@@ -1,0 +1,109 @@
+
+/* Contenedor principal para centrar la app */
+.layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100-screen;
+  background-color: #f5f5f5;
+  padding: 40px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* La tarjeta blanca (estilo celular/web de la foto) */
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+/* Encabezado igual al de la imagen */
+.card-header {
+  background-color: #444444;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.year {
+  opacity: 0.5;
+}
+
+.calendar-section {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.input-date {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.timezone-info {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background-color: #fafafa;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Lista de botones */
+.slots-container {
+  padding: 15px 20px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.slot-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 10px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot-btn:hover {
+  border-color: #999;
+}
+
+/* Estilo para el botón seleccionado */
+.slot-btn.active {
+  background-color: #444444;
+  color: white;
+  border-color: #444444;
+}
+
+.footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
