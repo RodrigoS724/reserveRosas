@@ -1,0 +1,23 @@
+.navbar {
+  width: 260px;
+  height: 100vh;
+  background-color: var(--bg-dark);
+  border-right: 1px solid var(--border-muted);
+  display: flex;
+  flex-direction: column;
+  position: fixed; /* Se mantiene fija al estirar */
+}
+
+.nav-link {
+  padding: 15px 25px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+  background-color: var(--bg-light);
+  color: var(--primary);
+  border-left: 4px solid var(--primary);
+}

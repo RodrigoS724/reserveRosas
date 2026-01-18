@@ -1,24 +1,21 @@
 import { createApp } from 'vue'
-import './style.css'
+import './main.css' // <--- Esta línea es la que conecta el CSS con el programa
 import App from './App.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Confirmacion from './views/confirmation.vue'
 import Home from './views/home.vue'
+import ReservasView from './views/reserve.vue'
 
 const router = createRouter({
-  history: createWebHashHistory(), // Usamos Hash para compatibilidad con Electron
+  history: createWebHashHistory(),
   routes: [
     { path: '/', component: Home },
-    { path: '/confirmacion', component: Confirmacion }
+    { path: '/confirmacion', component: Confirmacion },
+    { path: '/clientes', component: () => import('./views/client.vue') },
+    { path: '/motos', component: () => import('./views/motos.vue') },
+    { path: '/ajustes', component: () => import('./views/preferences.vue') },
+    { path: '/reservas', component: ReservasView },
   ]
 })
 
 createApp(App).use(router).mount('#app')
-/*
-createApp(App).mount('#app').$nextTick(() => {
-  // Use contextBridge
-  window.ipcRenderer.on('main-process-message', (_event, message) => {
-    console.log(message)
-  })
-})
-*/

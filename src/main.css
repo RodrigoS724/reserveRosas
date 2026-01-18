@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  /* Definimos los colores base */
+  --color-app-bg: #f9fafb;
+  --color-app-text: #111827;
+  --color-sidebar: #ffffff;
+  --color-border: #e5e7eb;
+
+  /* Colores para el modo oscuro usando la nueva sintaxis de variables de Tailwind */
+  --color-dark-bg: #0f172a;
+  --color-dark-text: #f9fafb;
+  --color-dark-sidebar: #1e293b;
+  --color-dark-border: #334155;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    /* Esto asegura que el fondo del body siempre combine con el div principal */
+    @apply bg-gray-50 dark:bg-[#0f172a] transition-colors duration-300;
+  }
+}
+
+/* Clases de utilidad que respetan el modo oscuro */
+.bg-custom-sidebar {
+  @apply bg-white dark:bg-[#1e293b];
+}
+
+.border-custom {
+  @apply border-gray-200 dark:border-gray-800;
+}
