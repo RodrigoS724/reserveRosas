@@ -4,7 +4,7 @@ import App from './App.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Confirmacion from './views/confirmation.vue'
 import Home from './views/home.vue'
-import ReservasView from './views/reserve.vue'
+import Reservas from './views/reserve.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -14,8 +14,10 @@ const router = createRouter({
     { path: '/clientes', component: () => import('./views/client.vue') },
     { path: '/motos', component: () => import('./views/motos.vue') },
     { path: '/ajustes', component: () => import('./views/preferences.vue') },
-    { path: '/reservas', component: ReservasView },
+    { path: '/reservas', component: Reservas },
   ]
 })
+
+
 
 createApp(App).use(router).mount('#app')

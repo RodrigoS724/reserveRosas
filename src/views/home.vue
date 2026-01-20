@@ -100,6 +100,15 @@ const irAFormulario = () => {
     } 
   })
 }
+
+const horasOcupadas = ref<string[]>([]);
+
+// Cada vez que cambia el día seleccionado:
+const cargarDisponibilidad = async (fechaSeleccionada: string) => {
+  const ocupados = await window.api.obtenerOcupados(fechaSeleccionada);
+  horasOcupadas.value = ocupados.map((o: any) => o.hora);
+};
+
 </script>
 
 <template>
