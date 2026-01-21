@@ -1,30 +1,52 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
-// --------- Expose some API to the Renderer process ---------
-/*contextBridge.exposeInMainWorld('ipcRenderer', {
-  on(...args: Parameters<typeof ipcRenderer.on>) {
-    const [channel, listener] = args
-    return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
-  },
-  off(...args: Parameters<typeof ipcRenderer.off>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.off(channel, ...omit)
-  },
-  send(...args: Parameters<typeof ipcRenderer.send>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.send(channel, ...omit)
-  },
-  invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.invoke(channel, ...omit)
-  },
-
-  // You can expose other APTs you need here.
-  // ...
-})*/
+console.log('✅ PRELOAD CARGADO OK')
 
 contextBridge.exposeInMainWorld('api', {
-  guardarReserva: (datos: any) => ipcRenderer.invoke('guardar-reserva', datos),
-  obtenerOcupados: (fecha: string) => ipcRenderer.invoke('obtener-ocupados', fecha),
-  obtenerReservas: () => ipcRenderer.invoke('obtener-reservas-semana'),
+  /* =========================
+   * RESERVAS
+   * ========================= */
+  guardarReserva: (datos: any) =>
+    ipcRenderer.invoke('reservas:guardar', datos),
+
+  obtenerReservasSemana: (fechaBase?: string) =>
+    ipcRenderer.invoke('reservas:semana', fechaBase),
+
+  moverReserva: (payload: {
+    id: number
+    nuevaFecha: string
+    nuevaHora?: string
+  }) =>
+    ipcRenderer.invoke('reservas:mover', payload),
+
+  actualizarReserva: (payload: any) =>
+    ipcRenderer.invoke('reservas:actualizar', payload),
+
+  /* =========================
+   * HORARIOS
+   * ========================= */
+  obtenerHorariosBase: () =>
+    ipcRenderer.invoke('horarios:base'),
+
+  obtenerHorariosDisponibles: (fecha: string) =>
+    ipcRenderer.invoke('horarios:disponibles', fecha),
+
+  crearHorario: (hora: string) =>
+    ipcRenderer.invoke('horarios:crear', hora),
+
+  desactivarHorario: (id: number) =>
+    ipcRenderer.invoke('horarios:desactivar', id),
+
+  bloquearHorario: (payload: {
+    fecha: string
+    hora: string
+    motivo?: string
+  }) =>
+    ipcRenderer.invoke('horarios:bloquear', payload),
+
+  /* =========================
+   * HISTORIAL
+   * ========================= */
+  obtenerHistorialReserva: (reservaId: number) =>
+    ipcRenderer.invoke('historial:reserva', reservaId),
 })

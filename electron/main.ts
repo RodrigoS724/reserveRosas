@@ -1,12 +1,14 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { setupHandlers } from './ipcHandlers'
 import path from 'node:path'
-import { initDatabase } from './persistence/database'
+import { setupIpcHandlers } from './ipc/index.ts'
+import { initDatabase } from './db/database'
 
-const require = createRequire(import.meta.url)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+
+
 
 // The built directory structure
 //
@@ -19,7 +21,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
@@ -38,17 +39,16 @@ function createWindow() {
     autoHideMenuBar: true,
     frame: true, // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(MAIN_DIST, 'preload.mjs'),
       nodeIntegration: false,
       contextIsolation: true,
     },
   })
-
+ win.webContents.openDevTools({ mode: 'detach' })
   // 1. ELIMINAR MENÚ DE RAÍZ
-  win.setMenu(null); // Elimina el menú de la instancia
-  win.removeMenu();  // Refuerza la eliminación
+ // win.setMenu(null); // Elimina el menú de la instancia
+ // win.removeMenu();  // Refuerza la eliminación
 
-  // 2. FORZAR MAXIMIZADO AL ARRANCAR
   win.maximize(); 
 
   // 3. EVITAR QUE VITE CAMBIE EL TÍTULO
@@ -64,6 +64,6 @@ function createWindow() {
 // UN SOLO whenReady para todo
 app.whenReady().then(() => {
   initDatabase() // Inicializamos la base de datos
-  setupHandlers() // Activamos los cables
+  setupIpcHandlers() // Activamos los cables
   createWindow()  // Creamos la ventana
 })

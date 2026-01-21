@@ -14,20 +14,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen w-full bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300">
+  <div
+    class="flex h-screen w-full bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
-    <aside class="w-64 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-sm">
+    <aside
+      class="w-64 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-sm">
       <div class="p-8 text-xl font-black border-b border-gray-100 dark:border-gray-800 tracking-tighter italic">
         🏍️ ReserveRosas
       </div>
 
       <nav class="flex-1 p-4 flex flex-col gap-2">
-        
+
         <router-link to="/" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer',
-            isActive 
-              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600' 
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600'
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600'
           ]">
             <span class="text-lg">📅</span>
@@ -38,12 +40,24 @@ onMounted(() => {
         <router-link to="/reservas" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer',
-            isActive 
-              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600' 
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600'
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600'
           ]">
             <span class="text-lg">📋</span>
             <span>Panel Reservas</span>
+          </div>
+        </router-link>
+
+        <router-link to="/ajustes" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer',
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600'
+          ]">
+            <span class="text-lg">⏱️</span>
+            <span>Ajustes de horarios</span>
           </div>
         </router-link>
 

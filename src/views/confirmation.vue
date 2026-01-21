@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -19,7 +19,10 @@ const km = ref('')
 const matricula = ref('')
 const tipoTurno = ref('Service') // Esta es la variable clave
 const detalles = ref('') // Para los comentarios de garantía/taller
-
+onMounted(() => {
+  console.log("API:", window.api)
+  console.log("guardarReserva:", window.api?.guardarReserva)
+})  
 const descargarTicket = () => {
   const ticketHTML = `
     <html>
@@ -64,7 +67,8 @@ const descargarTicket = () => {
 
 const confirmarReserva = async () => {
   if (!nombre.value || !cedula.value) return; // Validación básica
-
+  console.log(window.api)
+  
   const datos = {
     nombre: nombre.value,
     cedula: cedula.value,
@@ -82,6 +86,8 @@ const confirmarReserva = async () => {
   try {
     // LLAMADA A ELECTRON
     const resultado = await window.api.guardarReserva(datos);
+    console.log("/n/nResultados   ", resultado);
+
     if (resultado.success) {
       descargarTicket(); // Tu función de HTML
       alert("¡Reserva guardada en la base de datos!");
@@ -204,7 +210,7 @@ const confirmarReserva = async () => {
             </div>
           </div>
 
-          <button @click="confirmarReserva" :disabled="!nombre || !cedula || !matricula" :class="[
+          <button type="submit" @click.prevent="confirmarReserva" :disabled="!nombre || !cedula || !matricula" :class="[
             'mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl active:scale-95',
             (!nombre || !cedula || !matricula)
               ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
@@ -212,6 +218,8 @@ const confirmarReserva = async () => {
           ]">
             Confirmar y Descargar Ticket
           </button>
+
+
         </form>
       </div>
     </div>
