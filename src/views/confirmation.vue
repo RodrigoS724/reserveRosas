@@ -21,7 +21,7 @@ const tipoTurno = ref('Service') // Esta es la variable clave
 const detalles = ref('') // Para los comentarios de garantía/taller
 onMounted(() => {
   console.log("API:", window.api)
-  console.log("guardarReserva:", window.api?.guardarReserva)
+  console.log("crearReserva:", window.api?.crearReserva)
 })  
 const descargarTicket = () => {
   const ticketHTML = `
@@ -85,14 +85,14 @@ const confirmarReserva = async () => {
 
   try {
     // LLAMADA A ELECTRON
-    const resultado = await window.api.guardarReserva(datos);
+    const resultado = await window.api.crearReserva(datos);
     console.log("/n/nResultados   ", resultado);
 
     if (resultado.success) {
       descargarTicket(); // Tu función de HTML
       alert("¡Reserva guardada en la base de datos!");
     } else {
-      alert("Error: " + resultado.error);
+      alert("Error: " + ('error' in resultado ? (resultado as any).error : 'No se pudo guardar la reserva.'));
     }
     router.push('/reservas');
   } catch (error) {

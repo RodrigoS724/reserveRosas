@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-
-/* =======================
-   ESTADO GENERAL
-======================= */
+import { ref, onMounted, computed } from 'vue'
+import ReservaWindow from '../components/ReservaWindow.vue'
 const semanaOffset = ref(0)
+const busquedaCedula = ref('')
 
+// Estructura base de los días
 const diasSemana = ref([
-  { id: 0, nombre: 'Lunes', fecha: '', reservas: [] },
+  { id: 0, nombre: 'Lunes', fecha: '', reservas: [] as any[] },
   { id: 1, nombre: 'Martes', fecha: '', reservas: [] },
   { id: 2, nombre: 'Miércoles', fecha: '', reservas: [] },
   { id: 3, nombre: 'Jueves', fecha: '', reservas: [] },
@@ -15,281 +14,437 @@ const diasSemana = ref([
   { id: 5, nombre: 'Sábado', fecha: '', reservas: [] }
 ])
 
-/* =======================
-   CARGA DE DATOS
-======================= */
+// Cargar reservas desde SQLite
+
 const cargarReservas = async () => {
-  const reservas = await window.api.obtenerReservasSemana(semanaOffset.value)
+  const hoy = new Date()
+  const lunesActual = new Date(hoy)
+  const diaSemana = hoy.getDay()
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana
+  lunesActual.setDate(hoy.getDate() + diff)
 
-  diasSemana.value.forEach(d => {
-    d.reservas = []
-    d.fecha = ''
-  })
+  const inicioSemana = new Date(lunesActual)
+  inicioSemana.setDate(lunesActual.getDate() + (semanaOffset.value * 7))
 
-  reservas.forEach((r: any) => {
-    const fecha = new Date(r.fecha)
-    const dia = fecha.getDay() - 1
+  const finSemana = new Date(inicioSemana)
+  finSemana.setDate(inicioSemana.getDate() + 5)
 
-    if (dia >= 0 && dia <= 5) {
-      diasSemana.value[dia].fecha = fecha.toLocaleDateString('es-UY', {
-        day: '2-digit',
-        month: 'short'
-      })
+  const desdeStr = inicioSemana.toISOString().split('T')[0]
+  const hastaStr = finSemana.toISOString().split('T')[0]
 
-      diasSemana.value[dia].reservas.push({
-        id: r.id,
-        nombre: r.nombre,
-        telefono: r.telefono,
-        marca: r.marca,
-        modelo: r.modelo,
-        matricula: r.matricula,
-        tipo: r.tipo_turno,
-        hora: r.hora,
-        observaciones: r.detalles,
-        expandido: false
-      })
+  // 1. Obtenemos datos
+  const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
+
+  // 2. Mapeamos y limpiamos en un solo paso para evitar parpadeos
+  const nuevosDias = diasSemana.value.map((d, index) => {
+    const f = new Date(inicioSemana)
+    f.setDate(inicioSemana.getDate() + index)
+
+    // Filtramos las reservas que pertenecen a este día específico
+    const reservasDelDia = nuevasReservas.filter((r: any) => {
+      return r.fecha === f.toISOString().split('T')[0]
+    }).map((r: any) => ({
+      ...r,
+      estado: r.estado || 'Pendiente'
+    }))
+
+    return {
+      ...d,
+      fecha: f.toLocaleDateString('es-UY', { day: '2-digit', month: 'short' }),
+      reservas: reservasDelDia
     }
   })
-}
 
+  // 3. Sobrescribimos el valor completo para disparar la reactividad de Vue
+  diasSemana.value = nuevosDias
+  console.log(nuevosDias);
+
+}
 onMounted(cargarReservas)
 
-/* =======================
-   SEMANAS
-======================= */
+// Filtrado por cédula
+const reservasFiltradas = computed(() => {
+  if (!busquedaCedula.value) return diasSemana.value
+  return diasSemana.value.map(d => ({
+    ...d,
+    reservas: d.reservas.filter(r => r.cedula?.includes(busquedaCedula.value))
+  }))
+})
+
 const cambiarSemana = (delta: number) => {
   semanaOffset.value += delta
   cargarReservas()
 }
 
-/* =======================
-   DRAG & DROP
-======================= */
-const reservaArrastrada = ref<any>(null)
-const diaOrigen = ref<number | null>(null)
+// DRAG AND DROP LOGIC
+const iniciarArrastre = (event: DragEvent, reserva: any) => {
+  if (!event.dataTransfer) return
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('application/json', JSON.stringify({ reservaId: reserva.id }))
 
-const iniciarArrastre = (reserva: any, diaId: number) => {
-  reservaArrastrada.value = reserva
-  diaOrigen.value = diaId
+  // Opcional: añade una clase visual al elemento arrastrado
+  const target = event.target as HTMLElement
+  target.style.opacity = '0.5'
 }
 
-const soltarEnDia = async (diaDestino: number) => {
-  if (!reservaArrastrada.value || diaOrigen.value === null) return
+const terminarArrastre = (event: DragEvent) => {
+  const target = event.target as HTMLElement
+  target.style.opacity = '1'
+}
 
-  const origen = diasSemana.value[diaOrigen.value]
-  const destino = diasSemana.value[diaDestino]
+const soltarEnDia = async (event: DragEvent, diaDestinoId: number) => {
+  event.preventDefault()
+  if (!event.dataTransfer) return
 
-  origen.reservas = origen.reservas.filter(r => r.id !== reservaArrastrada.value.id)
-  destino.reservas.push(reservaArrastrada.value)
+  const jsonData = event.dataTransfer.getData('application/json')
+  if (!jsonData) return
+  const { reservaId } = JSON.parse(jsonData)
 
-  const nuevaFecha = new Date()
-  nuevaFecha.setDate(nuevaFecha.getDate() + diaDestino + semanaOffset.value * 7)
+  // Calcular la nueva fecha basada en el lunes de la semana que vemos
+  const hoy = new Date()
+  const lunesActual = new Date(hoy)
+  const diff = hoy.getDay() === 0 ? -6 : 1 - hoy.getDay()
+  lunesActual.setDate(hoy.getDate() + diff)
 
-  await window.api.actualizarReserva({
-    id: reservaArrastrada.value.id,
-    fecha: nuevaFecha.toISOString().split('T')[0],
-    hora: reservaArrastrada.value.hora,
-    tipo: reservaArrastrada.value.tipo,
-    observaciones: reservaArrastrada.value.observaciones
+  const nuevaFecha = new Date(lunesActual)
+  nuevaFecha.setDate(lunesActual.getDate() + (semanaOffset.value * 7) + diaDestinoId)
+
+  await window.api.moverReserva({
+    id: reservaId,
+    nuevaFecha: nuevaFecha.toISOString().split('T')[0]
   })
 
-  reservaArrastrada.value = null
-  diaOrigen.value = null
+  cargarReservas()
 }
 
-/* =======================
-   GUARDAR CAMBIOS
-======================= */
-const guardarReserva = async (reserva: any) => {
-  await window.api.actualizarReserva({
-    id: reserva.id,
-    fecha: '',
-    hora: reserva.hora,
-    tipo: reserva.tipo,
-    observaciones: reserva.observaciones
-  })
+// VENTANA DE DETALLES
+const mostrarVentana = ref(false)
+const reservaActiva = ref<any>(null)
+
+const abrirVentana = (reserva: any) => {
+  // Pasamos una copia para evitar conflictos de referencia
+  reservaActiva.value = { ...reserva }
+  mostrarVentana.value = true
 }
+
+const manejarCierre = async () => {
+  mostrarVentana.value = false
+  setTimeout(() => {
+    cargarReservas()
+  }, 150) // ⏳ da tiempo real a SQLite
+}
+
 </script>
 
 <template>
-  <div class="h-full flex flex-col p-4">
-
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-black text-white">Planificación Semanal</h2>
-      <div class="flex gap-3">
-        <button class="btn" @click="cambiarSemana(-1)">←</button>
-        <button class="btn" @click="cambiarSemana(1)">→</button>
+  <div class="panel-container custom-scroll">
+    <header class="panel-header">
+      <div class="header-left">
+        <h2 class="main-title">PLANIFICACIÓN <span class="text-sky">SEMANAL</span></h2>
+        <div class="search-wrapper">
+          <input v-model="busquedaCedula" placeholder="🔍 Buscar por CI..." class="search-input" />
+        </div>
       </div>
-    </div>
 
-    <!-- DIAS -->
-    <div class="flex gap-4 overflow-x-auto pb-6 custom-scrollbar">
-      <div
-        v-for="dia in diasSemana"
-        :key="dia.id"
-        @dragover.prevent
-        @drop="soltarEnDia(dia.id)"
-        class="dia">
+      <div class="nav-group">
+        <button class="nav-btn" @click="cambiarSemana(-1)">ANTERIOR</button>
+        <button class="nav-btn hoy-btn" @click="semanaOffset = 0; cargarReservas()">ESTA SEMANA</button>
+        <button class="nav-btn" @click="cambiarSemana(1)">SIGUIENTE</button>
+      </div>
+    </header>
 
-        <div class="dia-header">
-          <span class="dia-nombre">{{ dia.nombre }}</span>
-          <span class="dia-fecha">{{ dia.fecha }}</span>
+    <div class="planning-grid">
+      <div v-for="dia in reservasFiltradas" :key="dia.id" class="day-column" @dragover.prevent
+        @drop="soltarEnDia($event, dia.id)">
+        <div class="day-info">
+          <span class="day-name">{{ dia.nombre }}</span>
+          <span class="day-date">{{ dia.fecha }}</span>
         </div>
 
-        <!-- RESERVAS -->
-        <div class="space-y-3 p-3">
-          <div
-            v-for="r in dia.reservas"
-            :key="r.id"
-            class="reserva">
-
-            <!-- DRAG HANDLE -->
-            <div
-              class="drag-handle"
-              draggable="true"
-              @dragstart="iniciarArrastre(r, dia.id)"
-            />
-
-            <!-- HEADER -->
-            <div class="flex justify-between items-center cursor-pointer"
-                 @click="r.expandido = !r.expandido">
-              <div>
-                <p class="hora">{{ r.hora }}</p>
-                <h4 class="nombre">{{ r.nombre }}</h4>
-                <p class="moto">🏍 {{ r.marca }} {{ r.modelo }}</p>
+        <div class="cards-stack">
+          <div v-for="r in dia.reservas" :key="`${r.id}`" class="moto-card" draggable="true"
+            @dragstart="iniciarArrastre($event, r)" @click.self="abrirVentana(r)">
+            <div class="card-inner">
+              <div class="card-top">
+                <span class="reserva-time">{{ r.hora }}</span>
+                <span class="status-pill" :class="r.estado.toLowerCase()">
+                  {{ r.estado }}
+                </span>
               </div>
 
-              <span class="flecha" :class="{ abierta: r.expandido }">⌄</span>
-            </div>
+              <div class="card-body">
+                <h4 class="client-name">{{ r.nombre }}</h4>
+                <div class="moto-info">
+                  <span class="moto-label">{{ r.marca }} {{ r.modelo }}</span>
+                  <span class="km-label">{{ r.km }} KM</span>
+                </div>
+              </div>
 
-            <!-- DETALLE -->
-            <div v-if="r.expandido" class="detalle">
-
-              <label>Teléfono</label>
-              <input :value="r.telefono" disabled />
-
-              <label>Matrícula</label>
-              <input :value="r.matricula" disabled />
-
-              <label>Tipo de turno</label>
-              <select v-model="r.tipo">
-                <option>Service</option>
-                <option>Taller</option>
-                <option>Diagnóstico</option>
-              </select>
-
-              <label>Observaciones</label>
-              <textarea v-model="r.observaciones" rows="3"></textarea>
-
-              <button class="btn-guardar" @click="guardarReserva(r)">
-                Guardar
-              </button>
+              <div class="card-footer">
+                <div class="footer-item">
+                  <span class="label">CI:</span> {{ r.cedula }}
+                </div>
+                <div class="footer-item plate">
+                  {{ r.matricula }}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div v-if="dia.reservas.length === 0" class="vacio">
-            Espacio libre
+          <div v-if="dia.reservas.length === 0" class="empty-card">
+            <span class="empty-icon">📅</span>
+            <p>SIN TURNOS</p>
           </div>
         </div>
       </div>
     </div>
+
+    <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
+
   </div>
 </template>
 
 <style scoped>
-/* CONTENEDORES */
-.dia {
-  width: 280px;
-  background: rgba(30,41,59,.6);
-  border-radius: 24px;
-}
-.dia-header {
-  padding: 16px;
+/* CONTENEDOR PRINCIPAL */
+.panel-container {
+  height: 100vh;
   display: flex;
-  justify-content: space-between;
-}
-.dia-nombre {
-  font-size: 10px;
-  text-transform: uppercase;
-  color: #94a3b8;
-}
-.dia-fecha {
-  color: #38bdf8;
-  font-weight: bold;
+  flex-direction: column;
+  padding: 30px;
+  background-color: #020617;
+  /* Slate 950 */
+  gap: 25px;
+  overflow-y: auto;
 }
 
-/* RESERVA */
-.reserva {
-  background: #020617;
-  border-radius: 18px;
-  padding: 14px;
+/* HEADER */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.main-title {
+  color: white;
+  font-size: 2rem;
+  /* Más grande para 2K */
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.text-sky {
+  color: #38bdf8;
+}
+
+.search-input {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: white;
+  width: 350px;
+  margin-top: 10px;
+}
+
+.nav-group {
+  display: flex;
+  gap: 10px;
+  background: #0f172a;
+  padding: 6px;
+  border-radius: 15px;
   border: 1px solid #1e293b;
 }
 
-/* DRAG */
-.drag-handle {
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(90deg,#3b82f6,#06b6d4);
-  margin-bottom: 10px;
-  cursor: grab;
+.nav-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.8rem;
+  transition: 0.2s;
 }
 
-/* TEXTOS */
-.hora { color:#38bdf8;font-size:11px }
-.nombre { color:white;font-weight:700 }
-.moto { color:#94a3b8;font-size:12px }
-
-/* FLECHA */
-.flecha {
-  transition: transform .2s;
-}
-.flecha.abierta {
-  transform: rotate(180deg);
+.nav-btn:hover {
+  background: #1e293b;
+  color: white;
 }
 
-/* DETALLE */
-.detalle {
-  margin-top: 12px;
+.hoy-btn {
+  background: #38bdf8;
+  color: #020617;
+}
+
+/* GRID SYSTEM */
+.planning-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  align-items: start;
+}
+
+/* COLUMNAS DE DÍAS */
+.day-column {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 25px;
+  border: 1px solid #1e293b;
+  min-height: 400px;
+}
+
+.day-info {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e293b;
+  align-items: center;
+}
+
+.day-name {
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.day-date {
+  color: #38bdf8;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+/* TARJETAS DE MOTO */
+.cards-stack {
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-.detalle input,
-.detalle textarea,
-.detalle select {
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:10px;
-  padding:6px;
-  color:white;
-}
-.detalle input:disabled {
-  color:#64748b;
+  gap: 15px;
 }
 
-/* BOTONES */
-.btn {
-  background:#1e293b;
-  padding:8px 14px;
-  border-radius:12px;
-  color:white;
-}
-.btn-guardar {
-  margin-top:10px;
-  background:#3b82f6;
-  padding:10px;
-  border-radius:14px;
-  font-weight:bold;
+.moto-card {
+  background: #020617;
+  border-radius: 20px;
+  border: 1px solid #1e293b;
+  cursor: grab;
+  transition: all 0.3s ease;
 }
 
-/* VACIO */
-.vacio {
-  border:2px dashed #1e293b;
-  border-radius:18px;
-  padding:20px;
-  text-align:center;
-  color:#475569;
+.moto-card:hover {
+  border-color: #38bdf8;
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3);
+}
+
+.card-inner {
+  padding: 20px;
+  pointer-events: none;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.reserva-time {
+  color: #38bdf8;
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+/* BADGES DE ESTADO */
+.status-pill {
+  font-size: 0.65rem;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-pill.pendiente {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-pill.pronto {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.status-pill.cancelado {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-pill.en-proceso {
+  background: rgba(147, 197, 253, 0.1);
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+.client-name {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.moto-info {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.moto-label {
+  background: #1e293b;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.km-label {
+  color: #64748b;
+  font-size: 0.75rem;
+  align-self: center;
+}
+
+.card-footer {
+  border-top: 1px solid #1e293b;
+  padding-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.plate {
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+/* ESTADO VACÍO */
+.empty-card {
+  padding: 40px;
+  text-align: center;
+  border: 2px dashed #1e293b;
+  border-radius: 20px;
+}
+
+.empty-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 10px;
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+
+.empty-card p {
+  color: #334155;
+  font-weight: 800;
+  font-size: 0.8rem;
 }
 </style>

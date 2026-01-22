@@ -1,3 +1,4 @@
+// main/ipc/horarios.handlers.ts
 import { ipcMain } from 'electron'
 import {
   obtenerHorariosBase,
@@ -6,30 +7,29 @@ import {
   desactivarHorario,
   bloquearHorario
 } from '../services/horarios.service'
+import { withDbLock } from './withDBLock'
 
-export function setupHorariosHandlers() {
-    console.log('/nHorarios Handler funcionando /n');
-    
+export function registrarHandlersHorarios() {
+
   ipcMain.handle('horarios:base', () =>
     obtenerHorariosBase()
   )
 
-  ipcMain.handle('horarios:disponibles', (_e, fecha) =>
+  ipcMain.handle('horarios:disponibles', (_, fecha: string) =>
     obtenerHorariosDisponibles(fecha)
   )
 
-  ipcMain.handle('horarios:crear', (_e, hora) => {
-    crearHorario(hora)
-    return { success: true }
-  })
+  ipcMain.handle('horarios:crear', (_, hora: string) =>
+    withDbLock(() => crearHorario(hora))
+  )
 
-  ipcMain.handle('horarios:desactivar', (_e, id) => {
-    desactivarHorario(id)
-    return { success: true }
-  })
+  ipcMain.handle('horarios:desactivar', (_, id: number) =>
+    withDbLock(() => desactivarHorario(id))
+  )
 
-  ipcMain.handle('horarios:bloquear', (_e, data) => {
-    bloquearHorario(data.fecha, data.hora, data.motivo)
-    return { success: true }
-  })
+  ipcMain.handle('horarios:bloquear', (_, payload) =>
+    withDbLock(() =>
+      bloquearHorario(payload.fecha, payload.hora, payload.motivo)
+    )
+  )
 }

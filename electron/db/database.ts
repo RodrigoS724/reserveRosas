@@ -25,6 +25,10 @@ export function initDatabase() {
 
   db = new Database(dbPath)
 
+  db.pragma('journal_mode = WAL')
+  db.pragma('busy_timeout = 5000')
+  db.pragma('synchronous = NORMAL')
+
   // ===============================
   // TABLA PRINCIPAL DE RESERVAS
   // ===============================

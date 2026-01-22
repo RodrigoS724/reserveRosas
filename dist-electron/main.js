@@ -151,31 +151,111 @@ function setupHorariosHandlers() {
     return { success: true };
   });
 }
-function moverReserva(id, nuevaFecha) {
+function crearReserva(data) {
   const db2 = initDatabase();
-  const anterior = db2.prepare(`SELECT fecha FROM reservas WHERE id = ?`).get(id);
-  db2.prepare(`
-    UPDATE reservas SET fecha = ?
-    WHERE id = ?
-  `).run(nuevaFecha, id);
+  const result = db2.prepare(`
+    INSERT INTO reservas (
+      nombre, cedula, telefono,
+      marca, modelo, km, matricula,
+      tipo_turno, fecha, hora, detalles
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    data.nombre,
+    data.cedula,
+    data.telefono,
+    data.marca,
+    data.modelo,
+    data.km,
+    data.matricula,
+    data.tipo_turno,
+    data.fecha,
+    data.hora,
+    data.detalles ?? ""
+  );
   db2.prepare(`
     INSERT INTO historial_reservas
     (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-    VALUES (?, 'fecha', ?, ?, datetime('now'))
-  `).run(id, anterior.fecha, nuevaFecha);
+    VALUES (?, 'creación', '', 'reserva creada', datetime('now'))
+  `).run(result.lastInsertRowid);
+  return result.lastInsertRowid;
 }
-function actualizarDetalles(id, detalles) {
+function obtenerReserva(id) {
   const db2 = initDatabase();
-  const anterior = db2.prepare(`SELECT detalles FROM reservas WHERE id = ?`).get(id);
+  return db2.prepare(`
+    SELECT * FROM reservas WHERE id = ?
+  `).get(id);
+}
+function borrarReserva(id) {
+  const db2 = initDatabase();
+  const reserva = db2.prepare(`
+    SELECT * FROM reservas WHERE id = ?
+  `).get(id);
+  if (!reserva) return;
   db2.prepare(`
-    UPDATE reservas SET detalles = ?
-    WHERE id = ?
-  `).run(detalles, id);
+    DELETE FROM reservas WHERE id = ?
+  `).run(id);
   db2.prepare(`
     INSERT INTO historial_reservas
     (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-    VALUES (?, 'detalles', ?, ?, datetime('now'))
-  `).run(id, anterior.detalles, detalles);
+    VALUES (?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
+  `).run(id, JSON.stringify(reserva));
+}
+function moverReserva(id, nuevaFecha, nuevaHora) {
+  const db2 = initDatabase();
+  const anterior = db2.prepare(`
+    SELECT fecha, hora FROM reservas WHERE id = ?
+  `).get(id);
+  db2.prepare(`
+    UPDATE reservas SET fecha = ?, hora = COALESCE(?, hora)
+    WHERE id = ?
+  `).run(nuevaFecha, null, id);
+  if (nuevaFecha !== anterior.fecha) {
+    db2.prepare(`
+      INSERT INTO historial_reservas
+      (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
+      VALUES (?, 'fecha', ?, ?, datetime('now'))
+    `).run(id, anterior.fecha, nuevaFecha);
+  }
+}
+function actualizarReserva(id, reserva) {
+  const db2 = initDatabase();
+  const anterior = db2.prepare(`
+ SELECT nombre, fecha, hora, estado, detalles
+    FROM reservas
+    WHERE id = ?
+  `).get(id);
+  db2.prepare(`
+    UPDATE reservas
+    SET
+      nombre = ?,
+      fecha = ?,
+      hora = ?,
+      estado = ?,
+      detalles = ?
+    WHERE id = ?
+  `).run(
+    reserva.nombre,
+    reserva.fecha,
+    reserva.hora,
+    reserva.estado,
+    reserva.detalles,
+    reserva.id
+  );
+  Object.keys(anterior).forEach((campo) => {
+    if (anterior[campo] !== reserva[campo]) {
+      db2.prepare(`
+        INSERT INTO historial_reservas
+        (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
+        VALUES (?, ?, ?, ?, datetime('now'))
+      `).run(
+        reserva.id,
+        campo,
+        anterior[campo],
+        reserva[campo]
+      );
+    }
+  });
 }
 function obtenerReservasSemana(desde, hasta) {
   const db2 = initDatabase();
@@ -186,16 +266,33 @@ function obtenerReservasSemana(desde, hasta) {
   `).all(desde, hasta);
 }
 function setupReservasHandlers() {
-  ipcMain.handle(
-    "reservas:semana",
-    (_e, rango) => obtenerReservasSemana(rango.desde, rango.hasta)
-  );
+  ipcMain.handle("reservas:guardar", (_e, datos) => {
+    crearReserva(datos);
+    return { success: true };
+  });
+  ipcMain.handle("reservas:obtener", (_e, id) => {
+    obtenerReserva(id);
+    return { success: true };
+  });
+  ipcMain.handle("reservas:borrar", (_e, id) => {
+    borrarReserva(id);
+    return { success: true };
+  });
   ipcMain.handle("reservas:mover", (_e, data) => {
     moverReserva(data.id, data.nuevaFecha);
     return { success: true };
   });
+  ipcMain.handle(
+    "reservas:semana",
+    (_e, rango) => obtenerReservasSemana(rango.desde, rango.hasta)
+  );
   ipcMain.handle("reservas:detalles", (_e, data) => {
-    actualizarDetalles(data.id, data.detalles);
+    actualizarReserva(data.id, data.detalles);
+    return { success: true };
+  });
+  ipcMain.handle("reservas:actualizar", (_e, data) => {
+    console.log("RESERVA RECIBIDA", data);
+    actualizarReserva(data.id, data.detalles);
     return { success: true };
   });
 }
