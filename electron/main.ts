@@ -47,22 +47,23 @@ function createWindow() {
   }
 }
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-    win = null
+// UN SOLO whenReady para todo
+app.whenReady().then(() => {
+  console.log('🚀 [Main] App ready, inicializando...')
+  try {
+    initDatabase() // Inicializamos la base de datos
+    console.log('✅ [Main] Base de datos inicializada')
+  } catch (e) {
+    console.error('❌ [Main] Error inicializando DB:', e)
   }
-})
-
-app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+  
+  try {
+    setupIpcHandlers() // Activamos los cables
+    console.log('✅ [Main] IPC handlers configurados')
+  } catch (e) {
+    console.error('❌ [Main] Error configurando handlers:', e)
   }
+  
+  createWindow()  // Creamos la ventana
+  console.log('✅ [Main] Ventana creada')
 })
-
-app.whenReady().then(createWindow)

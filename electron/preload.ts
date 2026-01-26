@@ -19,6 +19,27 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     return ipcRenderer.invoke(channel, ...omit)
   },
 
+<<<<<<< Updated upstream
   // You can expose other APTs you need here.
   // ...
 })
+=======
+contextBridge.exposeInMainWorld('api', {
+  // Reservas
+  crearReserva: (d: any) => ipcRenderer.invoke('reservas:crear', d),
+  obtenerReserva: (id: number) => ipcRenderer.invoke('reservas:obtener', id),
+  borrarReserva: (id: number) => ipcRenderer.invoke('reservas:borrar', id),
+  moverReserva: (d: any) => ipcRenderer.invoke('reservas:mover', d),
+  actualizarReserva: (d: any) => ipcRenderer.invoke('reservas:actualizar', d),
+  obtenerReservasSemana: (d: any) => ipcRenderer.invoke('reservas:semana', d),
+
+  // Horarios
+  obtenerHorariosBase: () => ipcRenderer.invoke('horarios:base'),
+  obtenerHorariosDisponibles: (f: string) => ipcRenderer.invoke('horarios:disponibles', f),
+  crearHorario: (h: string) => ipcRenderer.invoke('horarios:crear', h),
+  desactivarHorario: (id: number) => ipcRenderer.invoke('horarios:desactivar', id),
+  bloquearHorario: (d: any) => ipcRenderer.invoke('horarios:bloquear', d),
+
+  // Historial
+  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)})
+>>>>>>> Stashed changes

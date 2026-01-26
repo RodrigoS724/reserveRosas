@@ -1,16 +1,180 @@
 <script setup lang="ts">
+<<<<<<< Updated upstream
 import { ref } from 'vue'
+=======
+import { onMounted, ref, computed, watch } from 'vue'
+>>>>>>> Stashed changes
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
+<<<<<<< Updated upstream
 // Datos que vienen de la agenda
 const fecha = route.query.fecha || '2026-01-21'
 const hora = route.query.hora || '08:00'
 
 // Estado para el tipo de servicio seleccionado
 const tipoServicio = ref('Service') // Por defecto
+=======
+// Datos que vienen del Home
+const fecha = route.query.fecha as string || '2026-01-19'
+const hora = route.query.hora as string || '11:00'
+
+// Estado del Formulario
+const nombre = ref('')
+const cedula = ref('')
+const telefono = ref('')
+const marca = ref('')
+const modelo = ref('')
+const km = ref('')
+const matricula = ref('')
+const tipoTurno = ref('Service')
+const detalles = ref('')
+const guardando = ref(false)
+
+// CLASES UTILITARIAS (Para evitar el error de @apply en styles)
+// Esto soluciona tu error de "Unknown utility class"
+const baseInputClass = "w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white"
+const smallInputClass = "w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white"
+const successClass = "border-blue-500/50 ring-2 ring-blue-500/10 bg-blue-50/30 dark:bg-blue-900/10"
+const errorClass = "border-red-500/50 ring-2 ring-red-500/10 bg-red-50/30 dark:bg-red-900/10"
+
+onMounted(() => {
+  console.log("✅ API disponible:", !!window.api)
+})
+
+// --- LÓGICA DE FORMATEO AUTOMÁTICO DE CÉDULA ---
+watch(cedula, (nuevoValor) => {
+  // 1. Eliminar todo lo que no sea número
+  let limpio = nuevoValor.replace(/\D/g, '')
+  
+  // 2. Limitar a 8 dígitos (Cédula uruguaya estándar)
+  if (limpio.length > 8) limpio = limpio.slice(0, 8)
+
+  // 3. Aplicar formato X.XXX.XXX-X
+  if (limpio.length > 7) {
+    // Caso 8 dígitos (10 millones o más, raro pero posible o formato viejo sin digito verificador mal puesto)
+    // Formato estándar 1.234.567-8
+    limpio = limpio.replace(/^(\d)(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  } else if (limpio.length > 6) {
+    // Caso estándar 7 dígitos (millones) -> 1.234.567 -> 1.234.567
+    // Pero asumimos que el último es verificador si tiene 7 u 8
+    // Vamos a formatear simple: 3.456.789-0
+    limpio = limpio.replace(/^(\d{1,2})(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  }
+  
+  // Solo actualizamos si el valor cambió para evitar bucles
+  if (limpio !== nuevoValor) {
+    cedula.value = limpio
+  }
+})
+
+const descargarTicket = () => {
+  const ticketHTML = `
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .ticket { width: 350px; border: 2px solid #3b82f6; border-radius: 15px; padding: 20px; }
+        .header { text-align: center; border-bottom: 2px dashed #ddd; margin-bottom: 15px; padding-bottom: 10px; }
+        .title { font-weight: bold; font-size: 18px; color: #1e293b; }
+        .section-title { font-size: 10px; font-weight: bold; color: #3b82f6; margin-top: 15px; text-transform: uppercase; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+        .val { font-weight: bold; }
+        .footer { text-align: center; font-size: 10px; color: #999; margin-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="ticket">
+        <div class="header">
+          <div class="title">TALLER ROSAS</div>
+          <p style="font-size: 11px">Comprobante de Reserva</p>
+        </div>
+        <div class="section-title">Cita</div>
+        <div class="row"><span>Fecha:</span> <span class="val">${fecha}</span></div>
+        <div class="row"><span>Horario:</span> <span class="val">${hora} hs</span></div>
+        <div class="section-title">Cliente</div>
+        <div class="row"><span>Nombre:</span> <span class="val">${nombre.value}</span></div>
+        <div class="section-title">Vehículo</div>
+        <div class="row"><span>Moto:</span> <span class="val">${marca.value} ${modelo.value}</span></div>
+        <div class="row"><span>Matrícula:</span> <span class="val">${matricula.value}</span></div>
+        <div class="row"><span>Tipo:</span> <span class="val">${tipoTurno.value}</span></div>
+        <div class="footer"><p>Rodo y Oribe, Mercedes, Soriano</p></div>
+      </div>
+      <script>window.print();<\/script>
+    </body>
+    </html>
+  `;
+  const blob = new Blob([ticketHTML], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+
+const confirmarReserva = async () => {
+  console.log('📋 [Frontend] Validando formulario...')
+  if (!esValido.value) {
+    console.log('❌ [Frontend] Validación fallida')
+    alert('Por favor completa los campos requeridos correctamente.')
+    return
+  }
+
+  console.log('✅ [Frontend] Validación exitosa, iniciando guardado...')
+  guardando.value = true
+
+  const datos = {
+    nombre: nombre.value.trim(),
+    cedula: cedula.value.trim(),
+    telefono: telefono.value.trim(),
+    marca: marca.value.trim(),
+    modelo: modelo.value.trim(),
+    km: String(km.value),
+    matricula: matricula.value.trim(),
+    tipo_turno: tipoTurno.value,
+    fecha,
+    hora,
+    detalles: detalles.value.trim()
+  };
+
+  console.log('📤 [Frontend] Enviando datos a IPC:', datos)
+
+  try {
+    console.log('⏳ [Frontend] Esperando respuesta de crearReserva...')
+    const resultado = await window.api.crearReserva(datos);
+    console.log('✅ [Frontend] Resultado recibido:', resultado, typeof resultado);
+    if (resultado && typeof resultado === 'number' && resultado > 0) {
+      console.log('✅ [Frontend] Reserva guardada con éxito, ID:', resultado)
+      descargarTicket();
+      alert("✅ ¡Reserva guardada!");
+      router.push('/reservas');
+    } else {
+      console.log('❌ [Frontend] Resultado inválido:', resultado)
+      alert("❌ Error: No se pudo guardar la reserva.");
+    }
+  } catch (error) {
+    console.error("❌ [Frontend] Error al guardar:", error);
+    alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+  } finally {
+    console.log('🔄 [Frontend] Reseteando estado guardando...')
+    guardando.value = false
+  }
+}
+
+// VALIDACIONES
+const cedulaValida = computed(() => {
+  // Validamos largo mínimo considerando puntos y guiones (min 9 chars para formateada)
+  return cedula.value.length >= 9 
+})
+const telefonoValido = computed(() => telefono.value.replace(/\s/g, '').length >= 8)
+const nombreValido = computed(() => nombre.value.trim().split(' ').length >= 2)
+const matriculaValida = computed(() => matricula.value.trim().length >= 6)
+
+const esValido = computed(() => {
+  return nombreValido.value && cedulaValida.value && telefonoValido.value && 
+    marca.value && modelo.value && matriculaValida.value
+})
+>>>>>>> Stashed changes
 </script>
 
 <template>
@@ -49,6 +213,7 @@ const tipoServicio = ref('Service') // Por defecto
       </div>
 
       <div class="lg:col-span-2 bg-white dark:bg-[#1e293b] p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800">
+<<<<<<< Updated upstream
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-8 text-balance">Datos de la Reserva</h2>
         
         <form class="space-y-6">
@@ -60,12 +225,36 @@ const tipoServicio = ref('Service') // Por defecto
             <div class="space-y-2">
               <label class="text-xs font-black text-gray-400 uppercase ml-1">Cédula de Identidad</label>
               <input type="text" placeholder="1.234.567-8" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white">
+=======
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-8">Datos de la Reserva</h2>
+
+        <form class="space-y-6" @submit.prevent="confirmarReserva">
+
+          <div class="flex flex-col gap-4">
+            <div class="space-y-2">
+              <label class="text-xs font-black text-gray-400 uppercase ml-1">Nombre Completo</label>
+              <input v-model="nombre" type="text" placeholder="Ej: Rodrigo Rosas"
+                :class="[baseInputClass, nombre && !nombreValido ? errorClass : (nombreValido ? successClass : '')]">
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-black text-gray-400 uppercase ml-1">Cédula</label>
+              <input v-model="cedula" type="text" placeholder="1.234.567-8"
+                :class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')]">
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-black text-gray-400 uppercase ml-1">Teléfono de Contacto</label>
+              <input v-model="telefono" type="tel" placeholder="099 123 456"
+                :class="[baseInputClass, telefono && !telefonoValido ? errorClass : (telefonoValido ? successClass : '')]">
+>>>>>>> Stashed changes
             </div>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
+<<<<<<< Updated upstream
               <input type="text" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 outline-none dark:text-white">
             </div>
             <div class="space-y-2">
@@ -79,12 +268,29 @@ const tipoServicio = ref('Service') // Por defecto
             <div class="space-y-2">
               <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Matrícula</label>
               <input type="text" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 outline-none dark:text-white">
+=======
+              <input v-model="marca" type="text" :class="smallInputClass">
+            </div>
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
+              <input v-model="modelo" type="text" :class="smallInputClass">
+            </div>
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">KM</label>
+              <input v-model="km" type="number" :class="smallInputClass">
+            </div>
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Matrícula</label>
+              <input v-model="matricula" type="text" placeholder="ABC 1234"
+                :class="[smallInputClass, matricula && !matriculaValida ? errorClass : (matriculaValida ? successClass : '')]">
+>>>>>>> Stashed changes
             </div>
           </div>
 
           <div class="space-y-3">
             <label class="text-xs font-black text-gray-400 uppercase ml-1 text-balance">Tipo de Turno</label>
             <div class="grid grid-cols-3 gap-3">
+<<<<<<< Updated upstream
               <button v-for="t in ['Service', 'Garantía', 'Taller']" :key="t" 
                 type="button"
                 @click="tipoServicio = t"
@@ -94,11 +300,17 @@ const tipoServicio = ref('Service') // Por defecto
                     ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 shadow-sm' 
                     : 'border-gray-100 dark:border-gray-800 text-gray-400 hover:border-gray-200 dark:hover:border-gray-700'
                 ]">
+=======
+              <button v-for="t in ['Service', 'Garantía', 'Taller']" :key="t" type="button" @click="tipoTurno = t"
+                :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm',
+                  tipoTurno === t ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">
+>>>>>>> Stashed changes
                 {{ t }}
               </button>
             </div>
           </div>
 
+<<<<<<< Updated upstream
           <div class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 min-h-[100px] flex flex-col justify-center">
             
             <p v-if="tipoServicio === 'Service'" class="text-gray-500 dark:text-gray-400 text-sm text-center italic text-balance">
@@ -117,6 +329,19 @@ const tipoServicio = ref('Service') // Por defecto
 
           <button type="submit" class="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xl rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] uppercase tracking-wider">
             Confirmar Reserva
+=======
+          <div class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+            <textarea v-if="tipoTurno !== 'Service'" v-model="detalles"
+              class="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 dark:text-white h-24"
+              placeholder="Detalles..."></textarea>
+            <p v-else class="text-gray-500 text-center italic text-sm">Mantenimiento programado.</p>
+          </div>
+
+          <button type="submit" :disabled="!esValido || guardando"
+            :class="['mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl',
+              !esValido ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20']">
+            {{ guardando ? '⏳ Guardando...' : 'Confirmar y Descargar Ticket' }}
+>>>>>>> Stashed changes
           </button>
         </form>
       </div>

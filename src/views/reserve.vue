@@ -1,5 +1,12 @@
 <script setup lang="ts">
+<<<<<<< Updated upstream
 import { ref } from 'vue'
+=======
+import { ref, onMounted, computed } from 'vue'
+import ReservaWindow from '../components/reservaWindow.vue'
+const semanaOffset = ref(0)
+const busquedaCedula = ref('')
+>>>>>>> Stashed changes
 
 const diasSemana = ref([
   { id: 0, nombre: 'Lunes', fecha: '19 Ene', reservas: [
@@ -40,6 +47,52 @@ const soltarEnDia = (diaDestinoId: number) => {
     diaOrigenId.value = null
   }
 }
+<<<<<<< Updated upstream
+=======
+
+const soltarEnDia = async (event: DragEvent, diaDestinoId: number) => {
+  event.preventDefault()
+  if (!event.dataTransfer) return
+
+  const jsonData = event.dataTransfer.getData('application/json')
+  if (!jsonData) return
+  const { reservaId } = JSON.parse(jsonData)
+
+  // Calcular la nueva fecha basada en el lunes de la semana que vemos
+  const hoy = new Date()
+  const lunesActual = new Date(hoy)
+  const diff = hoy.getDay() === 0 ? -6 : 1 - hoy.getDay()
+  lunesActual.setDate(hoy.getDate() + diff)
+
+  const nuevaFecha = new Date(lunesActual)
+  nuevaFecha.setDate(lunesActual.getDate() + (semanaOffset.value * 7) + diaDestinoId)
+
+  await window.api.moverReserva({
+    id: reservaId,
+    nuevaFecha: nuevaFecha.toISOString().split('T')[0]
+  })
+
+  cargarReservas()
+}
+
+// VENTANA DE DETALLES
+const mostrarVentana = ref(false)
+const reservaActiva = ref<any>(null)
+
+const abrirVentana = (reserva: any) => {
+  // Pasamos una copia para evitar conflictos de referencia
+  reservaActiva.value = { ...reserva }
+  mostrarVentana.value = true
+}
+
+const manejarCierre = async () => {
+  mostrarVentana.value = false
+  setTimeout(() => {
+    cargarReservas()
+  }, 150) // ⏳ da tiempo real a SQLite
+}
+
+>>>>>>> Stashed changes
 </script>
 
 <template>
