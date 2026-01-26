@@ -18,12 +18,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-
-<<<<<<< Updated upstream
-  // You can expose other APTs you need here.
-  // ...
 })
-=======
+
 contextBridge.exposeInMainWorld('api', {
   // Reservas
   crearReserva: (d: any) => ipcRenderer.invoke('reservas:crear', d),
@@ -41,5 +37,5 @@ contextBridge.exposeInMainWorld('api', {
   bloquearHorario: (d: any) => ipcRenderer.invoke('horarios:bloquear', d),
 
   // Historial
-  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)})
->>>>>>> Stashed changes
+  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)
+})

@@ -1,9 +1,14 @@
-import { app, BrowserWindow } from "electron";
-import { createRequire } from "node:module";
+import { app, ipcMain, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Database from "better-sqlite3";
 import fs from "node:fs";
+const __filename$2 = fileURLToPath(import.meta.url);
+const __dirname$2 = path.dirname(__filename$2);
+if (typeof globalThis !== "undefined") {
+  globalThis.__filename = __filename$2;
+  globalThis.__dirname = __dirname$2;
+}
 let db = null;
 let dbConnectionInProgress = false;
 function initDatabase() {
@@ -647,22 +652,34 @@ function setupIpcHandlers() {
 }
 const __filename$1 = fileURLToPath(import.meta.url);
 const __dirname$1 = path.dirname(__filename$1);
+globalThis.__filename = __filename$1;
+globalThis.__dirname = __dirname$1;
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
+let win = null;
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    width: 1366,
+    height: 768,
+    minWidth: 1024,
+    // Mínimo para que no se rompa el diseño
+    minHeight: 700,
+    title: "ReserveRosas - Taller Central",
+    autoHideMenuBar: true,
+    frame: true,
+    // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: path.join(MAIN_DIST, "preload.mjs"),
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
+  win.webContents.openDevTools({ mode: "detach" });
+  win.maximize();
+  win.on("page-title-updated", (e) => e.preventDefault());
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -674,7 +691,6 @@ app.whenReady().then(() => {
   setupIpcHandlers();
   createWindow();
 });
-app.whenReady().then(createWindow);
 export {
   MAIN_DIST,
   RENDERER_DIST,

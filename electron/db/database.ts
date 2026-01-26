@@ -2,6 +2,17 @@ import Database from 'better-sqlite3'
 import path from 'node:path'
 import fs from 'node:fs'
 import { app } from 'electron'
+import { fileURLToPath } from 'node:url'
+
+// Definir __filename y __dirname para módulos ES
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Hacer disponibles globalmente para módulos que los necesitan (como better-sqlite3)
+if (typeof globalThis !== 'undefined') {
+  globalThis.__filename = __filename
+  globalThis.__dirname = __dirname
+}
 
 let db: Database.Database | null = null
 let dbConnectionInProgress = false

@@ -1,6 +1,4 @@
 /// <reference types="vite/client" />
-<<<<<<< Updated upstream
-=======
 /// <reference types="vue" />
 
 declare module '*.vue' {
@@ -92,4 +90,3 @@ declare global {
   }
 }
 export {}
->>>>>>> Stashed changes
