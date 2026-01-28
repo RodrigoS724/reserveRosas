@@ -142,10 +142,11 @@ const onFechaChange = async () => {
   await cargarHorariosBloqueados()
 }
 
-const idABorrar = ref(null);
+const idABorrar = ref<number | null>(null);
 const confirmarBorradoInterno = async () => {
   try {
     console.log('[AdminHorarios] Eliminando horario permanentemente:', idABorrar.value)
+    if (idABorrar.value === null) return
     await window.api.borrarHorarioPermanente(idABorrar.value)
     console.log('[AdminHorarios] Horario eliminado exitosamente')
     

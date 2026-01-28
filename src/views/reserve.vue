@@ -144,14 +144,14 @@ const obtenerReservasEnCelda = (fecha: string, hora: string) => {
 }
 
 // Verificar si el horario debe mostrarse para la fecha (sábados solo hasta 12:00)
-const debeRechazoHora = (fecha: string, hora: string) => {
-  const date = new Date(fecha)
-  const esSabado = date.getDay() === 6  // 6 es sábado
-  if (esSabado && hora >= '12:00') {
-    return true  // Rechazar horarios >= 12:00 en sábados
-  }
-  return false
-}
+// const debeRechazoHora = (fecha: string, hora: string) => {
+//   const date = new Date(fecha)
+//   const esSabado = date.getDay() === 6  // 6 es sábado
+//   if (esSabado && hora >= '12:00') {
+//     return true  // Rechazar horarios >= 12:00 en sábados
+//   }
+//   return false
+// }
 
 const cambiarSemana = (delta: number) => {
   semanaOffset.value += delta
@@ -219,14 +219,14 @@ const soltarEnCelda = async (evento: DragEvent, fechaDestino: string, horaDestin
 }
 
 // Función para manejar los estilos dinámicos de las tarjetas
-const getCardStyles = (estado) => {
+const getCardStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400',
     'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400',
     'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500 text-rose-700 dark:text-rose-400',
     'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500 text-sky-700 dark:text-sky-400',
   };
-  return styles[estado?.toUpperCase()] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
+  return styles[estado?.toUpperCase() as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
 };
 
 </script>
