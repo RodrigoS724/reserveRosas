@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('api', {
   bloquearHorario: (d: any) => ipcRenderer.invoke('horarios:bloquear', d),
   desbloquearHorario: (d: any) => ipcRenderer.invoke('horarios:desbloquear', d),
   obtenerHorariosBloqueados: (f: string) => ipcRenderer.invoke('horarios:bloqueados', f),
+  borrarHorarioPermanente: (id: number) => ipcRenderer.invoke('horarios:borrar', id),
 
   // Historial
   obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)

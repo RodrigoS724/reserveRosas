@@ -9,7 +9,8 @@ import {
   activarHorario,
   bloquearHorario,
   desbloquearHorario,
-  obtenerHorariosBloqueados
+  obtenerHorariosBloqueados,
+  borrarHorarioPermanente
 } from '../services/horarios.service'
 import { withDbLock } from './withDBLock'
 
@@ -99,6 +100,18 @@ export function registrarHandlersHorarios() {
       return result
     } catch (error: any) {
       console.error('[IPC] Error obteniendo horarios bloqueados:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('horarios:borrar', async (_, id: number) => {
+    console.log('[IPC] Borrando horario permanentemente:', id)
+    try {
+      const result = await withDbLock(() => borrarHorarioPermanente(id))
+      console.log('[IPC] Horario eliminado exitosamente')
+      return result
+    } catch (error: any) {
+      console.error('[IPC] Error borrando horario:', error)
       throw error
     }
   })

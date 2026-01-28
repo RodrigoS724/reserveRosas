@@ -93,6 +93,8 @@ declare global {
         motivo?: string
       }[]>
 
+      borrarHorarioPermanente: (id: number) => Promise<void>
+
       /* =========================
        * HISTORIAL
        * ========================= */

@@ -300,6 +300,29 @@ function obtenerHorariosBloqueados(fecha) {
   console.log("[Service] TODOS los bloqueos en BD:", todosLosBloqueos);
   return result;
 }
+function borrarHorarioPermanente(id) {
+  console.log("[Service] Borrando horario permanentemente:", id);
+  const db2 = initDatabase();
+  try {
+    const tx = db2.transaction(() => {
+      const horario = db2.prepare(`
+        SELECT * FROM horarios_base WHERE id = ?
+      `).get(id);
+      if (!horario) {
+        console.log("[Service] Horario no encontrado:", id);
+        throw new Error("Horario no encontrado");
+      }
+      db2.prepare(`
+        DELETE FROM horarios_base WHERE id = ?
+      `).run(id);
+      console.log("[Service] Horario eliminado permanentemente:", horario);
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en borrarHorarioPermanente:", error);
+    throw error;
+  }
+}
 let isLocked = false;
 const queue = [];
 let operationCounter = 0;
@@ -427,6 +450,17 @@ function registrarHandlersHorarios() {
       return result;
     } catch (error) {
       console.error("[IPC] Error obteniendo horarios bloqueados:", error);
+      throw error;
+    }
+  });
+  ipcMain.handle("horarios:borrar", async (_, id) => {
+    console.log("[IPC] Borrando horario permanentemente:", id);
+    try {
+      const result = await withDbLock(() => borrarHorarioPermanente(id));
+      console.log("[IPC] Horario eliminado exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error borrando horario:", error);
       throw error;
     }
   });

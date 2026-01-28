@@ -38,6 +38,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   bloquearHorario: (d) => electron.ipcRenderer.invoke("horarios:bloquear", d),
   desbloquearHorario: (d) => electron.ipcRenderer.invoke("horarios:desbloquear", d),
   obtenerHorariosBloqueados: (f) => electron.ipcRenderer.invoke("horarios:bloqueados", f),
+  borrarHorarioPermanente: (id) => electron.ipcRenderer.invoke("horarios:borrar", id),
   // Historial
   obtenerHistorial: (id) => electron.ipcRenderer.invoke("historial:obtener", id)
 });

@@ -175,504 +175,125 @@ const exportarACSV = () => {
   link.click()
   document.body.removeChild(link)
 }
+
+const getBadgeStyles = (estado) => {
+  const styles = {
+    'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400',
+    'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
+    'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400',
+    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400'
+  };
+  return styles[estado?.toUpperCase()] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400';
+};
 </script>
 
 <template>
-  <div class="historial-container">
-    <!-- HEADER -->
-    <header class="historial-header">
-      <h1 class="title">Historial de Reservas</h1>
-      <button @click="cargarReservas" class="btn-recargar" :disabled="cargando">
-        {{ cargando ? 'Cargando...' : 'Recargar' }}
+  <div class="h-screen flex flex-col p-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-hidden">
+    <header class="flex justify-between items-center">
+      <div>
+        <h1 class="text-4xl font-black text-gray-800 dark:text-white tracking-tighter">Historial</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Registro completo de reservas y servicios</p>
+      </div>
+      <button @click="cargarReservas" class="bg-white dark:bg-[#1e293b] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-6 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 transition-all font-bold shadow-sm">
+        {{ cargando ? 'Cargando...' : '🔄 Actualizar' }}
       </button>
     </header>
 
-    <!-- FILTROS -->
-    <div class="filtros-section">
-      <div class="filtro-group">
-        <label>Buscar (CI o Nombre)</label>
-        <input v-model="filtroTexto" type="text" placeholder="Ej: 12345678 o Juan Pérez" class="input-search" />
+    <div class="bg-white dark:bg-[#1e293b] p-4 rounded-[20px] border border-gray-200 dark:border-gray-800 flex items-center gap-4 shadow-sm">
+      <input v-model="filtroTexto" type="text" placeholder="Buscar por nombre o CI..." 
+             class="flex-1 bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 px-4 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
+      
+      <div class="flex items-center gap-4 px-4 border-l border-gray-100 dark:border-gray-800">
+        <input v-model="fechaDesde" type="date" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
+        <span class="text-gray-300">→</span>
+        <input v-model="fechaHasta" type="date" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
       </div>
 
-      <div class="filtro-group">
-        <label>Desde</label>
-        <input v-model="fechaDesde" type="date" class="input-date" />
-      </div>
-
-      <div class="filtro-group">
-        <label>Hasta</label>
-        <input v-model="fechaHasta" type="date" class="input-date" />
-      </div>
-
-      <button @click="exportarACSV" class="btn-exportar">Exportar CSV</button>
+      <button @click="exportarACSV" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-emerald-700/20">
+        Exportar CSV
+      </button>
     </div>
 
-    <!-- TABLA -->
-    <div class="tabla-wrapper">
-      <div v-if="cargando" class="loading">Cargando reservas...</div>
-      <div v-else-if="reservasFiltradas.length === 0" class="empty">
-        No hay reservas que coincidan con los filtros
+    <div class="flex-1 overflow-hidden bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-[24px] flex flex-col shadow-sm">
+      <div class="overflow-auto flex-1 custom-scrollbar">
+        <table class="w-full text-left border-separate border-spacing-0">
+          <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-[#1e293b] border-b border-gray-200 dark:border-gray-800">
+            <tr>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Cliente / CI</th>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Vehículo / KM</th>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">Turno</th>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Estado</th>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Notas</th>
+              <th class="p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            <tr v-for="r in reservasFiltradas" :key="r.id" class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              <td class="p-5">
+                <div class="flex flex-col">
+                  <span class="text-sm font-black text-gray-800 dark:text-gray-100">{{ r.nombre }}</span>
+                  <span class="text-[11px] text-gray-500 dark:text-gray-400 font-bold">{{ r.cedula }} • {{ r.telefono }}</span>
+                </div>
+              </td>
+              <td class="p-5">
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ r.marca }} {{ r.modelo }}</span>
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase">{{ r.matricula }} • {{ r.km }} KM</span>
+                </div>
+              </td>
+              <td class="p-5 text-center">
+                <div class="inline-flex flex-col bg-gray-100 dark:bg-[#0f172a] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <span class="text-xs font-black text-cyan-600">{{ formatearFecha(r.fecha) }}</span>
+                  <span class="text-[10px] font-bold text-gray-400">{{ r.hora }} hs</span>
+                </div>
+              </td>
+              <td class="p-5">
+                <span :class="['px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border', getBadgeStyles(r.estado)]">
+                  {{ r.estado || 'Pendiente' }}
+                </span>
+              </td>
+              <td class="p-5 max-w-[200px]">
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 italic truncate">
+                  {{ r.notas || 'Sin notas' }}
+                </p>
+              </td>
+              <td class="p-5 text-right">
+                <button @click="abrirModalNotas(r)" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-cyan-600/20">
+                   Ver Notas
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <table v-else class="tabla-reservas">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>CI</th>
-            <th>Teléfono</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Km</th>
-            <th>Matrícula</th>
-            <th>Tipo</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado</th>
-            <th>Notas</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in reservasFiltradas" :key="r.id" class="fila" :class="`estado-${r.estado?.toLowerCase() || 'pendiente'}`">
-            <td class="cell-id">{{ r.id }}</td>
-            <td class="cell-nombre">{{ r.nombre }}</td>
-            <td class="cell-ci">{{ r.cedula }}</td>
-            <td class="cell-tel">{{ r.telefono }}</td>
-            <td class="cell-marca">{{ r.marca }}</td>
-            <td class="cell-modelo">{{ r.modelo }}</td>
-            <td class="cell-km">{{ r.km }}</td>
-            <td class="cell-matricula">{{ r.matricula }}</td>
-            <td class="cell-tipo">{{ r.tipo_turno }}</td>
-            <td class="cell-fecha">{{ formatearFecha(r.fecha) }}</td>
-            <td class="cell-hora">{{ r.hora }}</td>
-            <td class="cell-estado">
-              <span class="estado-badge" :class="`estado-${r.estado?.toLowerCase() || 'pendiente'}`">
-                {{ r.estado || 'Pendiente' }}
-              </span>
-            </td>
-            <td class="cell-notas">{{ r.notas ? r.notas.substring(0, 30) + '...' : '-' }}</td>
-            <td class="cell-acciones">
-              <button @click="abrirModalNotas(r)" class="btn-notas">Notas</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
 
-    <!-- MODAL DE NOTAS -->
-    <div v-if="mostrarModalNotas" class="modal-overlay" @click.self="cerrarModalNotas">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Notas - Reserva #{{ reservaActual?.id }}</h2>
-          <span class="cliente-info">{{ reservaActual?.nombre }} ({{ reservaActual?.cedula }})</span>
-          <button class="btn-close" @click="cerrarModalNotas">✕</button>
+    <div v-if="mostrarModalNotas" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-[#1e293b] w-full max-w-lg rounded-[32px] border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div class="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start">
+          <div>
+            <h2 class="text-2xl font-black text-gray-800 dark:text-white">Notas de Reserva</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ reservaActual?.nombre }} • CI: {{ reservaActual?.cedula }}</p>
+          </div>
+          <button @click="cerrarModalNotas" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
-
-        <div class="modal-body">
-          <textarea v-model="notasActuales" :readonly="!modoEdicion && reservaActual?.notas" placeholder="Agrega notas sobre esta reserva..." class="textarea-notas" :class="{ 'readonly': !modoEdicion && reservaActual?.notas }"></textarea>
+        <div class="p-8">
+          <textarea 
+            v-model="notasActuales" 
+            :readonly="!modoEdicion && reservaActual?.notas"
+            placeholder="Escribe los detalles aquí..." 
+            class="w-full h-48 bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 resize-none font-medium"
+            :class="{ 'opacity-70 cursor-not-allowed': !modoEdicion && reservaActual?.notas }"
+          ></textarea>
         </div>
-
-        <div class="modal-footer">
-          <button @click="cerrarModalNotas" class="btn-cancelar">Cancelar</button>
-          <button v-if="!modoEdicion && reservaActual?.notas" @click="habilitarEdicion" class="btn-editar">Editar Nota</button>
-          <button @click="guardarNotas" class="btn-guardar">{{ modoEdicion ? 'Guardar Cambios' : 'Guardar Notas' }}</button>
+        <div class="p-8 bg-gray-50/50 dark:bg-black/20 flex justify-end gap-3">
+          <button @click="cerrarModalNotas" class="px-6 py-3 rounded-xl font-bold text-gray-500 text-sm">Cancelar</button>
+          <button v-if="!modoEdicion && reservaActual?.notas" @click="habilitarEdicion" class="px-6 py-3 bg-amber-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-amber-500/20">Editar</button>
+          <button @click="guardarNotas" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-cyan-600/20 transition-all">
+            {{ modoEdicion ? 'Guardar Cambios' : 'Guardar Notas' }}
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.historial-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #020617;
-  color: white;
-  padding: 20px;
-  gap: 20px;
-}
-
-/* HEADER */
-.historial-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-.title {
-  font-size: 2rem;
-  font-weight: 900;
-  color: white;
-  margin: 0;
-}
-
-.btn-recargar {
-  padding: 10px 20px;
-  background: #0ea5e9;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-recargar:hover:not(:disabled) {
-  background: #06b6d4;
-}
-
-.btn-recargar:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* FILTROS */
-.filtros-section {
-  display: flex;
-  gap: 15px;
-  align-items: flex-end;
-  background: rgba(30, 41, 59, 0.5);
-  padding: 15px;
-  border-radius: 15px;
-  flex-wrap: wrap;
-}
-
-.filtro-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.filtro-group label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-
-.input-search,
-.input-date {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: white;
-  font-size: 0.9rem;
-  min-width: 200px;
-}
-
-.input-search:focus,
-.input-date:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.btn-exportar {
-  padding: 10px 20px;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-exportar:hover {
-  background: #059669;
-}
-
-/* TABLA */
-.tabla-wrapper {
-  flex: 1;
-  overflow: auto;
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 15px;
-  border: 1px solid #1e293b;
-}
-
-.loading,
-.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #64748b;
-  font-size: 1.1rem;
-}
-
-.tabla-reservas {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tabla-reservas thead {
-  position: sticky;
-  top: 0;
-  background: #0f172a;
-  z-index: 10;
-}
-
-.tabla-reservas th {
-  padding: 12px;
-  text-align: left;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #94a3b8;
-  border-bottom: 2px solid #1e293b;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.tabla-reservas td {
-  padding: 12px;
-  border-bottom: 1px solid #1e293b;
-  font-size: 0.9rem;
-}
-
-.fila:hover {
-  background: rgba(14, 165, 233, 0.05);
-}
-
-.fila.estado-pendiente {
-  border-left: 3px solid #f59e0b;
-}
-
-.fila.estado-pronto {
-  border-left: 3px solid #22c55e;
-}
-
-.fila.estado-cancelado {
-  border-left: 3px solid #ef4444;
-}
-
-.fila.estado-en-proceso {
-  border-left: 3px solid #3b82f6;
-}
-
-.estado-badge {
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.estado-badge.estado-pendiente {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.estado-badge.estado-pronto {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-}
-
-.estado-badge.estado-cancelado {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.estado-badge.estado-en-proceso {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.cell-notas {
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
-
-.btn-notas {
-  padding: 6px 12px;
-  background: #0ea5e9;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-notas:hover {
-  background: #06b6d4;
-}
-
-/* MODAL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #1e293b;
-  border-radius: 15px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  max-width: 600px;
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #0f172a;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.3rem;
-  color: white;
-}
-
-.cliente-info {
-  font-size: 0.85rem;
-  color: #94a3b8;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.btn-close:hover {
-  color: white;
-}
-
-.modal-body {
-  padding: 20px;
-  flex: 1;
-}
-
-.textarea-notas {
-  width: 100%;
-  height: 200px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px;
-  color: white;
-  font-family: inherit;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.textarea-notas:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid #0f172a;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn-cancelar,
-.btn-guardar {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-cancelar {
-  background: #475569;
-  color: white;
-}
-
-.btn-cancelar:hover {
-  background: #64748b;
-}
-
-.btn-editar {
-  padding: 10px 20px;
-  background: #f59e0b;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-editar:hover {
-  background: #d97706;
-}
-
-.btn-guardar {
-  background: #0ea5e9;
-  color: white;
-}
-
-.btn-guardar:hover {
-  background: #06b6d4;
-}
-
-.textarea-notas {
-  width: 100%;
-  height: 200px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px;
-  color: white;
-  font-family: inherit;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.textarea-notas:focus {
-  outline: none;
-  border-color: #0ea5e9;
-}
-
-.textarea-notas.readonly {
-  background: #0a0f1a;
-  cursor: default;
-  opacity: 0.8;
-}
-
-.textarea-notas.readonly:focus {
-  border-color: #1e293b;
-}
-
-/* Scrollbar personalizado */
-.tabla-wrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.tabla-wrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.tabla-wrapper::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-}
-
-.tabla-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-</style>

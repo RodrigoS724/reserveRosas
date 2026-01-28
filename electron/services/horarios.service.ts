@@ -248,3 +248,34 @@ export function obtenerHorariosBloqueados(fecha: string) {
   
   return result
 }
+
+/* =========================
+ * BORRAR HORARIO PERMANENTE
+ * ========================= */
+export function borrarHorarioPermanente(id: number) {
+  console.log('[Service] Borrando horario permanentemente:', id)
+  const db = initDatabase()
+
+  try {
+    const tx = db.transaction(() => {
+      const horario = db.prepare(`
+        SELECT * FROM horarios_base WHERE id = ?
+      `).get(id)
+
+      if (!horario) {
+        console.log('[Service] Horario no encontrado:', id)
+        throw new Error('Horario no encontrado')
+      }
+
+      db.prepare(`
+        DELETE FROM horarios_base WHERE id = ?
+      `).run(id)
+      console.log('[Service] Horario eliminado permanentemente:', horario)
+    })
+
+    tx()
+  } catch (error: any) {
+    console.error('[Service] Error en borrarHorarioPermanente:', error)
+    throw error
+  }
+}

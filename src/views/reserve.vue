@@ -218,73 +218,76 @@ const soltarEnCelda = async (evento: DragEvent, fechaDestino: string, horaDestin
   }
 }
 
+// Función para manejar los estilos dinámicos de las tarjetas
+const getCardStyles = (estado) => {
+  const styles = {
+    'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400',
+    'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400',
+    'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500 text-rose-700 dark:text-rose-400',
+    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500 text-sky-700 dark:text-sky-400',
+  };
+  return styles[estado?.toUpperCase()] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
+};
+
 </script>
 
 <template>
-  <div class="panel-container custom-scroll">
-    <!-- HEADER CON BÚSQUEDA Y NAVEGACIÓN -->
-    <header class="panel-header">
-      <div class="header-left">
-        <h2 class="main-title">CALENDARIO <span class="text-sky">SEMANAL</span></h2>
-        <div class="search-wrapper">
-          <input v-model="busquedaCedula" placeholder="Buscar por CI..." class="search-input" />
+  <div class="h-screen flex flex-col p-6 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-hidden">
+    <header class="flex justify-between items-end">
+      <div class="space-y-4">
+        <h2 class="text-3xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
+          CALENDARIO <span class="text-cyan-600">SEMANAL</span>
+        </h2>
+        <div class="relative group">
+          <input 
+            v-model="busquedaCedula" 
+            placeholder="Buscar por CI..." 
+            class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl py-3 px-6 text-gray-700 dark:text-gray-200 w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
+          />
         </div>
       </div>
 
-      <div class="nav-group">
-        <button class="nav-btn" @click="cambiarSemana(-1)">ANTERIOR</button>
-        <button class="nav-btn hoy-btn" @click="semanaOffset = 0; cargarReservas()">HOY</button>
-        <button class="nav-btn" @click="cambiarSemana(1)">SIGUIENTE</button>
+      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <button @click="cambiarSemana(-1)" class="px-5 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-widest">Anterior</button>
+        <button @click="semanaOffset = 0; cargarReservas()" class="px-6 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
+        <button @click="cambiarSemana(1)" class="px-5 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-widest">Siguiente</button>
       </div>
     </header>
 
-    <!-- TABLA CALENDARIO -->
-    <div class="calendar-wrapper">
-      <table class="calendar-table">
-        <!-- ENCABEZADO CON DÍAS DE LA SEMANA -->
-        <thead>
+    <div class="flex-1 overflow-auto rounded-[24px] border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+      <table class="w-full border-collapse table-fixed">
+        <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
-            <th class="hora-header">HORA</th>
-            <th v-for="dia in fechasWeek" :key="dia.fecha" class="dia-header">
-              <div class="dia-header-content">
-                <span class="dia-nombre">{{ dia.nombre }}</span>
-                <span class="dia-fecha">{{ dia.fecha }}</span>
+            <th class="w-24 p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
+            <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-4 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
+                <span class="text-lg font-black text-gray-800 dark:text-gray-100">{{ dia.fecha.split('-')[2] }}</span>
               </div>
             </th>
           </tr>
         </thead>
 
-        <!-- FILAS POR HORARIO -->
-        <tbody>
-          <tr v-for="hora in horariosDisponibles" :key="hora" class="hora-row"
-            :style="{ display: fechasWeek.some(d => !debeRechazoHora(d.fecha, hora)) ? '' : 'none' }">
-            <!-- CELDA DE HORA -->
-            <td class="hora-cell">
-              <span class="hora-label">{{ hora }}</span>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800/50">
+          <tr v-for="hora in horariosDisponibles" :key="hora">
+            <td class="p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
+              <span class="text-xs font-black text-gray-400 dark:text-gray-500">{{ hora }}</span>
             </td>
 
-            <!-- CELDAS CON RESERVAS POR DÍA -->
-            <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" class="reserva-cell"
-              :style="{ display: debeRechazoHora(dia.fecha, hora) ? 'none' : '' }"
-              @dragover.prevent @drop="soltarEnCelda($event, dia.fecha, hora)">
+            <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" 
+                class="p-2 border-l border-gray-100 dark:border-gray-800/30 min-h-[100px] align-top hover:bg-cyan-500/5 transition-colors"
+                @dragover.prevent @drop="soltarEnCelda($event, dia.fecha, hora)">
               
-              <div class="reservas-container">
-                <div v-if="obtenerReservasEnCelda(dia.fecha, hora).length > 0" class="reservas-stack">
-                  <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
-                    class="mini-card" draggable="true" @dragstart="iniciarArrastre($event, r)"
-                    @click="abrirVentana(r)" :class="`estado-${r.estado.toLowerCase()}`">
-                    
-                    <div class="mini-card-content">
-                      <div class="mini-nombre">{{ r.nombre }}</div>
-                      <div class="mini-cedula">{{ r.cedula }}</div>
-                      <div class="mini-moto">{{ r.marca }} {{ r.modelo }}</div>
-                      <div class="mini-status">{{ r.estado }}</div>
-                    </div>
+              <div class="flex flex-col gap-2">
+                <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
+                     @click="abrirVentana(r)"
+                     draggable="true" @dragstart="iniciarArrastre($event, r)"
+                     :class="['p-3 rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
+                  <div class="text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
+                  <div class="text-[9px] font-bold opacity-80 leading-tight">
+                    {{ r.marca }} {{ r.modelo }}<br/>
+                    <span class="opacity-60">{{ r.cedula }}</span>
                   </div>
-                </div>
-
-                <div v-else class="empty-slot">
-                  <span class="slot-empty">-</span>
                 </div>
               </div>
             </td>
@@ -292,339 +295,6 @@ const soltarEnCelda = async (evento: DragEvent, fechaDestino: string, horaDestin
         </tbody>
       </table>
     </div>
-
     <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
   </div>
 </template>
-
-<style scoped>
-.panel-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 30px;
-  background-color: #020617;
-  gap: 25px;
-  overflow-y: auto;
-}
-
-/* HEADER */
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.main-title {
-  color: white;
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: -1px;
-}
-
-.text-sky {
-  color: #0ea5e9;
-}
-
-.search-wrapper {
-  margin-top: 10px;
-}
-
-.search-input {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 15px;
-  padding: 12px 20px;
-  color: white;
-  width: 350px;
-  font-weight: 600;
-}
-
-.search-input::placeholder {
-  color: #64748b;
-}
-
-.search-input:focus {
-  border-color: #0ea5e9;
-  outline: none;
-}
-
-.nav-group {
-  display: flex;
-  gap: 10px;
-  background: #0f172a;
-  padding: 8px;
-  border-radius: 18px;
-  border: 1px solid #1e293b;
-}
-
-.nav-btn {
-  padding: 10px 24px;
-  border-radius: 12px;
-  color: #94a3b8;
-  font-weight: 700;
-  font-size: 0.8rem;
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.nav-btn:hover {
-  background: #1e293b;
-  color: white;
-}
-
-.hoy-btn {
-  background: #0ea5e9;
-  color: #020617;
-}
-
-.hoy-btn:hover {
-  background: #06b6d4;
-}
-
-/* CALENDARIO */
-.calendar-wrapper {
-  flex: 1;
-  overflow: auto;
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 20px;
-  border: 1px solid #1e293b;
-  padding: 20px;
-}
-
-.calendar-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-/* ENCABEZADO */
-thead {
-  position: sticky;
-  top: 0;
-  background: #020617;
-  z-index: 10;
-}
-
-.hora-header {
-  width: 100px;
-  padding: 15px;
-  text-align: center;
-  color: #64748b;
-  font-weight: 900;
-  font-size: 0.75rem;
-  border-bottom: 2px solid #1e293b;
-  text-transform: uppercase;
-}
-
-.dia-header {
-  padding: 15px;
-  text-align: center;
-  border-bottom: 2px solid #1e293b;
-  border-right: 1px solid #1e293b;
-}
-
-.dia-header:last-child {
-  border-right: none;
-}
-
-.dia-header-content {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.dia-nombre {
-  color: #94a3b8;
-  font-weight: 900;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.dia-fecha {
-  color: #0ea5e9;
-  font-weight: 900;
-  font-size: 1.1rem;
-}
-
-/* FILAS Y CELDAS */
-.hora-row {
-  border-bottom: 1px solid #1e293b;
-}
-
-.hora-row:hover {
-  background: rgba(14, 165, 233, 0.05);
-}
-
-.hora-cell {
-  width: 100px;
-  padding: 15px;
-  text-align: center;
-  background: rgba(15, 23, 42, 0.8);
-  border-right: 2px solid #1e293b;
-  vertical-align: top;
-}
-
-.hora-label {
-  color: #64748b;
-  font-weight: 900;
-  font-size: 0.95rem;
-}
-
-.reserva-cell {
-  padding: 8px;
-  border-right: 1px solid #1e293b;
-  vertical-align: top;
-  min-height: 120px;
-  background: rgba(15, 23, 42, 0.3);
-}
-
-.reserva-cell:last-child {
-  border-right: none;
-}
-
-.reserva-cell:hover {
-  background: rgba(14, 165, 233, 0.08);
-}
-
-/* CONTENEDOR DE RESERVAS */
-.reservas-container {
-  width: 100%;
-  min-height: 100%;
-}
-
-.reservas-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* MINI TARJETAS */
-.mini-card {
-  background: #0f172a;
-  border: 1.5px solid #1e293b;
-  border-radius: 10px;
-  padding: 8px;
-  cursor: grab;
-  transition: all 0.2s ease;
-  font-size: 0.7rem;
-}
-
-.mini-card:hover {
-  border-color: #0ea5e9;
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px -5px rgba(14, 165, 233, 0.3);
-}
-
-.mini-card:active {
-  cursor: grabbing;
-}
-
-.mini-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  pointer-events: none;
-}
-
-.mini-nombre {
-  color: white;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.mini-cedula {
-  color: #94a3b8;
-  font-weight: 700;
-  font-size: 0.65rem;
-}
-
-.mini-moto {
-  color: #64748b;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-
-.mini-status {
-  color: #0ea5e9;
-  font-weight: 700;
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
-/* ESTADOS DE RESERVA */
-.mini-card.estado-pendiente {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.05);
-}
-
-.mini-card.estado-pendiente .mini-status {
-  color: #f59e0b;
-}
-
-.mini-card.estado-pronto {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.05);
-}
-
-.mini-card.estado-pronto .mini-status {
-  color: #22c55e;
-}
-
-.mini-card.estado-cancelado {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.mini-card.estado-cancelado .mini-status {
-  color: #ef4444;
-}
-
-.mini-card.estado-en-proceso {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.mini-card.estado-en-proceso .mini-status {
-  color: #3b82f6;
-}
-
-/* CELDA VACÍA */
-.empty-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100%;
-  color: #334155;
-  font-weight: 800;
-  font-size: 1.5rem;
-}
-
-.slot-empty {
-  opacity: 0.3;
-}
-
-/* SCROLL PERSONALIZADO */
-.calendar-wrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.calendar-wrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.calendar-wrapper::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-}
-
-.calendar-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-</style>
