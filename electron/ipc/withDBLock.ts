@@ -23,19 +23,19 @@ export async function withDbLock<T>(fn: () => T | Promise<T>): Promise<T> {
     const id = `op_${++operationCounter}`
     const now = Date.now()
     queue.push({ id, fn, resolve, reject, createdAt: now })
-    console.log(`⏳ [Lock] ${id} encolada. Cola: ${queue.length} operaciones. Locked: ${isLocked}`)
+    console.log(`[Lock] ${id} encolada. Cola: ${queue.length} operaciones. Locked: ${isLocked}`)
     processQueue()
   })
 }
 
 async function processQueue(): Promise<void> {
   if (isLocked) {
-    console.log(`🔒 [Lock] Sistema bloqueado, esperando liberación...`)
+    console.log(`[Lock] Sistema bloqueado, esperando liberación...`)
     return
   }
 
   if (queue.length === 0) {
-    console.log(`✅ [Lock] Cola vacía, nada que procesar`)
+    console.log(`[Lock] Cola vacía, nada que procesar`)
     return
   }
 
@@ -44,7 +44,7 @@ async function processQueue(): Promise<void> {
   const now = Date.now()
   const waitTime = now - operation.createdAt
   
-  console.log(`🔓 [Lock] INICIANDO ${operation.id} (esperó ${waitTime}ms). Quedan: ${queue.length}`)
+  console.log(`[Lock] INICIANDO ${operation.id} (esperó ${waitTime}ms). Quedan: ${queue.length}`)
 
   try {
     // Ejecutar la operación (puede ser sync o async)
@@ -58,17 +58,17 @@ async function processQueue(): Promise<void> {
       operation.resolve(result)
     }
     
-    console.log(`✅ [Lock] ${operation.id} completada exitosamente`)
+    console.log(`[Lock] ${operation.id} completada exitosamente`)
   } catch (error: any) {
-    console.error(`❌ [Lock] ${operation.id} ERROR:`, error?.message || error)
+    console.error(`[Lock] ${operation.id} ERROR:`, error?.message || error)
     operation.reject(error instanceof Error ? error : new Error(String(error)))
   } finally {
     isLocked = false
-    console.log(`🔓 [Lock] ${operation.id} liberada. Quedan: ${queue.length}`)
+    console.log(`[Lock] ${operation.id} liberada. Quedan: ${queue.length}`)
     
     // Procesar el siguiente sin delay
     if (queue.length > 0) {
-      console.log(`➡️ [Lock] Procesando siguiente...`)
+      console.log(`[Lock] Procesando siguiente...`)
       // Usar setImmediate para no bloquear el event loop
       setImmediate(() => processQueue())
     }

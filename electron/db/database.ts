@@ -85,7 +85,8 @@ export function initDatabase() {
       fecha TEXT NOT NULL,
       hora TEXT NOT NULL,
       detalles TEXT,
-      estado TEXT DEFAULT 'pendiente'
+      estado TEXT DEFAULT 'pendiente',
+      notas TEXT
     );
   `)
 
@@ -150,6 +151,24 @@ export function initDatabase() {
     })
 
     transaction()
+  }
+
+  // ===============================
+  // MIGRACIONES
+  // ===============================
+  console.log('🔄 [DB] Ejecutando migraciones...')
+  
+  try {
+    db.exec(`ALTER TABLE reservas ADD COLUMN notas TEXT`)
+    console.log('✅ [DB] Columna "notas" agregada a reservas')
+  } catch (err: any) {
+    if (err?.message?.includes('duplicate column')) {
+      console.log('ℹ️ [DB] Columna "notas" ya existe en reservas')
+    } else if (err?.message?.includes('no such table')) {
+      console.log('ℹ️ [DB] Tabla reservas no existe (será creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn('⚠️ [DB] Error durante migración:', err?.message)
+    }
   }
 
   console.log('✅ DB inicializada en:', dbPath)

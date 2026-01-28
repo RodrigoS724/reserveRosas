@@ -88,19 +88,37 @@ const descargarTicket = () => {
 }
 
 const confirmarReserva = async () => {
-  console.log('📋 [Frontend] Validando formulario...')
+  console.log('[Confirmation] Validando formulario...')
   if (!esValido.value) {
-    console.log('❌ [Frontend] Validación fallida')
+    console.log('[Confirmation] Validación fallida')
     alert('Por favor completa los campos requeridos correctamente.')
     return
   }
 
-  console.log('✅ [Frontend] Validación exitosa, iniciando guardado...')
+  // Validar que el horario siga disponible
+  console.log('[Confirmation] Verificando disponibilidad de horario:', fecha, hora)
+  try {
+    const horariosDisponibles = await window.api.obtenerHorariosDisponibles(fecha)
+    const horaDisponible = horariosDisponibles.some((h: any) => h.hora === hora)
+    
+    if (!horaDisponible) {
+      console.warn('[Confirmation] Horario ya no está disponible:', hora)
+      alert('Este horario ya no está disponible. Por favor selecciona otro.')
+      return
+    }
+    console.log('[Confirmation] Horario validado correctamente')
+  } catch (error) {
+    console.error('[Confirmation] Error verificando disponibilidad:', error)
+    alert('Error al verificar disponibilidad. Intenta de nuevo.')
+    return
+  }
+
+  console.log('[Confirmation] Validación exitosa, iniciando guardado...')
   guardando.value = true
 
   const datos = {
     nombre: nombre.value.trim(),
-    cedula: cedula.value.trim(),
+    cedula: cedula.value.trim().replace(/[\.\-]/g, ''),
     telefono: telefono.value.trim(),
     marca: marca.value.trim(),
     modelo: modelo.value.trim(),
@@ -112,26 +130,26 @@ const confirmarReserva = async () => {
     detalles: detalles.value.trim()
   };
 
-  console.log('📤 [Frontend] Enviando datos a IPC:', datos)
+  console.log('[Confirmation] Enviando datos a IPC:', datos)
 
   try {
-    console.log('⏳ [Frontend] Esperando respuesta de crearReserva...')
+    console.log('[Confirmation] Esperando respuesta de crearReserva...')
     const resultado = await window.api.crearReserva(datos);
-    console.log('✅ [Frontend] Resultado recibido:', resultado, typeof resultado);
+    console.log('[Confirmation] Resultado recibido:', resultado, typeof resultado);
     if (resultado && typeof resultado === 'number' && resultado > 0) {
-      console.log('✅ [Frontend] Reserva guardada con éxito, ID:', resultado)
+      console.log('[Confirmation] Reserva guardada con éxito, ID:', resultado)
       descargarTicket();
-      alert("✅ ¡Reserva guardada!");
+      alert("Reserva guardada exitosamente!");
       router.push('/reservas');
     } else {
-      console.log('❌ [Frontend] Resultado inválido:', resultado)
-      alert("❌ Error: No se pudo guardar la reserva.");
+      console.log('[Confirmation] Resultado inválido:', resultado)
+      alert("Error: No se pudo guardar la reserva.");
     }
   } catch (error) {
-    console.error("❌ [Frontend] Error al guardar:", error);
-    alert(`❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    console.error("[Confirmation] Error al guardar:", error);
+    alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
   } finally {
-    console.log('🔄 [Frontend] Reseteando estado guardando...')
+    console.log('[Confirmation] Reseteando estado guardando...')
     guardando.value = false
   }
 }

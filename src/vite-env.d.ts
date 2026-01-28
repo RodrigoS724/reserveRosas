@@ -60,6 +60,11 @@ declare global {
         activo: number
       }[]>
 
+      obtenerHorariosInactivos: () => Promise<{
+        id: number
+        hora: string
+      }[]>
+
       obtenerHorariosDisponibles: (fecha: string) => Promise<{
         hora: string
       }[]>
@@ -68,11 +73,25 @@ declare global {
 
       desactivarHorario: (id: number) => Promise<void>
 
+      activarHorario: (id: number) => Promise<void>
+
       bloquearHorario: (data: {
         fecha: string
         hora: string
         motivo?: string
       }) => Promise<void>
+
+      desbloquearHorario: (data: {
+        fecha: string
+        hora: string
+      }) => Promise<void>
+
+      obtenerHorariosBloqueados: (fecha: string) => Promise<{
+        id: number
+        fecha: string
+        hora: string
+        motivo?: string
+      }[]>
 
       /* =========================
        * HISTORIAL
@@ -86,6 +105,25 @@ declare global {
         fecha: string
         usuario?: string
       }[]>
+
+      obtenerTodasLasReservas: () => Promise<{
+        id: number
+        nombre: string
+        cedula: string
+        telefono: string
+        marca: string
+        modelo: string
+        km: string
+        matricula: string
+        tipo_turno: string
+        fecha: string
+        hora: string
+        detalles?: string
+        estado: string
+        notas?: string
+      }[]>
+
+      actualizarNotasReserva: (id: number, notas: string) => Promise<void>
     }
   }
 }

@@ -1,120 +1,160 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
+
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 
-// Estructura base de los días
+// Horarios: se cargarán dinámicamente desde la BD
+const horariosDisponibles = ref<string[]>([])
+
+// Intervalo para auto-refresh
+let intervaloRefresco: number | null = null
+
+// Estructura de semana
 const diasSemana = ref([
-  { id: 0, nombre: 'Lunes', fecha: '', reservas: [] as any[] },
-  { id: 1, nombre: 'Martes', fecha: '', reservas: [] },
-  { id: 2, nombre: 'Miércoles', fecha: '', reservas: [] },
-  { id: 3, nombre: 'Jueves', fecha: '', reservas: [] },
-  { id: 4, nombre: 'Viernes', fecha: '', reservas: [] },
-  { id: 5, nombre: 'Sábado', fecha: '', reservas: [] }
+  { id: 0, nombre: 'Lunes' },
+  { id: 1, nombre: 'Martes' },
+  { id: 2, nombre: 'Miércoles' },
+  { id: 3, nombre: 'Jueves' },
+  { id: 4, nombre: 'Viernes' },
+  { id: 5, nombre: 'Sábado' }
 ])
 
-// Cargar reservas desde SQLite
+// Matriz de reservas: [dia][hora] => []
+const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
 
-const cargarReservas = async () => {
+/* =========================
+ * CARGAR HORARIOS BASE ACTIVOS
+ * ========================= */
+const cargarHorariosBase = async () => {
+  try {
+    console.log('[Reserve] Cargando horarios base...')
+    const result = await window.api.obtenerHorariosBase()
+    console.log('[Reserve] Horarios recibidos:', result)
+    
+    // Filtrar solo los horarios activos y ordenarlos
+    const horariosActivos = result
+      .filter((h: any) => h.activo === 1)
+      .map((h: any) => h.hora)
+      .sort()
+    
+    horariosDisponibles.value = horariosActivos
+    console.log('[Reserve] Horarios activos cargados:', horariosActivos)
+  } catch (error: any) {
+    console.error('[Reserve] Error cargando horarios:', error)
+    // Fallback a horarios por defecto si falla
+    horariosDisponibles.value = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
+  }
+}
+
+// Obtener la fecha del lunes de la semana actual
+const obtenerLunesDeWeek = () => {
   const hoy = new Date()
   const lunesActual = new Date(hoy)
   const diaSemana = hoy.getDay()
   const diff = diaSemana === 0 ? -6 : 1 - diaSemana
-  lunesActual.setDate(hoy.getDate() + diff)
+  lunesActual.setDate(hoy.getDate() + diff + (semanaOffset.value * 7))
+  return lunesActual
+}
 
-  const inicioSemana = new Date(lunesActual)
-  inicioSemana.setDate(lunesActual.getDate() + (semanaOffset.value * 7))
-
-  const finSemana = new Date(inicioSemana)
-  finSemana.setDate(inicioSemana.getDate() + 5)
-
-  const desdeStr = inicioSemana.toISOString().split('T')[0]
-  const hastaStr = finSemana.toISOString().split('T')[0]
-
-  // 1. Obtenemos datos
-  const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
-
-  // 2. Mapeamos y limpiamos en un solo paso para evitar parpadeos
-  const nuevosDias = diasSemana.value.map((d, index) => {
-    const f = new Date(inicioSemana)
-    f.setDate(inicioSemana.getDate() + index)
-
-    // Filtramos las reservas que pertenecen a este día específico
-    const reservasDelDia = nuevasReservas.filter((r: any) => {
-      return r.fecha === f.toISOString().split('T')[0]
-    }).map((r: any) => ({
-      ...r,
-      estado: r.estado || 'Pendiente'
-    }))
-
+// Calcular fechas de la semana
+const fechasWeek = computed(() => {
+  const lunes = obtenerLunesDeWeek()
+  return diasSemana.value.map((dia, index) => {
+    const fecha = new Date(lunes)
+    fecha.setDate(fecha.getDate() + index)
+    const fechaISO = fecha.toISOString().split('T')[0]
     return {
-      ...d,
-      fecha: f.toLocaleDateString('es-UY', { day: '2-digit', month: 'short' }),
-      reservas: reservasDelDia
+      ...dia,
+      fecha: fechaISO,
+      fechaFormato: fecha.toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })
     }
   })
+})
 
-  // 3. Sobrescribimos el valor completo para disparar la reactividad de Vue
-  diasSemana.value = nuevosDias
-  console.log(nuevosDias);
+// Cargar reservas
+const cargarReservas = async () => {
+  try {
+    const lunes = obtenerLunesDeWeek()
+    const sabado = new Date(lunes)
+    sabado.setDate(sabado.getDate() + 5)
 
+    const desdeStr = lunes.toISOString().split('T')[0]
+    const hastaStr = sabado.toISOString().split('T')[0]
+
+    console.log('[Reserve] Cargando reservas desde', desdeStr, 'hasta', hastaStr)
+
+    const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
+    console.log('[Reserve] Reservas recibidas:', nuevasReservas)
+
+    // Inicializar matriz vacía
+    const nuevaMatriz: Record<string, Record<string, any[]>> = {}
+    
+    fechasWeek.value.forEach(dia => {
+      nuevaMatriz[dia.fecha] = {}
+      horariosDisponibles.value.forEach(hora => {
+        nuevaMatriz[dia.fecha][hora] = []
+      })
+    })
+
+    // Llenar la matriz con reservas
+    nuevasReservas.forEach((reserva: any) => {
+      if (nuevaMatriz[reserva.fecha] && nuevaMatriz[reserva.fecha][reserva.hora]) {
+        nuevaMatriz[reserva.fecha][reserva.hora].push({
+          ...reserva,
+          estado: reserva.estado || 'Pendiente'
+        })
+      }
+    })
+
+    matrizReservas.value = nuevaMatriz
+    console.log('[Reserve] Matriz actualizada')
+
+  } catch (error: any) {
+    console.error('[Reserve] Error cargando reservas:', error)
+  }
 }
-onMounted(cargarReservas)
+
+onMounted(async () => {
+  console.log('[Reserve] Inicializando vista...')
+  await cargarHorariosBase()
+  await cargarReservas()
+  
+  console.log('[Reserve] Iniciando auto-refresh cada 5 segundos...')
+  intervaloRefresco = window.setInterval(async () => {
+    console.log('[Reserve] Auto-refresh: Recargando reservas...')
+    await cargarReservas()
+  }, 5000) // Recargar cada 5 segundos
+})
+
+onBeforeUnmount(() => {
+  console.log('[Reserve] Deteniendo auto-refresh...')
+  if (intervaloRefresco) {
+    clearInterval(intervaloRefresco)
+    intervaloRefresco = null
+  }
+})
 
 // Filtrado por cédula
-const reservasFiltradas = computed(() => {
-  if (!busquedaCedula.value) return diasSemana.value
-  return diasSemana.value.map(d => ({
-    ...d,
-    reservas: d.reservas.filter(r => r.cedula?.includes(busquedaCedula.value))
-  }))
-})
+const obtenerReservasEnCelda = (fecha: string, hora: string) => {
+  const reservas = matrizReservas.value[fecha]?.[hora] || []
+  if (!busquedaCedula.value) return reservas
+  return reservas.filter(r => r.cedula?.includes(busquedaCedula.value))
+}
+
+// Verificar si el horario debe mostrarse para la fecha (sábados solo hasta 12:00)
+const debeRechazoHora = (fecha: string, hora: string) => {
+  const date = new Date(fecha)
+  const esSabado = date.getDay() === 6  // 6 es sábado
+  if (esSabado && hora >= '12:00') {
+    return true  // Rechazar horarios >= 12:00 en sábados
+  }
+  return false
+}
 
 const cambiarSemana = (delta: number) => {
   semanaOffset.value += delta
-  cargarReservas()
-}
-
-// DRAG AND DROP LOGIC
-const iniciarArrastre = (event: DragEvent, reserva: any) => {
-  if (!event.dataTransfer) return
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('application/json', JSON.stringify({ reservaId: reserva.id }))
-
-  // Opcional: añade una clase visual al elemento arrastrado
-  const target = event.target as HTMLElement
-  target.style.opacity = '0.5'
-}
-
-// Función para restaurar opacidad al terminar arrastre
-// const terminarArrastre = (event: DragEvent) => {
-//   const target = event.target as HTMLElement
-//   target.style.opacity = '1'
-// }
-
-const soltarEnDia = async (event: DragEvent, diaDestinoId: number) => {
-  event.preventDefault()
-  if (!event.dataTransfer) return
-
-  const jsonData = event.dataTransfer.getData('application/json')
-  if (!jsonData) return
-  const { reservaId } = JSON.parse(jsonData)
-
-  // Calcular la nueva fecha basada en el lunes de la semana que vemos
-  const hoy = new Date()
-  const lunesActual = new Date(hoy)
-  const diff = hoy.getDay() === 0 ? -6 : 1 - hoy.getDay()
-  lunesActual.setDate(hoy.getDate() + diff)
-
-  const nuevaFecha = new Date(lunesActual)
-  nuevaFecha.setDate(lunesActual.getDate() + (semanaOffset.value * 7) + diaDestinoId)
-
-  await window.api.moverReserva({
-    id: reservaId,
-    nuevaFecha: nuevaFecha.toISOString().split('T')[0]
-  })
-
   cargarReservas()
 }
 
@@ -123,7 +163,6 @@ const mostrarVentana = ref(false)
 const reservaActiva = ref<any>(null)
 
 const abrirVentana = (reserva: any) => {
-  // Pasamos una copia para evitar conflictos de referencia
   reservaActiva.value = { ...reserva }
   mostrarVentana.value = true
 }
@@ -132,88 +171,139 @@ const manejarCierre = async () => {
   mostrarVentana.value = false
   setTimeout(() => {
     cargarReservas()
-  }, 150) // ⏳ da tiempo real a SQLite
+  }, 150)
+}
+
+// DRAG & DROP
+let arrastreDatos: any = null
+
+const iniciarArrastre = (evento: DragEvent, reserva: any) => {
+  arrastreDatos = reserva
+  evento.dataTransfer!.effectAllowed = 'move'
+  if (evento.dataTransfer) {
+    evento.dataTransfer.setData('application/json', JSON.stringify(reserva))
+  }
+}
+
+const soltarEnCelda = async (evento: DragEvent, fechaDestino: string, horaDestino: string) => {
+  evento.preventDefault()
+  
+  if (!arrastreDatos) return
+
+  try {
+    const fechaOrigen = arrastreDatos.fecha
+    const horaOrigen = arrastreDatos.hora
+
+    // Evitar soltar en el mismo lugar
+    if (fechaOrigen === fechaDestino && horaOrigen === horaDestino) {
+      arrastreDatos = null
+      return
+    }
+
+    console.log('[Reserve] Moviendo reserva de', horaOrigen, 'en', fechaOrigen, 'a', horaDestino, 'en', fechaDestino)
+
+    // Actualizar la reserva en el backend con todos los campos necesarios
+    await window.api.actualizarReserva({
+      ...arrastreDatos,
+      fecha: fechaDestino,
+      hora: horaDestino
+    })
+
+    console.log('[Reserve] Reserva actualizada correctamente')
+    cargarReservas()
+    arrastreDatos = null
+  } catch (error: any) {
+    console.error('[Reserve] Error moviendo reserva:', error)
+    arrastreDatos = null
+  }
 }
 
 </script>
 
 <template>
   <div class="panel-container custom-scroll">
+    <!-- HEADER CON BÚSQUEDA Y NAVEGACIÓN -->
     <header class="panel-header">
       <div class="header-left">
-        <h2 class="main-title">PLANIFICACIÓN <span class="text-sky">SEMANAL</span></h2>
+        <h2 class="main-title">CALENDARIO <span class="text-sky">SEMANAL</span></h2>
         <div class="search-wrapper">
-          <input v-model="busquedaCedula" placeholder="🔍 Buscar por CI..." class="search-input" />
+          <input v-model="busquedaCedula" placeholder="Buscar por CI..." class="search-input" />
         </div>
       </div>
 
       <div class="nav-group">
         <button class="nav-btn" @click="cambiarSemana(-1)">ANTERIOR</button>
-        <button class="nav-btn hoy-btn" @click="semanaOffset = 0; cargarReservas()">ESTA SEMANA</button>
+        <button class="nav-btn hoy-btn" @click="semanaOffset = 0; cargarReservas()">HOY</button>
         <button class="nav-btn" @click="cambiarSemana(1)">SIGUIENTE</button>
       </div>
     </header>
 
-    <div class="planning-grid">
-      <div v-for="dia in reservasFiltradas" :key="dia.id" class="day-column" @dragover.prevent
-        @drop="soltarEnDia($event, dia.id)">
-        <div class="day-info">
-          <span class="day-name">{{ dia.nombre }}</span>
-          <span class="day-date">{{ dia.fecha }}</span>
-        </div>
-
-        <div class="cards-stack">
-          <div v-for="r in dia.reservas" :key="`${r.id}`" class="moto-card" draggable="true"
-            @dragstart="iniciarArrastre($event, r)" @click.self="abrirVentana(r)">
-            <div class="card-inner">
-              <div class="card-top">
-                <span class="reserva-time">{{ r.hora }}</span>
-                <span class="status-pill" :class="r.estado.toLowerCase()">
-                  {{ r.estado }}
-                </span>
+    <!-- TABLA CALENDARIO -->
+    <div class="calendar-wrapper">
+      <table class="calendar-table">
+        <!-- ENCABEZADO CON DÍAS DE LA SEMANA -->
+        <thead>
+          <tr>
+            <th class="hora-header">HORA</th>
+            <th v-for="dia in fechasWeek" :key="dia.fecha" class="dia-header">
+              <div class="dia-header-content">
+                <span class="dia-nombre">{{ dia.nombre }}</span>
+                <span class="dia-fecha">{{ dia.fecha }}</span>
               </div>
+            </th>
+          </tr>
+        </thead>
 
-              <div class="card-body">
-                <h4 class="client-name">{{ r.nombre }}</h4>
-                <div class="moto-info">
-                  <span class="moto-label">{{ r.marca }} {{ r.modelo }}</span>
-                  <span class="km-label">{{ r.km }} KM</span>
+        <!-- FILAS POR HORARIO -->
+        <tbody>
+          <tr v-for="hora in horariosDisponibles" :key="hora" class="hora-row"
+            :style="{ display: fechasWeek.some(d => !debeRechazoHora(d.fecha, hora)) ? '' : 'none' }">
+            <!-- CELDA DE HORA -->
+            <td class="hora-cell">
+              <span class="hora-label">{{ hora }}</span>
+            </td>
+
+            <!-- CELDAS CON RESERVAS POR DÍA -->
+            <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" class="reserva-cell"
+              :style="{ display: debeRechazoHora(dia.fecha, hora) ? 'none' : '' }"
+              @dragover.prevent @drop="soltarEnCelda($event, dia.fecha, hora)">
+              
+              <div class="reservas-container">
+                <div v-if="obtenerReservasEnCelda(dia.fecha, hora).length > 0" class="reservas-stack">
+                  <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
+                    class="mini-card" draggable="true" @dragstart="iniciarArrastre($event, r)"
+                    @click="abrirVentana(r)" :class="`estado-${r.estado.toLowerCase()}`">
+                    
+                    <div class="mini-card-content">
+                      <div class="mini-nombre">{{ r.nombre }}</div>
+                      <div class="mini-cedula">{{ r.cedula }}</div>
+                      <div class="mini-moto">{{ r.marca }} {{ r.modelo }}</div>
+                      <div class="mini-status">{{ r.estado }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="empty-slot">
+                  <span class="slot-empty">-</span>
                 </div>
               </div>
-
-              <div class="card-footer">
-                <div class="footer-item">
-                  <span class="label">CI:</span> {{ r.cedula }}
-                </div>
-                <div class="footer-item plate">
-                  {{ r.matricula }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="dia.reservas.length === 0" class="empty-card">
-            <span class="empty-icon">📅</span>
-            <p>SIN TURNOS</p>
-          </div>
-        </div>
-      </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
-
   </div>
 </template>
 
 <style scoped>
-/* CONTENEDOR PRINCIPAL */
 .panel-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 30px;
   background-color: #020617;
-  /* Slate 950 */
   gap: 25px;
   overflow-y: auto;
 }
@@ -229,41 +319,56 @@ const manejarCierre = async () => {
 .main-title {
   color: white;
   font-size: 2rem;
-  /* Más grande para 2K */
   font-weight: 900;
   letter-spacing: -1px;
 }
 
 .text-sky {
-  color: #38bdf8;
+  color: #0ea5e9;
+}
+
+.search-wrapper {
+  margin-top: 10px;
 }
 
 .search-input {
   background: #0f172a;
   border: 1px solid #1e293b;
-  border-radius: 12px;
+  border-radius: 15px;
   padding: 12px 20px;
   color: white;
   width: 350px;
-  margin-top: 10px;
+  font-weight: 600;
+}
+
+.search-input::placeholder {
+  color: #64748b;
+}
+
+.search-input:focus {
+  border-color: #0ea5e9;
+  outline: none;
 }
 
 .nav-group {
   display: flex;
   gap: 10px;
   background: #0f172a;
-  padding: 6px;
-  border-radius: 15px;
+  padding: 8px;
+  border-radius: 18px;
   border: 1px solid #1e293b;
 }
 
 .nav-btn {
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: 10px 24px;
+  border-radius: 12px;
   color: #94a3b8;
   font-weight: 700;
   font-size: 0.8rem;
-  transition: 0.2s;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .nav-btn:hover {
@@ -272,180 +377,254 @@ const manejarCierre = async () => {
 }
 
 .hoy-btn {
-  background: #38bdf8;
+  background: #0ea5e9;
   color: #020617;
 }
 
-/* GRID SYSTEM */
-.planning-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-  align-items: start;
+.hoy-btn:hover {
+  background: #06b6d4;
 }
 
-/* COLUMNAS DE DÍAS */
-.day-column {
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 25px;
+/* CALENDARIO */
+.calendar-wrapper {
+  flex: 1;
+  overflow: auto;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 20px;
   border: 1px solid #1e293b;
-  min-height: 400px;
-}
-
-.day-info {
   padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #1e293b;
-  align-items: center;
 }
 
-.day-name {
-  font-weight: 900;
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* ENCABEZADO */
+thead {
+  position: sticky;
+  top: 0;
+  background: #020617;
+  z-index: 10;
+}
+
+.hora-header {
+  width: 100px;
+  padding: 15px;
+  text-align: center;
   color: #64748b;
+  font-weight: 900;
+  font-size: 0.75rem;
+  border-bottom: 2px solid #1e293b;
   text-transform: uppercase;
-  font-size: 0.8rem;
 }
 
-.day-date {
-  color: #38bdf8;
-  font-weight: 800;
+.dia-header {
+  padding: 15px;
+  text-align: center;
+  border-bottom: 2px solid #1e293b;
+  border-right: 1px solid #1e293b;
+}
+
+.dia-header:last-child {
+  border-right: none;
+}
+
+.dia-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dia-nombre {
+  color: #94a3b8;
+  font-weight: 900;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dia-fecha {
+  color: #0ea5e9;
+  font-weight: 900;
   font-size: 1.1rem;
 }
 
-/* TARJETAS DE MOTO */
-.cards-stack {
+/* FILAS Y CELDAS */
+.hora-row {
+  border-bottom: 1px solid #1e293b;
+}
+
+.hora-row:hover {
+  background: rgba(14, 165, 233, 0.05);
+}
+
+.hora-cell {
+  width: 100px;
   padding: 15px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.8);
+  border-right: 2px solid #1e293b;
+  vertical-align: top;
+}
+
+.hora-label {
+  color: #64748b;
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+.reserva-cell {
+  padding: 8px;
+  border-right: 1px solid #1e293b;
+  vertical-align: top;
+  min-height: 120px;
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.reserva-cell:last-child {
+  border-right: none;
+}
+
+.reserva-cell:hover {
+  background: rgba(14, 165, 233, 0.08);
+}
+
+/* CONTENEDOR DE RESERVAS */
+.reservas-container {
+  width: 100%;
+  min-height: 100%;
+}
+
+.reservas-stack {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 6px;
 }
 
-.moto-card {
-  background: #020617;
-  border-radius: 20px;
-  border: 1px solid #1e293b;
+/* MINI TARJETAS */
+.mini-card {
+  background: #0f172a;
+  border: 1.5px solid #1e293b;
+  border-radius: 10px;
+  padding: 8px;
   cursor: grab;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  font-size: 0.7rem;
 }
 
-.moto-card:hover {
-  border-color: #38bdf8;
-  transform: scale(1.02);
-  box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3);
+.mini-card:hover {
+  border-color: #0ea5e9;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px -5px rgba(14, 165, 233, 0.3);
 }
 
-.card-inner {
-  padding: 20px;
+.mini-card:active {
+  cursor: grabbing;
+}
+
+.mini-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   pointer-events: none;
 }
 
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.reserva-time {
-  color: #38bdf8;
-  font-weight: 900;
-  font-size: 1.2rem;
-}
-
-/* BADGES DE ESTADO */
-.status-pill {
-  font-size: 0.65rem;
-  padding: 4px 12px;
-  border-radius: 50px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.status-pill.pendiente {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.status-pill.pronto {
-  background: rgba(34, 197, 94, 0.1);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-.status-pill.cancelado {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.status-pill.en-proceso {
-  background: rgba(147, 197, 253, 0.1);
-  color: #93c5fd;
-  border: 1px solid rgba(147, 197, 253, 0.2);
-}
-
-.client-name {
+.mini-nombre {
   color: white;
-  font-size: 1.3rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  line-height: 1.1;
 }
 
-.moto-info {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.moto-label {
-  background: #1e293b;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.km-label {
-  color: #64748b;
-  font-size: 0.75rem;
-  align-self: center;
-}
-
-.card-footer {
-  border-top: 1px solid #1e293b;
-  padding-top: 12px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: #475569;
-}
-
-.plate {
+.mini-cedula {
   color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.65rem;
+}
+
+.mini-moto {
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.mini-status {
+  color: #0ea5e9;
+  font-weight: 700;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ESTADOS DE RESERVA */
+.mini-card.estado-pendiente {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.mini-card.estado-pendiente .mini-status {
+  color: #f59e0b;
+}
+
+.mini-card.estado-pronto {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.mini-card.estado-pronto .mini-status {
+  color: #22c55e;
+}
+
+.mini-card.estado-cancelado {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.mini-card.estado-cancelado .mini-status {
+  color: #ef4444;
+}
+
+.mini-card.estado-en-proceso {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.mini-card.estado-en-proceso .mini-status {
+  color: #3b82f6;
+}
+
+/* CELDA VACÍA */
+.empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  color: #334155;
   font-weight: 800;
+  font-size: 1.5rem;
 }
 
-/* ESTADO VACÍO */
-.empty-card {
-  padding: 40px;
-  text-align: center;
-  border: 2px dashed #1e293b;
-  border-radius: 20px;
-}
-
-.empty-icon {
-  font-size: 2rem;
-  display: block;
-  margin-bottom: 10px;
-  filter: grayscale(1);
+.slot-empty {
   opacity: 0.3;
 }
 
-.empty-card p {
-  color: #334155;
-  font-weight: 800;
-  font-size: 0.8rem;
+/* SCROLL PERSONALIZADO */
+.calendar-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.calendar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 </style>

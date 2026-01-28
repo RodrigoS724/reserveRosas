@@ -61,6 +61,18 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <router-link to="/historial" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer',
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600'
+          ]">
+            <span class="text-lg">📊</span>
+            <span>Historial</span>
+          </div>
+        </router-link>
+
       </nav>
 
       <div class="p-4 border-t border-gray-100 dark:border-gray-800">

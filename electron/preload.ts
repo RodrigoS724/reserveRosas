@@ -28,13 +28,19 @@ contextBridge.exposeInMainWorld('api', {
   moverReserva: (d: any) => ipcRenderer.invoke('reservas:mover', d),
   actualizarReserva: (d: any) => ipcRenderer.invoke('reservas:actualizar', d),
   obtenerReservasSemana: (d: any) => ipcRenderer.invoke('reservas:semana', d),
+  obtenerTodasLasReservas: () => ipcRenderer.invoke('reservas:todas'),
+  actualizarNotasReserva: (id: number, notas: string) => ipcRenderer.invoke('reservas:actualizar-notas', id, notas),
 
   // Horarios
   obtenerHorariosBase: () => ipcRenderer.invoke('horarios:base'),
+  obtenerHorariosInactivos: () => ipcRenderer.invoke('horarios:inactivos'),
   obtenerHorariosDisponibles: (f: string) => ipcRenderer.invoke('horarios:disponibles', f),
   crearHorario: (h: string) => ipcRenderer.invoke('horarios:crear', h),
   desactivarHorario: (id: number) => ipcRenderer.invoke('horarios:desactivar', id),
+  activarHorario: (id: number) => ipcRenderer.invoke('horarios:activar', id),
   bloquearHorario: (d: any) => ipcRenderer.invoke('horarios:bloquear', d),
+  desbloquearHorario: (d: any) => ipcRenderer.invoke('horarios:desbloquear', d),
+  obtenerHorariosBloqueados: (f: string) => ipcRenderer.invoke('horarios:bloqueados', f),
 
   // Historial
   obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)
