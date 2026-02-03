@@ -7,6 +7,7 @@ import Home from './views/home.vue'
 import Reservas from './views/reserve.vue'
 import adminHorarios from './views/adminHorarios.vue'
 import historial from './views/historial.vue'
+import vehiculos from './views/vehiculos.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/confirmacion', component: Confirmacion },
     { path: '/clientes', component: () => import('./views/client.vue') },
     { path: '/historial', component: historial },
+    { path: '/vehiculos', component: vehiculos },
     { path: '/ajustes', component: adminHorarios },
     { path: '/reservas', component: Reservas },
   ]

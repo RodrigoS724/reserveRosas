@@ -44,5 +44,9 @@ contextBridge.exposeInMainWorld('api', {
   borrarHorarioPermanente: (id: number) => ipcRenderer.invoke('horarios:borrar', id),
 
   // Historial
-  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id)
+  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id),
+
+  // Vehiculos
+  obtenerVehiculos: () => ipcRenderer.invoke('vehiculos:todos'),
+  obtenerHistorialVehiculo: (vehiculoId: number) => ipcRenderer.invoke('vehiculos:historial', vehiculoId)
 })

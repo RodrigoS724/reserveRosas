@@ -3,6 +3,73 @@ import { initDatabase } from '../db/database'
 const MAX_RETRIES = 3
 const RETRY_DELAY_MS = 100
 
+type ReservaInput = {
+  nombre: string
+  cedula: string
+  telefono: string
+  marca: string
+  modelo: string
+  km: string
+  matricula: string
+  tipo_turno: string
+  particular_tipo?: string | null
+  garantia_tipo?: string | null
+  garantia_fecha_compra?: string | null
+  garantia_numero_service?: string | null
+  garantia_problema?: string | null
+  fecha: string
+  hora: string
+  detalles?: string
+}
+
+function validarReserva(data: ReservaInput) {
+  const tipo = data.tipo_turno
+
+  if (tipo === 'Garantía') {
+    if (!data.garantia_tipo) {
+      throw new Error('Tipo de garantia requerido.')
+    }
+    if (!data.garantia_fecha_compra) {
+      throw new Error('Fecha de compra requerida.')
+    }
+    if (data.garantia_tipo === 'Service') {
+      if (!data.garantia_numero_service) {
+        throw new Error('Numero de service requerido.')
+      }
+    } else if (data.garantia_tipo === 'Reparación') {
+      if (!data.garantia_problema) {
+        throw new Error('Descripcion del problema requerida.')
+      }
+    } else {
+      throw new Error('Tipo de garantia invalido.')
+    }
+  } else if (tipo === 'Particular') {
+    if (!data.particular_tipo) {
+      throw new Error('Tipo particular requerido.')
+    }
+    if (data.particular_tipo !== 'Service' && data.particular_tipo !== 'Taller') {
+      throw new Error('Tipo particular invalido.')
+    }
+  }
+}
+
+function normalizarReserva(data: ReservaInput): ReservaInput {
+  const tipo = data.tipo_turno
+
+  if (tipo !== 'Garantía') {
+    data.garantia_tipo = null
+    data.garantia_fecha_compra = null
+    data.garantia_numero_service = null
+    data.garantia_problema = null
+  }
+
+  if (tipo !== 'Particular') {
+    data.particular_tipo = null
+  }
+
+  return data
+}
+
 /**
  * Ejecuta una operación con reintento automático en caso de SQLITE_BUSY
  */
@@ -26,24 +93,14 @@ async function executeWithRetry<T>(
 /* =========================
  * CREAR RESERVA
  * ========================= */
-export async function crearReserva(data: {
-  nombre: string
-  cedula: string
-  telefono: string
-  marca: string
-  modelo: string
-  km: string
-  matricula: string
-  tipo_turno: string
-  fecha: string
-  hora: string
-  detalles?: string
-}) {
+export async function crearReserva(data: ReservaInput) {
   console.log('[Service] Iniciando crearReserva...')
+  validarReserva(data)
+  const dataNormalizada = normalizarReserva({ ...data })
   
   // Normalizar fecha a formato ISO (YYYY-MM-DD)
-  const fechaNormalizada = new Date(data.fecha).toISOString().split('T')[0]
-  console.log('[Service] Fecha normalizada:', data.fecha, '->', fechaNormalizada)
+  const fechaNormalizada = new Date(dataNormalizada.fecha).toISOString().split('T')[0]
+  console.log('[Service] Fecha normalizada:', dataNormalizada.fecha, '->', fechaNormalizada)
   
   return executeWithRetry(() => {
     const db = initDatabase()
@@ -55,24 +112,83 @@ export async function crearReserva(data: {
         INSERT INTO reservas (
           nombre, cedula, telefono,
           marca, modelo, km, matricula,
-          tipo_turno, fecha, hora, detalles
+          tipo_turno, particular_tipo, garantia_tipo,
+          garantia_fecha_compra, garantia_numero_service, garantia_problema,
+          fecha, hora, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        data.nombre,
-        data.cedula,
-        data.telefono,
-        data.marca,
-        data.modelo,
-        data.km,
-        data.matricula,
-        data.tipo_turno,
+        dataNormalizada.nombre,
+        dataNormalizada.cedula,
+        dataNormalizada.telefono,
+        dataNormalizada.marca,
+        dataNormalizada.modelo,
+        dataNormalizada.km,
+        dataNormalizada.matricula,
+        dataNormalizada.tipo_turno,
+        dataNormalizada.particular_tipo ?? null,
+        dataNormalizada.garantia_tipo ?? null,
+        dataNormalizada.garantia_fecha_compra ?? null,
+        dataNormalizada.garantia_numero_service ?? null,
+        dataNormalizada.garantia_problema ?? null,
         fechaNormalizada,
-        data.hora,
-        data.detalles ?? ''
+        dataNormalizada.hora,
+        dataNormalizada.detalles ?? ''
       )
 
       console.log('[Service] Reserva insertada con ID:', result.lastInsertRowid)
+
+      const vehiculoExistente = db.prepare(`
+        SELECT id FROM vehiculos WHERE matricula = ?
+      `).get(dataNormalizada.matricula) as { id: number } | undefined
+
+      let vehiculoId = vehiculoExistente?.id
+
+      if (!vehiculoId) {
+        const vehiculoInsert = db.prepare(`
+          INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(
+          dataNormalizada.matricula,
+          dataNormalizada.marca,
+          dataNormalizada.modelo,
+          dataNormalizada.nombre,
+          dataNormalizada.telefono
+        )
+        vehiculoId = Number(vehiculoInsert.lastInsertRowid)
+      } else {
+        db.prepare(`
+          UPDATE vehiculos
+          SET marca = ?, modelo = ?, nombre = ?, telefono = ?
+          WHERE id = ?
+        `).run(
+          dataNormalizada.marca,
+          dataNormalizada.modelo,
+          dataNormalizada.nombre,
+          dataNormalizada.telefono,
+          vehiculoId
+        )
+      }
+
+      db.prepare(`
+        INSERT INTO vehiculos_historial (
+          vehiculo_id, fecha, km, tipo_turno,
+          particular_tipo, garantia_tipo, garantia_fecha_compra,
+          garantia_numero_service, garantia_problema, detalles
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        vehiculoId,
+        fechaNormalizada,
+        dataNormalizada.km,
+        dataNormalizada.tipo_turno,
+        dataNormalizada.particular_tipo ?? null,
+        dataNormalizada.garantia_tipo ?? null,
+        dataNormalizada.garantia_fecha_compra ?? null,
+        dataNormalizada.garantia_numero_service ?? null,
+        dataNormalizada.garantia_problema ?? null,
+        dataNormalizada.detalles ?? ''
+      )
 
       db.prepare(`
         INSERT INTO historial_reservas

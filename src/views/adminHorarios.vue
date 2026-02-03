@@ -164,20 +164,20 @@ const confirmarBorradoInterno = async () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <header class="mb-10">
-      <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tighter">
+  <div class="w-full h-full overflow-y-auto custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <header class="mb-6 sm:mb-8 md:mb-10">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-white tracking-tighter">
         Administración de <span class="text-cyan-600">Horarios</span>
       </h1>
-      <p class="text-gray-500 dark:text-gray-400 font-medium">Configura los turnos base y bloqueos específicos por
+      <p class="text-xs sm:text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium">Configura los turnos base y bloqueos específicos por
         fecha.</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 lg:gap-7">
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-[32px] p-6 border border-gray-200 dark:border-gray-800 shadow-xl flex flex-col h-[550px]">
-        <h2 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-2">Horarios
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           activos</h2>
 
         <div class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
@@ -204,8 +204,8 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-[32px] p-6 border border-gray-200 dark:border-gray-800 shadow-xl flex flex-col h-[550px]">
-        <h2 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-2">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">
           Desactivados</h2>
 
         <div class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
@@ -216,7 +216,7 @@ const confirmarBorradoInterno = async () => {
 
             <div class="flex items-center gap-3">
               <button @click="activarHorario(h.id)"
-                class="text-[10px] font-black uppercase text-emerald-500 hover:text-emerald-400 transition-all">
+                class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase text-emerald-500 hover:text-emerald-400 transition-all">
                 Activar
               </button>
 
@@ -238,19 +238,19 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-[32px] p-6 border border-gray-200 dark:border-gray-800 shadow-xl flex flex-col h-[550px]">
-        <h2 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-2">Bloquear
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Bloquear
           por fecha</h2>
 
         <div class="space-y-4">
           <div class="space-y-1">
-            <label class="text-[10px] font-black text-cyan-600 uppercase ml-2">Fecha</label>
+            <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-cyan-600 uppercase ml-2">Fecha</label>
             <input v-model="fechaBloqueo" @change="onFechaChange" type="date"
               class="w-full rounded-2xl bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-4 py-4 text-sm focus:ring-2 focus:ring-cyan-500/20 outline-none" />
           </div>
 
           <div class="space-y-1">
-            <label class="text-[10px] font-black text-cyan-600 uppercase ml-2">Hora a bloquear</label>
+            <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-cyan-600 uppercase ml-2">Hora a bloquear</label>
             <select v-model="horaBloqueo"
               class="w-full rounded-2xl bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-4 py-4 text-sm focus:ring-2 focus:ring-cyan-500/20 outline-none appearance-none">
               <option value="">Seleccionar hora...</option>
@@ -259,21 +259,21 @@ const confirmarBorradoInterno = async () => {
           </div>
 
           <div class="space-y-1">
-            <label class="text-[10px] font-black text-cyan-600 uppercase ml-2">Motivo</label>
+            <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-cyan-600 uppercase ml-2">Motivo</label>
             <input v-model="motivoBloqueo" placeholder="Ej: Feriado, Almuerzo..."
               class="w-full rounded-2xl bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-4 py-4 text-sm focus:ring-2 focus:ring-cyan-500/20 outline-none" />
           </div>
 
           <button @click="bloquearHorario()"
-            class="w-full bg-orange-500 hover:bg-orange-600 py-5 rounded-2xl font-black text-white uppercase text-[11px] tracking-[2px] transition-all shadow-lg shadow-orange-500/20 active:scale-95 mt-4">
+            class="w-full bg-orange-500 hover:bg-orange-600 py-5 rounded-2xl font-black text-white uppercase text-[9px] sm:text-[10px] md:text-[11px] tracking-[2px] transition-all shadow-lg shadow-orange-500/20 active:scale-95 mt-4">
             Bloquear Horario
           </button>
         </div>
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-[32px] p-6 border border-gray-200 dark:border-gray-800 shadow-xl flex flex-col h-[550px]">
-        <h2 class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-2">Horarios
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           bloqueados</h2>
 
         <div v-if="!fechaBloqueo" class="flex-1 flex items-center justify-center text-center p-6">
@@ -286,11 +286,11 @@ const confirmarBorradoInterno = async () => {
             <div class="flex justify-between items-center">
               <span class="text-amber-700 dark:text-amber-400 font-black text-sm">{{ b.hora }} hs</span>
               <button @click="desbloquearHorario(b.fecha, b.hora)"
-                class="text-[9px] font-black uppercase bg-white dark:bg-[#1e293b] px-2 py-1 rounded-lg text-rose-500 border border-rose-100 dark:border-rose-900/50">
+                class="text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase bg-white dark:bg-[#1e293b] px-2 py-1 rounded-lg text-rose-500 border border-rose-100 dark:border-rose-900/50">
                 Eliminar
               </button>
             </div>
-            <p v-if="b.motivo" class="text-[10px] text-amber-600/70 dark:text-amber-400/50 font-bold italic">{{ b.motivo
+            <p v-if="b.motivo" class="text-[8px] sm:text-[9px] md:text-[10px] text-amber-600/70 dark:text-amber-400/50 font-bold italic">{{ b.motivo
               }}</p>
           </div>
           <div v-if="horariosBloqueados.length === 0" class="text-gray-400 text-center py-10 text-xs italic">No hay
@@ -303,7 +303,7 @@ const confirmarBorradoInterno = async () => {
   <div v-if="idABorrar !== null" 
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
   
-  <div class="bg-white dark:bg-[#1e293b] w-full max-w-sm rounded-[32px] border border-gray-200 dark:border-gray-800 p-8 shadow-2xl scale-in-95 animate-in duration-200">
+  <div class="bg-white dark:bg-[#1e293b] w-full max-w-sm rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 p-6 sm:p-7 md:p-8 shadow-2xl scale-in-95 animate-in duration-200">
     <div class="text-center">
       <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-rose-100 dark:bg-rose-500/10 mb-6">
         <svg class="h-8 w-8 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

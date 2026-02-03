@@ -15,7 +15,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="flex h-screen w-full bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    class="flex h-screen w-screen bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
     <aside
       class="w-64 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-sm">
@@ -73,6 +73,18 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <router-link to="/vehiculos" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 cursor-pointer',
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm border-r-4 border-blue-600'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600'
+          ]">
+            <span class="text-lg">🏍️</span>
+            <span>Historial BD Gestor</span>
+          </div>
+        </router-link>
+
       </nav>
 
       <div class="p-4 border-t border-gray-100 dark:border-gray-800">
@@ -89,8 +101,8 @@ onMounted(() => {
       </div>
     </aside>
 
-    <main class="flex-1 p-8 overflow-y-auto">
-      <div class="max-w-7xl mx-auto">
+    <main class="flex-1 overflow-hidden h-full w-full">
+      <div class="w-full h-full overflow-hidden">
         <router-view />
       </div>
     </main>

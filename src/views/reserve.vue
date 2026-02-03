@@ -229,40 +229,68 @@ const getCardStyles = (estado: string) => {
   return styles[estado?.toUpperCase() as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
 };
 
+const obtenerTipoResumen = (reserva: any) => {
+  if (reserva?.tipo_turno === 'Garantía') {
+    return `Garantía${reserva.garantia_tipo ? ` - ${reserva.garantia_tipo}` : ''}`
+  }
+  if (reserva?.tipo_turno === 'Particular') {
+    return `Particular${reserva.particular_tipo ? ` - ${reserva.particular_tipo}` : ''}`
+  }
+  return reserva?.tipo_turno || ''
+}
+
+const obtenerDetalleResumen = (reserva: any) => {
+  if (reserva?.tipo_turno === 'Garantía') {
+    if (reserva.garantia_tipo === 'Service') {
+      return reserva.garantia_numero_service ? `Service: ${reserva.garantia_numero_service}` : ''
+    }
+    if (reserva.garantia_tipo === 'Reparación') {
+      return reserva.garantia_problema || ''
+    }
+  }
+  if (reserva?.tipo_turno === 'Particular') {
+    if (reserva.particular_tipo === 'Taller') {
+      return reserva.detalles || ''
+    }
+    return 'Mantenimiento programado'
+  }
+  return reserva?.detalles || ''
+}
+
 </script>
 
 <template>
-  <div class="h-screen flex flex-col p-6 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-hidden">
     <header class="flex justify-between items-end">
-      <div class="space-y-4">
-        <h2 class="text-3xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
+      <div class="space-y-3 sm:space-y-4 md:space-y-5">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
           CALENDARIO <span class="text-cyan-600">SEMANAL</span>
         </h2>
         <div class="relative group">
           <input 
             v-model="busquedaCedula" 
             placeholder="Buscar por CI..." 
-            class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl py-3 px-6 text-gray-700 dark:text-gray-200 w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
+            class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl py-3 px-4 sm:px-5 md:px-6 text-gray-700 dark:text-gray-200 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
           />
         </div>
       </div>
 
-      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <button @click="cambiarSemana(-1)" class="px-5 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-widest">Anterior</button>
-        <button @click="semanaOffset = 0; cargarReservas()" class="px-6 py-2.5 rounded-xl bg-cyan-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
-        <button @click="cambiarSemana(1)" class="px-5 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-widest">Siguiente</button>
+      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <button @click="cambiarSemana(-1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Anterior</button>
+        <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
+        <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
     </header>
 
-    <div class="flex-1 overflow-auto rounded-[24px] border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+    <div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
       <table class="w-full border-collapse table-fixed">
         <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
-            <th class="w-24 p-5 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
-            <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-4 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
+            <th class="w-20 sm:w-24 p-3 sm:p-4 md:p-5 text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
+            <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
               <div class="flex flex-col items-center">
-                <span class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
-                <span class="text-lg font-black text-gray-800 dark:text-gray-100">{{ dia.fecha.split('-')[2] }}</span>
+                <span class="text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
+                <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha.split('-')[2] }}</span>
               </div>
             </th>
           </tr>
@@ -270,21 +298,27 @@ const getCardStyles = (estado: string) => {
 
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/50">
           <tr v-for="hora in horariosDisponibles" :key="hora">
-            <td class="p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
-              <span class="text-xs font-black text-gray-400 dark:text-gray-500">{{ hora }}</span>
+            <td class="p-2 sm:p-3 md:p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
+              <span class="text-[7px] sm:text-[8px] md:text-xs font-black text-gray-400 dark:text-gray-500">{{ hora }}</span>
             </td>
 
             <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" 
-                class="p-2 border-l border-gray-100 dark:border-gray-800/30 min-h-[100px] align-top hover:bg-cyan-500/5 transition-colors"
+                class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors"
                 @dragover.prevent @drop="soltarEnCelda($event, dia.fecha, hora)">
               
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-1 sm:gap-2">
                 <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
                      @click="abrirVentana(r)"
                      draggable="true" @dragstart="iniciarArrastre($event, r)"
-                     :class="['p-3 rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
-                  <div class="text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
-                  <div class="text-[9px] font-bold opacity-80 leading-tight">
+                     :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
+                  <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
+                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
+                    {{ obtenerTipoResumen(r) }}
+                  </div>
+                  <div v-if="obtenerDetalleResumen(r)" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                    {{ obtenerDetalleResumen(r) }}
+                  </div>
+                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
                     {{ r.marca }} {{ r.modelo }}<br/>
                     <span class="opacity-60">{{ r.cedula }}</span>
                   </div>

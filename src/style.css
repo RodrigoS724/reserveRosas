@@ -94,7 +94,14 @@ body {
   width: 80%;
   height: 100vh;
   padding: 40px;
-  overflow-y: auto; /* Solo el contenido tiene scroll */
   display: flex;
   justify-content: center;
+}
+
+html, body, #app {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Esto mata el scroll principal del navegador */
 }

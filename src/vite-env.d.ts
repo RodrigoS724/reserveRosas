@@ -22,6 +22,11 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
+        particular_tipo?: string | null
+        garantia_tipo?: string | null
+        garantia_fecha_compra?: string | null
+        garantia_numero_service?: string | null
+        garantia_problema?: string | null
         fecha: string
         hora: string
         detalles?: string
@@ -108,6 +113,36 @@ declare global {
         usuario?: string
       }[]>
 
+      obtenerVehiculos: () => Promise<{
+        id: number
+        matricula: string
+        marca?: string
+        modelo?: string
+        nombre?: string
+        telefono?: string
+        created_at?: string
+        ultima_fecha?: string | null
+        ultimo_km?: string | null
+        ultimo_tipo_turno?: string | null
+        ultimo_particular_tipo?: string | null
+        ultimo_garantia_tipo?: string | null
+      }[]>
+
+      obtenerHistorialVehiculo: (vehiculoId: number) => Promise<{
+        id: number
+        vehiculo_id: number
+        fecha: string
+        km?: string | null
+        tipo_turno?: string | null
+        particular_tipo?: string | null
+        garantia_tipo?: string | null
+        garantia_fecha_compra?: string | null
+        garantia_numero_service?: string | null
+        garantia_problema?: string | null
+        detalles?: string | null
+        created_at?: string
+      }[]>
+
       obtenerTodasLasReservas: () => Promise<{
         id: number
         nombre: string
@@ -118,6 +153,11 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
+        particular_tipo?: string | null
+        garantia_tipo?: string | null
+        garantia_fecha_compra?: string | null
+        garantia_numero_service?: string | null
+        garantia_problema?: string | null
         fecha: string
         hora: string
         detalles?: string

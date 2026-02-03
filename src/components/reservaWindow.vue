@@ -74,6 +74,36 @@ const cancelarReserva = async () => {
                 </div>
 
                 <div class="campo">
+                    <label>Tipo de Turno</label>
+                    <input :value="editable.tipo_turno" disabled />
+                </div>
+
+                <div v-if="editable.tipo_turno === 'Particular'" class="campo">
+                    <label>Tipo Particular</label>
+                    <input :value="editable.particular_tipo || ''" disabled />
+                </div>
+
+                <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
+                    <label>Tipo Garantía</label>
+                    <input :value="editable.garantia_tipo || ''" disabled />
+                </div>
+
+                <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
+                    <label>Fecha de Compra</label>
+                    <input :value="editable.garantia_fecha_compra || ''" disabled />
+                </div>
+
+                <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Service'" class="campo">
+                    <label>Número de Service</label>
+                    <input :value="editable.garantia_numero_service || ''" disabled />
+                </div>
+
+                <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Reparación'" class="campo">
+                    <label>Problema</label>
+                    <textarea :value="editable.garantia_problema || ''" disabled />
+                </div>
+
+                <div class="campo">
                     <label>Fecha</label>
                     <input v-model="editable.fecha" type="date" />
                 </div>
@@ -220,7 +250,8 @@ const cancelarReserva = async () => {
     font-family: inherit;
 }
 
-.campo input:disabled {
+.campo input:disabled,
+.campo textarea:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }

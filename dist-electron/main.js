@@ -1,27 +1,52 @@
-import { app as m, ipcMain as c, BrowserWindow as H } from "electron";
-import { fileURLToPath as I } from "node:url";
-import d from "node:path";
-import A from "better-sqlite3";
-import b from "node:fs";
-const _ = I(import.meta.url), y = d.dirname(_);
-typeof globalThis < "u" && (globalThis.__filename = _, globalThis.__dirname = y);
-let t = null, g = !1;
-function i() {
-  var o, e;
-  if (t)
-    return console.log("✅ [DB] Reutilizando conexión existente"), t;
-  if (g && (console.log("⏳ [DB] Conexión en progreso, esperando..."), t))
-    return t;
-  g = !0;
+import { app, ipcMain, BrowserWindow } from "electron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import Database from "better-sqlite3";
+import fs from "node:fs";
+const __filename$2 = fileURLToPath(import.meta.url);
+const __dirname$2 = path.dirname(__filename$2);
+if (typeof globalThis !== "undefined") {
+  globalThis.__filename = __filename$2;
+  globalThis.__dirname = __dirname$2;
+}
+let db = null;
+let dbConnectionInProgress = false;
+function initDatabase() {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+  if (db) {
+    console.log("✅ [DB] Reutilizando conexión existente");
+    return db;
+  }
+  if (dbConnectionInProgress) {
+    console.log("⏳ [DB] Conexión en progreso, esperando...");
+    if (db) return db;
+  }
+  dbConnectionInProgress = true;
   try {
-    if (!m.isReady())
+    if (!app.isReady()) {
       throw new Error("Electron app not ready");
-    const r = m.getPath("userData"), a = d.join(r, "reservas.db");
-    if (b.existsSync(r) || b.mkdirSync(r, { recursive: !0 }), console.log("🔌 [DB] Creando nueva conexión a:", a), t = new A(a, {
-      readonly: !1,
-      fileMustExist: !1,
+    }
+    const userDataPath = app.getPath("userData");
+    const dbPath = path.join(userDataPath, "reservas.db");
+    if (!fs.existsSync(userDataPath)) {
+      fs.mkdirSync(userDataPath, { recursive: true });
+    }
+    console.log("🔌 [DB] Creando nueva conexión a:", dbPath);
+    db = new Database(dbPath, {
+      readonly: false,
+      fileMustExist: false,
       timeout: 3e4
-    }), console.log("🔧 [DB] Configurando pragmas..."), t.pragma("query_only = FALSE"), t.pragma("journal_mode = OFF"), t.pragma("synchronous = OFF"), t.pragma("cache_size = -64000"), t.pragma("temp_store = MEMORY"), t.pragma("foreign_keys = ON"), t.pragma("busy_timeout = 100000"), console.log("✅ [DB] Pragmas configurados correctamente"), t.exec(`
+    });
+    console.log("🔧 [DB] Configurando pragmas...");
+    db.pragma("query_only = FALSE");
+    db.pragma("journal_mode = OFF");
+    db.pragma("synchronous = OFF");
+    db.pragma("cache_size = -64000");
+    db.pragma("temp_store = MEMORY");
+    db.pragma("foreign_keys = ON");
+    db.pragma("busy_timeout = 100000");
+    console.log("✅ [DB] Pragmas configurados correctamente");
+    db.exec(`
     CREATE TABLE IF NOT EXISTS reservas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
@@ -32,26 +57,34 @@ function i() {
       km TEXT,
       matricula TEXT,
       tipo_turno TEXT,
+      particular_tipo TEXT,
+      garantia_tipo TEXT,
+      garantia_fecha_compra TEXT,
+      garantia_numero_service TEXT,
+      garantia_problema TEXT,
       fecha TEXT NOT NULL,
       hora TEXT NOT NULL,
       detalles TEXT,
       estado TEXT DEFAULT 'pendiente',
       notas TEXT
     );
-  `), t.exec(`
+  `);
+    db.exec(`
     CREATE TABLE IF NOT EXISTS horarios_base (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       hora TEXT UNIQUE NOT NULL,
       activo INTEGER DEFAULT 1
     );
-  `), t.exec(`
+  `);
+    db.exec(`
     CREATE TABLE IF NOT EXISTS bloqueos_horarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       fecha TEXT NOT NULL,
       hora TEXT NOT NULL,
       motivo TEXT
     );
-  `), t.exec(`
+  `);
+    db.exec(`
     CREATE TABLE IF NOT EXISTS historial_reservas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       reserva_id INTEGER NOT NULL,
@@ -62,12 +95,43 @@ function i() {
       usuario TEXT,
       FOREIGN KEY (reserva_id) REFERENCES reservas(id)
     );
-  `), t.prepare(`
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS vehiculos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      matricula TEXT UNIQUE,
+      marca TEXT,
+      modelo TEXT,
+      nombre TEXT,
+      telefono TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS vehiculos_historial (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehiculo_id INTEGER NOT NULL,
+      fecha TEXT NOT NULL,
+      km TEXT,
+      tipo_turno TEXT,
+      particular_tipo TEXT,
+      garantia_tipo TEXT,
+      garantia_fecha_compra TEXT,
+      garantia_numero_service TEXT,
+      garantia_problema TEXT,
+      detalles TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id)
+    );
+  `);
+    const count = db.prepare(`
     SELECT COUNT(*) as total FROM horarios_base
-  `).get().total === 0) {
-      const n = t.prepare(`
+  `).get();
+    if (count.total === 0) {
+      const insert = db.prepare(`
       INSERT INTO horarios_base (hora) VALUES (?)
-    `), E = [
+    `);
+      const horas = [
         "08:00",
         "09:00",
         "10:00",
@@ -77,41 +141,115 @@ function i() {
         "15:00",
         "16:00"
       ];
-      t.transaction(() => {
-        E.forEach((P) => n.run(P));
-      })();
+      const transaction = db.transaction(() => {
+        horas.forEach((h) => insert.run(h));
+      });
+      transaction();
     }
     console.log("🔄 [DB] Ejecutando migraciones...");
     try {
-      t.exec("ALTER TABLE reservas ADD COLUMN notas TEXT"), console.log('✅ [DB] Columna "notas" agregada a reservas');
-    } catch (n) {
-      (o = n == null ? void 0 : n.message) != null && o.includes("duplicate column") ? console.log('ℹ️ [DB] Columna "notas" ya existe en reservas') : (e = n == null ? void 0 : n.message) != null && e.includes("no such table") ? console.log("ℹ️ [DB] Tabla reservas no existe (será creada por CREATE TABLE IF NOT EXISTS)") : console.warn("⚠️ [DB] Error durante migración:", n == null ? void 0 : n.message);
+      db.exec(`ALTER TABLE reservas ADD COLUMN notas TEXT`);
+      console.log('✅ [DB] Columna "notas" agregada a reservas');
+    } catch (err) {
+      if ((_a = err == null ? void 0 : err.message) == null ? void 0 : _a.includes("duplicate column")) {
+        console.log('ℹ️ [DB] Columna "notas" ya existe en reservas');
+      } else if ((_b = err == null ? void 0 : err.message) == null ? void 0 : _b.includes("no such table")) {
+        console.log("ℹ️ [DB] Tabla reservas no existe (será creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("⚠️ [DB] Error durante migración:", err == null ? void 0 : err.message);
+      }
     }
-    return console.log("✅ DB inicializada en:", a), t;
+    console.log("✅ DB inicializada en:", dbPath);
+    try {
+      db.exec(`ALTER TABLE reservas ADD COLUMN particular_tipo TEXT`);
+      console.log('âœ… [DB] Columna "particular_tipo" agregada a reservas');
+    } catch (err) {
+      if ((_c = err == null ? void 0 : err.message) == null ? void 0 : _c.includes("duplicate column")) {
+        console.log('â„¹ï¸ [DB] Columna "particular_tipo" ya existe en reservas');
+      } else if ((_d = err == null ? void 0 : err.message) == null ? void 0 : _d.includes("no such table")) {
+        console.log("â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("âš ï¸ [DB] Error durante migraciÃ³n:", err == null ? void 0 : err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE reservas ADD COLUMN garantia_tipo TEXT`);
+      console.log('âœ… [DB] Columna "garantia_tipo" agregada a reservas');
+    } catch (err) {
+      if ((_e = err == null ? void 0 : err.message) == null ? void 0 : _e.includes("duplicate column")) {
+        console.log('â„¹ï¸ [DB] Columna "garantia_tipo" ya existe en reservas');
+      } else if ((_f = err == null ? void 0 : err.message) == null ? void 0 : _f.includes("no such table")) {
+        console.log("â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("âš ï¸ [DB] Error durante migraciÃ³n:", err == null ? void 0 : err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE reservas ADD COLUMN garantia_fecha_compra TEXT`);
+      console.log('âœ… [DB] Columna "garantia_fecha_compra" agregada a reservas');
+    } catch (err) {
+      if ((_g = err == null ? void 0 : err.message) == null ? void 0 : _g.includes("duplicate column")) {
+        console.log('â„¹ï¸ [DB] Columna "garantia_fecha_compra" ya existe en reservas');
+      } else if ((_h = err == null ? void 0 : err.message) == null ? void 0 : _h.includes("no such table")) {
+        console.log("â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("âš ï¸ [DB] Error durante migraciÃ³n:", err == null ? void 0 : err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE reservas ADD COLUMN garantia_numero_service TEXT`);
+      console.log('âœ… [DB] Columna "garantia_numero_service" agregada a reservas');
+    } catch (err) {
+      if ((_i = err == null ? void 0 : err.message) == null ? void 0 : _i.includes("duplicate column")) {
+        console.log('â„¹ï¸ [DB] Columna "garantia_numero_service" ya existe en reservas');
+      } else if ((_j = err == null ? void 0 : err.message) == null ? void 0 : _j.includes("no such table")) {
+        console.log("â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("âš ï¸ [DB] Error durante migraciÃ³n:", err == null ? void 0 : err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE reservas ADD COLUMN garantia_problema TEXT`);
+      console.log('âœ… [DB] Columna "garantia_problema" agregada a reservas');
+    } catch (err) {
+      if ((_k = err == null ? void 0 : err.message) == null ? void 0 : _k.includes("duplicate column")) {
+        console.log('â„¹ï¸ [DB] Columna "garantia_problema" ya existe en reservas');
+      } else if ((_l = err == null ? void 0 : err.message) == null ? void 0 : _l.includes("no such table")) {
+        console.log("â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn("âš ï¸ [DB] Error durante migraciÃ³n:", err == null ? void 0 : err.message);
+      }
+    }
+    return db;
   } finally {
-    g = !1;
+    dbConnectionInProgress = false;
   }
 }
-function R(o) {
-  const [e, r] = o.split(":").map(Number);
-  if (isNaN(e) || isNaN(r))
+function normalizarHora(hora) {
+  const [h, m] = hora.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) {
     throw new Error("Formato de hora inválido");
-  return `${String(e).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-function x(o) {
-  return (/* @__PURE__ */ new Date(`${o}T00:00:00`)).getDay() === 6;
+function esSabado(fecha) {
+  const d = /* @__PURE__ */ new Date(`${fecha}T00:00:00`);
+  return d.getDay() === 6;
 }
-function F() {
+function obtenerHorariosBase() {
   console.log("[Service] Obteniendo horarios base activos...");
-  const e = i().prepare(`
+  const db2 = initDatabase();
+  const result = db2.prepare(`
     SELECT * FROM horarios_base
     WHERE activo = 1
     ORDER BY hora
   `).all();
-  return console.log("[Service] Horarios obtenidos:", e), e;
+  console.log("[Service] Horarios obtenidos:", result);
+  return result;
 }
-function M(o) {
-  let r = i().prepare(`
+function obtenerHorariosDisponibles(fecha) {
+  const db2 = initDatabase();
+  let horarios = db2.prepare(`
     SELECT h.hora
     FROM horarios_base h
     WHERE h.activo = 1
@@ -122,496 +260,742 @@ function M(o) {
         SELECT hora FROM bloqueos_horarios WHERE fecha = ?
       )
     ORDER BY h.hora
-  `).all(o, o);
-  return x(o) && (r = r.filter((a) => a.hora < "12:00")), r;
+  `).all(fecha, fecha);
+  if (esSabado(fecha)) {
+    horarios = horarios.filter((h) => h.hora < "12:00");
+  }
+  return horarios;
 }
-function U(o) {
-  console.log("[Service] Creando horario:", o);
-  const e = i(), r = R(o);
+function crearHorario(hora) {
+  console.log("[Service] Creando horario:", hora);
+  const db2 = initDatabase();
+  const horaNormalizada = normalizarHora(hora);
   try {
-    e.transaction(() => {
-      if (e.prepare(`
+    const tx = db2.transaction(() => {
+      const existe = db2.prepare(`
         SELECT id FROM horarios_base WHERE hora = ?
-      `).get(r))
+      `).get(horaNormalizada);
+      if (existe) {
         throw new Error("El horario ya existe");
-      e.prepare(`
+      }
+      db2.prepare(`
         INSERT INTO horarios_base (hora, activo)
         VALUES (?, 1)
-      `).run(r), console.log("[Service] Horario creado:", r);
-    })();
-  } catch (a) {
-    throw console.error("[Service] Error en crearHorario:", a), a;
+      `).run(horaNormalizada);
+      console.log("[Service] Horario creado:", horaNormalizada);
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en crearHorario:", error);
+    throw error;
   }
 }
-function B(o) {
-  console.log("[Service] Desactivando horario:", o);
-  const e = i();
+function desactivarHorario(id) {
+  console.log("[Service] Desactivando horario:", id);
+  const db2 = initDatabase();
   try {
-    e.transaction(() => {
-      e.prepare(`
+    const tx = db2.transaction(() => {
+      db2.prepare(`
         UPDATE horarios_base
         SET activo = 0
         WHERE id = ?
-      `).run(o), console.log("[Service] Horario desactivado:", o);
-    })();
-  } catch (r) {
-    throw console.error("[Service] Error en desactivarHorario:", r), r;
+      `).run(id);
+      console.log("[Service] Horario desactivado:", id);
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en desactivarHorario:", error);
+    throw error;
   }
 }
-function z() {
+function obtenerHorariosInactivos() {
   console.log("[Service] Obteniendo horarios inactivos");
-  const e = i().prepare(`
+  const db2 = initDatabase();
+  const horarios = db2.prepare(`
     SELECT id, hora FROM horarios_base WHERE activo = 0 ORDER BY hora
   `).all();
-  return console.log("[Service] Horarios inactivos encontrados:", e.length), e;
+  console.log("[Service] Horarios inactivos encontrados:", horarios.length);
+  return horarios;
 }
-function q(o) {
-  const e = i();
-  e.transaction(() => {
-    e.prepare(`
+function activarHorario(id) {
+  const db2 = initDatabase();
+  const tx = db2.transaction(() => {
+    db2.prepare(`
       UPDATE horarios_base
       SET activo = 1
       WHERE id = ?
-    `).run(o);
-  })();
+    `).run(id);
+  });
+  tx();
 }
-function $(o, e, r) {
-  console.log("[Service] Bloqueando horario:", { fecha: o, hora: e, motivo: r });
-  const a = i(), s = new Date(o).toISOString().split("T")[0], n = R(e);
-  console.log("[Service] Fecha normalizada:", o, "->", s), console.log("[Service] Hora normalizada:", e, "->", n);
+function bloquearHorario(fecha, hora, motivo) {
+  console.log("[Service] Bloqueando horario:", { fecha, hora, motivo });
+  const db2 = initDatabase();
+  const fechaNormalizada = new Date(fecha).toISOString().split("T")[0];
+  const horaNormalizada = normalizarHora(hora);
+  console.log("[Service] Fecha normalizada:", fecha, "->", fechaNormalizada);
+  console.log("[Service] Hora normalizada:", hora, "->", horaNormalizada);
   try {
-    a.transaction(() => {
-      if (a.prepare(`
+    const tx = db2.transaction(() => {
+      const existe = db2.prepare(`
         SELECT id FROM bloqueos_horarios
         WHERE fecha = ? AND hora = ?
-      `).get(s, n)) {
+      `).get(fechaNormalizada, horaNormalizada);
+      if (existe) {
         console.log("[Service] Horario ya bloqueado");
         return;
       }
-      a.prepare(`
+      db2.prepare(`
         INSERT INTO bloqueos_horarios (fecha, hora, motivo)
         VALUES (?, ?, ?)
-      `).run(s, n, r ?? ""), console.log("[Service] Horario bloqueado");
-    })();
-  } catch (E) {
-    throw console.error("[Service] Error en bloquearHorario:", E), E;
+      `).run(fechaNormalizada, horaNormalizada, motivo ?? "");
+      console.log("[Service] Horario bloqueado");
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en bloquearHorario:", error);
+    throw error;
   }
 }
-function X(o, e) {
-  console.log("[Service] Desbloqueando horario:", { fecha: o, hora: e });
-  const r = i(), a = new Date(o).toISOString().split("T")[0], s = R(e);
-  console.log("[Service] Fecha normalizada:", o, "->", a), console.log("[Service] Hora normalizada:", e, "->", s);
+function desbloquearHorario(fecha, hora) {
+  console.log("[Service] Desbloqueando horario:", { fecha, hora });
+  const db2 = initDatabase();
+  const fechaNormalizada = new Date(fecha).toISOString().split("T")[0];
+  const horaNormalizada = normalizarHora(hora);
+  console.log("[Service] Fecha normalizada:", fecha, "->", fechaNormalizada);
+  console.log("[Service] Hora normalizada:", hora, "->", horaNormalizada);
   try {
-    r.transaction(() => {
-      r.prepare(`
+    const tx = db2.transaction(() => {
+      db2.prepare(`
         DELETE FROM bloqueos_horarios
         WHERE fecha = ? AND hora = ?
-      `).run(a, s), console.log("[Service] Horario desbloqueado");
-    })();
-  } catch (n) {
-    throw console.error("[Service] Error en desbloquearHorario:", n), n;
+      `).run(fechaNormalizada, horaNormalizada);
+      console.log("[Service] Horario desbloqueado");
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en desbloquearHorario:", error);
+    throw error;
   }
 }
-function W(o) {
-  console.log("[Service] Obteniendo horarios bloqueados para:", o);
-  const e = i(), r = new Date(o).toISOString().split("T")[0];
-  console.log("[Service] Fecha normalizada:", o, "->", r);
-  const a = e.prepare(`
+function obtenerHorariosBloqueados(fecha) {
+  console.log("[Service] Obteniendo horarios bloqueados para:", fecha);
+  const db2 = initDatabase();
+  const fechaNormalizada = new Date(fecha).toISOString().split("T")[0];
+  console.log("[Service] Fecha normalizada:", fecha, "->", fechaNormalizada);
+  const result = db2.prepare(`
     SELECT * FROM bloqueos_horarios
     WHERE fecha = ?
     ORDER BY hora
-  `).all(r);
-  console.log("[Service] Horarios bloqueados encontrados:", a);
-  const s = e.prepare("SELECT * FROM bloqueos_horarios ORDER BY fecha, hora").all();
-  return console.log("[Service] TODOS los bloqueos en BD:", s), a;
+  `).all(fechaNormalizada);
+  console.log("[Service] Horarios bloqueados encontrados:", result);
+  const todosLosBloqueos = db2.prepare(`SELECT * FROM bloqueos_horarios ORDER BY fecha, hora`).all();
+  console.log("[Service] TODOS los bloqueos en BD:", todosLosBloqueos);
+  return result;
 }
-function Y(o) {
-  console.log("[Service] Borrando horario permanentemente:", o);
-  const e = i();
+function borrarHorarioPermanente(id) {
+  console.log("[Service] Borrando horario permanentemente:", id);
+  const db2 = initDatabase();
   try {
-    e.transaction(() => {
-      const a = e.prepare(`
+    const tx = db2.transaction(() => {
+      const horario = db2.prepare(`
         SELECT * FROM horarios_base WHERE id = ?
-      `).get(o);
-      if (!a)
-        throw console.log("[Service] Horario no encontrado:", o), new Error("Horario no encontrado");
-      e.prepare(`
+      `).get(id);
+      if (!horario) {
+        console.log("[Service] Horario no encontrado:", id);
+        throw new Error("Horario no encontrado");
+      }
+      db2.prepare(`
         DELETE FROM horarios_base WHERE id = ?
-      `).run(o), console.log("[Service] Horario eliminado permanentemente:", a);
-    })();
-  } catch (r) {
-    throw console.error("[Service] Error en borrarHorarioPermanente:", r), r;
+      `).run(id);
+      console.log("[Service] Horario eliminado permanentemente:", horario);
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en borrarHorarioPermanente:", error);
+    throw error;
   }
 }
-let T = !1;
-const h = [];
-let k = 0;
-async function l(o) {
-  return new Promise((e, r) => {
-    const a = `op_${++k}`, s = Date.now();
-    h.push({ id: a, fn: o, resolve: e, reject: r, createdAt: s }), console.log(`[Lock] ${a} encolada. Cola: ${h.length} operaciones. Locked: ${T}`), O();
+let isLocked = false;
+const queue = [];
+let operationCounter = 0;
+async function withDbLock(fn) {
+  return new Promise((resolve, reject) => {
+    const id = `op_${++operationCounter}`;
+    const now = Date.now();
+    queue.push({ id, fn, resolve, reject, createdAt: now });
+    console.log(`[Lock] ${id} encolada. Cola: ${queue.length} operaciones. Locked: ${isLocked}`);
+    processQueue();
   });
 }
-async function O() {
-  if (T) {
-    console.log("[Lock] Sistema bloqueado, esperando liberación...");
+async function processQueue() {
+  if (isLocked) {
+    console.log(`[Lock] Sistema bloqueado, esperando liberación...`);
     return;
   }
-  if (h.length === 0) {
-    console.log("[Lock] Cola vacía, nada que procesar");
+  if (queue.length === 0) {
+    console.log(`[Lock] Cola vacía, nada que procesar`);
     return;
   }
-  T = !0;
-  const o = h.shift(), r = Date.now() - o.createdAt;
-  console.log(`[Lock] INICIANDO ${o.id} (esperó ${r}ms). Quedan: ${h.length}`);
+  isLocked = true;
+  const operation = queue.shift();
+  const now = Date.now();
+  const waitTime = now - operation.createdAt;
+  console.log(`[Lock] INICIANDO ${operation.id} (esperó ${waitTime}ms). Quedan: ${queue.length}`);
   try {
-    const a = o.fn();
-    if (a instanceof Promise) {
-      const s = await a;
-      o.resolve(s);
-    } else
-      o.resolve(a);
-    console.log(`[Lock] ${o.id} completada exitosamente`);
-  } catch (a) {
-    console.error(`[Lock] ${o.id} ERROR:`, (a == null ? void 0 : a.message) || a), o.reject(a instanceof Error ? a : new Error(String(a)));
+    const result = operation.fn();
+    if (result instanceof Promise) {
+      const resolvedResult = await result;
+      operation.resolve(resolvedResult);
+    } else {
+      operation.resolve(result);
+    }
+    console.log(`[Lock] ${operation.id} completada exitosamente`);
+  } catch (error) {
+    console.error(`[Lock] ${operation.id} ERROR:`, (error == null ? void 0 : error.message) || error);
+    operation.reject(error instanceof Error ? error : new Error(String(error)));
   } finally {
-    T = !1, console.log(`[Lock] ${o.id} liberada. Quedan: ${h.length}`), h.length > 0 && (console.log("[Lock] Procesando siguiente..."), setImmediate(() => O()));
+    isLocked = false;
+    console.log(`[Lock] ${operation.id} liberada. Quedan: ${queue.length}`);
+    if (queue.length > 0) {
+      console.log(`[Lock] Procesando siguiente...`);
+      setImmediate(() => processQueue());
+    }
   }
 }
-function V() {
-  c.handle("horarios:base", async () => {
+function registrarHandlersHorarios() {
+  ipcMain.handle("horarios:base", async () => {
     console.log("[IPC] Obteniendo horarios base...");
     try {
-      const o = await l(() => F());
-      return console.log("[IPC] Horarios base obtenidos:", o), o;
-    } catch (o) {
-      throw console.error("[IPC] Error obteniendo horarios base:", o), o;
+      const result = await withDbLock(() => obtenerHorariosBase());
+      console.log("[IPC] Horarios base obtenidos:", result);
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error obteniendo horarios base:", error);
+      throw error;
     }
-  }), c.handle(
+  });
+  ipcMain.handle(
     "horarios:disponibles",
-    (o, e) => M(e)
-  ), c.handle(
+    (_, fecha) => obtenerHorariosDisponibles(fecha)
+  );
+  ipcMain.handle(
     "horarios:crear",
-    async (o, e) => await l(() => U(e))
-  ), c.handle("horarios:desactivar", async (o, e) => {
-    console.log("[IPC] Desactivando horario:", e);
+    async (_, hora) => await withDbLock(() => crearHorario(hora))
+  );
+  ipcMain.handle("horarios:desactivar", async (_, id) => {
+    console.log("[IPC] Desactivando horario:", id);
     try {
-      const r = await l(() => B(e));
-      return console.log("[IPC] Horario desactivado exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error desactivando horario:", r), r;
+      const result = await withDbLock(() => desactivarHorario(id));
+      console.log("[IPC] Horario desactivado exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error desactivando horario:", error);
+      throw error;
     }
-  }), c.handle("horarios:activar", async (o, e) => {
-    console.log("[IPC] Activando horario:", e);
+  });
+  ipcMain.handle("horarios:activar", async (_, id) => {
+    console.log("[IPC] Activando horario:", id);
     try {
-      const r = await l(() => q(e));
-      return console.log("[IPC] Horario activado exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error activando horario:", r), r;
+      const result = await withDbLock(() => activarHorario(id));
+      console.log("[IPC] Horario activado exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error activando horario:", error);
+      throw error;
     }
-  }), c.handle("horarios:inactivos", async () => {
+  });
+  ipcMain.handle("horarios:inactivos", async () => {
     console.log("[IPC] Obteniendo horarios inactivos...");
     try {
-      const o = await l(() => z());
-      return console.log("[IPC] Horarios inactivos obtenidos:", o), o;
-    } catch (o) {
-      throw console.error("[IPC] Error obteniendo horarios inactivos:", o), o;
+      const result = await withDbLock(() => obtenerHorariosInactivos());
+      console.log("[IPC] Horarios inactivos obtenidos:", result);
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error obteniendo horarios inactivos:", error);
+      throw error;
     }
-  }), c.handle(
+  });
+  ipcMain.handle(
     "horarios:bloquear",
-    async (o, e) => await l(
-      () => $(e.fecha, e.hora, e.motivo)
+    async (_, payload) => await withDbLock(
+      () => bloquearHorario(payload.fecha, payload.hora, payload.motivo)
     )
-  ), c.handle("horarios:desbloquear", async (o, e) => {
-    console.log("[IPC] Desbloqueando horario:", e);
+  );
+  ipcMain.handle("horarios:desbloquear", async (_, payload) => {
+    console.log("[IPC] Desbloqueando horario:", payload);
     try {
-      const r = await l(
-        () => X(e.fecha, e.hora)
+      const result = await withDbLock(
+        () => desbloquearHorario(payload.fecha, payload.hora)
       );
-      return console.log("[IPC] Horario desbloqueado exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error desbloqueando horario:", r), r;
+      console.log("[IPC] Horario desbloqueado exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error desbloqueando horario:", error);
+      throw error;
     }
-  }), c.handle("horarios:bloqueados", async (o, e) => {
-    console.log("[IPC] Obteniendo horarios bloqueados para:", e);
+  });
+  ipcMain.handle("horarios:bloqueados", async (_, fecha) => {
+    console.log("[IPC] Obteniendo horarios bloqueados para:", fecha);
     try {
-      const r = await l(() => W(e));
-      return console.log("[IPC] Horarios bloqueados obtenidos:", r), r;
-    } catch (r) {
-      throw console.error("[IPC] Error obteniendo horarios bloqueados:", r), r;
+      const result = await withDbLock(() => obtenerHorariosBloqueados(fecha));
+      console.log("[IPC] Horarios bloqueados obtenidos:", result);
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error obteniendo horarios bloqueados:", error);
+      throw error;
     }
-  }), c.handle("horarios:borrar", async (o, e) => {
-    console.log("[IPC] Borrando horario permanentemente:", e);
+  });
+  ipcMain.handle("horarios:borrar", async (_, id) => {
+    console.log("[IPC] Borrando horario permanentemente:", id);
     try {
-      const r = await l(() => Y(e));
-      return console.log("[IPC] Horario eliminado exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error borrando horario:", r), r;
+      const result = await withDbLock(() => borrarHorarioPermanente(id));
+      console.log("[IPC] Horario eliminado exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error borrando horario:", error);
+      throw error;
     }
   });
 }
-const p = 3, f = 100;
-async function C(o, e = 0) {
-  try {
-    return console.log(`[Service] Intento ${e + 1}/${p}`), o();
-  } catch (r) {
-    if ((r == null ? void 0 : r.code) === "SQLITE_BUSY" && e < p - 1)
-      return console.warn(`[Service] SQLITE_BUSY, reintentando en ${f}ms...`), await new Promise((a) => setTimeout(a, f)), C(o, e + 1);
-    throw r;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 100;
+function validarReserva(data) {
+  const tipo = data.tipo_turno;
+  if (tipo === "Garantía") {
+    if (!data.garantia_tipo) {
+      throw new Error("Tipo de garantia requerido.");
+    }
+    if (!data.garantia_fecha_compra) {
+      throw new Error("Fecha de compra requerida.");
+    }
+    if (data.garantia_tipo === "Service") {
+      if (!data.garantia_numero_service) {
+        throw new Error("Numero de service requerido.");
+      }
+    } else if (data.garantia_tipo === "Reparación") {
+      if (!data.garantia_problema) {
+        throw new Error("Descripcion del problema requerida.");
+      }
+    } else {
+      throw new Error("Tipo de garantia invalido.");
+    }
+  } else if (tipo === "Particular") {
+    if (!data.particular_tipo) {
+      throw new Error("Tipo particular requerido.");
+    }
+    if (data.particular_tipo !== "Service" && data.particular_tipo !== "Taller") {
+      throw new Error("Tipo particular invalido.");
+    }
   }
 }
-async function j(o) {
+function normalizarReserva(data) {
+  const tipo = data.tipo_turno;
+  if (tipo !== "Garantía") {
+    data.garantia_tipo = null;
+    data.garantia_fecha_compra = null;
+    data.garantia_numero_service = null;
+    data.garantia_problema = null;
+  }
+  if (tipo !== "Particular") {
+    data.particular_tipo = null;
+  }
+  return data;
+}
+async function executeWithRetry(fn, retryCount = 0) {
+  try {
+    console.log(`[Service] Intento ${retryCount + 1}/${MAX_RETRIES}`);
+    return fn();
+  } catch (error) {
+    if ((error == null ? void 0 : error.code) === "SQLITE_BUSY" && retryCount < MAX_RETRIES - 1) {
+      console.warn(`[Service] SQLITE_BUSY, reintentando en ${RETRY_DELAY_MS}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+      return executeWithRetry(fn, retryCount + 1);
+    }
+    throw error;
+  }
+}
+async function crearReserva(data) {
   console.log("[Service] Iniciando crearReserva...");
-  const e = new Date(o.fecha).toISOString().split("T")[0];
-  return console.log("[Service] Fecha normalizada:", o.fecha, "->", e), C(() => {
-    const r = i(), a = r.transaction(() => {
+  validarReserva(data);
+  const dataNormalizada = normalizarReserva({ ...data });
+  const fechaNormalizada = new Date(dataNormalizada.fecha).toISOString().split("T")[0];
+  console.log("[Service] Fecha normalizada:", dataNormalizada.fecha, "->", fechaNormalizada);
+  return executeWithRetry(() => {
+    const db2 = initDatabase();
+    const tx = db2.transaction(() => {
       console.log("[Service] Dentro de transaction...");
-      const n = r.prepare(`
+      const result = db2.prepare(`
         INSERT INTO reservas (
           nombre, cedula, telefono,
           marca, modelo, km, matricula,
-          tipo_turno, fecha, hora, detalles
+          tipo_turno, particular_tipo, garantia_tipo,
+          garantia_fecha_compra, garantia_numero_service, garantia_problema,
+          fecha, hora, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        o.nombre,
-        o.cedula,
-        o.telefono,
-        o.marca,
-        o.modelo,
-        o.km,
-        o.matricula,
-        o.tipo_turno,
-        e,
-        o.hora,
-        o.detalles ?? ""
+        dataNormalizada.nombre,
+        dataNormalizada.cedula,
+        dataNormalizada.telefono,
+        dataNormalizada.marca,
+        dataNormalizada.modelo,
+        dataNormalizada.km,
+        dataNormalizada.matricula,
+        dataNormalizada.tipo_turno,
+        dataNormalizada.particular_tipo ?? null,
+        dataNormalizada.garantia_tipo ?? null,
+        dataNormalizada.garantia_fecha_compra ?? null,
+        dataNormalizada.garantia_numero_service ?? null,
+        dataNormalizada.garantia_problema ?? null,
+        fechaNormalizada,
+        dataNormalizada.hora,
+        dataNormalizada.detalles ?? ""
       );
-      return console.log("[Service] Reserva insertada con ID:", n.lastInsertRowid), r.prepare(`
+      console.log("[Service] Reserva insertada con ID:", result.lastInsertRowid);
+      const vehiculoExistente = db2.prepare(`
+        SELECT id FROM vehiculos WHERE matricula = ?
+      `).get(dataNormalizada.matricula);
+      let vehiculoId = vehiculoExistente == null ? void 0 : vehiculoExistente.id;
+      if (!vehiculoId) {
+        const vehiculoInsert = db2.prepare(`
+          INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(
+          dataNormalizada.matricula,
+          dataNormalizada.marca,
+          dataNormalizada.modelo,
+          dataNormalizada.nombre,
+          dataNormalizada.telefono
+        );
+        vehiculoId = Number(vehiculoInsert.lastInsertRowid);
+      } else {
+        db2.prepare(`
+          UPDATE vehiculos
+          SET marca = ?, modelo = ?, nombre = ?, telefono = ?
+          WHERE id = ?
+        `).run(
+          dataNormalizada.marca,
+          dataNormalizada.modelo,
+          dataNormalizada.nombre,
+          dataNormalizada.telefono,
+          vehiculoId
+        );
+      }
+      db2.prepare(`
+        INSERT INTO vehiculos_historial (
+          vehiculo_id, fecha, km, tipo_turno,
+          particular_tipo, garantia_tipo, garantia_fecha_compra,
+          garantia_numero_service, garantia_problema, detalles
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        vehiculoId,
+        fechaNormalizada,
+        dataNormalizada.km,
+        dataNormalizada.tipo_turno,
+        dataNormalizada.particular_tipo ?? null,
+        dataNormalizada.garantia_tipo ?? null,
+        dataNormalizada.garantia_fecha_compra ?? null,
+        dataNormalizada.garantia_numero_service ?? null,
+        dataNormalizada.garantia_problema ?? null,
+        dataNormalizada.detalles ?? ""
+      );
+      db2.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES (?, 'creación', '', 'reserva creada', datetime('now'))
-      `).run(n.lastInsertRowid), console.log("[Service] Historial registrado"), n.lastInsertRowid;
+      `).run(result.lastInsertRowid);
+      console.log("[Service] Historial registrado");
+      return result.lastInsertRowid;
     });
     console.log("[Service] Ejecutando transaction...");
-    const s = a();
-    return console.log("[Service] Transaction completada con ID:", s), s;
+    const lastId = tx();
+    console.log("[Service] Transaction completada con ID:", lastId);
+    return lastId;
   });
 }
-function G(o) {
-  return console.log("[Service] Obteniendo reserva:", o), i().prepare("SELECT * FROM reservas WHERE id = ?").get(o);
+function obtenerReserva(id) {
+  console.log("[Service] Obteniendo reserva:", id);
+  const db2 = initDatabase();
+  return db2.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id);
 }
-function Q(o) {
-  console.log("[Service] Borrando reserva:", o);
-  const e = i();
+function borrarReserva(id) {
+  console.log("[Service] Borrando reserva:", id);
+  const db2 = initDatabase();
   try {
-    e.transaction(() => {
-      const a = e.prepare(`
+    const tx = db2.transaction(() => {
+      const reserva = db2.prepare(`
         SELECT * FROM reservas WHERE id = ?
-      `).get(o);
-      if (!a) {
-        console.log("[Service] Reserva no encontrada:", o);
+      `).get(id);
+      if (!reserva) {
+        console.log("[Service] Reserva no encontrada:", id);
         return;
       }
-      e.prepare("DELETE FROM reservas WHERE id = ?").run(o), console.log("[Service] Reserva borrada"), e.prepare(`
+      db2.prepare(`DELETE FROM reservas WHERE id = ?`).run(id);
+      console.log("[Service] Reserva borrada");
+      db2.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES (?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
-      `).run(o, JSON.stringify(a)), console.log("[Service] Historial registrado para borrado");
-    })();
-  } catch (r) {
-    throw console.error("[Service] Error en borrarReserva:", r), r;
+      `).run(id, JSON.stringify(reserva));
+      console.log("[Service] Historial registrado para borrado");
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en borrarReserva:", error);
+    throw error;
   }
 }
-function K(o, e, r) {
-  console.log("[Service] Moviendo reserva:", { id: o, nuevaFecha: e, nuevaHora: r });
-  const a = i();
+function moverReserva(id, nuevaFecha, nuevaHora) {
+  console.log("[Service] Moviendo reserva:", { id, nuevaFecha, nuevaHora });
+  const db2 = initDatabase();
   try {
-    a.transaction(() => {
-      const n = a.prepare(`
+    const tx = db2.transaction(() => {
+      const anterior = db2.prepare(`
         SELECT fecha, hora FROM reservas WHERE id = ?
-      `).get(o);
-      if (!n) {
-        console.log("[Service] Reserva no encontrada para mover:", o);
+      `).get(id);
+      if (!anterior) {
+        console.log("[Service] Reserva no encontrada para mover:", id);
         return;
       }
-      a.prepare(`
+      db2.prepare(`
         UPDATE reservas
         SET fecha = ?, hora = COALESCE(?, hora)
         WHERE id = ?
-      `).run(e, r ?? null, o), console.log("[Service] Reserva movida"), e !== n.fecha && (a.prepare(`
+      `).run(nuevaFecha, nuevaHora ?? null, id);
+      console.log("[Service] Reserva movida");
+      if (nuevaFecha !== anterior.fecha) {
+        db2.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES (?, 'fecha', ?, ?, datetime('now'))
-        `).run(o, n.fecha, e), console.log("[Service] Cambio de fecha registrado")), r && r !== n.hora && (a.prepare(`
+        `).run(id, anterior.fecha, nuevaFecha);
+        console.log("[Service] Cambio de fecha registrado");
+      }
+      if (nuevaHora && nuevaHora !== anterior.hora) {
+        db2.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES (?, 'hora', ?, ?, datetime('now'))
-        `).run(o, n.hora, r), console.log("[Service] Cambio de hora registrado"));
-    })();
-  } catch (s) {
-    throw console.error("[Service] Error en moverReserva:", s), s;
+        `).run(id, anterior.hora, nuevaHora);
+        console.log("[Service] Cambio de hora registrado");
+      }
+    });
+    tx();
+  } catch (error) {
+    console.error("[Service] Error en moverReserva:", error);
+    throw error;
   }
 }
-function J(o, e) {
-  console.log("[Service] Actualizando reserva:", o, e);
-  const r = i();
+function actualizarReserva(id, reserva) {
+  console.log("[Service] Actualizando reserva:", id, reserva);
+  const db2 = initDatabase();
   try {
-    const a = r.prepare(`
+    const anterior = db2.prepare(`
       SELECT nombre, fecha, hora, estado, detalles
       FROM reservas
       WHERE id = ?
-    `).get(o);
-    if (!a) {
-      console.log("[Service] Reserva no encontrada para actualizar:", o);
+    `).get(id);
+    if (!anterior) {
+      console.log("[Service] Reserva no encontrada para actualizar:", id);
       return;
     }
-    r.transaction(() => {
-      r.prepare(`
+    const transaction = db2.transaction(() => {
+      db2.prepare(`
         UPDATE reservas
         SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
         WHERE id = ?
       `).run(
-        e.nombre,
-        e.fecha,
-        e.hora,
-        e.estado,
-        e.detalles,
-        e.id
-      ), console.log("[Service] Datos actualizados");
-      for (const n of Object.keys(a))
-        a[n] !== e[n] && (r.prepare(`
+        reserva.nombre,
+        reserva.fecha,
+        reserva.hora,
+        reserva.estado,
+        reserva.detalles,
+        reserva.id
+      );
+      console.log("[Service] Datos actualizados");
+      for (const campo of Object.keys(anterior)) {
+        if (anterior[campo] !== reserva[campo]) {
+          db2.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES (?, ?, ?, ?, datetime('now'))
           `).run(
-          e.id,
-          n,
-          a[n],
-          e[n]
-        ), console.log(`[Service] Cambio registrado: ${n}`));
-    })();
-  } catch (a) {
-    throw console.error("[Service] Error en actualizarReserva:", a), a;
+            reserva.id,
+            campo,
+            anterior[campo],
+            reserva[campo]
+          );
+          console.log(`[Service] Cambio registrado: ${campo}`);
+        }
+      }
+    });
+    transaction();
+  } catch (error) {
+    console.error("[Service] Error en actualizarReserva:", error);
+    throw error;
   }
 }
-function Z(o, e) {
-  console.log("[Service] Obteniendo reservas entre:", o, "y", e);
-  const r = i(), a = new Date(o).toISOString().split("T")[0], s = new Date(e).toISOString().split("T")[0];
-  console.log("[Service] Fechas normalizadas:", a, "a", s);
-  const n = r.prepare(`
+function obtenerReservasSemana(desde, hasta) {
+  console.log("[Service] Obteniendo reservas entre:", desde, "y", hasta);
+  const db2 = initDatabase();
+  const desdeNormalizado = new Date(desde).toISOString().split("T")[0];
+  const hastaNormalizado = new Date(hasta).toISOString().split("T")[0];
+  console.log("[Service] Fechas normalizadas:", desdeNormalizado, "a", hastaNormalizado);
+  const result = db2.prepare(`
     SELECT * FROM reservas
     WHERE fecha >= ? AND fecha <= ?
     ORDER BY fecha, hora
-  `).all(a, s);
-  console.log("[Service] Reservas encontradas:", n);
-  const E = r.prepare("SELECT * FROM reservas ORDER BY fecha, hora").all();
-  return console.log("[Service] TODAS las reservas en BD:", E), n;
+  `).all(desdeNormalizado, hastaNormalizado);
+  console.log("[Service] Reservas encontradas:", result);
+  const todasLasReservas = db2.prepare(`SELECT * FROM reservas ORDER BY fecha, hora`).all();
+  console.log("[Service] TODAS las reservas en BD:", todasLasReservas);
+  return result;
 }
-function ee() {
+function obtenerTodasLasReservas() {
   console.log("[Service] Obteniendo TODAS las reservas");
-  const e = i().prepare(`
+  const db2 = initDatabase();
+  const result = db2.prepare(`
     SELECT * FROM reservas
     ORDER BY fecha DESC, hora DESC
   `).all();
-  return console.log("[Service] Total de reservas:", e.length), e;
+  console.log("[Service] Total de reservas:", result.length);
+  return result;
 }
-function oe(o, e) {
-  console.log("[Service] Actualizando notas para reserva:", o);
-  const r = i();
+function actualizarNotasReserva(id, notas) {
+  console.log("[Service] Actualizando notas para reserva:", id);
+  const db2 = initDatabase();
   try {
-    const a = r.prepare(`
+    const anterior = db2.prepare(`
       SELECT notas FROM reservas WHERE id = ?
-    `).get(o);
-    if (!a) {
-      console.log("[Service] Reserva no encontrada:", o);
+    `).get(id);
+    if (!anterior) {
+      console.log("[Service] Reserva no encontrada:", id);
       return;
     }
-    r.transaction(() => {
-      r.prepare(`
+    const transaction = db2.transaction(() => {
+      db2.prepare(`
         UPDATE reservas SET notas = ? WHERE id = ?
-      `).run(e, o), console.log("[Service] Notas actualizadas"), r.prepare(`
+      `).run(notas, id);
+      console.log("[Service] Notas actualizadas");
+      db2.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES (?, 'notas', ?, ?, datetime('now'))
-      `).run(o, a.notas || "", e), console.log("[Service] Cambio de notas registrado en historial");
-    })();
-  } catch (a) {
-    throw console.error("[Service] Error en actualizarNotasReserva:", a), a;
+      `).run(id, anterior.notas || "", notas);
+      console.log("[Service] Cambio de notas registrado en historial");
+    });
+    transaction();
+  } catch (error) {
+    console.error("[Service] Error en actualizarNotasReserva:", error);
+    throw error;
   }
 }
-function re() {
-  c.handle("reservas:crear", async (o, e) => {
-    const r = Date.now();
-    console.log(`
-` + "=".repeat(50)), console.log("[IPC] Recibiendo solicitud de reserva:"), console.log(e), console.log("=".repeat(50));
+function registrarHandlersReservas() {
+  ipcMain.handle("reservas:crear", async (_, data) => {
+    const startTime = Date.now();
+    console.log("\n" + "=".repeat(50));
+    console.log("[IPC] Recibiendo solicitud de reserva:");
+    console.log(data);
+    console.log("=".repeat(50));
     try {
       console.log("[IPC] Esperando lock...");
-      const a = await l(async () => (console.log("[IPC] Lock adquirido, ejecutando crearReserva"), await j(e))), s = Date.now() - r;
-      return console.log(`[IPC] Reserva creada exitosamente en ${s}ms, retornando ID:`, a), console.log("=".repeat(50) + `
-`), a;
-    } catch (a) {
-      const s = Date.now() - r;
-      throw console.error(`[IPC] Error en reservas:crear (${s}ms):`, (a == null ? void 0 : a.message) || a), console.error("Stack:", a == null ? void 0 : a.stack), console.log("=".repeat(50) + `
-`), a;
+      const result = await withDbLock(async () => {
+        console.log("[IPC] Lock adquirido, ejecutando crearReserva");
+        return await crearReserva(data);
+      });
+      const elapsed = Date.now() - startTime;
+      console.log(`[IPC] Reserva creada exitosamente en ${elapsed}ms, retornando ID:`, result);
+      console.log("=".repeat(50) + "\n");
+      return result;
+    } catch (error) {
+      const elapsed = Date.now() - startTime;
+      console.error(`[IPC] Error en reservas:crear (${elapsed}ms):`, (error == null ? void 0 : error.message) || error);
+      console.error("Stack:", error == null ? void 0 : error.stack);
+      console.log("=".repeat(50) + "\n");
+      throw error;
     }
-  }), c.handle("reservas:obtener", (o, e) => (console.log("[IPC] Obteniendo reserva:", e), G(e))), c.handle("reservas:borrar", async (o, e) => {
-    console.log("[IPC] Borrando reserva:", e);
+  });
+  ipcMain.handle("reservas:obtener", (_, id) => {
+    console.log("[IPC] Obteniendo reserva:", id);
+    return obtenerReserva(id);
+  });
+  ipcMain.handle("reservas:borrar", async (_, id) => {
+    console.log("[IPC] Borrando reserva:", id);
     try {
-      const r = await l(() => Q(e));
-      return console.log("[IPC] Reserva borrada exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error en reservas:borrar:", r), r;
+      const result = await withDbLock(() => borrarReserva(id));
+      console.log("[IPC] Reserva borrada exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:borrar:", error);
+      throw error;
     }
-  }), c.handle("reservas:mover", async (o, e) => {
-    console.log("[IPC] Moviendo reserva:", e);
+  });
+  ipcMain.handle("reservas:mover", async (_, payload) => {
+    console.log("[IPC] Moviendo reserva:", payload);
     try {
-      const r = await l(
-        () => K(e.id, e.nuevaFecha, e.nuevaHora)
+      const result = await withDbLock(
+        () => moverReserva(payload.id, payload.nuevaFecha, payload.nuevaHora)
       );
-      return console.log("[IPC] Reserva movida exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error en reservas:mover:", r), r;
+      console.log("[IPC] Reserva movida exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:mover:", error);
+      throw error;
     }
-  }), c.handle("reservas:actualizar", async (o, e) => {
-    console.log("[IPC] Actualizando reserva:", e);
+  });
+  ipcMain.handle("reservas:actualizar", async (_, payload) => {
+    console.log("[IPC] Actualizando reserva:", payload);
     try {
-      const r = await l(
-        () => J(e.id, e)
+      const result = await withDbLock(
+        () => actualizarReserva(payload.id, payload)
       );
-      return console.log("[IPC] Reserva actualizada exitosamente"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error en reservas:actualizar:", r), r;
+      console.log("[IPC] Reserva actualizada exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:actualizar:", error);
+      throw error;
     }
-  }), c.handle("reservas:semana", async (o, e) => {
-    console.log("[IPC] Obteniendo reservas de semana:", e);
+  });
+  ipcMain.handle("reservas:semana", async (_, payload) => {
+    console.log("[IPC] Obteniendo reservas de semana:", payload);
     try {
-      const r = await l(
-        () => Z(e.desde, e.hasta)
+      const result = await withDbLock(
+        () => obtenerReservasSemana(payload.desde, payload.hasta)
       );
-      return console.log("[IPC] Reservas de semana obtenidas:", r.length, "registros"), r;
-    } catch (r) {
-      throw console.error("[IPC] Error en reservas:semana:", r), r;
+      console.log("[IPC] Reservas de semana obtenidas:", result.length, "registros");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:semana:", error);
+      throw error;
     }
-  }), c.handle("reservas:todas", async (o) => {
+  });
+  ipcMain.handle("reservas:todas", async (_) => {
     console.log("[IPC] Obteniendo TODAS las reservas");
     try {
-      const e = await l(() => ee());
-      return console.log("[IPC] Total de reservas obtenidas:", e.length), e;
-    } catch (e) {
-      throw console.error("[IPC] Error en reservas:todas:", e), e;
+      const result = await withDbLock(() => obtenerTodasLasReservas());
+      console.log("[IPC] Total de reservas obtenidas:", result.length);
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:todas:", error);
+      throw error;
     }
-  }), c.handle("reservas:actualizar-notas", async (o, e, r) => {
-    console.log("[IPC] Actualizando notas para reserva:", e);
+  });
+  ipcMain.handle("reservas:actualizar-notas", async (_, id, notas) => {
+    console.log("[IPC] Actualizando notas para reserva:", id);
     try {
-      const a = await l(() => oe(e, r));
-      return console.log("[IPC] Notas actualizadas exitosamente"), a;
-    } catch (a) {
-      throw console.error("[IPC] Error en reservas:actualizar-notas:", a), a;
+      const result = await withDbLock(() => actualizarNotasReserva(id, notas));
+      console.log("[IPC] Notas actualizadas exitosamente");
+      return result;
+    } catch (error) {
+      console.error("[IPC] Error en reservas:actualizar-notas:", error);
+      throw error;
     }
   });
 }
-function v(o) {
-  return {
+function traducirCampo(campo) {
+  const mapa = {
     nombre: "Nombre",
     fecha: "Fecha",
     hora: "Hora",
@@ -619,15 +1003,33 @@ function v(o) {
     detalles: "Observaciones",
     creación: "Creación",
     eliminación: "Eliminación"
-  }[o] ?? o;
+  };
+  return mapa[campo] ?? campo;
 }
-function ae(o, e, r) {
-  return o === "creación" ? "Reserva creada" : o === "eliminación" ? "Reserva eliminada" : e === null && r !== null ? `Se estableció ${v(o)}: ${r}` : e !== null && r === null ? `Se eliminó ${v(o)}` : e !== r ? `Cambió ${v(o)} de "${e}" a "${r}"` : `Actualización de ${v(o)}`;
+function describirCambio(campo, anterior, nuevo) {
+  if (campo === "creación") {
+    return "Reserva creada";
+  }
+  if (campo === "eliminación") {
+    return "Reserva eliminada";
+  }
+  if (anterior === null && nuevo !== null) {
+    return `Se estableció ${traducirCampo(campo)}: ${nuevo}`;
+  }
+  if (anterior !== null && nuevo === null) {
+    return `Se eliminó ${traducirCampo(campo)}`;
+  }
+  if (anterior !== nuevo) {
+    return `Cambió ${traducirCampo(campo)} de "${anterior}" a "${nuevo}"`;
+  }
+  return `Actualización de ${traducirCampo(campo)}`;
 }
-function ne(o) {
-  if (!Number.isInteger(o))
+function obtenerHistorial(reservaId) {
+  if (!Number.isInteger(reservaId)) {
     throw new Error("ID de reserva inválido");
-  return i().prepare(`
+  }
+  const db2 = initDatabase();
+  const filas = db2.prepare(`
     SELECT
       id,
       reserva_id,
@@ -639,85 +1041,150 @@ function ne(o) {
     FROM historial_reservas
     WHERE reserva_id = ?
     ORDER BY datetime(fecha) DESC, id DESC
-  `).all(o).map((a) => ({
-    ...a,
-    descripcion: ae(
-      a.campo,
-      a.valor_anterior,
-      a.valor_nuevo
+  `).all(reservaId);
+  return filas.map((row) => ({
+    ...row,
+    descripcion: describirCambio(
+      row.campo,
+      row.valor_anterior,
+      row.valor_nuevo
     )
   }));
 }
-function se(o, e, r, a, s) {
-  const n = i();
-  n.transaction(() => {
-    n.prepare(`
+function registrarEventoHistorial(reservaId, campo, anterior, nuevo, usuario) {
+  const db2 = initDatabase();
+  const tx = db2.transaction(() => {
+    db2.prepare(`
       INSERT INTO historial_reservas
       (reserva_id, campo, valor_anterior, valor_nuevo, fecha, usuario)
       VALUES (?, ?, ?, ?, datetime('now'), ?)
     `).run(
-      o,
-      e,
-      r,
-      a,
-      s ?? "sistema"
+      reservaId,
+      campo,
+      anterior,
+      nuevo,
+      usuario ?? "sistema"
     );
-  })();
+  });
+  tx();
 }
-function te() {
-  c.handle(
+function registrarHandlersHistorial() {
+  ipcMain.handle(
     "historial:obtener",
-    (o, e) => ne(e)
-  ), c.handle(
+    (_, reservaId) => obtenerHistorial(reservaId)
+  );
+  ipcMain.handle(
     "historial:registrar",
-    async (o, e) => await l(
-      () => se(
-        e.reservaId,
-        e.campo,
-        e.anterior,
-        e.nuevo,
-        e.usuario
+    async (_, payload) => await withDbLock(
+      () => registrarEventoHistorial(
+        payload.reservaId,
+        payload.campo,
+        payload.anterior,
+        payload.nuevo,
+        payload.usuario
       )
     )
   );
 }
-function ie() {
-  console.log(` 
-🧩 Cargando IPC handlers  
-`), V(), re(), te(), console.log(` 
- ✅ IPC handlers cargados 
-`);
+function obtenerVehiculos() {
+  const db2 = initDatabase();
+  return db2.prepare(`
+    SELECT
+      v.*,
+      h.fecha as ultima_fecha,
+      h.km as ultimo_km,
+      h.tipo_turno as ultimo_tipo_turno,
+      h.particular_tipo as ultimo_particular_tipo,
+      h.garantia_tipo as ultimo_garantia_tipo
+    FROM vehiculos v
+    LEFT JOIN vehiculos_historial h
+      ON h.id = (
+        SELECT id FROM vehiculos_historial
+        WHERE vehiculo_id = v.id
+        ORDER BY fecha DESC, id DESC
+        LIMIT 1
+      )
+    ORDER BY v.matricula
+  `).all();
 }
-const N = I(import.meta.url), w = d.dirname(N);
-globalThis.__filename = N;
-globalThis.__dirname = w;
-process.env.APP_ROOT = d.join(w, "..");
-const S = process.env.VITE_DEV_SERVER_URL, ce = d.join(process.env.APP_ROOT, "dist-electron"), L = d.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = S ? d.join(process.env.APP_ROOT, "public") : L;
-let u = null;
-function le() {
-  u = new H({
+function obtenerHistorialVehiculo(vehiculoId) {
+  const db2 = initDatabase();
+  return db2.prepare(`
+    SELECT *
+    FROM vehiculos_historial
+    WHERE vehiculo_id = ?
+    ORDER BY fecha DESC, id DESC
+  `).all(vehiculoId);
+}
+function registrarHandlersVehiculos() {
+  ipcMain.handle("vehiculos:todos", async () => {
+    try {
+      return await withDbLock(() => obtenerVehiculos());
+    } catch (error) {
+      console.error("[IPC] Error en vehiculos:todos:", error);
+      throw error;
+    }
+  });
+  ipcMain.handle("vehiculos:historial", async (_, vehiculoId) => {
+    try {
+      return await withDbLock(() => obtenerHistorialVehiculo(vehiculoId));
+    } catch (error) {
+      console.error("[IPC] Error en vehiculos:historial:", error);
+      throw error;
+    }
+  });
+}
+function setupIpcHandlers() {
+  console.log(" \n🧩 Cargando IPC handlers  \n");
+  registrarHandlersHorarios();
+  registrarHandlersReservas();
+  registrarHandlersHistorial();
+  registrarHandlersVehiculos();
+  console.log(" \n ✅ IPC handlers cargados \n");
+}
+const __filename$1 = fileURLToPath(import.meta.url);
+const __dirname$1 = path.dirname(__filename$1);
+globalThis.__filename = __filename$1;
+globalThis.__dirname = __dirname$1;
+process.env.APP_ROOT = path.join(__dirname$1, "..");
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+let win = null;
+function createWindow() {
+  win = new BrowserWindow({
     width: 1366,
     height: 768,
     minWidth: 1024,
     // Mínimo para que no se rompa el diseño
     minHeight: 700,
     title: "ReserveRosas - Taller Central",
-    autoHideMenuBar: !0,
-    frame: !0,
+    autoHideMenuBar: true,
+    frame: true,
     // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {
-      preload: d.join(ce, "preload.mjs"),
-      nodeIntegration: !1,
-      contextIsolation: !0
+      preload: path.join(MAIN_DIST, "preload.mjs"),
+      nodeIntegration: false,
+      contextIsolation: true
     }
-  }), u.webContents.openDevTools({ mode: "detach" }), u.maximize(), u.on("page-title-updated", (o) => o.preventDefault()), S ? u.loadURL(S) : u.loadFile(d.join(L, "index.html"));
+  });
+  win.webContents.openDevTools({ mode: "detach" });
+  win.maximize();
+  win.on("page-title-updated", (e) => e.preventDefault());
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+  }
 }
-m.whenReady().then(() => {
-  i(), ie(), le();
+app.whenReady().then(() => {
+  initDatabase();
+  setupIpcHandlers();
+  createWindow();
 });
 export {
-  ce as MAIN_DIST,
-  L as RENDERER_DIST,
-  S as VITE_DEV_SERVER_URL
+  MAIN_DIST,
+  RENDERER_DIST,
+  VITE_DEV_SERVER_URL
 };
