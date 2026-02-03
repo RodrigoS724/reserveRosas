@@ -1,11 +1,15 @@
 {
   "name": "reserverosas",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
+    "build:win": "vue-tsc && vite build && electron-builder --win",
+    "build:win:publish": "vue-tsc && vite build && electron-builder --win --publish always",
+    "release:local": "powershell -ExecutionPolicy Bypass -File scripts/release-local.ps1",
+    "release:github": "powershell -ExecutionPolicy Bypass -File scripts/release-github.ps1",
     "preview": "vite preview"
   },
   "dependencies": {
