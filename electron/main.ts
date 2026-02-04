@@ -1,8 +1,10 @@
+import 'dotenv/config'
 import { app, BrowserWindow } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
 import { initDatabase } from './db/database'
+import { startBackupScheduler } from './services/backup.service'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,5 +71,6 @@ function createWindow() {
 app.whenReady().then(() => {
   initDatabase() // Inicializamos la base de datos
   setupIpcHandlers() // Activamos los cables
+  startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana
 })

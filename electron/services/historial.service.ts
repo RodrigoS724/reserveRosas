@@ -1,4 +1,5 @@
 import { initDatabase } from '../db/database'
+import { tryMysql } from '../db/mysql'
 
 /* =========================
  * TIPOS
@@ -69,7 +70,7 @@ function describirCambio(
 /* =========================
  * OBTENER HISTORIAL
  * ========================= */
-export function obtenerHistorial(
+function obtenerHistorialSqlite(
   reservaId: number
 ): HistorialReserva[] {
   if (!Number.isInteger(reservaId)) {
@@ -102,11 +103,53 @@ export function obtenerHistorial(
   }))
 }
 
+export async function obtenerHistorial(
+  reservaId: number
+): Promise<HistorialReserva[]> {
+  if (!Number.isInteger(reservaId)) {
+    throw new Error('ID de reserva inválido')
+  }
+
+  const mysqlResult = await tryMysql(async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT
+          id,
+          reserva_id,
+          campo,
+          valor_anterior,
+          valor_nuevo,
+          fecha,
+          usuario
+        FROM historial_reservas
+        WHERE reserva_id = ?
+        ORDER BY fecha DESC, id DESC
+      `,
+      [reservaId]
+    )
+    return rows as any[]
+  })
+
+  if (mysqlResult.ok) {
+    const filas = mysqlResult.value
+    return filas.map(row => ({
+      ...row,
+      descripcion: describirCambio(
+        row.campo,
+        row.valor_anterior,
+        row.valor_nuevo
+      )
+    }))
+  }
+
+  return obtenerHistorialSqlite(reservaId)
+}
+
 /* =========================
  * INSERTAR EVENTO MANUAL
  * (útil para acciones futuras)
  * ========================= */
-export function registrarEventoHistorial(
+function registrarEventoHistorialSqlite(
   reservaId: number,
   campo: string,
   anterior: string | null,
@@ -130,4 +173,34 @@ export function registrarEventoHistorial(
   })
 
   tx()
+}
+
+export async function registrarEventoHistorial(
+  reservaId: number,
+  campo: string,
+  anterior: string | null,
+  nuevo: string | null,
+  usuario?: string
+) {
+  const mysqlResult = await tryMysql(async (pool) => {
+    await pool.execute(
+      `
+        INSERT INTO historial_reservas
+        (reserva_id, campo, valor_anterior, valor_nuevo, fecha, usuario)
+        VALUES (?, ?, ?, ?, NOW(), ?)
+      `,
+      [reservaId, campo, anterior, nuevo, usuario ?? 'sistema']
+    )
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      registrarEventoHistorialSqlite(reservaId, campo, anterior, nuevo, usuario)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en registrarEventoHistorial:', error)
+    }
+    return
+  }
+
+  registrarEventoHistorialSqlite(reservaId, campo, anterior, nuevo, usuario)
 }
