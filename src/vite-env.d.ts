@@ -166,6 +166,42 @@ declare global {
       }[]>
 
       actualizarNotasReserva: (id: number, notas: string) => Promise<void>
+
+      obtenerEnvConfig: () => Promise<string>
+      guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
+      probarConexionDB: () => Promise<{ ok: boolean; error?: string }>
+
+      obtenerUsuariosLogin: () => Promise<{
+        id: number
+        nombre: string
+        username: string
+        role: string
+        permissions: string[]
+      }[]>
+      login: (username: string, password: string) => Promise<{
+        ok: boolean
+        error?: string
+        user?: {
+          id: number
+          nombre: string
+          username: string
+          role: string
+          permissions: string[]
+        }
+      }>
+      listarUsuarios: () => Promise<{
+        id: number
+        nombre: string
+        username: string
+        role: string
+        permissions: string[]
+        activo: number
+        created_at?: string
+      }[]>
+      crearUsuario: (data: any) => Promise<{ ok: boolean }>
+      actualizarUsuario: (data: any) => Promise<{ ok: boolean }>
+      borrarUsuario: (id: number) => Promise<{ ok: boolean }>
+      actualizarPasswordUsuario: (id: number, password: string) => Promise<{ ok: boolean }>
     }
   }
 }

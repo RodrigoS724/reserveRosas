@@ -28,6 +28,10 @@ export function getMysqlPool() {
   return pool
 }
 
+export function resetMysqlPool() {
+  pool = null
+}
+
 export async function tryMysql<T>(fn: (pool: mysql.Pool) => Promise<T>) {
   if (!isMysqlConfigured()) {
     return { ok: false as const, error: new Error('MYSQL not configured') }

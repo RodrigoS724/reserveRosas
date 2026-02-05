@@ -8,6 +8,9 @@ import Reservas from './views/reserve.vue'
 import adminHorarios from './views/adminHorarios.vue'
 import historial from './views/historial.vue'
 import vehiculos from './views/vehiculos.vue'
+import Config from './views/config.vue'
+import Users from './views/users.vue'
+import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -19,7 +22,20 @@ const router = createRouter({
     { path: '/vehiculos', component: vehiculos },
     { path: '/ajustes', component: adminHorarios },
     { path: '/reservas', component: Reservas },
+    { path: '/config', component: Config },
+    { path: '/usuarios', component: Users },
   ]
+})
+
+router.beforeEach((to, _from, next) => {
+  const session = getSession()
+  if (!session) {
+    return next()
+  }
+  if (canAccessRoute(session, to.path)) {
+    return next()
+  }
+  return next(getFallbackRoute(session))
 })
 
 

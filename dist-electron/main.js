@@ -18,6 +18,7 @@ import require$$1$2 from "string_decoder";
 import require$$0$6 from "zlib";
 import require$$1$4 from "util";
 import require$$0$7 from "url";
+import crypto from "node:crypto";
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -34,7 +35,7 @@ function requireMain() {
   const fs2 = require$$0$1;
   const path2 = require$$1$1;
   const os = require$$2$1;
-  const crypto = require$$0$2;
+  const crypto2 = require$$0$2;
   const packageJson = require$$4$1;
   const version2 = packageJson.version;
   const LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
@@ -253,7 +254,7 @@ function requireMain() {
     const authTag = ciphertext.subarray(-16);
     ciphertext = ciphertext.subarray(12, -16);
     try {
-      const aesgcm = crypto.createDecipheriv("aes-256-gcm", key, nonce);
+      const aesgcm = crypto2.createDecipheriv("aes-256-gcm", key, nonce);
       aesgcm.setAuthTag(authTag);
       return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
     } catch (error) {
@@ -482,6 +483,18 @@ function initDatabase() {
       modelo TEXT,
       nombre TEXT,
       telefono TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL,
+      permissions_json TEXT,
+      activo INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
@@ -11656,9 +11669,9 @@ function requireAuth_41() {
   if (hasRequiredAuth_41) return auth_41;
   hasRequiredAuth_41 = 1;
   (function(exports$1) {
-    const crypto = require$$0$2;
+    const crypto2 = require$$0$2;
     function sha1(msg, msg1, msg2) {
-      const hash = crypto.createHash("sha1");
+      const hash = crypto2.createHash("sha1");
       hash.update(msg);
       if (msg1) {
         hash.update(msg1);
@@ -13410,7 +13423,7 @@ function requireSha256_password() {
   if (hasRequiredSha256_password) return sha256_password;
   hasRequiredSha256_password = 1;
   const PLUGIN_NAME = "sha256_password";
-  const crypto = require$$0$2;
+  const crypto2 = require$$0$2;
   const { xorRotating } = requireAuth_41();
   const Tls = require$$2$2;
   const REQUEST_SERVER_KEY_PACKET = Buffer.from([1]);
@@ -13419,7 +13432,7 @@ function requireSha256_password() {
   const STATE_FINAL = -1;
   function encrypt(password, scramble, key) {
     const stage1 = xorRotating(Buffer.from(`${password}\0`, "utf8"), scramble);
-    return crypto.publicEncrypt(key, stage1);
+    return crypto2.publicEncrypt(key, stage1);
   }
   sha256_password = (pluginOptions = {}) => ({ connection: connection2 }) => {
     let state = 0;
@@ -13465,7 +13478,7 @@ function requireCaching_sha2_password() {
   if (hasRequiredCaching_sha2_password) return caching_sha2_password;
   hasRequiredCaching_sha2_password = 1;
   const PLUGIN_NAME = "caching_sha2_password";
-  const crypto = require$$0$2;
+  const crypto2 = require$$0$2;
   const { xor, xorRotating } = requireAuth_41();
   const REQUEST_SERVER_KEY_PACKET = Buffer.from([2]);
   const FAST_AUTH_SUCCESS_PACKET = Buffer.from([3]);
@@ -13475,7 +13488,7 @@ function requireCaching_sha2_password() {
   const STATE_WAIT_SERVER_KEY = 2;
   const STATE_FINAL = -1;
   function sha256(msg) {
-    const hash = crypto.createHash("sha256");
+    const hash = crypto2.createHash("sha256");
     hash.update(msg);
     return hash.digest();
   }
@@ -13490,10 +13503,10 @@ function requireCaching_sha2_password() {
   }
   function encrypt(password, scramble, key) {
     const stage1 = xorRotating(Buffer.from(`${password}\0`, "utf8"), scramble);
-    return crypto.publicEncrypt(
+    return crypto2.publicEncrypt(
       {
         key,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+        padding: crypto2.constants.RSA_PKCS1_OAEP_PADDING
       },
       stage1
     );
@@ -19185,6 +19198,9 @@ function getMysqlPool() {
   }
   return pool;
 }
+function resetMysqlPool() {
+  pool = null;
+}
 async function tryMysql(fn) {
   if (!isMysqlConfigured()) {
     return { ok: false, error: new Error("MYSQL not configured") };
@@ -20706,12 +20722,427 @@ function registrarHandlersVehiculos() {
     }
   });
 }
+const ENV_FILENAME = "mysql.env";
+const ENV_KEYS = [
+  "MYSQL_HOST",
+  "MYSQL_PORT",
+  "MYSQL_USER",
+  "MYSQL_PASSWORD",
+  "MYSQL_DATABASE"
+];
+function getEnvFilePath() {
+  const userDataPath = app.getPath("userData");
+  return path.join(userDataPath, ENV_FILENAME);
+}
+function parseEnv(content) {
+  const result = {};
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const idx = trimmed.indexOf("=");
+    if (idx === -1) continue;
+    const key = trimmed.slice(0, idx).trim();
+    let value = trimmed.slice(idx + 1).trim();
+    if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+      value = value.slice(1, -1);
+    }
+    if (key) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+function seedFromProcessEnv() {
+  const lines = [];
+  for (const key of ENV_KEYS) {
+    const value = process.env[key];
+    if (value !== void 0 && value !== "") {
+      lines.push(`${key}=${value}`);
+    }
+  }
+  return lines.join("\n");
+}
+function loadUserEnv() {
+  const envPath = getEnvFilePath();
+  if (!fs.existsSync(envPath)) {
+    const seeded = seedFromProcessEnv();
+    if (seeded) {
+      writeUserEnvText(seeded);
+    } else {
+      return;
+    }
+  }
+  const content = fs.readFileSync(envPath, "utf-8");
+  const parsed = parseEnv(content);
+  for (const [key, value] of Object.entries(parsed)) {
+    process.env[key] = value;
+  }
+}
+function readUserEnvText() {
+  const envPath = getEnvFilePath();
+  if (!fs.existsSync(envPath)) {
+    return "";
+  }
+  return fs.readFileSync(envPath, "utf-8");
+}
+function writeUserEnvText(text) {
+  const envPath = getEnvFilePath();
+  const dir = path.dirname(envPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(envPath, text, "utf-8");
+}
+function registrarHandlersConfig() {
+  ipcMain.handle("config:env:get", async () => {
+    return readUserEnvText();
+  });
+  ipcMain.handle("config:env:set", async (_event, text) => {
+    writeUserEnvText(text || "");
+    loadUserEnv();
+    resetMysqlPool();
+    return { ok: true };
+  });
+  ipcMain.handle("config:db:test", async () => {
+    var _a;
+    const result = await tryMysql(async (pool2) => {
+      const [rows] = await pool2.query("SELECT 1 as ok");
+      return rows;
+    });
+    if (!result.ok) {
+      return { ok: false, error: ((_a = result.error) == null ? void 0 : _a.message) || "Error de conexión" };
+    }
+    return { ok: true };
+  });
+}
+const ALL_PERMISSIONS = [
+  "agenda",
+  "reservas",
+  "historial",
+  "ajustes",
+  "vehiculos",
+  "config",
+  "usuarios"
+];
+function getDefaultPermissions(role) {
+  if (role === "super") return [...ALL_PERMISSIONS];
+  if (role === "admin") return ["agenda", "reservas", "historial", "ajustes", "vehiculos"];
+  return ["reservas", "historial"];
+}
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(password, salt, 32);
+  return `scrypt$${salt.toString("hex")}$${hash.toString("hex")}`;
+}
+function verifyPassword(password, stored) {
+  const parts = stored.split("$");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
+  const salt = Buffer.from(parts[1], "hex");
+  const hash = Buffer.from(parts[2], "hex");
+  const computed = crypto.scryptSync(password, salt, 32);
+  return crypto.timingSafeEqual(hash, computed);
+}
+function normalizePermissions(role, permissions) {
+  if (role === "super") {
+    return getDefaultPermissions(role);
+  }
+  if (!permissions || permissions.length === 0) {
+    return getDefaultPermissions(role);
+  }
+  const unique = /* @__PURE__ */ new Set();
+  for (const p of permissions) {
+    if (ALL_PERMISSIONS.includes(p)) unique.add(p);
+  }
+  return Array.from(unique);
+}
+function parsePermissions(raw, role) {
+  if (!raw) return getDefaultPermissions(role);
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return normalizePermissions(role, parsed);
+    }
+    return getDefaultPermissions(role);
+  } catch {
+    return getDefaultPermissions(role);
+  }
+}
+async function ensureUserMysql(data) {
+  const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions));
+  const activo = data.activo ?? 1;
+  return tryMysql(async (pool2) => {
+    await pool2.query(
+      `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         nombre = VALUES(nombre),
+         password_hash = VALUES(password_hash),
+         role = VALUES(role),
+         permissions_json = VALUES(permissions_json),
+         activo = VALUES(activo)`,
+      [data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo]
+    );
+    return true;
+  });
+}
+function ensureUserSqlite(data) {
+  const db2 = initDatabase();
+  const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions));
+  const activo = data.activo ?? 1;
+  db2.prepare(
+    `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(username) DO UPDATE SET
+       nombre = excluded.nombre,
+       password_hash = excluded.password_hash,
+       role = excluded.role,
+       permissions_json = excluded.permissions_json,
+       activo = excluded.activo`
+  ).run(data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo);
+}
+async function bootstrapSuperAdmin() {
+  const username = process.env.SUPERADMIN_USER || "Admin";
+  const password = process.env.SUPERADMIN_PASS || "admin";
+  const nombre = process.env.SUPERADMIN_NAME || "Super Admin";
+  const role = "super";
+  const permissions = getDefaultPermissions(role);
+  const passwordHash = hashPassword(password);
+  const existsMysql = await tryMysql(async (pool2) => {
+    const [rows] = await pool2.query(
+      "SELECT id FROM usuarios WHERE username = ? LIMIT 1",
+      [username]
+    );
+    return rows && rows.length > 0;
+  });
+  let existsSqlite = false;
+  try {
+    const db2 = initDatabase();
+    const row = db2.prepare("SELECT id FROM usuarios WHERE username = ? LIMIT 1").get(username);
+    existsSqlite = Boolean(row);
+  } catch {
+    existsSqlite = false;
+  }
+  if (existsMysql.ok && existsMysql.value || existsSqlite) {
+    return;
+  }
+  const mysqlResult = await ensureUserMysql({
+    nombre,
+    username,
+    passwordHash,
+    role,
+    permissions,
+    activo: 1
+  });
+  if (!mysqlResult.ok) {
+    ensureUserSqlite({
+      nombre,
+      username,
+      passwordHash,
+      role,
+      permissions,
+      activo: 1
+    });
+  } else {
+    try {
+      ensureUserSqlite({
+        nombre,
+        username,
+        passwordHash,
+        role,
+        permissions,
+        activo: 1
+      });
+    } catch (error) {
+      console.warn("[Usuarios] Error sincronizando a sqlite:", error);
+    }
+  }
+}
+async function listarUsuarios() {
+  const mysqlResult = await tryMysql(async (pool2) => {
+    const [rows2] = await pool2.query(
+      "SELECT id, nombre, username, role, permissions_json, activo, created_at FROM usuarios"
+    );
+    return rows2;
+  });
+  if (mysqlResult.ok) {
+    return mysqlResult.value.map((row) => ({
+      id: Number(row.id),
+      nombre: row.nombre,
+      username: row.username,
+      role: row.role,
+      permissions: parsePermissions(row.permissions_json, row.role),
+      activo: Number(row.activo) || 0,
+      created_at: row.created_at
+    }));
+  }
+  const db2 = initDatabase();
+  const rows = db2.prepare(
+    "SELECT id, nombre, username, role, permissions_json, activo, created_at FROM usuarios"
+  ).all();
+  return rows.map((row) => ({
+    id: Number(row.id),
+    nombre: row.nombre,
+    username: row.username,
+    role: row.role,
+    permissions: parsePermissions(row.permissions_json, row.role),
+    activo: Number(row.activo) || 0,
+    created_at: row.created_at
+  }));
+}
+async function listarUsuariosLogin() {
+  const users = await listarUsuarios();
+  return users.filter((u) => u.activo).map((u) => ({
+    id: u.id,
+    nombre: u.nombre,
+    username: u.username,
+    role: u.role,
+    permissions: u.permissions
+  }));
+}
+async function validarLogin(username, password) {
+  const mysqlResult = await tryMysql(async (pool2) => {
+    const [rows] = await pool2.query(
+      "SELECT id, nombre, username, password_hash, role, permissions_json, activo FROM usuarios WHERE username = ? LIMIT 1",
+      [username]
+    );
+    return rows[0];
+  });
+  let row = null;
+  if (mysqlResult.ok) {
+    row = mysqlResult.value;
+  } else {
+    const db2 = initDatabase();
+    row = db2.prepare(
+      "SELECT id, nombre, username, password_hash, role, permissions_json, activo FROM usuarios WHERE username = ? LIMIT 1"
+    ).get(username);
+  }
+  if (!row || !row.password_hash) return { ok: false, error: "Usuario o contraseña inválida" };
+  if (!row.activo) return { ok: false, error: "Usuario inactivo" };
+  if (!verifyPassword(password, row.password_hash)) {
+    return { ok: false, error: "Usuario o contraseña inválida" };
+  }
+  return {
+    ok: true,
+    user: {
+      id: Number(row.id),
+      nombre: row.nombre,
+      username: row.username,
+      role: row.role,
+      permissions: parsePermissions(row.permissions_json, row.role)
+    }
+  };
+}
+async function crearUsuario(data) {
+  const permissions = normalizePermissions(data.role, data.permissions);
+  const passwordHash = hashPassword(data.password);
+  const mysqlResult = await ensureUserMysql({
+    nombre: data.nombre,
+    username: data.username,
+    passwordHash,
+    role: data.role,
+    permissions,
+    activo: data.activo ?? 1
+  });
+  if (!mysqlResult.ok) {
+    ensureUserSqlite({
+      nombre: data.nombre,
+      username: data.username,
+      passwordHash,
+      role: data.role,
+      permissions,
+      activo: data.activo ?? 1
+    });
+  } else {
+    try {
+      ensureUserSqlite({
+        nombre: data.nombre,
+        username: data.username,
+        passwordHash,
+        role: data.role,
+        permissions,
+        activo: data.activo ?? 1
+      });
+    } catch (error) {
+      console.warn("[Usuarios] Error sincronizando a sqlite:", error);
+    }
+  }
+}
+async function actualizarUsuario(data) {
+  const permissions = normalizePermissions(data.role, data.permissions);
+  const mysqlResult = await tryMysql(async (pool2) => {
+    await pool2.query(
+      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
+       WHERE id = ?`,
+      [data.nombre, data.username, data.role, JSON.stringify(permissions), data.activo ?? 1, data.id]
+    );
+    return true;
+  });
+  const db2 = initDatabase();
+  db2.prepare(
+    `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
+     WHERE id = ?`
+  ).run(data.nombre, data.username, data.role, JSON.stringify(permissions), data.activo ?? 1, data.id);
+  if (!mysqlResult.ok) {
+    console.warn("[Usuarios] MySQL no disponible, actualizado solo en SQLite");
+  }
+}
+async function eliminarUsuario(id) {
+  await tryMysql(async (pool2) => {
+    await pool2.query("DELETE FROM usuarios WHERE id = ?", [id]);
+    return true;
+  });
+  const db2 = initDatabase();
+  db2.prepare("DELETE FROM usuarios WHERE id = ?").run(id);
+}
+async function actualizarPassword(id, password) {
+  const passwordHash = hashPassword(password);
+  await tryMysql(async (pool2) => {
+    await pool2.query("UPDATE usuarios SET password_hash = ? WHERE id = ?", [passwordHash, id]);
+    return true;
+  });
+  const db2 = initDatabase();
+  db2.prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?").run(passwordHash, id);
+}
+function registrarHandlersUsuarios() {
+  ipcMain.handle("usuarios:bootstrap", async () => {
+    await bootstrapSuperAdmin();
+    return { ok: true };
+  });
+  ipcMain.handle("usuarios:login-list", async () => {
+    return listarUsuariosLogin();
+  });
+  ipcMain.handle("auth:login", async (_event, username, password) => {
+    return validarLogin(username, password);
+  });
+  ipcMain.handle("usuarios:list", async () => {
+    return listarUsuarios();
+  });
+  ipcMain.handle("usuarios:create", async (_event, data) => {
+    await crearUsuario(data);
+    return { ok: true };
+  });
+  ipcMain.handle("usuarios:update", async (_event, data) => {
+    await actualizarUsuario(data);
+    return { ok: true };
+  });
+  ipcMain.handle("usuarios:delete", async (_event, id) => {
+    await eliminarUsuario(id);
+    return { ok: true };
+  });
+  ipcMain.handle("usuarios:password", async (_event, id, password) => {
+    await actualizarPassword(id, password);
+    return { ok: true };
+  });
+}
 function setupIpcHandlers() {
   console.log(" \n🧩 Cargando IPC handlers  \n");
   registrarHandlersHorarios();
   registrarHandlersReservas();
   registrarHandlersHistorial();
   registrarHandlersVehiculos();
+  registrarHandlersConfig();
+  registrarHandlersUsuarios();
   console.log(" \n ✅ IPC handlers cargados \n");
 }
 function getDbPath() {
@@ -20786,7 +21217,9 @@ function createWindow() {
   }
 }
 app.whenReady().then(() => {
+  loadUserEnv();
   initDatabase();
+  bootstrapSuperAdmin();
   setupIpcHandlers();
   startBackupScheduler();
   createWindow();

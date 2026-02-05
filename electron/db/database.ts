@@ -150,6 +150,22 @@ export function initDatabase() {
   `)
 
   // ===============================
+  // USUARIOS Y PERMISOS
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL,
+      permissions_json TEXT,
+      activo INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  // ===============================
   // HISTORIAL DE VEHICULOS
   // ===============================
   db.exec(`

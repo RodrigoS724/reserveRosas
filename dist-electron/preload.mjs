@@ -43,5 +43,17 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerHistorial: (id) => electron.ipcRenderer.invoke("historial:obtener", id),
   // Vehiculos
   obtenerVehiculos: () => electron.ipcRenderer.invoke("vehiculos:todos"),
-  obtenerHistorialVehiculo: (vehiculoId) => electron.ipcRenderer.invoke("vehiculos:historial", vehiculoId)
+  obtenerHistorialVehiculo: (vehiculoId) => electron.ipcRenderer.invoke("vehiculos:historial", vehiculoId),
+  // Configuración
+  obtenerEnvConfig: () => electron.ipcRenderer.invoke("config:env:get"),
+  guardarEnvConfig: (text) => electron.ipcRenderer.invoke("config:env:set", text),
+  probarConexionDB: () => electron.ipcRenderer.invoke("config:db:test"),
+  // Usuarios / Auth
+  obtenerUsuariosLogin: () => electron.ipcRenderer.invoke("usuarios:login-list"),
+  login: (username, password) => electron.ipcRenderer.invoke("auth:login", username, password),
+  listarUsuarios: () => electron.ipcRenderer.invoke("usuarios:list"),
+  crearUsuario: (data) => electron.ipcRenderer.invoke("usuarios:create", data),
+  actualizarUsuario: (data) => electron.ipcRenderer.invoke("usuarios:update", data),
+  borrarUsuario: (id) => electron.ipcRenderer.invoke("usuarios:delete", id),
+  actualizarPasswordUsuario: (id, password) => electron.ipcRenderer.invoke("usuarios:password", id, password)
 });

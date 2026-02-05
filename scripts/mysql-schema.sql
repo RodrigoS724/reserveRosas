@@ -72,6 +72,17 @@ CREATE TABLE IF NOT EXISTS vehiculos_historial (
   FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id)
 );
 
+CREATE TABLE IF NOT EXISTS usuarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  permissions_json TEXT,
+  activo TINYINT DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Seed horarios_base si está vacío
 INSERT IGNORE INTO horarios_base (hora, activo) VALUES
 ('08:00', 1), ('09:00', 1), ('10:00', 1), ('11:00', 1),

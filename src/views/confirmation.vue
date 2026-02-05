@@ -291,7 +291,7 @@ const esValido = computed(() => {
           <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1 text-balance">Tipo de
             Turno</label>
           <div class="grid grid-cols-2 gap-2 sm:gap-3">
-            <button v-for="t in ['Garantía', 'Particular']" :key="t" type="button" @click="tipoTurno = t"
+            <button v-for="t in ['Garantía', 'Particular'] as const" :key="t" type="button" @click="tipoTurno = t"
               :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm',
                 tipoTurno === t ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">
               {{ t }}
@@ -329,7 +329,7 @@ const esValido = computed(() => {
           <div class="space-y-2">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1 text-balance">Tipo Particular</label>
             <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <button v-for="t in ['Service', 'Taller']" :key="t" type="button" @click="particularTipo = t"
+              <button v-for="t in ['Service', 'Taller'] as const" :key="t" type="button" @click="particularTipo = t"
                 :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm',
                   particularTipo === t ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">
                 {{ t }}

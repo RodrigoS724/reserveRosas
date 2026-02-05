@@ -117,6 +117,7 @@ const cancelarReserva = async () => {
                     <label>Estado</label>
                     <select v-model="editable.estado" class="select-estado" :class="editable.estado">
                         <option value="pendiente">Pendiente</option>
+                        <option value="pendiente_repuestos">Pendiente de repuestos</option>
                         <option value="revision">En revisión</option>
                         <option value="pronto">Pronto</option>
                         <option value="cancelada">Cancelada</option>
@@ -367,6 +368,10 @@ const cancelarReserva = async () => {
 
 .select-estado.revision {
     border-color: #93c5fd;
+}
+
+.select-estado.pendiente_repuestos {
+    border-color: #fb923c;
 }
 
 .select-estado.cancelada {

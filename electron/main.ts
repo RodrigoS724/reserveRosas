@@ -5,6 +5,8 @@ import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
 import { initDatabase } from './db/database'
 import { startBackupScheduler } from './services/backup.service'
+import { loadUserEnv } from './config/env'
+import { bootstrapSuperAdmin } from './services/users.service'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,7 +71,9 @@ function createWindow() {
 
 // UN SOLO whenReady para todo
 app.whenReady().then(() => {
+  loadUserEnv() // Cargar .env guardado por el usuario (si existe)
   initDatabase() // Inicializamos la base de datos
+  bootstrapSuperAdmin()
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana

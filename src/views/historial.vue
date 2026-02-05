@@ -5,6 +5,34 @@ import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
  * ESTADO
  * ========================= */
 const reservas = ref<any[]>([])
+const filtroTexto = ref('')
+const fechaDesde = ref('')
+const fechaHasta = ref('')
+const estadoFiltro = ref('TODOS')
+const cargando = ref(false)
+
+function normalizarEstadoKey(estado?: string) {
+  if (!estado) return 'PENDIENTE'
+  const key = estado
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (key === 'CANCELADA') return 'CANCELADO'
+  if (key === 'REVISION') return 'EN REVISION'
+  return key
+}
+
+function formatearEstado(estado?: string) {
+  const key = normalizarEstadoKey(estado)
+  if (key === 'PENDIENTE REPUESTOS') return 'Pendiente repuestos'
+  if (key === 'EN REVISION') return 'En revisión'
+  if (key === 'EN PROCESO') return 'En proceso'
+  if (key === 'CANCELADO') return 'Cancelado'
+  if (key === 'PRONTO') return 'Pronto'
+  return 'Pendiente'
+}
+
 const reservasFiltradas = computed(() => {
   return reservas.value.filter(r => {
     // Filtro por búsqueda CI/Nombre
@@ -27,14 +55,13 @@ const reservasFiltradas = computed(() => {
       if (r.fecha > fechaHasta.value) return false
     }
 
+    if (estadoFiltro.value !== 'TODOS') {
+      return normalizarEstadoKey(r.estado) === estadoFiltro.value
+    }
+
     return true
   })
 })
-
-const filtroTexto = ref('')
-const fechaDesde = ref('')
-const fechaHasta = ref('')
-const cargando = ref(false)
 
 // Modal de notas
 const mostrarModalNotas = ref(false)
@@ -216,11 +243,14 @@ const exportarACSV = () => {
 const getBadgeStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400',
+    'PENDIENTE REPUESTOS': 'bg-orange-50 dark:bg-orange-500/10 border-orange-500/30 text-orange-600 dark:text-orange-400',
     'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
     'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400',
-    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400'
+    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400',
+    'EN REVISION': 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
   };
-  return styles[estado?.toUpperCase() as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400';
+  const key = normalizarEstadoKey(estado)
+  return styles[key as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400';
 };
 </script>
 
@@ -244,6 +274,20 @@ const getBadgeStyles = (estado: string) => {
         <input v-model="fechaDesde" type="date" class="bg-transparent text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
         <span class="text-gray-300">→</span>
         <input v-model="fechaHasta" type="date" class="bg-transparent text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
+      </div>
+
+      <div class="flex items-center gap-2 px-2 md:px-4 border-l border-gray-100 dark:border-gray-800">
+        <span class="text-[10px] uppercase tracking-widest text-gray-400 font-black">Estado</span>
+        <select v-model="estadoFiltro"
+          class="bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl px-3 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-200">
+          <option value="TODOS">Todos</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
+          <option value="EN REVISION">En revisión</option>
+          <option value="PRONTO">Pronto</option>
+          <option value="EN PROCESO">En proceso</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
       </div>
 
       <button @click="exportarACSV" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-emerald-700/20">
@@ -290,7 +334,7 @@ const getBadgeStyles = (estado: string) => {
               </td>
               <td class="p-3 sm:p-4 md:p-5">
                 <span :class="['px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-widest border', getBadgeStyles(r.estado)]">
-                  {{ r.estado || 'Pendiente' }}
+                  {{ formatearEstado(r.estado) }}
                 </span>
               </td>
               <td class="p-3 sm:p-4 md:p-5 max-w-[150px] lg:max-w-[200px]">

@@ -4,6 +4,7 @@ import ReservaWindow from '../components/reservaWindow.vue'
 
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
+const estadoFiltro = ref('TODOS')
 
 // Horarios: se cargarán dinámicamente desde la BD
 const horariosDisponibles = ref<string[]>([])
@@ -137,10 +138,30 @@ onBeforeUnmount(() => {
 })
 
 // Filtrado por cédula
+const normalizarEstadoKey = (estado?: string) => {
+  if (!estado) return 'PENDIENTE'
+  const key = estado
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (key === 'CANCELADA') return 'CANCELADO'
+  if (key === 'REVISION') return 'EN REVISION'
+  return key
+}
+
 const obtenerReservasEnCelda = (fecha: string, hora: string) => {
   const reservas = matrizReservas.value[fecha]?.[hora] || []
-  if (!busquedaCedula.value) return reservas
-  return reservas.filter(r => r.cedula?.includes(busquedaCedula.value))
+  const filtradas = reservas.filter(r => {
+    if (busquedaCedula.value && !r.cedula?.includes(busquedaCedula.value)) {
+      return false
+    }
+    if (estadoFiltro.value !== 'TODOS') {
+      return normalizarEstadoKey(r.estado) === estadoFiltro.value
+    }
+    return true
+  })
+  return filtradas
 }
 
 // Verificar si el horario debe mostrarse para la fecha (sábados solo hasta 12:00)
@@ -174,59 +195,17 @@ const manejarCierre = async () => {
   }, 150)
 }
 
-// DRAG & DROP
-let arrastreDatos: any = null
-
-const iniciarArrastre = (evento: DragEvent, reserva: any) => {
-  arrastreDatos = reserva
-  evento.dataTransfer!.effectAllowed = 'move'
-  if (evento.dataTransfer) {
-    evento.dataTransfer.setData('application/json', JSON.stringify(reserva))
-  }
-}
-
-const soltarEnCelda = async (evento: DragEvent, fechaDestino: string, horaDestino: string) => {
-  evento.preventDefault()
-  
-  if (!arrastreDatos) return
-
-  try {
-    const fechaOrigen = arrastreDatos.fecha
-    const horaOrigen = arrastreDatos.hora
-
-    // Evitar soltar en el mismo lugar
-    if (fechaOrigen === fechaDestino && horaOrigen === horaDestino) {
-      arrastreDatos = null
-      return
-    }
-
-    console.log('[Reserve] Moviendo reserva de', horaOrigen, 'en', fechaOrigen, 'a', horaDestino, 'en', fechaDestino)
-
-    // Actualizar la reserva en el backend con todos los campos necesarios
-    await window.api.actualizarReserva({
-      ...arrastreDatos,
-      fecha: fechaDestino,
-      hora: horaDestino
-    })
-
-    console.log('[Reserve] Reserva actualizada correctamente')
-    cargarReservas()
-    arrastreDatos = null
-  } catch (error: any) {
-    console.error('[Reserve] Error moviendo reserva:', error)
-    arrastreDatos = null
-  }
-}
-
 // Función para manejar los estilos dinámicos de las tarjetas
 const getCardStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400',
+    'PENDIENTE REPUESTOS': 'bg-orange-50 dark:bg-orange-500/10 border-orange-500 text-orange-700 dark:text-orange-400',
     'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400',
     'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500 text-rose-700 dark:text-rose-400',
     'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500 text-sky-700 dark:text-sky-400',
   };
-  return styles[estado?.toUpperCase() as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
+  const key = normalizarEstadoKey(estado)
+  return styles[key as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
 };
 
 const obtenerTipoResumen = (reserva: any) => {
@@ -266,12 +245,27 @@ const obtenerDetalleResumen = (reserva: any) => {
         <h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
           CALENDARIO <span class="text-cyan-600">SEMANAL</span>
         </h2>
-        <div class="relative group">
-          <input 
-            v-model="busquedaCedula" 
-            placeholder="Buscar por CI..." 
-            class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl py-3 px-4 sm:px-5 md:px-6 text-gray-700 dark:text-gray-200 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
-          />
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="relative group">
+            <input 
+              v-model="busquedaCedula" 
+              placeholder="Buscar por CI..." 
+              class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl py-3 px-4 sm:px-5 md:px-6 text-gray-700 dark:text-gray-200 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Estado</span>
+            <select v-model="estadoFiltro"
+              class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl py-2.5 px-4 text-gray-700 dark:text-gray-200 text-xs font-bold uppercase tracking-widest">
+              <option value="TODOS">Todos</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
+              <option value="EN REVISION">En revisión</option>
+              <option value="PRONTO">Pronto</option>
+              <option value="EN PROCESO">En proceso</option>
+              <option value="CANCELADO">Cancelado</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -303,13 +297,11 @@ const obtenerDetalleResumen = (reserva: any) => {
             </td>
 
             <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" 
-                class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors"
-                @dragover.prevent @drop="soltarEnCelda($event, dia.fecha, hora)">
+                class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors">
               
               <div class="flex flex-col gap-1 sm:gap-2">
                 <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
                      @click="abrirVentana(r)"
-                     draggable="true" @dragstart="iniciarArrastre($event, r)"
                      :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
                   <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
                   <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">

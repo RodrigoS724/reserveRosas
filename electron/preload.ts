@@ -48,5 +48,19 @@ contextBridge.exposeInMainWorld('api', {
 
   // Vehiculos
   obtenerVehiculos: () => ipcRenderer.invoke('vehiculos:todos'),
-  obtenerHistorialVehiculo: (vehiculoId: number) => ipcRenderer.invoke('vehiculos:historial', vehiculoId)
+  obtenerHistorialVehiculo: (vehiculoId: number) => ipcRenderer.invoke('vehiculos:historial', vehiculoId),
+
+  // Configuración
+  obtenerEnvConfig: () => ipcRenderer.invoke('config:env:get'),
+  guardarEnvConfig: (text: string) => ipcRenderer.invoke('config:env:set', text),
+  probarConexionDB: () => ipcRenderer.invoke('config:db:test'),
+
+  // Usuarios / Auth
+  obtenerUsuariosLogin: () => ipcRenderer.invoke('usuarios:login-list'),
+  login: (username: string, password: string) => ipcRenderer.invoke('auth:login', username, password),
+  listarUsuarios: () => ipcRenderer.invoke('usuarios:list'),
+  crearUsuario: (data: any) => ipcRenderer.invoke('usuarios:create', data),
+  actualizarUsuario: (data: any) => ipcRenderer.invoke('usuarios:update', data),
+  borrarUsuario: (id: number) => ipcRenderer.invoke('usuarios:delete', id),
+  actualizarPasswordUsuario: (id: number, password: string) => ipcRenderer.invoke('usuarios:password', id, password)
 })
