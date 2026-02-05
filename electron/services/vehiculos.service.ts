@@ -2,7 +2,7 @@ import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
 
 export async function obtenerVehiculos() {
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(`
       SELECT
         v.*,
@@ -47,7 +47,7 @@ export async function obtenerVehiculos() {
 }
 
 export async function obtenerHistorialVehiculo(vehiculoId: number) {
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `
         SELECT *

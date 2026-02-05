@@ -5,6 +5,7 @@ import Historial from '../views/historial.vue'
 import Vehiculos from '../views/vehiculos.vue'
 import Config from '../views/config.vue'
 import Users from '../views/users.vue'
+import Auditoria from '../views/auditoria.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/usuarios',
     name: 'Usuarios',
     component: Users
+  },
+  {
+    path: '/auditoria',
+    name: 'Auditoria',
+    component: Auditoria
   }
 ]
 

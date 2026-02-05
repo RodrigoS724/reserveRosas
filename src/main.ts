@@ -10,6 +10,7 @@ import historial from './views/historial.vue'
 import vehiculos from './views/vehiculos.vue'
 import Config from './views/config.vue'
 import Users from './views/users.vue'
+import Auditoria from './views/auditoria.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -24,6 +25,7 @@ const router = createRouter({
     { path: '/reservas', component: Reservas },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
+    { path: '/auditoria', component: Auditoria },
   ]
 })
 

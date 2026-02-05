@@ -15,7 +15,8 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/ajustes': 'ajustes',
   '/vehiculos': 'vehiculos',
   '/config': 'config',
-  '/usuarios': 'usuarios'
+  '/usuarios': 'usuarios',
+  '/auditoria': 'auditoria'
 }
 
 const DEFAULT_ROUTES: Record<SessionUser['role'], string> = {
@@ -64,6 +65,7 @@ export const PermissionsLabels: Record<string, string> = {
   historial: 'Historial',
   ajustes: 'Ajustes horarios',
   vehiculos: 'Historial BD Gestor',
-  config: 'Configuración DB',
-  usuarios: 'Usuarios'
+  config: 'Configuracion DB',
+  usuarios: 'Usuarios',
+  auditoria: 'Auditoria'
 }

@@ -20,7 +20,7 @@ let dbConnectionInProgress = false
 export function initDatabase() {
   // Si ya existe conexión activa, retornarla
   if (db) {
-    console.log('✅ [DB] Reutilizando conexión existente')
+    console.log(' [DB] Reutilizando conexión existente')
     return db
   }
 
@@ -50,7 +50,7 @@ export function initDatabase() {
       fs.mkdirSync(userDataPath, { recursive: true })
     }
 
-    console.log('🔌 [DB] Creando nueva conexión a:', dbPath)
+    console.log(' [DB] Creando nueva conexión a:', dbPath)
     db = new Database(dbPath, {
       readonly: false,
       fileMustExist: false,
@@ -58,7 +58,7 @@ export function initDatabase() {
     })
     
     // Configuración para mejor manejo de bloqueos en Windows
-    console.log('🔧 [DB] Configurando pragmas...')
+    console.log(' [DB] Configurando pragmas...')
     db.pragma('query_only = FALSE')
     db.pragma('journal_mode = OFF')  // SIN journaling - máxima compatibilidad en Windows
     db.pragma('synchronous = OFF')  // Sin sincronización - máxima velocidad
@@ -66,7 +66,7 @@ export function initDatabase() {
     db.pragma('temp_store = MEMORY')
     db.pragma('foreign_keys = ON')
     db.pragma('busy_timeout = 100000')  // 100 segundos - timeout extremadamente alto
-    console.log('✅ [DB] Pragmas configurados correctamente')
+    console.log(' [DB] Pragmas configurados correctamente')
 
   // ===============================
   // TABLA PRINCIPAL DE RESERVAS
@@ -101,8 +101,7 @@ export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS horarios_base (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      hora TEXT UNIQUE NOT NULL,
-      activo INTEGER DEFAULT 1
+      hora TEXT UNIQUE NOT NULL, activo INTEGER DEFAULT 1
     );
   `)
 
@@ -159,8 +158,19 @@ export function initDatabase() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL,
-      permissions_json TEXT,
-      activo INTEGER DEFAULT 1,
+      permissions_json TEXT, activo INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  // ===============================
+  // AUDITORIA DE USUARIOS
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS auditoria_usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, actor_username TEXT, actor_role TEXT, accion TEXT NOT NULL,
+      target_username TEXT,
+      detalle TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
   `)
@@ -195,7 +205,7 @@ export function initDatabase() {
 
   if (count.total === 0) {
     const insert = db.prepare(`
-      INSERT INTO horarios_base (hora) VALUES (?)
+      INSERT INTO horarios_base (hora) VALUES ( ?)
     `)
 
     const horas = [
@@ -213,32 +223,32 @@ export function initDatabase() {
   // ===============================
   // MIGRACIONES
   // ===============================
-  console.log('🔄 [DB] Ejecutando migraciones...')
+  console.log(' [DB] Ejecutando migraciones...')
   
   try {
     db.exec(`ALTER TABLE reservas ADD COLUMN notas TEXT`)
-    console.log('✅ [DB] Columna "notas" agregada a reservas')
+    console.log(' [DB] Columna "notas" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('ℹ️ [DB] Columna "notas" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('ℹ️ [DB] Tabla reservas no existe (será creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('⚠️ [DB] Error durante migración:', err?.message)
+      console.warn('⚠️ [DB] Error durante migración:', err.message)
     }
   }
 
-  console.log('✅ DB inicializada en:', dbPath)
+  console.log(' DB inicializada en:', dbPath)
   try {
     db.exec(`ALTER TABLE reservas ADD COLUMN particular_tipo TEXT`)
     console.log('âœ… [DB] Columna "particular_tipo" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('â„¹ï¸ [DB] Columna "particular_tipo" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err?.message)
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
     }
   }
 
@@ -246,12 +256,12 @@ export function initDatabase() {
     db.exec(`ALTER TABLE reservas ADD COLUMN garantia_tipo TEXT`)
     console.log('âœ… [DB] Columna "garantia_tipo" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('â„¹ï¸ [DB] Columna "garantia_tipo" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err?.message)
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
     }
   }
 
@@ -259,12 +269,12 @@ export function initDatabase() {
     db.exec(`ALTER TABLE reservas ADD COLUMN garantia_fecha_compra TEXT`)
     console.log('âœ… [DB] Columna "garantia_fecha_compra" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('â„¹ï¸ [DB] Columna "garantia_fecha_compra" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err?.message)
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
     }
   }
 
@@ -272,12 +282,12 @@ export function initDatabase() {
     db.exec(`ALTER TABLE reservas ADD COLUMN garantia_numero_service TEXT`)
     console.log('âœ… [DB] Columna "garantia_numero_service" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('â„¹ï¸ [DB] Columna "garantia_numero_service" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err?.message)
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
     }
   }
 
@@ -285,12 +295,12 @@ export function initDatabase() {
     db.exec(`ALTER TABLE reservas ADD COLUMN garantia_problema TEXT`)
     console.log('âœ… [DB] Columna "garantia_problema" agregada a reservas')
   } catch (err: any) {
-    if (err?.message?.includes('duplicate column')) {
+    if (err.message.includes('duplicate column')) {
       console.log('â„¹ï¸ [DB] Columna "garantia_problema" ya existe en reservas')
-    } else if (err?.message?.includes('no such table')) {
+    } else if (err.message.includes('no such table')) {
       console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
     } else {
-      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err?.message)
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
     }
   }
 

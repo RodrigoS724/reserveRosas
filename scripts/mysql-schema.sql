@@ -83,6 +83,16 @@ CREATE TABLE IF NOT EXISTS usuarios (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS auditoria_usuarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  actor_username VARCHAR(255),
+  actor_role VARCHAR(50),
+  accion VARCHAR(100) NOT NULL,
+  target_username VARCHAR(255),
+  detalle TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Seed horarios_base si está vacío
 INSERT IGNORE INTO horarios_base (hora, activo) VALUES
 ('08:00', 1), ('09:00', 1), ('10:00', 1), ('11:00', 1),

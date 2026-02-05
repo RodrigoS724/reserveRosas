@@ -43,8 +43,7 @@ function createWindow() {
     height: 768,
     minWidth: 1024, // Mínimo para que no se rompa el diseño
     minHeight: 700,
-    title: "ReserveRosas - Taller Central",
-    autoHideMenuBar: true,
+    title: "ReserveRosas - Taller Central", autoHideMenuBar: true,
     frame: true, // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs'),

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
+import { registrarAuditoria } from './auditoria.service'
 
 export type UserRole = 'super' | 'admin' | 'user'
 
@@ -11,7 +12,7 @@ export type UserRecord = {
   role: UserRole
   permissions: string[]
   activo: number
-  created_at?: string
+  created_at: string
 }
 
 const ALL_PERMISSIONS = [
@@ -21,8 +22,26 @@ const ALL_PERMISSIONS = [
   'ajustes',
   'vehiculos',
   'config',
-  'usuarios'
+  'usuarios',
+  'auditoria'
 ]
+
+async function ensureUsersTableMysql() {
+  return tryMysql( async (pool) => {
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS usuarios (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        permissions_json TEXT, activo TINYINT DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`
+    )
+    return true
+  })
+}
 
 export function getDefaultPermissions(role: UserRole) {
   if (role === 'super') return [...ALL_PERMISSIONS]
@@ -45,7 +64,7 @@ function verifyPassword(password: string, stored: string) {
   return crypto.timingSafeEqual(hash, computed)
 }
 
-function normalizePermissions(role: UserRole, permissions?: string[] | null) {
+function normalizePermissions(role: UserRole, permissions: string[] | null) {
   if (role === 'super') {
     return getDefaultPermissions(role)
   }
@@ -78,20 +97,20 @@ async function ensureUserMysql(data: {
   passwordHash: string
   role: UserRole
   permissions: string[]
-  activo?: number
+  activo: number
 }) {
+  await ensureUsersTableMysql()
   const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions))
   const activo = data.activo ?? 1
-  return tryMysql(async (pool) => {
+  return tryMysql( async (pool) => {
     await pool.query(
       `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
-       VALUES (?, ?, ?, ?, ?, ?)
+       VALUES ( ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          nombre = VALUES(nombre),
          password_hash = VALUES(password_hash),
          role = VALUES(role),
-         permissions_json = VALUES(permissions_json),
-         activo = VALUES(activo)`,
+         permissions_json = VALUES(permissions_json), activo = VALUES( activo)`,
       [data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo]
     )
     return true
@@ -104,20 +123,19 @@ function ensureUserSqlite(data: {
   passwordHash: string
   role: UserRole
   permissions: string[]
-  activo?: number
+  activo: number
 }) {
   const db = initDatabase()
   const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions))
   const activo = data.activo ?? 1
   db.prepare(
     `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
-     VALUES (?, ?, ?, ?, ?, ?)
+     VALUES ( ?, ?, ?, ?, ?, ?)
      ON CONFLICT(username) DO UPDATE SET
        nombre = excluded.nombre,
        password_hash = excluded.password_hash,
        role = excluded.role,
-       permissions_json = excluded.permissions_json,
-       activo = excluded.activo`
+       permissions_json = excluded.permissions_json, activo = excluded.activo`
   ).run(data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo)
 }
 
@@ -129,7 +147,8 @@ export async function bootstrapSuperAdmin() {
   const permissions = getDefaultPermissions(role)
   const passwordHash = hashPassword(password)
 
-  const existsMysql = await tryMysql(async (pool) => {
+  await ensureUsersTableMysql()
+  const existsMysql = await tryMysql( async (pool) => {
     const [rows] = await pool.query<any[]>(
       'SELECT id FROM usuarios WHERE username = ? LIMIT 1',
       [username]
@@ -146,46 +165,42 @@ export async function bootstrapSuperAdmin() {
     existsSqlite = false
   }
 
-  if ((existsMysql.ok && existsMysql.value) || existsSqlite) {
+  const mysqlAvailable = existsMysql.ok
+  const mysqlHasUser = existsMysql.ok && existsMysql.value
+
+  if (!mysqlAvailable && existsSqlite) {
     return
   }
 
-  const mysqlResult = await ensureUserMysql({
-    nombre,
-    username,
-    passwordHash,
-    role,
-    permissions,
-    activo: 1
-  })
-
-  if (!mysqlResult.ok) {
-    ensureUserSqlite({
+  let mysqlResult = { ok: false as const }
+  if (!mysqlHasUser) {
+    mysqlResult = await ensureUserMysql({
       nombre,
       username,
       passwordHash,
       role,
-      permissions,
-      activo: 1
+      permissions, activo: 1
     })
-  } else {
+  }
+
+  if (!existsSqlite) {
     try {
       ensureUserSqlite({
         nombre,
         username,
         passwordHash,
         role,
-        permissions,
-        activo: 1
+        permissions, activo: 1
       })
     } catch (error) {
-      console.warn('[Usuarios] Error sincronizando a sqlite:', error)
+      console.warn('[Usuarios] Error sincronizando ? sqlite:', error)
     }
   }
 }
 
 export async function listarUsuarios(): Promise<UserRecord[]> {
-  const mysqlResult = await tryMysql(async (pool) => {
+  await ensureUsersTableMysql()
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows] = await pool.query<any[]>(
       'SELECT id, nombre, username, role, permissions_json, activo, created_at FROM usuarios'
     )
@@ -198,8 +213,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
       nombre: row.nombre,
       username: row.username,
       role: row.role as UserRole,
-      permissions: parsePermissions(row.permissions_json, row.role as UserRole),
-      activo: Number(row.activo) || 0,
+      permissions: parsePermissions(row.permissions_json, row.role as UserRole), activo: Number(row.activo) || 0,
       created_at: row.created_at
     }))
   }
@@ -213,8 +227,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
     nombre: row.nombre,
     username: row.username,
     role: row.role as UserRole,
-    permissions: parsePermissions(row.permissions_json, row.role as UserRole),
-    activo: Number(row.activo) || 0,
+    permissions: parsePermissions(row.permissions_json, row.role as UserRole), activo: Number(row.activo) || 0,
     created_at: row.created_at
   }))
 }
@@ -231,7 +244,8 @@ export async function listarUsuariosLogin() {
 }
 
 export async function validarLogin(username: string, password: string) {
-  const mysqlResult = await tryMysql(async (pool) => {
+  await ensureUsersTableMysql()
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows] = await pool.query<any[]>(
       'SELECT id, nombre, username, password_hash, role, permissions_json, activo FROM usuarios WHERE username = ? LIMIT 1',
       [username]
@@ -255,6 +269,12 @@ export async function validarLogin(username: string, password: string) {
     return { ok: false, error: 'Usuario o contraseña inválida' }
   }
 
+  await registrarAuditoria({
+    actor_username: row.username, actor_role: row.role, accion: 'LOGIN_OK',
+    target_username: row.username,
+    detalle: 'Inicio de sesión exitoso'
+  })
+
   return {
     ok: true,
     user: {
@@ -272,9 +292,12 @@ export async function crearUsuario(data: {
   username: string
   password: string
   role: UserRole
-  permissions?: string[]
-  activo?: number
+  permissions: string[]
+  activo: number
+  actor_username: string
+  actor_role: string
 }) {
+  await ensureUsersTableMysql()
   const permissions = normalizePermissions(data.role, data.permissions)
   const passwordHash = hashPassword(data.password)
   const mysqlResult = await ensureUserMysql({
@@ -282,8 +305,7 @@ export async function crearUsuario(data: {
     username: data.username,
     passwordHash,
     role: data.role,
-    permissions,
-    activo: data.activo ?? 1
+    permissions, activo: data.activo ?? 1
   })
 
   if (!mysqlResult.ok) {
@@ -292,8 +314,7 @@ export async function crearUsuario(data: {
       username: data.username,
       passwordHash,
       role: data.role,
-      permissions,
-      activo: data.activo ?? 1
+      permissions, activo: data.activo ?? 1
     })
   } else {
     try {
@@ -302,13 +323,18 @@ export async function crearUsuario(data: {
         username: data.username,
         passwordHash,
         role: data.role,
-        permissions,
-        activo: data.activo ?? 1
+        permissions, activo: data.activo ?? 1
       })
     } catch (error) {
-      console.warn('[Usuarios] Error sincronizando a sqlite:', error)
+      console.warn('[Usuarios] Error sincronizando ? sqlite:', error)
     }
   }
+
+  await registrarAuditoria({
+    actor_username: data.actor_username || 'sistema', actor_role: data.actor_role || 'system', accion: 'USUARIO_CREADO',
+    target_username: data.username,
+    detalle: `Rol: ${data.role}`
+  })
 }
 
 export async function actualizarUsuario(data: {
@@ -316,11 +342,14 @@ export async function actualizarUsuario(data: {
   nombre: string
   username: string
   role: UserRole
-  permissions?: string[]
-  activo?: number
+  permissions: string[]
+  activo: number
+  actor_username: string
+  actor_role: string
 }) {
+  await ensureUsersTableMysql()
   const permissions = normalizePermissions(data.role, data.permissions)
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     await pool.query(
       `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
        WHERE id = ?`,
@@ -338,27 +367,66 @@ export async function actualizarUsuario(data: {
   if (!mysqlResult.ok) {
     console.warn('[Usuarios] MySQL no disponible, actualizado solo en SQLite')
   }
+
+  await registrarAuditoria({
+    actor_username: data.actor_username || 'sistema', actor_role: data.actor_role || 'system', accion: 'USUARIO_ACTUALIZADO',
+    target_username: data.username,
+    detalle: `Rol: ${data.role} | activo: ${data.activo ?? 1}`
+  })
 }
 
-export async function eliminarUsuario(id: number) {
-  await tryMysql(async (pool) => {
+export async function eliminarUsuario(id: number, actor: { username: string; role: string }) {
+  const username = await obtenerUsernamePorId(id)
+  await ensureUsersTableMysql()
+  await tryMysql( async (pool) => {
     await pool.query('DELETE FROM usuarios WHERE id = ?', [id])
     return true
   })
 
   const db = initDatabase()
   db.prepare('DELETE FROM usuarios WHERE id = ?').run(id)
+
+  await registrarAuditoria({
+    actor_username: actor.username || 'sistema', actor_role: actor.role || 'system', accion: 'USUARIO_ELIMINADO',
+    target_username: username,
+    detalle: `ID: ${id}`
+  })
 }
 
-export async function actualizarPassword(id: number, password: string) {
+export async function actualizarPassword(id: number, password: string, actor: { username: string; role: string }) {
+  const username = await obtenerUsernamePorId(id)
+  await ensureUsersTableMysql()
   const passwordHash = hashPassword(password)
-  await tryMysql(async (pool) => {
+  await tryMysql( async (pool) => {
     await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [passwordHash, id])
     return true
   })
 
   const db = initDatabase()
   db.prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?').run(passwordHash, id)
+
+  await registrarAuditoria({
+    actor_username: actor.username || 'sistema', actor_role: actor.role || 'system', accion: 'PASSWORD_CAMBIADA',
+    target_username: username,
+    detalle: `ID: ${id}`
+  })
 }
 
 export const PermissionsCatalog = ALL_PERMISSIONS
+
+async function obtenerUsernamePorId(id: number) {
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows] = await pool.query<any[]>(
+      'SELECT username FROM usuarios WHERE id = ? LIMIT 1',
+      [id]
+    )
+    return rows[0]?.username || null
+  })
+  if (mysqlResult.ok) {
+    return mysqlResult.value || null
+  }
+  const db = initDatabase()
+  const row = db.prepare('SELECT username FROM usuarios WHERE id = ? LIMIT 1').get(id) as any
+  return row.username || null
+}
+

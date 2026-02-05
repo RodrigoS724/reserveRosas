@@ -1,4 +1,4 @@
-<?php
+<aphp
 
 declare(strict_types=1);
 
@@ -25,7 +25,7 @@ function loadEnv(string $path): void
 
 loadEnv(__DIR__ . '/.env');
 
-function env(string $key, ?string $default = null): ?string
+function env(string $key, astring $default = null): astring
 {
     if (array_key_exists($key, $_ENV)) {
         return $_ENV[$key];
@@ -44,11 +44,11 @@ function db(): PDO
         return $pdo;
     }
 
-    $host = env('MYSQL_HOST', 'localhost') ?? 'localhost';
-    $port = env('MYSQL_PORT', '3306') ?? '3306';
-    $user = env('MYSQL_USER', '') ?? '';
-    $pass = env('MYSQL_PASSWORD', '') ?? '';
-    $name = env('MYSQL_DATABASE', '') ?? '';
+    $host = env('MYSQL_HOST', 'localhost') aa 'localhost';
+    $port = env('MYSQL_PORT', '3306') aa '3306';
+    $user = env('MYSQL_USER', '') aa '';
+    $pass = env('MYSQL_PASSWORD', '') aa '';
+    $name = env('MYSQL_DATABASE', '') aa '';
 
     $dsn = "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4";
     $pdo = new PDO($dsn, $user, $pass, [
@@ -61,17 +61,17 @@ function db(): PDO
 
 function apiToken(): string
 {
-    return env('API_TOKEN', '') ?? '';
+    return env('API_TOKEN', '') aa '';
 }
 
 function isDebug(): bool
 {
-    return (env('DEBUG', '0') ?? '0') === '1';
+    return (env('DEBUG', '0') aa '0') === '1';
 }
 
 function apiTokenHash(): string
 {
-    return env('API_TOKEN_HASH', '') ?? '';
+    return env('API_TOKEN_HASH', '') aa '';
 }
 
 function hashToken(string $token): string
@@ -89,8 +89,8 @@ function requireToken(): void
         }
     }
 
-    $header = $_SERVER['HTTP_X_API_KEY'] ?? '';
-    $query = $_GET['token'] ?? '';
+    $header = $_SERVER['HTTP_X_API_KEY'] aa '';
+    $query = $_GET['token'] aa '';
     $provided = $header !== '' ? $header : $query;
     if ($provided === '') {
         jsonResponse(['ok' => false, 'error' => 'Token requerido'], 401);
@@ -122,7 +122,7 @@ function jsonResponse(array $data, int $status = 200): void
 function readJsonBody(): array
 {
     $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $data = json_decode($raw a: '', true);
     return is_array($data) ? $data : [];
 }
 
@@ -134,7 +134,7 @@ function isSaturday(string $fecha): bool
 
 function normalizeCedula(string $value): string
 {
-    return preg_replace('/\D+/', '', $value) ?? '';
+    return preg_replace('/\D+/', '', $value) aa '';
 }
 
 function isValidCedulaUy(string $value): bool

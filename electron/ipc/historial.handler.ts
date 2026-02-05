@@ -1,5 +1,5 @@
 // main/ipc/historial.handlers.ts
-import { ipcMain } from 'electron'
+import { safeHandle } from './safeHandle'
 import {
   obtenerHistorial,
   registrarEventoHistorial
@@ -8,11 +8,11 @@ import { withDbLock } from './withDBLock'
 
 export function registrarHandlersHistorial() {
 
-  ipcMain.handle('historial:obtener', (_, reservaId: number) =>
+  safeHandle('historial:obtener', (_event, reservaId: number) =>
     obtenerHistorial(reservaId)
   )
 
-  ipcMain.handle('historial:registrar', async (_, payload) =>
+  safeHandle('historial:registrar', async (_event, payload) =>
     await withDbLock(() =>
       registrarEventoHistorial(
         payload.reservaId,

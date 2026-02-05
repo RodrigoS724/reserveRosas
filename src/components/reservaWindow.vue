@@ -57,7 +57,7 @@ const cancelarReserva = async () => {
             <!-- HEADER -->
             <div class="window-header">
                 <span>Reserva #{{ editable.id }}</span>
-                <button @click="$emit('cerrar')">✕</button>
+                <button @click="$emit('cerrar')"></button>
             </div>
 
             <!-- BODY -->
@@ -141,7 +141,7 @@ const cancelarReserva = async () => {
             <!-- CONFIRMACIÓN DE CANCELACIÓN -->
             <div v-else class="window-footer confirmation-footer">
                 <div class="confirmation-message">
-                    ¿Estás seguro de cancelar esta reserva?
+                    ¿Estás seguro de cancelar esta reserva
                 </div>
                 <div class="confirmation-buttons">
                     <button class="btn-cancelar" @click="mostrandoConfirmacion = false">No, volver</button>

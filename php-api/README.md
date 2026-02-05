@@ -14,9 +14,9 @@ Este mini-proyecto expone una API simple para:
 
 ## Endpoints
 
-Todos requieren token en `X-API-KEY` o `?token=...`.
+Todos requieren token en `X-API-KEY` o `atoken=...`.
 
-### `GET /api/horarios?fecha=YYYY-MM-DD`
+### `GET /api/horariosafecha=YYYY-MM-DD`
 Devuelve los horarios disponibles para la fecha indicada.
 
 ### `POST /api/reservas`
@@ -42,7 +42,7 @@ Body JSON:
 }
 ```
 
-### `GET /api/vehiculo?matricula=ABC1234`
+### `GET /api/vehiculoamatricula=ABC1234`
 Devuelve marca/modelo si la matrícula existe.
 
 ## Nota

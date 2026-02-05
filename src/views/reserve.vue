@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
 })
 
 // Filtrado por cédula
-const normalizarEstadoKey = (estado?: string) => {
+const normalizarEstadoKey = (estado: string) => {
   if (!estado) return 'PENDIENTE'
   const key = estado
     .toUpperCase()
@@ -153,7 +153,7 @@ const normalizarEstadoKey = (estado?: string) => {
 const obtenerReservasEnCelda = (fecha: string, hora: string) => {
   const reservas = matrizReservas.value[fecha]?.[hora] || []
   const filtradas = reservas.filter(r => {
-    if (busquedaCedula.value && !r.cedula?.includes(busquedaCedula.value)) {
+    if (busquedaCedula.value && !r.cedula.includes(busquedaCedula.value)) {
       return false
     }
     if (estadoFiltro.value !== 'TODOS') {
@@ -209,17 +209,17 @@ const getCardStyles = (estado: string) => {
 };
 
 const obtenerTipoResumen = (reserva: any) => {
-  if (reserva?.tipo_turno === 'Garantía') {
+  if (reserva.tipo_turno === 'Garantía') {
     return `Garantía${reserva.garantia_tipo ? ` - ${reserva.garantia_tipo}` : ''}`
   }
-  if (reserva?.tipo_turno === 'Particular') {
+  if (reserva.tipo_turno === 'Particular') {
     return `Particular${reserva.particular_tipo ? ` - ${reserva.particular_tipo}` : ''}`
   }
-  return reserva?.tipo_turno || ''
+  return reserva.tipo_turno || ''
 }
 
 const obtenerDetalleResumen = (reserva: any) => {
-  if (reserva?.tipo_turno === 'Garantía') {
+  if (reserva.tipo_turno === 'Garantía') {
     if (reserva.garantia_tipo === 'Service') {
       return reserva.garantia_numero_service ? `Service: ${reserva.garantia_numero_service}` : ''
     }
@@ -227,13 +227,13 @@ const obtenerDetalleResumen = (reserva: any) => {
       return reserva.garantia_problema || ''
     }
   }
-  if (reserva?.tipo_turno === 'Particular') {
+  if (reserva.tipo_turno === 'Particular') {
     if (reserva.particular_tipo === 'Taller') {
       return reserva.detalles || ''
     }
     return 'Mantenimiento programado'
   }
-  return reserva?.detalles || ''
+  return reserva.detalles || ''
 }
 
 </script>
@@ -284,7 +284,7 @@ const obtenerDetalleResumen = (reserva: any) => {
             <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
               <div class="flex flex-col items-center">
                 <span class="text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
-                <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha.split('-')[2] }}</span>
+                <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha?.split('-')[2] }}</span>
               </div>
             </th>
           </tr>
@@ -324,3 +324,7 @@ const obtenerDetalleResumen = (reserva: any) => {
     <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
   </div>
 </template>
+
+
+
+

@@ -13,14 +13,14 @@ type ReservaInput = {
   km: string
   matricula: string
   tipo_turno: string
-  particular_tipo?: string | null
-  garantia_tipo?: string | null
-  garantia_fecha_compra?: string | null
-  garantia_numero_service?: string | null
-  garantia_problema?: string | null
+  particular_tipo: string | null
+  garantia_tipo: string | null
+  garantia_fecha_compra: string | null
+  garantia_numero_service: string | null
+  garantia_problema: string | null
   fecha: string
   hora: string
-  detalles?: string
+  detalles: string
 }
 
 function validarReserva(data: ReservaInput) {
@@ -82,7 +82,7 @@ async function executeWithRetry<T>(
     console.log(`[Service] Intento ${retryCount + 1}/${MAX_RETRIES}`)
     return fn()
   } catch (error: any) {
-    if (error?.code === 'SQLITE_BUSY' && retryCount < MAX_RETRIES - 1) {
+    if (error.code === 'SQLITE_BUSY' && retryCount < MAX_RETRIES - 1) {
       console.warn(`[Service] SQLITE_BUSY, reintentando en ${RETRY_DELAY_MS}ms...`)
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
       return executeWithRetry(fn, retryCount + 1)
@@ -109,7 +109,7 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
           garantia_fecha_compra, garantia_numero_service, garantia_problema,
           fecha, hora, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         dataNormalizada.nombre,
         dataNormalizada.cedula,
@@ -132,15 +132,14 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
       console.log('[Service] Reserva insertada con ID:', result.lastInsertRowid)
 
       const vehiculoExistente = db.prepare(`
-        SELECT id FROM vehiculos WHERE matricula = ?
-      `).get(dataNormalizada.matricula) as { id: number } | undefined
+        SELECT id FROM vehiculos WHERE matricula = ? `).get(dataNormalizada.matricula) as { id: number } | undefined
 
-      let vehiculoId = vehiculoExistente?.id
+      let vehiculoId = vehiculoExistente.id
 
       if (!vehiculoId) {
         const vehiculoInsert = db.prepare(`
           INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-          VALUES (?, ?, ?, ?, ?)
+          VALUES ( ?, ?, ?, ?, ?)
         `).run(
           dataNormalizada.matricula,
           dataNormalizada.marca,
@@ -169,7 +168,7 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
           particular_tipo, garantia_tipo, garantia_fecha_compra,
           garantia_numero_service, garantia_problema, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         vehiculoId,
         fechaNormalizada,
@@ -186,7 +185,7 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'creación', '', 'reserva creada', datetime('now'))
+        VALUES ( ?, 'creación', '', 'reserva creada', datetime('now'))
       `).run(result.lastInsertRowid)
 
       console.log('[Service] Historial registrado')
@@ -201,7 +200,7 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
 }
 
 async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada: string) {
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [result]: any = await pool.execute(
       `
         INSERT INTO reservas (
@@ -211,7 +210,7 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
           garantia_fecha_compra, garantia_numero_service, garantia_problema,
           fecha, hora, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         dataNormalizada.nombre,
@@ -239,7 +238,7 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'creación', '', 'reserva creada', NOW())
+        VALUES ( ?, 'creación', '', 'reserva creada', NOW())
       `,
       [reservaId]
     )
@@ -249,13 +248,13 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
       [dataNormalizada.matricula]
     )
 
-    let vehiculoId = vehiculosRows?.[0]?.id as number | undefined
+    let vehiculoId = vehiculosRows[0]?.id as number | undefined
 
     if (!vehiculoId) {
       const [vehInsert]: any = await pool.execute(
         `
           INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-          VALUES (?, ?, ?, ?, ?)
+          VALUES ( ?, ?, ?, ?, ?)
         `,
         [
           dataNormalizada.matricula,
@@ -290,7 +289,7 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
           particular_tipo, garantia_tipo, garantia_fecha_compra,
           garantia_numero_service, garantia_problema, detalles
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         vehiculoId,
@@ -342,9 +341,9 @@ export async function crearReserva(data: ReservaInput) {
  * ========================= */
 export async function obtenerReserva(id: number) {
   console.log('[Service] Obteniendo reserva:', id)
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(`SELECT * FROM reservas WHERE id = ?`, [id])
-    return rows?.[0] ?? null
+    return rows[0] ?? null
   })
   if (mysqlResult.ok) return mysqlResult.value
 
@@ -358,9 +357,9 @@ export async function obtenerReserva(id: number) {
 export async function borrarReserva(id: number) {
   console.log('[Service] Borrando reserva:', id)
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(`SELECT * FROM reservas WHERE id = ?`, [id])
-    const reserva = rows?.[0]
+    const reserva = rows[0]
     if (!reserva) {
       console.log('[Service] Reserva no encontrada en MySQL:', id)
       return
@@ -371,7 +370,7 @@ export async function borrarReserva(id: number) {
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'eliminación', ?, 'reserva eliminada', NOW())
+        VALUES ( ?, 'eliminación', ?, 'reserva eliminada', NOW())
       `,
       [id, JSON.stringify(reserva)]
     )
@@ -387,7 +386,7 @@ export async function borrarReserva(id: number) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
+          VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
         `).run(id, JSON.stringify(reserva))
       })
       tx()
@@ -409,7 +408,7 @@ export async function borrarReserva(id: number) {
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
+        VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
       `).run(id, JSON.stringify(reserva))
     })
     tx()
@@ -422,22 +421,22 @@ export async function borrarReserva(id: number) {
 /* =========================
  * MOVER RESERVA (drag & drop)
  * ========================= */
-export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: string) {
+export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: string) {
   console.log('[Service] Moviendo reserva:', { id, nuevaFecha, nuevaHora })
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT fecha, hora FROM reservas WHERE id = ?`,
       [id]
     )
-    const anterior = rows?.[0]
+    const anterior = rows[0]
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para mover (MySQL):', id)
       return
     }
 
     await pool.execute(
-      `UPDATE reservas SET fecha = ?, hora = COALESCE(?, hora) WHERE id = ?`,
+      `UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`,
       [nuevaFecha, nuevaHora ?? null, id]
     )
 
@@ -446,7 +445,7 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: s
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'fecha', ?, ?, NOW())
+          VALUES ( ?, 'fecha', ?, ?, NOW())
         `,
         [id, anterior.fecha, nuevaFecha]
       )
@@ -457,7 +456,7 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: s
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'hora', ?, ?, NOW())
+          VALUES ( ?, 'hora', ?, ?, NOW())
         `,
         [id, anterior.hora, nuevaHora]
       )
@@ -470,19 +469,19 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: s
       const tx = db.transaction(() => {
         const anterior = db.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(id) as { fecha: string; hora: string } | undefined
         if (!anterior) return
-        db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE(?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
+        db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
         if (nuevaFecha !== anterior.fecha) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (?, 'fecha', ?, ?, datetime('now'))
+            VALUES ( ?, 'fecha', ?, ?, datetime('now'))
           `).run(id, anterior.fecha, nuevaFecha)
         }
         if (nuevaHora && nuevaHora !== anterior.hora) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (?, 'hora', ?, ?, datetime('now'))
+            VALUES ( ?, 'hora', ?, ?, datetime('now'))
           `).run(id, anterior.hora, nuevaHora)
         }
       })
@@ -501,19 +500,19 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: s
         console.log('[Service] Reserva no encontrada para mover:', id)
         return
       }
-      db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE(?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
+      db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
       if (nuevaFecha !== anterior.fecha) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'fecha', ?, ?, datetime('now'))
+          VALUES ( ?, 'fecha', ?, ?, datetime('now'))
         `).run(id, anterior.fecha, nuevaFecha)
       }
       if (nuevaHora && nuevaHora !== anterior.hora) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'hora', ?, ?, datetime('now'))
+          VALUES ( ?, 'hora', ?, ?, datetime('now'))
         `).run(id, anterior.hora, nuevaHora)
       }
     })
@@ -530,12 +529,12 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora?: s
 export async function actualizarReserva(id: number, reserva: any) {
   console.log('[Service] Actualizando reserva:', id, reserva)
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT nombre, fecha, hora, estado, detalles FROM reservas WHERE id = ?`,
       [id]
     )
-    const anterior = rows?.[0]
+    const anterior = rows[0]
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para actualizar (MySQL):', id)
       return
@@ -546,13 +545,13 @@ export async function actualizarReserva(id: number, reserva: any) {
       [reserva.nombre, reserva.fecha, reserva.hora, reserva.estado, reserva.detalles, reserva.id]
     )
 
-    for (const campo of Object.keys(anterior)) {
-      if (anterior[campo] !== reserva[campo]) {
+    for (const campo of Object.keys( anterior)) {
+      if ( anterior[campo] !== reserva[campo]) {
         await pool.execute(
           `
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (?, ?, ?, ?, NOW())
+            VALUES ( ?, ?, ?, ?, NOW())
           `,
           [reserva.id, campo, anterior[campo], reserva[campo]]
         )
@@ -582,16 +581,15 @@ export async function actualizarReserva(id: number, reserva: any) {
           reserva.detalles,
           reserva.id
         )
-        for (const campo of Object.keys(anterior)) {
-          if (anterior[campo] !== reserva[campo]) {
+        for (const campo of Object.keys( anterior)) {
+          if ( anterior[campo] !== reserva[campo]) {
             db.prepare(`
               INSERT INTO historial_reservas
               (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-              VALUES (?, ?, ?, ?, datetime('now'))
+              VALUES ( ?, ?, ?, ?, datetime('now'))
             `).run(
               reserva.id,
-              campo,
-              anterior[campo],
+              campo, anterior[campo],
               reserva[campo]
             )
           }
@@ -631,16 +629,15 @@ export async function actualizarReserva(id: number, reserva: any) {
         reserva.id
       )
 
-      for (const campo of Object.keys(anterior)) {
-        if (anterior[campo] !== reserva[campo]) {
+      for (const campo of Object.keys( anterior)) {
+        if ( anterior[campo] !== reserva[campo]) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (?, ?, ?, ?, datetime('now'))
+            VALUES ( ?, ?, ?, ?, datetime('now'))
           `).run(
             reserva.id,
-            campo,
-            anterior[campo],
+            campo, anterior[campo],
             reserva[campo]
           )
         }
@@ -665,7 +662,7 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
   const hastaNormalizado = new Date(hasta).toISOString().split('T')[0]
   console.log('[Service] Fechas normalizadas:', desdeNormalizado, 'a', hastaNormalizado)
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `
         SELECT * FROM reservas
@@ -693,7 +690,7 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
 export async function obtenerTodasLasReservas() {
   console.log('[Service] Obteniendo TODAS las reservas')
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT * FROM reservas ORDER BY fecha DESC, hora DESC`
     )
@@ -715,12 +712,12 @@ export async function obtenerTodasLasReservas() {
 export async function actualizarNotasReserva(id: number, notas: string) {
   console.log('[Service] Actualizando notas para reserva:', id)
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT notas FROM reservas WHERE id = ?`,
       [id]
     )
-    const anterior = rows?.[0]
+    const anterior = rows[0]
     if (!anterior) return
 
     await pool.execute(`UPDATE reservas SET notas = ? WHERE id = ?`, [notas, id])
@@ -728,7 +725,7 @@ export async function actualizarNotasReserva(id: number, notas: string) {
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'notas', ?, ?, NOW())
+        VALUES ( ?, 'notas', ?, ?, NOW())
       `,
       [id, anterior.notas || '', notas]
     )
@@ -744,7 +741,7 @@ export async function actualizarNotasReserva(id: number, notas: string) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-          VALUES (?, 'notas', ?, ?, datetime('now'))
+          VALUES ( ?, 'notas', ?, ?, datetime('now'))
         `).run(id, anterior.notas || '', notas)
       })
       transaction()
@@ -757,8 +754,7 @@ export async function actualizarNotasReserva(id: number, notas: string) {
   const db = initDatabase()
   try {
     const anterior = db.prepare(`
-      SELECT notas FROM reservas WHERE id = ?
-    `).get(id) as { notas: string | null } | undefined
+      SELECT notas FROM reservas WHERE id = ? `).get(id) as { notas: string | null } | undefined
 
     if (!anterior) {
       console.log('[Service] Reserva no encontrada:', id)
@@ -770,7 +766,7 @@ export async function actualizarNotasReserva(id: number, notas: string) {
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-        VALUES (?, 'notas', ?, ?, datetime('now'))
+        VALUES ( ?, 'notas', ?, ?, datetime('now'))
       `).run(id, anterior.notas || '', notas)
     })
 
@@ -780,4 +776,9 @@ export async function actualizarNotasReserva(id: number, notas: string) {
     throw error
   }
 }
+
+
+
+
+
 

@@ -40,8 +40,7 @@ function traducirCampo(campo: string): string {
  * Genera una descripción legible del cambio
  */
 function describirCambio(
-  campo: string,
-  anterior: string | null,
+  campo: string, anterior: string | null,
   nuevo: string | null
 ): string {
   if (campo === 'creación') {
@@ -52,15 +51,15 @@ function describirCambio(
     return 'Reserva eliminada'
   }
 
-  if (anterior === null && nuevo !== null) {
+  if ( anterior === null && nuevo !== null) {
     return `Se estableció ${traducirCampo(campo)}: ${nuevo}`
   }
 
-  if (anterior !== null && nuevo === null) {
+  if ( anterior !== null && nuevo === null) {
     return `Se eliminó ${traducirCampo(campo)}`
   }
 
-  if (anterior !== nuevo) {
+  if ( anterior !== nuevo) {
     return `Cambió ${traducirCampo(campo)} de "${anterior}" a "${nuevo}"`
   }
 
@@ -110,7 +109,7 @@ export async function obtenerHistorial(
     throw new Error('ID de reserva inválido')
   }
 
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `
         SELECT
@@ -151,10 +150,9 @@ export async function obtenerHistorial(
  * ========================= */
 function registrarEventoHistorialSqlite(
   reservaId: number,
-  campo: string,
-  anterior: string | null,
+  campo: string, anterior: string | null,
   nuevo: string | null,
-  usuario?: string
+  usuarioa: string
 ) {
   const db = initDatabase()
 
@@ -162,11 +160,10 @@ function registrarEventoHistorialSqlite(
     db.prepare(`
       INSERT INTO historial_reservas
       (reserva_id, campo, valor_anterior, valor_nuevo, fecha, usuario)
-      VALUES (?, ?, ?, ?, datetime('now'), ?)
+      VALUES ( ?, ?, ?, ?, datetime('now'), ?)
     `).run(
       reservaId,
-      campo,
-      anterior,
+      campo, anterior,
       nuevo,
       usuario ?? 'sistema'
     )
@@ -177,17 +174,16 @@ function registrarEventoHistorialSqlite(
 
 export async function registrarEventoHistorial(
   reservaId: number,
-  campo: string,
-  anterior: string | null,
+  campo: string, anterior: string | null,
   nuevo: string | null,
-  usuario?: string
+  usuarioa: string
 ) {
-  const mysqlResult = await tryMysql(async (pool) => {
+  const mysqlResult = await tryMysql( async (pool) => {
     await pool.execute(
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha, usuario)
-        VALUES (?, ?, ?, ?, NOW(), ?)
+        VALUES ( ?, ?, ?, ?, NOW(), ?)
       `,
       [reservaId, campo, anterior, nuevo, usuario ?? 'sistema']
     )
@@ -204,3 +200,4 @@ export async function registrarEventoHistorial(
 
   registrarEventoHistorialSqlite(reservaId, campo, anterior, nuevo, usuario)
 }
+

@@ -50,17 +50,17 @@ const seleccionarVehiculo = async (vehiculo: any) => {
 }
 
 const obtenerTipoResumen = (row: any) => {
-  if (row?.tipo_turno === 'Garantía') {
+  if (row.tipo_turno === 'Garantía') {
     return `Garantía${row.garantia_tipo ? ` - ${row.garantia_tipo}` : ''}`
   }
-  if (row?.tipo_turno === 'Particular') {
+  if (row.tipo_turno === 'Particular') {
     return `Particular${row.particular_tipo ? ` - ${row.particular_tipo}` : ''}`
   }
-  return row?.tipo_turno || ''
+  return row.tipo_turno || ''
 }
 
 const obtenerDetalleResumen = (row: any) => {
-  if (row?.tipo_turno === 'Garantía') {
+  if (row.tipo_turno === 'Garantía') {
     if (row.garantia_tipo === 'Service') {
       return row.garantia_numero_service ? `Service: ${row.garantia_numero_service}` : ''
     }
@@ -68,13 +68,13 @@ const obtenerDetalleResumen = (row: any) => {
       return row.garantia_problema || ''
     }
   }
-  if (row?.tipo_turno === 'Particular') {
+  if (row.tipo_turno === 'Particular') {
     if (row.particular_tipo === 'Taller') {
       return row.detalles || ''
     }
     return 'Mantenimiento programado'
   }
-  return row?.detalles || ''
+  return row.detalles || ''
 }
 
 const formatearFecha = (fecha: string) => {
@@ -110,7 +110,7 @@ onMounted(() => {
             @click="seleccionarVehiculo(v)"
             :class="[
               'px-4 sm:px-5 md:px-6 py-4 border-b border-gray-100 dark:border-gray-800 cursor-pointer transition-colors',
-              vehiculoActivo?.id === v.id ? 'bg-cyan-50 dark:bg-cyan-600/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'
+              vehiculoActivo.id === v.id ? 'bg-cyan-50 dark:bg-cyan-600/10' : 'hover:bg-gray-50 dark:hover:bg-white/5'
             ]">
             <div class="flex items-center justify-between">
               <div>

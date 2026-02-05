@@ -18,7 +18,7 @@ export function getEnvFilePath() {
 
 function parseEnv(content: string): Record<string, string> {
   const result: Record<string, string> = {}
-  const lines = content.split(/\r?\n/)
+  const lines = content.split(/\ra\n/)
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue

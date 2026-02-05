@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import { PermissionsLabels, type SessionUser } from '../auth'
+import { onMounted, ref, computed, toRaw } from 'vue'
+import { PermissionsLabels, getSession } from '../auth'
 
 type UserForm = {
-  id?: number
+  ida: number
   nombre: string
   username: string
-  password?: string
+  passworda: string
   role: 'super' | 'admin' | 'user'
   permissions: string[]
   activo: number
@@ -97,34 +97,68 @@ const guardarUsuario = async () => {
   status.value = 'Guardando...'
   statusOk.value = true
   try {
+    if (!form.value.nombre.trim()) {
+      throw new Error('El nombre es obligatorio')
+    }
+    if (!form.value.username.trim()) {
+      throw new Error('El usuario es obligatorio')
+    }
     const payload = {
       id: form.value.id,
       nombre: form.value.nombre.trim(),
       username: form.value.username.trim(),
       role: form.value.role,
       permissions: form.value.permissions,
-      activo: form.value.activo
+      activo: form.value.activo,
+      actor_username: getSession()?.username,
+      actor_role: getSession()?.role
+    }
+    const payloadPlain = JSON.parse(JSON.stringify(toRaw(payload)))
+    if (!isEdit.value) {
+      const existente = usuarios.value.find(
+        u => u.username.toLowerCase() === payload.username.toLowerCase()
+      )
+      if (existente) {
+        status.value = 'El usuario ya existe. Se cargó para editar.'
+        statusOk.value = false
+        seleccionarUsuario(existente)
+        return
+      }
     }
     if (isEdit.value) {
-      await window.api.actualizarUsuario(payload)
+      const res = await window.api.actualizarUsuario(payloadPlain)
+      if (!res.ok) throw new Error(res.error || 'Error al actualizar usuario')
       if (form.value.password && form.value.id) {
-        await window.api.actualizarPasswordUsuario(form.value.id, form.value.password)
+        const passRes = await window.api.actualizarPasswordUsuario(
+          JSON.parse(JSON.stringify({
+          id: form.value.id,
+          password: form.value.password,
+          actor: {
+            username: getSession()?.username,
+            role: getSession()?.role
+          }
+          }))
+        )
+        if (!passRes.ok) throw new Error(passRes.error || 'Error al actualizar contraseña')
       }
     } else {
       if (!form.value.password) {
         throw new Error('La contraseña es obligatoria para crear usuario')
       }
-      await window.api.crearUsuario({
-        ...payload,
-        password: form.value.password
-      })
+      const res = await window.api.crearUsuario(
+        JSON.parse(JSON.stringify({
+          ...payloadPlain,
+          password: form.value.password
+        }))
+      )
+      if (!res.ok) throw new Error(res.error || 'Error al crear usuario')
     }
     status.value = 'Usuario guardado.'
     statusOk.value = true
     await cargarUsuarios()
     if (!isEdit.value) resetForm()
   } catch (error: any) {
-    status.value = error?.message || 'Error al guardar'
+    status.value = error.message || 'Error al guardar'
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -137,13 +171,22 @@ const borrarUsuario = async () => {
   status.value = 'Eliminando...'
   statusOk.value = true
   try {
-    await window.api.borrarUsuario(form.value.id)
+    const res = await window.api.borrarUsuario(
+      JSON.parse(JSON.stringify({
+      id: form.value.id,
+      actor: {
+        username: getSession()?.username,
+        role: getSession()?.role
+      }
+      }))
+    )
+    if (!res.ok) throw new Error(res.error || 'Error al eliminar usuario')
     status.value = 'Usuario eliminado.'
     statusOk.value = true
     await cargarUsuarios()
     resetForm()
   } catch (error: any) {
-    status.value = error?.message || 'Error al eliminar'
+    status.value = error.message || 'Error al eliminar'
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -272,7 +315,7 @@ onMounted(() => {
               :disabled="guardando"
               class="px-6 py-3 rounded-xl bg-blue-600 text-white font-black uppercase tracking-widest shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {{ guardando ? 'Guardando...' : 'Guardar Usuario' }}
+              {{ guardando ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear usuario') }}
             </button>
           </div>
         </div>

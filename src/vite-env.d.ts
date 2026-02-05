@@ -22,14 +22,14 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
+        particular_tipoa: string | null
+        garantia_tipoa: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_servicea: string | null
+        garantia_problema: string | null
         fecha: string
         hora: string
-        detalles?: string
+        detallesa: string
       }) => Promise<number>
 
       obtenerReserva: (id: number) => Promise<any>
@@ -39,7 +39,7 @@ declare global {
       moverReserva: (data: {
         id: number
         nuevaFecha: string
-        nuevaHora?: string
+        nuevaHora: string
       }) => Promise<void>
 
       actualizarReserva: (data: {
@@ -48,7 +48,7 @@ declare global {
         fecha: string
         hora: string
         estado: string
-        detalles?: string
+        detallesa: string
       }) => Promise<void>
 
       obtenerReservasSemana: (data: {
@@ -83,7 +83,7 @@ declare global {
       bloquearHorario: (data: {
         fecha: string
         hora: string
-        motivo?: string
+        motivoa: string
       }) => Promise<void>
 
       desbloquearHorario: (data: {
@@ -95,7 +95,7 @@ declare global {
         id: number
         fecha: string
         hora: string
-        motivo?: string
+        motivoa: string
       }[]>
 
       borrarHorarioPermanente: (id: number) => Promise<void>
@@ -110,37 +110,37 @@ declare global {
         valor_anterior: string | null
         valor_nuevo: string | null
         fecha: string
-        usuario?: string
+        usuarioa: string
       }[]>
 
       obtenerVehiculos: () => Promise<{
         id: number
         matricula: string
-        marca?: string
-        modelo?: string
-        nombre?: string
-        telefono?: string
-        created_at?: string
-        ultima_fecha?: string | null
-        ultimo_km?: string | null
-        ultimo_tipo_turno?: string | null
-        ultimo_particular_tipo?: string | null
-        ultimo_garantia_tipo?: string | null
+        marca: string
+        modeloa: string
+        nombrea: string
+        telefonoa: string
+        created_ata: string
+        ultima_fecha: string | null
+        ultimo_kma: string | null
+        ultimo_tipo_turnoa: string | null
+        ultimo_particular_tipoa: string | null
+        ultimo_garantia_tipoa: string | null
       }[]>
 
       obtenerHistorialVehiculo: (vehiculoId: number) => Promise<{
         id: number
         vehiculo_id: number
         fecha: string
-        km?: string | null
-        tipo_turno?: string | null
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
-        detalles?: string | null
-        created_at?: string
+        kma: string | null
+        tipo_turnoa: string | null
+        particular_tipoa: string | null
+        garantia_tipoa: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_servicea: string | null
+        garantia_problema: string | null
+        detallesa: string | null
+        created_ata: string
       }[]>
 
       obtenerTodasLasReservas: () => Promise<{
@@ -153,23 +153,23 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
+        particular_tipoa: string | null
+        garantia_tipoa: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_servicea: string | null
+        garantia_problema: string | null
         fecha: string
         hora: string
-        detalles?: string
+        detallesa: string
         estado: string
-        notas?: string
+        notasa: string
       }[]>
 
       actualizarNotasReserva: (id: number, notas: string) => Promise<void>
 
       obtenerEnvConfig: () => Promise<string>
       guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
-      probarConexionDB: () => Promise<{ ok: boolean; error?: string }>
+      probarConexionDB: () => Promise<{ ok: boolean; errora: string }>
 
       obtenerUsuariosLogin: () => Promise<{
         id: number
@@ -180,8 +180,8 @@ declare global {
       }[]>
       login: (username: string, password: string) => Promise<{
         ok: boolean
-        error?: string
-        user?: {
+        errora: string
+        usera: {
           id: number
           nombre: string
           username: string
@@ -196,12 +196,21 @@ declare global {
         role: string
         permissions: string[]
         activo: number
-        created_at?: string
+        created_ata: string
       }[]>
-      crearUsuario: (data: any) => Promise<{ ok: boolean }>
-      actualizarUsuario: (data: any) => Promise<{ ok: boolean }>
-      borrarUsuario: (id: number) => Promise<{ ok: boolean }>
-      actualizarPasswordUsuario: (id: number, password: string) => Promise<{ ok: boolean }>
+      crearUsuario: (data: any) => Promise<{ ok: boolean; errora: string }>
+      actualizarUsuario: (data: any) => Promise<{ ok: boolean; errora: string }>
+      borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => Promise<{ ok: boolean; errora: string }>
+      actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => Promise<{ ok: boolean; errora: string }>
+      obtenerAuditoriaUsuarios: () => Promise<{
+        id: number
+        actor_username: string | null
+        actor_role: string | null
+        accion: string
+        target_username: string | null
+        detallea: string | null
+        created_ata: string
+      }[]>
     }
   }
 }

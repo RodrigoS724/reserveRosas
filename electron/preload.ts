@@ -20,47 +20,57 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   },
 })
 
+const invokeSafe = async (...args: Parameters<typeof ipcRenderer.invoke>) => {
+  const result = await ipcRenderer.invoke(...args)
+  if (result && typeof result === 'object' && result.__ipc_error) {
+    const err = new Error(result.message || 'IPC error')
+    if (result.stack) {
+      err.stack = result.stack
+    }
+    throw err
+  }
+  return result
+}
+
 contextBridge.exposeInMainWorld('api', {
   // Reservas
-  crearReserva: (d: any) => ipcRenderer.invoke('reservas:crear', d),
-  obtenerReserva: (id: number) => ipcRenderer.invoke('reservas:obtener', id),
-  borrarReserva: (id: number) => ipcRenderer.invoke('reservas:borrar', id),
-  moverReserva: (d: any) => ipcRenderer.invoke('reservas:mover', d),
-  actualizarReserva: (d: any) => ipcRenderer.invoke('reservas:actualizar', d),
-  obtenerReservasSemana: (d: any) => ipcRenderer.invoke('reservas:semana', d),
-  obtenerTodasLasReservas: () => ipcRenderer.invoke('reservas:todas'),
-  actualizarNotasReserva: (id: number, notas: string) => ipcRenderer.invoke('reservas:actualizar-notas', id, notas),
+  crearReserva: (d: any) => invokeSafe('reservas:crear', d),
+  obtenerReserva: (id: number) => invokeSafe('reservas:obtener', id),
+  borrarReserva: (id: number) => invokeSafe('reservas:borrar', id),
+  moverReserva: (d: any) => invokeSafe('reservas:mover', d), actualizarReserva: (d: any) => invokeSafe('reservas:actualizar', d),
+  obtenerReservasSemana: (d: any) => invokeSafe('reservas:semana', d),
+  obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (id: number, notas: string) => invokeSafe('reservas:actualizar-notas', id, notas),
 
   // Horarios
-  obtenerHorariosBase: () => ipcRenderer.invoke('horarios:base'),
-  obtenerHorariosInactivos: () => ipcRenderer.invoke('horarios:inactivos'),
-  obtenerHorariosDisponibles: (f: string) => ipcRenderer.invoke('horarios:disponibles', f),
-  crearHorario: (h: string) => ipcRenderer.invoke('horarios:crear', h),
-  desactivarHorario: (id: number) => ipcRenderer.invoke('horarios:desactivar', id),
-  activarHorario: (id: number) => ipcRenderer.invoke('horarios:activar', id),
-  bloquearHorario: (d: any) => ipcRenderer.invoke('horarios:bloquear', d),
-  desbloquearHorario: (d: any) => ipcRenderer.invoke('horarios:desbloquear', d),
-  obtenerHorariosBloqueados: (f: string) => ipcRenderer.invoke('horarios:bloqueados', f),
-  borrarHorarioPermanente: (id: number) => ipcRenderer.invoke('horarios:borrar', id),
+  obtenerHorariosBase: () => invokeSafe('horarios:base'),
+  obtenerHorariosInactivos: () => invokeSafe('horarios:inactivos'),
+  obtenerHorariosDisponibles: (f: string) => invokeSafe('horarios:disponibles', f),
+  crearHorario: (h: string) => invokeSafe('horarios:crear', h),
+  desactivarHorario: (id: number) => invokeSafe('horarios:desactivar', id), activarHorario: (id: number) => invokeSafe('horarios:activar', id),
+  bloquearHorario: (d: any) => invokeSafe('horarios:bloquear', d),
+  desbloquearHorario: (d: any) => invokeSafe('horarios:desbloquear', d),
+  obtenerHorariosBloqueados: (f: string) => invokeSafe('horarios:bloqueados', f),
+  borrarHorarioPermanente: (id: number) => invokeSafe('horarios:borrar', id),
 
   // Historial
-  obtenerHistorial: (id: number) => ipcRenderer.invoke('historial:obtener', id),
+  obtenerHistorial: (id: number) => invokeSafe('historial:obtener', id),
 
   // Vehiculos
-  obtenerVehiculos: () => ipcRenderer.invoke('vehiculos:todos'),
-  obtenerHistorialVehiculo: (vehiculoId: number) => ipcRenderer.invoke('vehiculos:historial', vehiculoId),
+  obtenerVehiculos: () => invokeSafe('vehiculos:todos'),
+  obtenerHistorialVehiculo: (vehiculoId: number) => invokeSafe('vehiculos:historial', vehiculoId),
 
   // Configuración
-  obtenerEnvConfig: () => ipcRenderer.invoke('config:env:get'),
-  guardarEnvConfig: (text: string) => ipcRenderer.invoke('config:env:set', text),
-  probarConexionDB: () => ipcRenderer.invoke('config:db:test'),
+  obtenerEnvConfig: () => invokeSafe('config:env:get'),
+  guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),
+  probarConexionDB: () => invokeSafe('config:db:test'),
 
   // Usuarios / Auth
-  obtenerUsuariosLogin: () => ipcRenderer.invoke('usuarios:login-list'),
-  login: (username: string, password: string) => ipcRenderer.invoke('auth:login', username, password),
-  listarUsuarios: () => ipcRenderer.invoke('usuarios:list'),
-  crearUsuario: (data: any) => ipcRenderer.invoke('usuarios:create', data),
-  actualizarUsuario: (data: any) => ipcRenderer.invoke('usuarios:update', data),
-  borrarUsuario: (id: number) => ipcRenderer.invoke('usuarios:delete', id),
-  actualizarPasswordUsuario: (id: number, password: string) => ipcRenderer.invoke('usuarios:password', id, password)
+  obtenerUsuariosLogin: () => invokeSafe('usuarios:login-list'),
+  login: (username: string, password: string) => invokeSafe('auth:login', username, password),
+  listarUsuarios: () => invokeSafe('usuarios:list'),
+  crearUsuario: (data: any) => invokeSafe('usuarios:create', data), actualizarUsuario: (data: any) => invokeSafe('usuarios:update', data),
+  borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => invokeSafe('usuarios:delete', data), actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => invokeSafe('usuarios:password', data),
+
+  // Auditoría
+  obtenerAuditoriaUsuarios: () => invokeSafe('auditoria:list')
 })

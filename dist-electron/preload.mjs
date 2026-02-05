@@ -18,42 +18,55 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
     return electron.ipcRenderer.invoke(channel, ...omit);
   }
 });
+const invokeSafe = async (...args) => {
+  const result = await electron.ipcRenderer.invoke(...args);
+  if (result && typeof result === "object" && result.__ipc_error) {
+    const err = new Error(result.message || "IPC error");
+    if (result.stack) {
+      err.stack = result.stack;
+    }
+    throw err;
+  }
+  return result;
+};
 electron.contextBridge.exposeInMainWorld("api", {
   // Reservas
-  crearReserva: (d) => electron.ipcRenderer.invoke("reservas:crear", d),
-  obtenerReserva: (id) => electron.ipcRenderer.invoke("reservas:obtener", id),
-  borrarReserva: (id) => electron.ipcRenderer.invoke("reservas:borrar", id),
-  moverReserva: (d) => electron.ipcRenderer.invoke("reservas:mover", d),
-  actualizarReserva: (d) => electron.ipcRenderer.invoke("reservas:actualizar", d),
-  obtenerReservasSemana: (d) => electron.ipcRenderer.invoke("reservas:semana", d),
-  obtenerTodasLasReservas: () => electron.ipcRenderer.invoke("reservas:todas"),
-  actualizarNotasReserva: (id, notas) => electron.ipcRenderer.invoke("reservas:actualizar-notas", id, notas),
+  crearReserva: (d) => invokeSafe("reservas:crear", d),
+  obtenerReserva: (id) => invokeSafe("reservas:obtener", id),
+  borrarReserva: (id) => invokeSafe("reservas:borrar", id),
+  moverReserva: (d) => invokeSafe("reservas:mover", d),
+  actualizarReserva: (d) => invokeSafe("reservas:actualizar", d),
+  obtenerReservasSemana: (d) => invokeSafe("reservas:semana", d),
+  obtenerTodasLasReservas: () => invokeSafe("reservas:todas"),
+  actualizarNotasReserva: (id, notas) => invokeSafe("reservas:actualizar-notas", id, notas),
   // Horarios
-  obtenerHorariosBase: () => electron.ipcRenderer.invoke("horarios:base"),
-  obtenerHorariosInactivos: () => electron.ipcRenderer.invoke("horarios:inactivos"),
-  obtenerHorariosDisponibles: (f) => electron.ipcRenderer.invoke("horarios:disponibles", f),
-  crearHorario: (h) => electron.ipcRenderer.invoke("horarios:crear", h),
-  desactivarHorario: (id) => electron.ipcRenderer.invoke("horarios:desactivar", id),
-  activarHorario: (id) => electron.ipcRenderer.invoke("horarios:activar", id),
-  bloquearHorario: (d) => electron.ipcRenderer.invoke("horarios:bloquear", d),
-  desbloquearHorario: (d) => electron.ipcRenderer.invoke("horarios:desbloquear", d),
-  obtenerHorariosBloqueados: (f) => electron.ipcRenderer.invoke("horarios:bloqueados", f),
-  borrarHorarioPermanente: (id) => electron.ipcRenderer.invoke("horarios:borrar", id),
+  obtenerHorariosBase: () => invokeSafe("horarios:base"),
+  obtenerHorariosInactivos: () => invokeSafe("horarios:inactivos"),
+  obtenerHorariosDisponibles: (f) => invokeSafe("horarios:disponibles", f),
+  crearHorario: (h) => invokeSafe("horarios:crear", h),
+  desactivarHorario: (id) => invokeSafe("horarios:desactivar", id),
+  activarHorario: (id) => invokeSafe("horarios:activar", id),
+  bloquearHorario: (d) => invokeSafe("horarios:bloquear", d),
+  desbloquearHorario: (d) => invokeSafe("horarios:desbloquear", d),
+  obtenerHorariosBloqueados: (f) => invokeSafe("horarios:bloqueados", f),
+  borrarHorarioPermanente: (id) => invokeSafe("horarios:borrar", id),
   // Historial
-  obtenerHistorial: (id) => electron.ipcRenderer.invoke("historial:obtener", id),
+  obtenerHistorial: (id) => invokeSafe("historial:obtener", id),
   // Vehiculos
-  obtenerVehiculos: () => electron.ipcRenderer.invoke("vehiculos:todos"),
-  obtenerHistorialVehiculo: (vehiculoId) => electron.ipcRenderer.invoke("vehiculos:historial", vehiculoId),
+  obtenerVehiculos: () => invokeSafe("vehiculos:todos"),
+  obtenerHistorialVehiculo: (vehiculoId) => invokeSafe("vehiculos:historial", vehiculoId),
   // Configuración
-  obtenerEnvConfig: () => electron.ipcRenderer.invoke("config:env:get"),
-  guardarEnvConfig: (text) => electron.ipcRenderer.invoke("config:env:set", text),
-  probarConexionDB: () => electron.ipcRenderer.invoke("config:db:test"),
+  obtenerEnvConfig: () => invokeSafe("config:env:get"),
+  guardarEnvConfig: (text) => invokeSafe("config:env:set", text),
+  probarConexionDB: () => invokeSafe("config:db:test"),
   // Usuarios / Auth
-  obtenerUsuariosLogin: () => electron.ipcRenderer.invoke("usuarios:login-list"),
-  login: (username, password) => electron.ipcRenderer.invoke("auth:login", username, password),
-  listarUsuarios: () => electron.ipcRenderer.invoke("usuarios:list"),
-  crearUsuario: (data) => electron.ipcRenderer.invoke("usuarios:create", data),
-  actualizarUsuario: (data) => electron.ipcRenderer.invoke("usuarios:update", data),
-  borrarUsuario: (id) => electron.ipcRenderer.invoke("usuarios:delete", id),
-  actualizarPasswordUsuario: (id, password) => electron.ipcRenderer.invoke("usuarios:password", id, password)
+  obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
+  login: (username, password) => invokeSafe("auth:login", username, password),
+  listarUsuarios: () => invokeSafe("usuarios:list"),
+  crearUsuario: (data) => invokeSafe("usuarios:create", data),
+  actualizarUsuario: (data) => invokeSafe("usuarios:update", data),
+  borrarUsuario: (data) => invokeSafe("usuarios:delete", data),
+  actualizarPasswordUsuario: (data) => invokeSafe("usuarios:password", data),
+  // Auditoría
+  obtenerAuditoriaUsuarios: () => invokeSafe("auditoria:list")
 });

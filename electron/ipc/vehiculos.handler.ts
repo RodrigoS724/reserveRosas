@@ -1,23 +1,13 @@
-import { ipcMain } from 'electron'
+import { safeHandle } from './safeHandle'
 import { obtenerVehiculos, obtenerHistorialVehiculo } from '../services/vehiculos.service'
 import { withDbLock } from './withDBLock'
 
 export function registrarHandlersVehiculos() {
-  ipcMain.handle('vehiculos:todos', async () => {
-    try {
-      return await withDbLock(() => obtenerVehiculos())
-    } catch (error: any) {
-      console.error('[IPC] Error en vehiculos:todos:', error)
-      throw error
-    }
+  safeHandle('vehiculos:todos', async () => {
+    return await withDbLock(() => obtenerVehiculos())
   })
 
-  ipcMain.handle('vehiculos:historial', async (_, vehiculoId: number) => {
-    try {
-      return await withDbLock(() => obtenerHistorialVehiculo(vehiculoId))
-    } catch (error: any) {
-      console.error('[IPC] Error en vehiculos:historial:', error)
-      throw error
-    }
+  safeHandle('vehiculos:historial', async (_event, vehiculoId: number) => {
+    return await withDbLock(() => obtenerHistorialVehiculo(vehiculoId))
   })
 }

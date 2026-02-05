@@ -1,12 +1,11 @@
 // main/ipc/horarios.handlers.ts
-import { ipcMain } from 'electron'
+import { safeHandle } from './safeHandle'
 import {
   obtenerHorariosBase,
   obtenerHorariosInactivos,
   obtenerHorariosDisponibles,
   crearHorario,
-  desactivarHorario,
-  activarHorario,
+  desactivarHorario, activarHorario,
   bloquearHorario,
   desbloquearHorario,
   obtenerHorariosBloqueados,
@@ -16,103 +15,68 @@ import { withDbLock } from './withDBLock'
 
 export function registrarHandlersHorarios() {
 
-  ipcMain.handle('horarios:base', async () => {
+  safeHandle('horarios:base', async () => {
     console.log('[IPC] Obteniendo horarios base...')
-    try {
-      const result = await withDbLock(() => obtenerHorariosBase())
-      console.log('[IPC] Horarios base obtenidos:', result)
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error obteniendo horarios base:', error)
-      throw error
-    }
+    const result = await withDbLock(() => obtenerHorariosBase())
+    console.log('[IPC] Horarios base obtenidos:', result)
+    return result
   })
 
-  ipcMain.handle('horarios:disponibles', (_, fecha: string) =>
+  safeHandle('horarios:disponibles', (_event, fecha: string) =>
     obtenerHorariosDisponibles(fecha)
   )
 
-  ipcMain.handle('horarios:crear', async (_, hora: string) =>
+  safeHandle('horarios:crear', async (_event, hora: string) =>
     await withDbLock(() => crearHorario(hora))
   )
 
-  ipcMain.handle('horarios:desactivar', async (_, id: number) => {
+  safeHandle('horarios:desactivar', async (_event, id: number) => {
     console.log('[IPC] Desactivando horario:', id)
-    try {
-      const result = await withDbLock(() => desactivarHorario(id))
-      console.log('[IPC] Horario desactivado exitosamente')
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error desactivando horario:', error)
-      throw error
-    }
+    const result = await withDbLock(() => desactivarHorario(id))
+    console.log('[IPC] Horario desactivado exitosamente')
+    return result
   })
 
-  ipcMain.handle('horarios:activar', async (_, id: number) => {
+  safeHandle('horarios:activar', async (_event, id: number) => {
     console.log('[IPC] Activando horario:', id)
-    try {
-      const result = await withDbLock(() => activarHorario(id))
-      console.log('[IPC] Horario activado exitosamente')
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error activando horario:', error)
-      throw error
-    }
+    const result = await withDbLock(() => activarHorario(id))
+    console.log('[IPC] Horario activado exitosamente')
+    return result
   })
 
-  ipcMain.handle('horarios:inactivos', async () => {
+  safeHandle('horarios:inactivos', async () => {
     console.log('[IPC] Obteniendo horarios inactivos...')
-    try {
-      const result = await withDbLock(() => obtenerHorariosInactivos())
-      console.log('[IPC] Horarios inactivos obtenidos:', result)
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error obteniendo horarios inactivos:', error)
-      throw error
-    }
+    const result = await withDbLock(() => obtenerHorariosInactivos())
+    console.log('[IPC] Horarios inactivos obtenidos:', result)
+    return result
   })
 
-  ipcMain.handle('horarios:bloquear', async (_, payload) =>
+  safeHandle('horarios:bloquear', async (_event, payload) =>
     await withDbLock(() =>
       bloquearHorario(payload.fecha, payload.hora, payload.motivo)
     )
   )
 
-  ipcMain.handle('horarios:desbloquear', async (_, payload) => {
+  safeHandle('horarios:desbloquear', async (_event, payload) => {
     console.log('[IPC] Desbloqueando horario:', payload)
-    try {
-      const result = await withDbLock(() =>
-        desbloquearHorario(payload.fecha, payload.hora)
-      )
-      console.log('[IPC] Horario desbloqueado exitosamente')
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error desbloqueando horario:', error)
-      throw error
-    }
+    const result = await withDbLock(() =>
+      desbloquearHorario(payload.fecha, payload.hora)
+    )
+    console.log('[IPC] Horario desbloqueado exitosamente')
+    return result
   })
 
-  ipcMain.handle('horarios:bloqueados', async (_, fecha: string) => {
+  safeHandle('horarios:bloqueados', async (_event, fecha: string) => {
     console.log('[IPC] Obteniendo horarios bloqueados para:', fecha)
-    try {
-      const result = await withDbLock(() => obtenerHorariosBloqueados(fecha))
-      console.log('[IPC] Horarios bloqueados obtenidos:', result)
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error obteniendo horarios bloqueados:', error)
-      throw error
-    }
+    const result = await withDbLock(() => obtenerHorariosBloqueados(fecha))
+    console.log('[IPC] Horarios bloqueados obtenidos:', result)
+    return result
   })
 
-  ipcMain.handle('horarios:borrar', async (_, id: number) => {
+  safeHandle('horarios:borrar', async (_event, id: number) => {
     console.log('[IPC] Borrando horario permanentemente:', id)
-    try {
-      const result = await withDbLock(() => borrarHorarioPermanente(id))
-      console.log('[IPC] Horario eliminado exitosamente')
-      return result
-    } catch (error: any) {
-      console.error('[IPC] Error borrando horario:', error)
-      throw error
-    }
+    const result = await withDbLock(() => borrarHorarioPermanente(id))
+    console.log('[IPC] Horario eliminado exitosamente')
+    return result
   })
 }

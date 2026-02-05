@@ -30,9 +30,9 @@ const guardarEnv = async () => {
       statusDetail.value = result.error || ''
     }
   } catch (error: any) {
-    status.value = error?.message || 'Error al guardar la configuración'
+    status.value = error.message || 'Error al guardar la configuración'
     statusOk.value = false
-    statusDetail.value = error?.stack || ''
+    statusDetail.value = error.stack || ''
   } finally {
     guardando.value = false
   }
@@ -53,9 +53,9 @@ const probarConexion = async () => {
       statusDetail.value = result.error || ''
     }
   } catch (error: any) {
-    status.value = error?.message || 'Error al probar conexión'
+    status.value = error.message || 'Error al probar conexión'
     statusOk.value = false
-    statusDetail.value = error?.stack || ''
+    statusDetail.value = error.stack || ''
   }
 }
 
