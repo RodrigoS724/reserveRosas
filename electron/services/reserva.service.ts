@@ -651,6 +651,93 @@ export async function actualizarReserva(id: number, reserva: any) {
   }
 }
 
+function syncReservasToSqlite(rows: any[]) {
+  if (!Array.isArray(rows) || rows.length === 0) return
+  try {
+    const db = initDatabase()
+    const selectById = db.prepare(`SELECT id FROM reservas WHERE id = ?`)
+    const selectByKey = db.prepare(`
+      SELECT id FROM reservas
+      WHERE fecha = ? AND hora = ?
+        AND IFNULL(cedula, '') = ?
+        AND IFNULL(matricula, '') = ?
+      LIMIT 1
+    `)
+    const insert = db.prepare(`
+      INSERT INTO reservas (
+        id, nombre, cedula, telefono, marca, modelo, km, matricula,
+        tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+        garantia_numero_service, garantia_problema, fecha, hora, detalles,
+        estado, notas
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    const update = db.prepare(`
+      UPDATE reservas
+      SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+          tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
+          garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, detalles = ?,
+          estado = ?, notas = ?
+      WHERE id = ?
+    `)
+
+    const tx = db.transaction(() => {
+      for (const row of rows) {
+        const id = row?.id ? Number(row.id) : null
+        let existingId: number | null = null
+        if (id) {
+          const byId = selectById.get(id) as { id: number } | undefined
+          if (byId?.id) existingId = byId.id
+        }
+        if (!existingId) {
+          const byKey = selectByKey.get(
+            row?.fecha ?? '',
+            row?.hora ?? '',
+            row?.cedula ?? '',
+            row?.matricula ?? ''
+          ) as { id: number } | undefined
+          if (byKey?.id) existingId = byKey.id
+        }
+
+        const values = [
+          row?.nombre ?? '',
+          row?.cedula ?? '',
+          row?.telefono ?? '',
+          row?.marca ?? '',
+          row?.modelo ?? '',
+          row?.km ?? '',
+          row?.matricula ?? '',
+          row?.tipo_turno ?? '',
+          row?.particular_tipo ?? null,
+          row?.garantia_tipo ?? null,
+          row?.garantia_fecha_compra ?? null,
+          row?.garantia_numero_service ?? null,
+          row?.garantia_problema ?? null,
+          row?.fecha ?? '',
+          row?.hora ?? '',
+          row?.detalles ?? null,
+          row?.estado ?? 'pendiente',
+          row?.notas ?? null
+        ]
+
+        if (existingId) {
+          update.run(
+            ...values,
+            existingId
+          )
+        } else {
+          insert.run(
+            id || null,
+            ...values
+          )
+        }
+      }
+    })
+    tx()
+  } catch (error) {
+    console.warn('[Service] Error sincronizando reservas MySQL -> SQLite:', error)
+  }
+}
+
 
 /* =========================
  * RESERVAS DE LA SEMANA
@@ -673,7 +760,10 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
     )
     return rows
   })
-  if (mysqlResult.ok) return mysqlResult.value
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value)
+    return mysqlResult.value
+  }
 
   const db = initDatabase()
   const result = db.prepare(`
@@ -696,7 +786,10 @@ export async function obtenerTodasLasReservas() {
     )
     return rows
   })
-  if (mysqlResult.ok) return mysqlResult.value
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value)
+    return mysqlResult.value
+  }
 
   const db = initDatabase()
   const result = db.prepare(`

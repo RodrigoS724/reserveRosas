@@ -83,7 +83,7 @@ declare global {
       bloquearHorario: (data: {
         fecha: string
         hora: string
-        motivoa: string
+        motivo: string
       }) => Promise<void>
 
       desbloquearHorario: (data: {
@@ -95,7 +95,7 @@ declare global {
         id: number
         fecha: string
         hora: string
-        motivoa: string
+        motivo: string
       }[]>
 
       borrarHorarioPermanente: (id: number) => Promise<void>
@@ -215,3 +215,4 @@ declare global {
   }
 }
 export {}
+

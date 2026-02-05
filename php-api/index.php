@@ -1,4 +1,4 @@
-<aphp
+<?php
 
 declare(strict_types=1);
 
@@ -18,10 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit;
 }
 
-$method = $_SERVER['REQUEST_METHOD'] aa 'GET';
-$requestUri = $_SERVER['REQUEST_URI'] aa '/';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
-$basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] aa '/'), '/');
+$basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/');
 if ($basePath === '') {
     $basePath = '/';
 }
@@ -48,9 +48,9 @@ if (isDebug() && isset($_GET['__debug_global'])) {
         'ok' => true,
         'request_uri' => $requestUri,
         'parsed_path' => $path,
-        'script_name' => $_SERVER['SCRIPT_NAME'] aa null,
+        'script_name' => $_SERVER['SCRIPT_NAME'] ?? null,
         'base_path' => $basePath,
-        'host' => $_SERVER['HTTP_HOST'] aa null
+        'host' => $_SERVER['HTTP_HOST'] ?? null
     ]);
 }
 
@@ -59,7 +59,7 @@ if (isDebug() && isset($_GET['__debug'])) {
         'ok' => true,
         'request_uri' => $requestUri,
         'parsed_path' => $path,
-        'script_name' => $_SERVER['SCRIPT_NAME'] aa null,
+        'script_name' => $_SERVER['SCRIPT_NAME'] ?? null,
         'base_path' => $basePath
     ]);
 }
@@ -74,13 +74,13 @@ if (str_starts_with($path, '/api')) {
             'debug' => isDebug(),
             'base_path' => $basePath,
             'token_loaded' => apiToken() !== '' ? 'yes' : 'no',
-            'mysql_host' => $_ENV['MYSQL_HOST'] aa null,
-            'mysql_db' => $_ENV['MYSQL_DATABASE'] aa null
+            'mysql_host' => $_ENV['MYSQL_HOST'] ?? null,
+            'mysql_db' => $_ENV['MYSQL_DATABASE'] ?? null
         ]);
     }
 
   if ($method === 'GET' && $path === '/api/horarios') {
-    $fecha = $_GET['fecha'] aa '';
+    $fecha = $_GET['fecha'] ?? '';
     if ($fecha === '') {
       jsonResponse(['ok' => false, 'error' => 'Fecha requerida'], 400);
     }
@@ -91,10 +91,10 @@ if (str_starts_with($path, '/api')) {
             FROM horarios_base h
             WHERE h.activo = 1
               AND h.hora NOT IN (
-                SELECT hora FROM reservas WHERE fecha = a
+                SELECT hora FROM reservas WHERE fecha = ?
               )
               AND h.hora NOT IN (
-                SELECT hora FROM bloqueos_horarios WHERE fecha = a
+                SELECT hora FROM bloqueos_horarios WHERE fecha = ?
               )
             ORDER BY h.hora
         ");
@@ -109,15 +109,15 @@ if (str_starts_with($path, '/api')) {
   }
 
   if ($method === 'GET' && $path === '/api/vehiculo') {
-    $matricula = normalizeMatricula($_GET['matricula'] aa '');
+    $matricula = normalizeMatricula($_GET['matricula'] ?? '');
     if ($matricula === '') {
       jsonResponse(['ok' => false, 'error' => 'Matrícula requerida'], 400);
     }
 
     $pdo = db();
-    $stmt = $pdo->prepare("SELECT marca, modelo FROM vehiculos WHERE matricula = a LIMIT 1");
+    $stmt = $pdo->prepare("SELECT marca, modelo FROM vehiculos WHERE matricula = ? LIMIT 1");
     $stmt->execute([$matricula]);
-    $row = $stmt->fetch() a: null;
+    $row = $stmt->fetch() ?:  null;
     jsonResponse(['ok' => true, 'data' => $row]);
   }
 
@@ -131,7 +131,7 @@ if (str_starts_with($path, '/api')) {
       }
     }
 
-    $cedula = $data['cedula'] aa '';
+    $cedula = $data['cedula'] ?? '';
     if ($cedula !== '' && !isValidCedulaUy($cedula)) {
       jsonResponse(['ok' => false, 'error' => 'Cédula inválida'], 400);
     }
@@ -158,18 +158,18 @@ if (str_starts_with($path, '/api')) {
     $pdo = db();
 
     // Validar disponibilidad del horario
-    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = a AND hora = a");
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND hora = ?");
     $stmt->execute([$data['fecha'], $data['hora']]);
-    $exists = (int) ($stmt->fetch()['total'] aa 0) > 0;
+    $exists = (int) ($stmt->fetch()['total'] ?? 0) > 0;
     if ($exists) {
       jsonResponse(['ok' => false, 'error' => 'Horario no disponible'], 409);
     }
 
     // Evitar duplicado de cédula en el mismo día
     if (!empty($cedula)) {
-      $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = a AND cedula = a");
+      $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND cedula = ?");
       $stmt->execute([$data['fecha'], normalizeCedula($cedula)]);
-      $dup = (int) ($stmt->fetch()['total'] aa 0) > 0;
+      $dup = (int) ($stmt->fetch()['total'] ?? 0) > 0;
       if ($dup) {
         jsonResponse(['ok' => false, 'error' => 'La cédula ya tiene una reserva ese día'], 409);
       }
@@ -183,7 +183,7 @@ if (str_starts_with($path, '/api')) {
               garantia_fecha_compra, garantia_numero_service, garantia_problema,
               fecha, hora, detalles
             )
-            VALUES (a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
     $insert->execute([
@@ -192,17 +192,17 @@ if (str_starts_with($path, '/api')) {
       $data['telefono'],
       $data['marca'],
       $data['modelo'],
-      $data['km'] aa '',
+      $data['km'] ?? '',
       normalizeMatricula($data['matricula']),
       $data['tipo_turno'],
-      $data['particular_tipo'] aa null,
-      $data['garantia_tipo'] aa null,
-      $data['garantia_fecha_compra'] aa null,
-      $data['garantia_numero_service'] aa null,
-      $data['garantia_problema'] aa null,
+      $data['particular_tipo'] ?? null,
+      $data['garantia_tipo'] ?? null,
+      $data['garantia_fecha_compra'] ?? null,
+      $data['garantia_numero_service'] ?? null,
+      $data['garantia_problema'] ?? null,
       $data['fecha'],
       $data['hora'],
-      $data['detalles'] aa ''
+      $data['detalles'] ?? ''
     ]);
 
     $id = (int) $pdo->lastInsertId();
@@ -210,18 +210,18 @@ if (str_starts_with($path, '/api')) {
     $pdo->prepare("
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (a, 'creación', '', 'reserva creada', NOW())
+            VALUES (?, 'creación', '', 'reserva creada', NOW())
         ")->execute([$id]);
 
     // Guardar/actualizar vehiculo
     $matricula = normalizeMatricula($data['matricula']);
-    $stmt = $pdo->prepare("SELECT id FROM vehiculos WHERE matricula = a LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1");
     $stmt->execute([$matricula]);
     $vehiculo = $stmt->fetch();
     if (!$vehiculo) {
       $pdo->prepare("
                 INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-                VALUES (a, a, a, a, a)
+                VALUES (?, ?, ?, ?, ?)
             ")->execute([
             $matricula,
             $data['marca'],
@@ -234,8 +234,8 @@ if (str_starts_with($path, '/api')) {
       $vehiculoId = (int) $vehiculo['id'];
       $pdo->prepare("
                 UPDATE vehiculos
-                SET marca = a, modelo = a, nombre = a, telefono = a
-                WHERE id = a
+                SET marca = ?, modelo = ?, nombre = ?, telefono = ?
+                WHERE id = ?
             ")->execute([
             $data['marca'],
             $data['modelo'],
@@ -251,18 +251,18 @@ if (str_starts_with($path, '/api')) {
               particular_tipo, garantia_tipo, garantia_fecha_compra,
               garantia_numero_service, garantia_problema, detalles
             )
-            VALUES (a, a, a, a, a, a, a, a, a, a)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ")->execute([
           $vehiculoId,
           $data['fecha'],
-          $data['km'] aa '',
+          $data['km'] ?? '',
           $data['tipo_turno'],
-          $data['particular_tipo'] aa null,
-          $data['garantia_tipo'] aa null,
-          $data['garantia_fecha_compra'] aa null,
-          $data['garantia_numero_service'] aa null,
-          $data['garantia_problema'] aa null,
-          $data['detalles'] aa ''
+          $data['particular_tipo'] ?? null,
+          $data['garantia_tipo'] ?? null,
+          $data['garantia_fecha_compra'] ?? null,
+          $data['garantia_numero_service'] ?? null,
+          $data['garantia_problema'] ?? null,
+          $data['detalles'] ?? ''
         ]);
 
     jsonResponse(['ok' => true, 'id' => $id], 201);
@@ -416,8 +416,8 @@ a>
   </div>
 
   <script>
-    const API_TOKEN = <aphp echo json_encode($token); a>;
-    const BASE_PATH = <aphp echo json_encode($basePath); a>;
+    const API_TOKEN = <?php echo json_encode($token); ?>;
+    const BASE_PATH = <?php echo json_encode($basePath); ?>;
     const API_BASE = (BASE_PATH === '/' ? '' : BASE_PATH);
     const API_ORIGIN = window.location.origin + API_BASE;
     const $ = (id) => document.getElementById(id);
@@ -462,7 +462,7 @@ a>
       }
       horariosStatus.textContent = 'Cargando...';
       try {
-        const res = await fetch(`${API_ORIGIN}/api/horariosafecha=${fecha.value}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${fecha.value}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
           headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
         });
         const json = await res.json();
@@ -520,7 +520,7 @@ a>
       const mat = matricula.value.trim();
       if (mat.length < 4) return;
       try {
-        const res = await fetch(`${API_ORIGIN}/api/vehiculoamatricula=${encodeURIComponent(mat)}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+        const res = await fetch(`${API_ORIGIN}/api/vehiculo?matricula=${encodeURIComponent(mat)}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
           headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
         });
         const json = await res.json();
@@ -563,7 +563,7 @@ a>
       };
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/reservas${API_TOKEN ? `atoken=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+        const res = await fetch(`${API_ORIGIN}/api/reservas${API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
           method: 'POST',
           headers: API_TOKEN ? { 'Content-Type': 'application/json', 'X-API-KEY': API_TOKEN } : { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -622,3 +622,5 @@ a>
 </body>
 
 </html>
+
+

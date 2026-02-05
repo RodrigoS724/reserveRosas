@@ -19203,12 +19203,18 @@ function isMysqlConfigured() {
 function getMysqlPool() {
   if (!pool) {
     const port = process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306;
+    const useSsl = (process.env.MYSQL_SSL || "").toLowerCase();
+    const sslEnabled = useSsl === "1" || useSsl === "true" || useSsl === "yes";
+    const rejectEnv = (process.env.MYSQL_SSL_REJECT_UNAUTHORIZED || "").toLowerCase();
+    const rejectUnauthorized = !(rejectEnv === "0" || rejectEnv === "false" || rejectEnv === "no");
     pool = mysql.createPool({
       host: process.env.MYSQL_HOST,
       port: Number.isFinite(port) ? port : 3306,
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD || "",
       database: process.env.MYSQL_DATABASE,
+      ssl: sslEnabled ? { rejectUnauthorized } : void 0,
+      connectTimeout: process.env.MYSQL_CONNECT_TIMEOUT ? Number(process.env.MYSQL_CONNECT_TIMEOUT) : 1e4,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
@@ -20269,6 +20275,89 @@ async function actualizarReserva(id, reserva) {
     throw error;
   }
 }
+function syncReservasToSqlite(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return;
+  try {
+    const db2 = initDatabase();
+    const selectById = db2.prepare(`SELECT id FROM reservas WHERE id = ?`);
+    const selectByKey = db2.prepare(`
+      SELECT id FROM reservas
+      WHERE fecha = ? AND hora = ?
+        AND IFNULL(cedula, '') = ?
+        AND IFNULL(matricula, '') = ?
+      LIMIT 1
+    `);
+    const insert = db2.prepare(`
+      INSERT INTO reservas (
+        id, nombre, cedula, telefono, marca, modelo, km, matricula,
+        tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+        garantia_numero_service, garantia_problema, fecha, hora, detalles,
+        estado, notas
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const update = db2.prepare(`
+      UPDATE reservas
+      SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+          tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
+          garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, detalles = ?,
+          estado = ?, notas = ?
+      WHERE id = ?
+    `);
+    const tx = db2.transaction(() => {
+      for (const row of rows) {
+        const id = (row == null ? void 0 : row.id) ? Number(row.id) : null;
+        let existingId = null;
+        if (id) {
+          const byId = selectById.get(id);
+          if (byId == null ? void 0 : byId.id) existingId = byId.id;
+        }
+        if (!existingId) {
+          const byKey = selectByKey.get(
+            (row == null ? void 0 : row.fecha) ?? "",
+            (row == null ? void 0 : row.hora) ?? "",
+            (row == null ? void 0 : row.cedula) ?? "",
+            (row == null ? void 0 : row.matricula) ?? ""
+          );
+          if (byKey == null ? void 0 : byKey.id) existingId = byKey.id;
+        }
+        const values = [
+          (row == null ? void 0 : row.nombre) ?? "",
+          (row == null ? void 0 : row.cedula) ?? "",
+          (row == null ? void 0 : row.telefono) ?? "",
+          (row == null ? void 0 : row.marca) ?? "",
+          (row == null ? void 0 : row.modelo) ?? "",
+          (row == null ? void 0 : row.km) ?? "",
+          (row == null ? void 0 : row.matricula) ?? "",
+          (row == null ? void 0 : row.tipo_turno) ?? "",
+          (row == null ? void 0 : row.particular_tipo) ?? null,
+          (row == null ? void 0 : row.garantia_tipo) ?? null,
+          (row == null ? void 0 : row.garantia_fecha_compra) ?? null,
+          (row == null ? void 0 : row.garantia_numero_service) ?? null,
+          (row == null ? void 0 : row.garantia_problema) ?? null,
+          (row == null ? void 0 : row.fecha) ?? "",
+          (row == null ? void 0 : row.hora) ?? "",
+          (row == null ? void 0 : row.detalles) ?? null,
+          (row == null ? void 0 : row.estado) ?? "pendiente",
+          (row == null ? void 0 : row.notas) ?? null
+        ];
+        if (existingId) {
+          update.run(
+            ...values,
+            existingId
+          );
+        } else {
+          insert.run(
+            id || null,
+            ...values
+          );
+        }
+      }
+    });
+    tx();
+  } catch (error) {
+    console.warn("[Service] Error sincronizando reservas MySQL -> SQLite:", error);
+  }
+}
 async function obtenerReservasSemana(desde, hasta) {
   console.log("[Service] Obteniendo reservas entre:", desde, "y", hasta);
   const desdeNormalizado = new Date(desde).toISOString().split("T")[0];
@@ -20285,7 +20374,10 @@ async function obtenerReservasSemana(desde, hasta) {
     );
     return rows;
   });
-  if (mysqlResult.ok) return mysqlResult.value;
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value);
+    return mysqlResult.value;
+  }
   const db2 = initDatabase();
   const result = db2.prepare(`
     SELECT * FROM reservas
@@ -20302,7 +20394,10 @@ async function obtenerTodasLasReservas() {
     );
     return rows;
   });
-  if (mysqlResult.ok) return mysqlResult.value;
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value);
+    return mysqlResult.value;
+  }
   const db2 = initDatabase();
   const result = db2.prepare(`
     SELECT * FROM reservas
@@ -20670,7 +20765,7 @@ function getEnvFilePath() {
 }
 function parseEnv(content) {
   const result = {};
-  const lines = content.split(/\ra\n/);
+  const lines = content.split(/\r?\n/);
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
