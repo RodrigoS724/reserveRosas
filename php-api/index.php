@@ -135,7 +135,7 @@ if (str_starts_with($path, '/api')) {
     if ($cedula !== '' && !isValidCedulaUy($cedula)) {
       jsonResponse(['ok' => false, 'error' => 'Cedula invalida'], 400);
     }
-    $telefono = $telefono ?? '';
+    $telefono = $data['telefono'] ?? '';
     if (!isValidTelefonoUy($telefono)) {
       jsonResponse(['ok' => false, 'error' => 'Telefono invalido'], 400);
     }
@@ -147,7 +147,7 @@ if (str_starts_with($path, '/api')) {
     $matriculaNorm = normalizeMatricula($data['matricula'] ?? '');
 
     $tipo = $data['tipo_turno'];
-    if ($tipo === 'Garanta') {
+    if ($tipo === 'Garantia') {
       if (empty($data['garantia_tipo']) || empty($data['garantia_fecha_compra'])) {
         jsonResponse(['ok' => false, 'error' => 'Datos de garantia incompletos'], 400);
       }
@@ -309,22 +309,39 @@ $token = apiToken();
 
       <div class="rounded-2xl border border-emerald-100 bg-white p-6 md:p-8 shadow-xl" id="stepCalendario">
         <div class="text-sm font-black uppercase tracking-widest text-emerald-600 mb-4">Paso 1 : Elegir fecha y hora</div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Fecha</label>
-            <input id="fecha" type="date"
-              class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-400/40" />
+        <div class="grid gap-6 md:grid-cols-[280px_1fr] md:items-start">
+          <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 w-full max-w-sm mx-auto">
+            <div class="flex items-center justify-between mb-3">
+              <button id="calPrev" type="button"
+                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">‹</button>
+              <div id="calTitle" class="text-sm font-black text-emerald-900"></div>
+              <button id="calNext" type="button"
+                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">›</button>
+            </div>
+            <div class="grid grid-cols-7 text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">
+              <div class="text-center">Dom</div>
+              <div class="text-center">Lun</div>
+              <div class="text-center">Mar</div>
+              <div class="text-center">Mié</div>
+              <div class="text-center">Jue</div>
+              <div class="text-center">Vie</div>
+              <div class="text-center">Sáb</div>
+            </div>
+            <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+            <input id="fecha" type="hidden" />
+            <div id="fechaSeleccion" class="mt-3 text-xs text-emerald-700"></div>
           </div>
-          <div>
-            <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Horarios
-              disponibles</label>
-            <div id="horarios" class="grid grid-cols-3 md:grid-cols-4 gap-2"></div>
-            <div id="horariosStatus" class="text-xs mt-2 text-emerald-700"></div>
-          </div>
-          <div class="pt-2">
-            <button id="btnContinuar"
-              class="bg-emerald-600 text-white font-black tracking-widest uppercase px-6 py-3 rounded-xl shadow-lg shadow-emerald-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled>Continuar</button>
+          <div class="space-y-3 w-full">
+            <div>
+              <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Horarios disponibles</label>
+              <div id="horarios" class="space-y-2 max-h-64 overflow-auto pr-1"></div>
+              <div id="horariosStatus" class="text-xs mt-2 text-emerald-700"></div>
+            </div>
+            <div class="pt-2">
+              <button id="btnContinuar"
+                class="bg-emerald-600 text-white font-black tracking-widest uppercase px-6 py-3 rounded-xl shadow-lg shadow-emerald-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>Continuar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -346,7 +363,7 @@ $token = apiToken();
     </div>
     <div>
       <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Telefono</label>
-      <input id="telefono" type="tel" inputmode="numeric" placeholder="+598 99 999 999"
+      <input id="telefono" type="tel" inputmode="numeric" placeholder="099 111 111"
         class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
       <div id="telefonoStatus" class="text-xs mt-1"></div>
     </div>
@@ -445,6 +462,11 @@ $token = apiToken();
     const $ = (id) => document.getElementById(id);
 
     const fecha = $('fecha');
+    const calPrev = $('calPrev');
+    const calNext = $('calNext');
+    const calTitle = $('calTitle');
+    const calGrid = $('calGrid');
+    const fechaSeleccion = $('fechaSeleccion');
     const horariosEl = $('horarios');
     const horariosStatus = $('horariosStatus');
     const btnReservar = $('btnReservar');
@@ -481,6 +503,129 @@ $token = apiToken();
 
     let horaSeleccionada = '';
     let ultimoLookupMatricula = '';
+    let calendarioMes = new Date();
+    calendarioMes.setDate(1);
+    const availabilityCache = {};
+    let cargandoDisponibilidad = false;
+    let lastDisponibilidadKey = '';
+
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 21);
+
+    function formatFechaISO(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getMinutesFromHora(label) {
+      const raw = String(label).trim().toLowerCase();
+      const match = raw.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
+      if (!match) return null;
+      let h = Number(match[1]);
+      const m = Number(match[2]);
+      const ampm = match[3];
+      if (ampm) {
+        if (ampm === 'pm' && h < 12) h += 12;
+        if (ampm === 'am' && h === 12) h = 0;
+      }
+      return h * 60 + m;
+    }
+
+    function formatFechaLarga(d) {
+      return `${d.getDate()} de ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function esDomingo(d) {
+      return d.getDay() === 0;
+    }
+
+    function estaEnRango(d) {
+      return d >= today && d <= maxDate;
+    }
+
+    async function cargarDisponibilidadMes(year, month) {
+      if (cargandoDisponibilidad) return;
+      cargandoDisponibilidad = true;
+      try {
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0);
+        for (let day = 1; day <= end.getDate(); day++) {
+          const d = new Date(year, month, day);
+          if (!estaEnRango(d) || esDomingo(d)) {
+            availabilityCache[formatFechaISO(d)] = false;
+            continue;
+          }
+          const iso = formatFechaISO(d);
+          if (availabilityCache[iso] !== undefined) continue;
+          try {
+            const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${iso}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+              headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
+            });
+            const json = await res.json();
+            availabilityCache[iso] = !!(json && json.ok && Array.isArray(json.data) && json.data.length);
+          } catch {
+            availabilityCache[iso] = false;
+          }
+        }
+      } finally {
+        cargandoDisponibilidad = false;
+        renderCalendar();
+      }
+    }
+
+    function renderCalendar() {
+      const year = calendarioMes.getFullYear();
+      const month = calendarioMes.getMonth();
+      calTitle.textContent = `${monthNames[month]} ${year}`;
+      calGrid.innerHTML = '';
+      const first = new Date(year, month, 1);
+      const startDay = first.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'h-9 w-9';
+        calGrid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(year, month, day);
+        const iso = formatFechaISO(d);
+        const isDisabled = esDomingo(d) || !estaEnRango(d) || availabilityCache[iso] === false;
+        const isSelected = fecha.value === iso;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = day;
+        btn.className = `h-9 w-9 rounded-full text-sm font-bold ${
+          isSelected
+            ? 'bg-emerald-600 text-white'
+            : 'bg-white text-emerald-900 border border-emerald-100 hover:border-emerald-400'
+        }`;
+        if (isDisabled) {
+          btn.className = 'h-9 w-9 rounded-full text-sm font-bold text-slate-300 bg-transparent border border-transparent cursor-not-allowed';
+          btn.disabled = true;
+        } else {
+          btn.onclick = () => {
+            fecha.value = iso;
+            fechaSeleccion.textContent = `Fecha seleccionada: ${formatFechaLarga(d)}`;
+            renderCalendar();
+            fetchHorarios();
+          };
+        }
+        calGrid.appendChild(btn);
+      }
+
+      const key = `${year}-${month}`;
+      if (lastDisponibilidadKey !== key) {
+        lastDisponibilidadKey = key;
+        cargarDisponibilidadMes(year, month);
+      }
+    }
 
     function setStatus(el, text, ok = true) {
       el.textContent = text;
@@ -506,11 +651,20 @@ $token = apiToken();
           return;
         }
         if (!json.ok) throw new Error(json.error || 'Error');
-        const data = json.data || [];
+        let data = json.data || [];
+        const hoyIso = formatFechaISO(new Date());
+        if (fecha.value === hoyIso) {
+          const now = new Date();
+          const nowMinutes = now.getHours() * 60 + now.getMinutes();
+          data = data.filter(h => {
+            const mins = getMinutesFromHora(h.hora);
+            return mins === null ? true : mins >= nowMinutes;
+          });
+        }
         horariosStatus.textContent = data.length ? '' : 'Sin horarios disponibles';
         data.forEach(h => {
           const btn = document.createElement('button');
-          btn.className = 'px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-bold hover:border-emerald-500';
+          btn.className = 'w-full text-left px-4 py-2 rounded-lg border border-emerald-200 bg-white text-emerald-900 text-sm font-bold hover:border-emerald-500';
           btn.textContent = h.hora;
           btn.onclick = () => {
             horaSeleccionada = h.hora;
@@ -542,21 +696,25 @@ $token = apiToken();
     }
 
     function normalizarTelefonoUy(value) {
-      const digits = value.replace(/\D/g, '');
-      let local = digits;
-      if (digits.startsWith('598')) {
-        local = digits.slice(3);
+      let digits = value.replace(/\\D/g, '');
+      if (digits.length === 0) {
+        return { formatted: '', local: '' };
       }
-      local = local.slice(0, 8);
-      let formatted = '+598';
-      if (local.length > 0) formatted += ' ' + local.slice(0, 2);
-      if (local.length > 2) formatted += ' ' + local.slice(2, 5);
-      if (local.length > 5) formatted += ' ' + local.slice(5, 8);
-      return { formatted, local };
+      if (digits.startsWith('598')) {
+        digits = digits.slice(3);
+      }
+      if (digits.startsWith('0')) {
+        digits = digits.slice(1);
+      }
+      if (digits.startsWith('9')) {
+        digits = digits.slice(1);
+      }
+      const local = `09${digits}`.slice(0, 9);
+      return { formatted: local, local };
     }
 
     function telefonoValido(value) {
-      return /^\+598\s\d{2}\s\d{3}\s\d{3}$/.test(value.trim());
+      return /^0\d{8}$/.test(value.trim());
     }
 
     function normalizarMatricula(value) {
@@ -592,7 +750,7 @@ $token = apiToken();
 
       const telOk = telefonoValido(telefono.value);
       if (!telOk) {
-        setStatus(telefonoStatus, 'Formato valido: +598 99 999 999', false);
+        setStatus(telefonoStatus, 'Formato valido: 099111111', false);
       } else {
         telefonoStatus.textContent = '';
       }
@@ -700,7 +858,7 @@ $token = apiToken();
       const payload = {
         nombre: $('nombre').value.trim(),
         cedula: cedula.value.trim(),
-        telefono: telefono.value.trim(),
+        telefono: normalizarTelefonoUy(telefono.value).local,
         marca: marca.value.trim(),
         modelo: modelo.value.trim(),
         km: $('km').value.trim(),
@@ -733,10 +891,28 @@ $token = apiToken();
       }
     }
 
-    const hoy = new Date();
-    fecha.value = hoy.toISOString().split('T')[0];
-    fetchHorarios();
-    fecha.addEventListener('change', fetchHorarios);
+    function setFechaInicial() {
+      let d = new Date();
+      while (esDomingo(d)) {
+        d.setDate(d.getDate() + 1);
+      }
+      fecha.value = formatFechaISO(d);
+      fechaSeleccion.textContent = `Fecha seleccionada: ${formatFechaLarga(d)}`;
+      calendarioMes = new Date(d.getFullYear(), d.getMonth(), 1);
+      renderCalendar();
+      fetchHorarios();
+    }
+
+    calPrev.addEventListener('click', () => {
+      calendarioMes.setMonth(calendarioMes.getMonth() - 1);
+      renderCalendar();
+    });
+    calNext.addEventListener('click', () => {
+      calendarioMes.setMonth(calendarioMes.getMonth() + 1);
+      renderCalendar();
+    });
+
+    setFechaInicial();
 
     ['nombre', 'marca', 'modelo', 'km'].forEach(id => {
       $(id).addEventListener('input', validarForm);
@@ -822,6 +998,12 @@ $token = apiToken();
 </body>
 
 </html>
+
+
+
+
+
+
 
 
 
