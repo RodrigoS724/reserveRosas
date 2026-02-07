@@ -3,10 +3,10 @@ import { onMounted, ref, computed, toRaw } from 'vue'
 import { PermissionsLabels, getSession } from '../auth'
 
 type UserForm = {
-  ida: number
+  id?: number
   nombre: string
   username: string
-  passworda: string
+  password?: string
   role: 'super' | 'admin' | 'user'
   permissions: string[]
   activo: number
@@ -42,7 +42,11 @@ const isEdit = computed(() => Boolean(form.value.id))
 const isSuper = computed(() => form.value.role === 'super')
 
 const cargarUsuarios = async () => {
-  usuarios.value = await window.api.listarUsuarios()
+  const data = await window.api.listarUsuarios()
+  usuarios.value = (data || []).map((u: any) => ({
+    ...u,
+    role: (u.role === 'super' || u.role === 'admin' || u.role === 'user') ? u.role : 'user'
+  }))
 }
 
 const resetForm = () => {

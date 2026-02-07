@@ -172,9 +172,8 @@ export async function bootstrapSuperAdmin() {
     return
   }
 
-  let mysqlResult = { ok: false as const }
   if (!mysqlHasUser) {
-    mysqlResult = await ensureUserMysql({
+    await ensureUserMysql({
       nombre,
       username,
       passwordHash,

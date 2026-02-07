@@ -152,7 +152,7 @@ function registrarEventoHistorialSqlite(
   reservaId: number,
   campo: string, anterior: string | null,
   nuevo: string | null,
-  usuarioa: string
+  usuario: string
 ) {
   const db = initDatabase()
 
@@ -176,7 +176,7 @@ export async function registrarEventoHistorial(
   reservaId: number,
   campo: string, anterior: string | null,
   nuevo: string | null,
-  usuarioa: string
+  usuario: string
 ) {
   const mysqlResult = await tryMysql( async (pool) => {
     await pool.execute(

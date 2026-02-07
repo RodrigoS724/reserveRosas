@@ -20,7 +20,10 @@ export function registrarHandlersConfig() {
       return rows
     })
     if (!result.ok) {
-      return { ok: false, error: result.error.message || 'Error de conexión' }
+      const message = result.error instanceof Error
+        ? result.error.message
+        : 'Error de conexión'
+      return { ok: false, error: message }
     }
     return { ok: true }
   })

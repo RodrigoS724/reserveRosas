@@ -134,7 +134,7 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
       const vehiculoExistente = db.prepare(`
         SELECT id FROM vehiculos WHERE matricula = ? `).get(dataNormalizada.matricula) as { id: number } | undefined
 
-      let vehiculoId = vehiculoExistente.id
+      let vehiculoId = vehiculoExistente?.id
 
       if (!vehiculoId) {
         const vehiculoInsert = db.prepare(`

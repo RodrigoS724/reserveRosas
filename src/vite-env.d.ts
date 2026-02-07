@@ -22,14 +22,14 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipoa: string | null
-        garantia_tipoa: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
         garantia_fecha_compra: string | null
-        garantia_numero_servicea: string | null
+        garantia_numero_service: string | null
         garantia_problema: string | null
         fecha: string
         hora: string
-        detallesa: string
+        detalles: string
       }) => Promise<number>
 
       obtenerReserva: (id: number) => Promise<any>
@@ -48,13 +48,29 @@ declare global {
         fecha: string
         hora: string
         estado: string
-        detallesa: string
+        detalles: string
       }) => Promise<void>
 
       obtenerReservasSemana: (data: {
         desde: string
         hasta: string
       }) => Promise<any[]>
+
+      obtenerCambiosReservas: (data: {
+        since: string
+        lastId: number
+        limit?: number
+      }) => Promise<{
+        id: number
+        reserva_id: number
+        campo: string
+        valor_anterior: string | null
+        valor_nuevo: string | null
+        fecha: string
+        nombre: string | null
+        reserva_fecha: string | null
+        reserva_hora: string | null
+      }[]>
 
       /* =========================
        * HORARIOS
@@ -110,37 +126,37 @@ declare global {
         valor_anterior: string | null
         valor_nuevo: string | null
         fecha: string
-        usuarioa: string
+        usuario: string
       }[]>
 
       obtenerVehiculos: () => Promise<{
         id: number
         matricula: string
         marca: string
-        modeloa: string
-        nombrea: string
-        telefonoa: string
-        created_ata: string
+        modelo: string
+        nombre: string
+        telefono: string
+        created_at: string
         ultima_fecha: string | null
-        ultimo_kma: string | null
-        ultimo_tipo_turnoa: string | null
-        ultimo_particular_tipoa: string | null
-        ultimo_garantia_tipoa: string | null
+        ultimo_km: string | null
+        ultimo_tipo_turno: string | null
+        ultimo_particular_tipo: string | null
+        ultimo_garantia_tipo: string | null
       }[]>
 
       obtenerHistorialVehiculo: (vehiculoId: number) => Promise<{
         id: number
         vehiculo_id: number
         fecha: string
-        kma: string | null
-        tipo_turnoa: string | null
-        particular_tipoa: string | null
-        garantia_tipoa: string | null
+        km: string | null
+        tipo_turno: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
         garantia_fecha_compra: string | null
-        garantia_numero_servicea: string | null
+        garantia_numero_service: string | null
         garantia_problema: string | null
-        detallesa: string | null
-        created_ata: string
+        detalles: string | null
+        created_at: string
       }[]>
 
       obtenerTodasLasReservas: () => Promise<{
@@ -153,23 +169,23 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipoa: string | null
-        garantia_tipoa: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
         garantia_fecha_compra: string | null
-        garantia_numero_servicea: string | null
+        garantia_numero_service: string | null
         garantia_problema: string | null
         fecha: string
         hora: string
-        detallesa: string
+        detalles: string
         estado: string
-        notasa: string
+        notas: string
       }[]>
 
       actualizarNotasReserva: (id: number, notas: string) => Promise<void>
 
       obtenerEnvConfig: () => Promise<string>
       guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
-      probarConexionDB: () => Promise<{ ok: boolean; errora: string }>
+      probarConexionDB: () => Promise<{ ok: boolean; error: string }>
 
       obtenerUsuariosLogin: () => Promise<{
         id: number
@@ -180,8 +196,8 @@ declare global {
       }[]>
       login: (username: string, password: string) => Promise<{
         ok: boolean
-        errora: string
-        usera: {
+        error: string
+        user: {
           id: number
           nombre: string
           username: string
@@ -196,23 +212,24 @@ declare global {
         role: string
         permissions: string[]
         activo: number
-        created_ata: string
+        created_at: string
       }[]>
-      crearUsuario: (data: any) => Promise<{ ok: boolean; errora: string }>
-      actualizarUsuario: (data: any) => Promise<{ ok: boolean; errora: string }>
-      borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => Promise<{ ok: boolean; errora: string }>
-      actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => Promise<{ ok: boolean; errora: string }>
+      crearUsuario: (data: any) => Promise<{ ok: boolean; error: string }>
+      actualizarUsuario: (data: any) => Promise<{ ok: boolean; error: string }>
+      borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => Promise<{ ok: boolean; error: string }>
+      actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => Promise<{ ok: boolean; error: string }>
       obtenerAuditoriaUsuarios: () => Promise<{
         id: number
         actor_username: string | null
         actor_role: string | null
         accion: string
         target_username: string | null
-        detallea: string | null
-        created_ata: string
+        detalle: string | null
+        created_at: string
       }[]>
     }
   }
 }
 export {}
+
 

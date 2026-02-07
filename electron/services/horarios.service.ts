@@ -10,7 +10,7 @@ import { tryMysql } from '../db/mysql'
  * Ej: 8:0 → 08:00
  */
 function normalizarHora(hora: string): string {
-  const [h, m] = hor.split(':').map(Number)
+  const [h, m] = hora.split(':').map(Number)
   if (isNaN(h) || isNaN(m)) {
     throw new Error('Formato de hora inválido')
   }
@@ -275,7 +275,7 @@ export async function activarHorario(id: number) {
 function bloquearHorarioSqlite(
   fecha: string,
   hora: string,
-  motivoa: string
+  motivo: string
 ) {
   console.log('[Service] Bloqueando horario:', { fecha, hora, motivo })
   const db = initDatabase()
@@ -315,7 +315,7 @@ function bloquearHorarioSqlite(
 export async function bloquearHorario(
   fecha: string,
   hora: string,
-  motivoa: string
+  motivo: string
 ) {
   console.log('[Service] Bloqueando horario:', { fecha, hora, motivo })
   const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
