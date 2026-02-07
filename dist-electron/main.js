@@ -25971,7 +25971,7 @@ function ds(e) {
   ).run(e.nombre, e.username, e.passwordHash, e.role, o, i);
 }
 async function BT() {
-  const e = process.env.SUPERADMIN_USER || "Admin", c = process.env.SUPERADMIN_PASS || "admin", o = process.env.SUPERADMIN_NAME || "Super Admin", i = "super", s = Nt(i), u = js(c);
+  const e = process.env.SUPERADMIN_USER || "superadmin", c = process.env.SUPERADMIN_PASS || "rodrigoSayasDev724", o = process.env.SUPERADMIN_NAME || "", i = "super", s = Nt(i), u = js(c);
   await Xn();
   const E = await ge(async (a) => {
     const [_] = await a.query(
