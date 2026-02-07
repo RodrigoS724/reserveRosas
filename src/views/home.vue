@@ -205,7 +205,7 @@ const irAFormulario = () => {
           </button>
         </div>
         <div v-else class="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 text-gray-400">
-          <div class="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
+          <div class="text-3xl sm:text-4xl mb-3 sm:mb-4"></div>
           <p class="text-xs sm:text-sm font-medium">Seleccione un día disponible para ver los horarios</p>
         </div>
       </div>
@@ -220,3 +220,4 @@ const irAFormulario = () => {
         </div>
       </div>
 </template>
+

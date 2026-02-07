@@ -57,7 +57,7 @@ const cancelarReserva = async () => {
             <!-- HEADER -->
             <div class="window-header">
                 <span>Reserva #{{ editable.id }}</span>
-                <button @click="$emit('cerrar')">✕</button>
+                <button @click="$emit('cerrar')"></button>
             </div>
 
             <!-- BODY -->
@@ -117,6 +117,7 @@ const cancelarReserva = async () => {
                     <label>Estado</label>
                     <select v-model="editable.estado" class="select-estado" :class="editable.estado">
                         <option value="pendiente">Pendiente</option>
+                        <option value="pendiente_repuestos">Pendiente de repuestos</option>
                         <option value="revision">En revisión</option>
                         <option value="pronto">Pronto</option>
                         <option value="cancelada">Cancelada</option>
@@ -140,7 +141,7 @@ const cancelarReserva = async () => {
             <!-- CONFIRMACIÓN DE CANCELACIÓN -->
             <div v-else class="window-footer confirmation-footer">
                 <div class="confirmation-message">
-                    ¿Estás seguro de cancelar esta reserva?
+                    ¿Estás seguro de cancelar esta reserva
                 </div>
                 <div class="confirmation-buttons">
                     <button class="btn-cancelar" @click="mostrandoConfirmacion = false">No, volver</button>
@@ -367,6 +368,10 @@ const cancelarReserva = async () => {
 
 .select-estado.revision {
     border-color: #93c5fd;
+}
+
+.select-estado.pendiente_repuestos {
+    border-color: #fb923c;
 }
 
 .select-estado.cancelada {

@@ -1,9 +1,9 @@
-$ErrorActionPreference = "Stop"
-
 param(
   [ValidateSet("patch","minor","major")]
   [string]$Bump = "patch"
 )
+
+$ErrorActionPreference = "Stop"
 
 Write-Host "[release:local] Bumping version ($Bump)..." -ForegroundColor Cyan
 npm version $Bump

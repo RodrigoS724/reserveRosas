@@ -3,7 +3,7 @@ import path from 'path';
 import { app } from 'electron';
 
 // Guardamos la base de datos en la carpeta de datos de usuario de la app
-const dbPath = path.join(app.getPath('userData'), 'agenda.db');
+const dbPath = path.join( app.getPath('userData'), 'agend.db');
 const db = new Database(dbPath);
 
 // Creamos la tabla si no existe

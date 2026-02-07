@@ -60,7 +60,7 @@ async function processQueue(): Promise<void> {
     
     console.log(`[Lock] ${operation.id} completada exitosamente`)
   } catch (error: any) {
-    console.error(`[Lock] ${operation.id} ERROR:`, error?.message || error)
+    console.error(`[Lock] ${operation.id} ERROR:`, error.message || error)
     operation.reject(error instanceof Error ? error : new Error(String(error)))
   } finally {
     isLocked = false

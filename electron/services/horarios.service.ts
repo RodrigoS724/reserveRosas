@@ -1,11 +1,12 @@
 import { initDatabase } from '../db/database'
+import { tryMysql } from '../db/mysql'
 
 /* =========================
  * HELPERS
  * ========================= */
 
 /**
- * Normaliza hora a formato HH:mm
+ * Normaliza hora ? formato HH:mm
  * Ej: 8:0 → 08:00
  */
 function normalizarHora(hora: string): string {
@@ -27,22 +28,31 @@ function esSabado(fecha: string): boolean {
 /* =========================
  * HORARIOS BASE ACTIVOS
  * ========================= */
-export function obtenerHorariosBase() {
+export async function obtenerHorariosBase() {
   console.log('[Service] Obteniendo horarios base activos...')
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(`
+      SELECT * FROM horarios_base
+      WHERE activo = 1
+      ORDER BY hora
+    `)
+    return rows
+  })
+  if (mysqlResult.ok) return mysqlResult.value
+
   const db = initDatabase()
   const result = db.prepare(`
     SELECT * FROM horarios_base
     WHERE activo = 1
     ORDER BY hora
   `).all()
-  console.log('[Service] Horarios obtenidos:', result)
   return result
 }
 
 /* =========================
  * HORARIOS DISPONIBLES REALES
  * ========================= */
-export function obtenerHorariosDisponibles(fecha: string) {
+function obtenerHorariosDisponiblesSqlite(fecha: string) {
   const db = initDatabase()
 
   let horarios = db.prepare(`
@@ -66,10 +76,43 @@ export function obtenerHorariosDisponibles(fecha: string) {
   return horarios
 }
 
+export async function obtenerHorariosDisponibles(fecha: string) {
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT h.hora
+        FROM horarios_base h
+        WHERE h.activo = 1
+          AND h.hora NOT IN (
+            SELECT hora FROM reservas WHERE fecha = ?
+          )
+          AND h.hora NOT IN (
+            SELECT hora FROM bloqueos_horarios WHERE fecha = ?
+          )
+        ORDER BY h.hora
+      `,
+      [fechaNormalizada, fechaNormalizada]
+    )
+    return rows as { hora: string }[]
+  })
+
+  if (mysqlResult.ok) {
+    let horarios = mysqlResult.value
+    if (esSabado(fecha)) {
+      horarios = horarios.filter(h => h.hora < '12:00')
+    }
+    return horarios
+  }
+
+  return obtenerHorariosDisponiblesSqlite(fechaNormalizada)
+}
+
 /* =========================
  * CREAR HORARIO BASE
  * ========================= */
-export function crearHorario(hora: string) {
+function crearHorarioSqlite(hora: string) {
   console.log('[Service] Creando horario:', hora)
   const db = initDatabase()
   const horaNormalizada = normalizarHora(hora)
@@ -86,7 +129,7 @@ export function crearHorario(hora: string) {
 
       db.prepare(`
         INSERT INTO horarios_base (hora, activo)
-        VALUES (?, 1)
+        VALUES ( ?, 1)
       `).run(horaNormalizada)
       console.log('[Service] Horario creado:', horaNormalizada)
     })
@@ -98,10 +141,40 @@ export function crearHorario(hora: string) {
   }
 }
 
+export async function crearHorario(hora: string) {
+  console.log('[Service] Creando horario:', hora)
+  const horaNormalizada = normalizarHora(hora)
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `SELECT id FROM horarios_base WHERE hora = ?`,
+      [horaNormalizada]
+    )
+    if (rows.length) {
+      throw new Error('El horario ya existe')
+    }
+    await pool.execute(
+      `INSERT INTO horarios_base (hora, activo) VALUES ( ?, 1)`,
+      [horaNormalizada]
+    )
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      crearHorarioSqlite(horaNormalizada)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en crearHorario:', error)
+    }
+    return
+  }
+
+  return crearHorarioSqlite(horaNormalizada)
+}
+
 /* =========================
  * DESACTIVAR HORARIO BASE
  * ========================= */
-export function desactivarHorario(id: number) {
+function desactivarHorarioSqlite(id: number) {
   console.log('[Service] Desactivando horario:', id)
   const db = initDatabase()
 
@@ -122,10 +195,26 @@ export function desactivarHorario(id: number) {
   }
 }
 
+export async function desactivarHorario(id: number) {
+  console.log('[Service] Desactivando horario:', id)
+  const mysqlResult = await tryMysql( async (pool) => {
+    await pool.execute(`UPDATE horarios_base SET activo = 0 WHERE id = ?`, [id])
+  })
+  if (mysqlResult.ok) {
+    try {
+      desactivarHorarioSqlite(id)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en desactivarHorario:', error)
+    }
+    return
+  }
+  return desactivarHorarioSqlite(id)
+}
+
 /* =========================
  * OBTENER HORARIOS INACTIVOS
  * ========================= */
-export function obtenerHorariosInactivos() {
+function obtenerHorariosInactivosSqlite() {
   console.log('[Service] Obteniendo horarios inactivos')
   const db = initDatabase()
   const horarios = db.prepare(`
@@ -135,10 +224,23 @@ export function obtenerHorariosInactivos() {
   return horarios
 }
 
+export async function obtenerHorariosInactivos() {
+  console.log('[Service] Obteniendo horarios inactivos')
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `SELECT id, hora FROM horarios_base WHERE activo = 0 ORDER BY hora`
+    )
+    return rows
+  })
+  if (mysqlResult.ok) return mysqlResult.value
+
+  return obtenerHorariosInactivosSqlite()
+}
+
 /* =========================
  * REACTIVAR HORARIO BASE
  * ========================= */
-export function activarHorario(id: number) {
+function activarHorarioSqlite(id: number) {
   const db = initDatabase()
 
   const tx = db.transaction(() => {
@@ -152,13 +254,28 @@ export function activarHorario(id: number) {
   tx()
 }
 
+export async function activarHorario(id: number) {
+  const mysqlResult = await tryMysql( async (pool) => {
+    await pool.execute(`UPDATE horarios_base SET activo = 1 WHERE id = ?`, [id])
+  })
+  if (mysqlResult.ok) {
+    try {
+      activarHorarioSqlite(id)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en activarHorario:', error)
+    }
+    return
+  }
+  return activarHorarioSqlite(id)
+}
+
 /* =========================
  * BLOQUEAR HORARIO EN FECHA
  * ========================= */
-export function bloquearHorario(
+function bloquearHorarioSqlite(
   fecha: string,
   hora: string,
-  motivo?: string
+  motivo: string
 ) {
   console.log('[Service] Bloqueando horario:', { fecha, hora, motivo })
   const db = initDatabase()
@@ -183,7 +300,7 @@ export function bloquearHorario(
 
       db.prepare(`
         INSERT INTO bloqueos_horarios (fecha, hora, motivo)
-        VALUES (?, ?, ?)
+        VALUES ( ?, ?, ?)
       `).run(fechaNormalizada, horaNormalizada, motivo ?? '')
       console.log('[Service] Horario bloqueado')
     })
@@ -195,10 +312,43 @@ export function bloquearHorario(
   }
 }
 
+export async function bloquearHorario(
+  fecha: string,
+  hora: string,
+  motivo: string
+) {
+  console.log('[Service] Bloqueando horario:', { fecha, hora, motivo })
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+  const horaNormalizada = normalizarHora(hora)
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `SELECT id FROM bloqueos_horarios WHERE fecha = ? AND hora = ?`,
+      [fechaNormalizada, horaNormalizada]
+    )
+    if (rows.length) return
+    await pool.execute(
+      `INSERT INTO bloqueos_horarios (fecha, hora, motivo) VALUES ( ?, ?, ?)`,
+      [fechaNormalizada, horaNormalizada, motivo ?? '']
+    )
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      bloquearHorarioSqlite(fechaNormalizada, horaNormalizada, motivo)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en bloquearHorario:', error)
+    }
+    return
+  }
+
+  return bloquearHorarioSqlite(fechaNormalizada, horaNormalizada, motivo)
+}
+
 /* =========================
  * DESBLOQUEAR HORARIO
  * ========================= */
-export function desbloquearHorario(fecha: string, hora: string) {
+function desbloquearHorarioSqlite(fecha: string, hora: string) {
   console.log('[Service] Desbloqueando horario:', { fecha, hora })
   const db = initDatabase()
   
@@ -224,10 +374,34 @@ export function desbloquearHorario(fecha: string, hora: string) {
   }
 }
 
+export async function desbloquearHorario(fecha: string, hora: string) {
+  console.log('[Service] Desbloqueando horario:', { fecha, hora })
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+  const horaNormalizada = normalizarHora(hora)
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    await pool.execute(
+      `DELETE FROM bloqueos_horarios WHERE fecha = ? AND hora = ?`,
+      [fechaNormalizada, horaNormalizada]
+    )
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      desbloquearHorarioSqlite(fechaNormalizada, horaNormalizada)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en desbloquearHorario:', error)
+    }
+    return
+  }
+
+  return desbloquearHorarioSqlite(fechaNormalizada, horaNormalizada)
+}
+
 /* =========================
  * OBTENER HORARIOS BLOQUEADOS POR FECHA
  * ========================= */
-export function obtenerHorariosBloqueados(fecha: string) {
+function obtenerHorariosBloqueadosSqlite(fecha: string) {
   console.log('[Service] Obteniendo horarios bloqueados para:', fecha)
   const db = initDatabase()
   
@@ -249,10 +423,27 @@ export function obtenerHorariosBloqueados(fecha: string) {
   return result
 }
 
+export async function obtenerHorariosBloqueados(fecha: string) {
+  console.log('[Service] Obteniendo horarios bloqueados para:', fecha)
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `SELECT * FROM bloqueos_horarios WHERE fecha = ? ORDER BY hora`,
+      [fechaNormalizada]
+    )
+    return rows
+  })
+
+  if (mysqlResult.ok) return mysqlResult.value
+
+  return obtenerHorariosBloqueadosSqlite(fechaNormalizada)
+}
+
 /* =========================
  * BORRAR HORARIO PERMANENTE
  * ========================= */
-export function borrarHorarioPermanente(id: number) {
+function borrarHorarioPermanenteSqlite(id: number) {
   console.log('[Service] Borrando horario permanentemente:', id)
   const db = initDatabase()
 
@@ -279,3 +470,27 @@ export function borrarHorarioPermanente(id: number) {
     throw error
   }
 }
+
+export async function borrarHorarioPermanente(id: number) {
+  console.log('[Service] Borrando horario permanentemente:', id)
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(`SELECT * FROM horarios_base WHERE id = ?`, [id])
+    const horario = rows[0]
+    if (!horario) {
+      throw new Error('Horario no encontrado')
+    }
+    await pool.execute(`DELETE FROM horarios_base WHERE id = ?`, [id])
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      borrarHorarioPermanenteSqlite(id)
+    } catch (error) {
+      console.warn('[Service] Backup SQLite fallo en borrarHorarioPermanente:', error)
+    }
+    return
+  }
+
+  return borrarHorarioPermanenteSqlite(id)
+}
+

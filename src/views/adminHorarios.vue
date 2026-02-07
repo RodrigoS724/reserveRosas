@@ -311,7 +311,7 @@ const confirmarBorradoInterno = async () => {
         </svg>
       </div>
       
-      <h3 class="text-xl font-black text-gray-800 dark:text-white mb-2">¿Estás seguro?</h3>
+      <h3 class="text-xl font-black text-gray-800 dark:text-white mb-2">¿Estás seguroa</h3>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">
         Esta acción eliminará el horario permanentemente. No podrás recuperarlo.
       </p>

@@ -22,14 +22,14 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_service: string | null
+        garantia_problema: string | null
         fecha: string
         hora: string
-        detalles?: string
+        detalles: string
       }) => Promise<number>
 
       obtenerReserva: (id: number) => Promise<any>
@@ -39,7 +39,7 @@ declare global {
       moverReserva: (data: {
         id: number
         nuevaFecha: string
-        nuevaHora?: string
+        nuevaHora: string
       }) => Promise<void>
 
       actualizarReserva: (data: {
@@ -48,13 +48,29 @@ declare global {
         fecha: string
         hora: string
         estado: string
-        detalles?: string
+        detalles: string
       }) => Promise<void>
 
       obtenerReservasSemana: (data: {
         desde: string
         hasta: string
       }) => Promise<any[]>
+
+      obtenerCambiosReservas: (data: {
+        since: string
+        lastId: number
+        limit?: number
+      }) => Promise<{
+        id: number
+        reserva_id: number
+        campo: string
+        valor_anterior: string | null
+        valor_nuevo: string | null
+        fecha: string
+        nombre: string | null
+        reserva_fecha: string | null
+        reserva_hora: string | null
+      }[]>
 
       /* =========================
        * HORARIOS
@@ -83,7 +99,7 @@ declare global {
       bloquearHorario: (data: {
         fecha: string
         hora: string
-        motivo?: string
+        motivo: string
       }) => Promise<void>
 
       desbloquearHorario: (data: {
@@ -95,7 +111,7 @@ declare global {
         id: number
         fecha: string
         hora: string
-        motivo?: string
+        motivo: string
       }[]>
 
       borrarHorarioPermanente: (id: number) => Promise<void>
@@ -110,37 +126,37 @@ declare global {
         valor_anterior: string | null
         valor_nuevo: string | null
         fecha: string
-        usuario?: string
+        usuario: string
       }[]>
 
       obtenerVehiculos: () => Promise<{
         id: number
         matricula: string
-        marca?: string
-        modelo?: string
-        nombre?: string
-        telefono?: string
-        created_at?: string
-        ultima_fecha?: string | null
-        ultimo_km?: string | null
-        ultimo_tipo_turno?: string | null
-        ultimo_particular_tipo?: string | null
-        ultimo_garantia_tipo?: string | null
+        marca: string
+        modelo: string
+        nombre: string
+        telefono: string
+        created_at: string
+        ultima_fecha: string | null
+        ultimo_km: string | null
+        ultimo_tipo_turno: string | null
+        ultimo_particular_tipo: string | null
+        ultimo_garantia_tipo: string | null
       }[]>
 
       obtenerHistorialVehiculo: (vehiculoId: number) => Promise<{
         id: number
         vehiculo_id: number
         fecha: string
-        km?: string | null
-        tipo_turno?: string | null
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
-        detalles?: string | null
-        created_at?: string
+        km: string | null
+        tipo_turno: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_service: string | null
+        garantia_problema: string | null
+        detalles: string | null
+        created_at: string
       }[]>
 
       obtenerTodasLasReservas: () => Promise<{
@@ -153,20 +169,67 @@ declare global {
         km: string
         matricula: string
         tipo_turno: string
-        particular_tipo?: string | null
-        garantia_tipo?: string | null
-        garantia_fecha_compra?: string | null
-        garantia_numero_service?: string | null
-        garantia_problema?: string | null
+        particular_tipo: string | null
+        garantia_tipo: string | null
+        garantia_fecha_compra: string | null
+        garantia_numero_service: string | null
+        garantia_problema: string | null
         fecha: string
         hora: string
-        detalles?: string
+        detalles: string
         estado: string
-        notas?: string
+        notas: string
       }[]>
 
       actualizarNotasReserva: (id: number, notas: string) => Promise<void>
+
+      obtenerEnvConfig: () => Promise<string>
+      guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
+      probarConexionDB: () => Promise<{ ok: boolean; error: string }>
+
+      obtenerUsuariosLogin: () => Promise<{
+        id: number
+        nombre: string
+        username: string
+        role: string
+        permissions: string[]
+      }[]>
+      login: (username: string, password: string) => Promise<{
+        ok: boolean
+        error: string
+        user: {
+          id: number
+          nombre: string
+          username: string
+          role: string
+          permissions: string[]
+        }
+      }>
+      listarUsuarios: () => Promise<{
+        id: number
+        nombre: string
+        username: string
+        role: string
+        permissions: string[]
+        activo: number
+        created_at: string
+      }[]>
+      crearUsuario: (data: any) => Promise<{ ok: boolean; error: string }>
+      actualizarUsuario: (data: any) => Promise<{ ok: boolean; error: string }>
+      borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => Promise<{ ok: boolean; error: string }>
+      actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => Promise<{ ok: boolean; error: string }>
+      obtenerAuditoriaUsuarios: () => Promise<{
+        id: number
+        actor_username: string | null
+        actor_role: string | null
+        accion: string
+        target_username: string | null
+        detalle: string | null
+        created_at: string
+      }[]>
     }
   }
 }
 export {}
+
+

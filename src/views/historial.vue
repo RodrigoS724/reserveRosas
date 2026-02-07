@@ -5,13 +5,41 @@ import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
  * ESTADO
  * ========================= */
 const reservas = ref<any[]>([])
+const filtroTexto = ref('')
+const fechaDesde = ref('')
+const fechaHasta = ref('')
+const estadoFiltro = ref('TODOS')
+const cargando = ref(false)
+
+function normalizarEstadoKey(estado: string) {
+  if (!estado) return 'PENDIENTE'
+  const key = estado
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (key === 'CANCELADA') return 'CANCELADO'
+  if (key === 'REVISION') return 'EN REVISION'
+  return key
+}
+
+function formatearEstado(estado: string) {
+  const key = normalizarEstadoKey(estado)
+  if (key === 'PENDIENTE REPUESTOS') return 'Pendiente repuestos'
+  if (key === 'EN REVISION') return 'En revisión'
+  if (key === 'EN PROCESO') return 'En proceso'
+  if (key === 'CANCELADO') return 'Cancelado'
+  if (key === 'PRONTO') return 'Pronto'
+  return 'Pendiente'
+}
+
 const reservasFiltradas = computed(() => {
   return reservas.value.filter(r => {
     // Filtro por búsqueda CI/Nombre
     if (filtroTexto.value) {
       const search = filtroTexto.value.toLowerCase()
-      const nombre = r.nombre?.toLowerCase() || ''
-      const cedula = r.cedula?.toLowerCase() || ''
+      const nombre = r.nombre.toLowerCase() || ''
+      const cedula = r.cedula.toLowerCase() || ''
       if (!nombre.includes(search) && !cedula.includes(search)) {
         return false
       }
@@ -27,14 +55,13 @@ const reservasFiltradas = computed(() => {
       if (r.fecha > fechaHasta.value) return false
     }
 
+    if (estadoFiltro.value !== 'TODOS') {
+      return normalizarEstadoKey(r.estado) === estadoFiltro.value
+    }
+
     return true
   })
 })
-
-const filtroTexto = ref('')
-const fechaDesde = ref('')
-const fechaHasta = ref('')
-const cargando = ref(false)
 
 // Modal de notas
 const mostrarModalNotas = ref(false)
@@ -136,17 +163,17 @@ const formatearFecha = (fecha: string) => {
 }
 
 const obtenerTipoResumen = (reserva: any) => {
-  if (reserva?.tipo_turno === 'Garantía') {
+  if (reserva.tipo_turno === 'Garantía') {
     return `Garantía${reserva.garantia_tipo ? ` - ${reserva.garantia_tipo}` : ''}`
   }
-  if (reserva?.tipo_turno === 'Particular') {
+  if (reserva.tipo_turno === 'Particular') {
     return `Particular${reserva.particular_tipo ? ` - ${reserva.particular_tipo}` : ''}`
   }
-  return reserva?.tipo_turno || ''
+  return reserva.tipo_turno || ''
 }
 
 const obtenerDetalleResumen = (reserva: any) => {
-  if (reserva?.tipo_turno === 'Garantía') {
+  if (reserva.tipo_turno === 'Garantía') {
     if (reserva.garantia_tipo === 'Service') {
       return reserva.garantia_numero_service ? `Service: ${reserva.garantia_numero_service}` : ''
     }
@@ -154,13 +181,13 @@ const obtenerDetalleResumen = (reserva: any) => {
       return reserva.garantia_problema || ''
     }
   }
-  if (reserva?.tipo_turno === 'Particular') {
+  if (reserva.tipo_turno === 'Particular') {
     if (reserva.particular_tipo === 'Taller') {
       return reserva.detalles || ''
     }
     return 'Mantenimiento programado'
   }
-  return reserva?.detalles || ''
+  return reserva.detalles || ''
 }
 
 const exportarACSV = () => {
@@ -216,11 +243,14 @@ const exportarACSV = () => {
 const getBadgeStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400',
+    'PENDIENTE REPUESTOS': 'bg-orange-50 dark:bg-orange-500/10 border-orange-500/30 text-orange-600 dark:text-orange-400',
     'PRONTO': 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
     'CANCELADO': 'bg-rose-50 dark:bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400',
-    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400'
+    'EN PROCESO': 'bg-sky-50 dark:bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400',
+    'EN REVISION': 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
   };
-  return styles[estado?.toUpperCase() as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400';
+  const key = normalizarEstadoKey(estado)
+  return styles[key as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400';
 };
 </script>
 
@@ -232,7 +262,7 @@ const getBadgeStyles = (estado: string) => {
         <p class="text-gray-500 dark:text-gray-400 font-medium">Registro completo de reservas y servicios</p>
       </div>
       <button @click="cargarReservas" class="bg-white dark:bg-[#1e293b] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 transition-all font-bold text-sm md:text-base shadow-sm">
-        {{ cargando ? 'Cargando...' : '🔄 Actualizar' }}
+        {{ cargando ? 'Cargando...' : ' Actualizar' }}
       </button>
     </header>
 
@@ -244,6 +274,20 @@ const getBadgeStyles = (estado: string) => {
         <input v-model="fechaDesde" type="date" class="bg-transparent text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
         <span class="text-gray-300">→</span>
         <input v-model="fechaHasta" type="date" class="bg-transparent text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
+      </div>
+
+      <div class="flex items-center gap-2 px-2 md:px-4 border-l border-gray-100 dark:border-gray-800">
+        <span class="text-[10px] uppercase tracking-widest text-gray-400 font-black">Estado</span>
+        <select v-model="estadoFiltro"
+          class="bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl px-3 py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-200">
+          <option value="TODOS">Todos</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
+          <option value="EN REVISION">En revisión</option>
+          <option value="PRONTO">Pronto</option>
+          <option value="EN PROCESO">En proceso</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
       </div>
 
       <button @click="exportarACSV" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-emerald-700/20">
@@ -290,7 +334,7 @@ const getBadgeStyles = (estado: string) => {
               </td>
               <td class="p-3 sm:p-4 md:p-5">
                 <span :class="['px-2 sm:px-3 py-1 rounded-lg sm:rounded-xl text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-widest border', getBadgeStyles(r.estado)]">
-                  {{ r.estado || 'Pendiente' }}
+                  {{ formatearEstado(r.estado) }}
                 </span>
               </td>
               <td class="p-3 sm:p-4 md:p-5 max-w-[150px] lg:max-w-[200px]">
@@ -314,22 +358,22 @@ const getBadgeStyles = (estado: string) => {
         <div class="p-6 sm:p-7 md:p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start">
           <div>
             <h2 class="text-lg sm:text-xl md:text-2xl font-black text-gray-800 dark:text-white">Notas de Reserva</h2>
-            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ reservaActual?.nombre }} • CI: {{ reservaActual?.cedula }}</p>
+            <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ reservaActual.nombre }} • CI: {{ reservaActual.cedula }}</p>
           </div>
-          <button @click="cerrarModalNotas" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <button @click="cerrarModalNotas" class="text-gray-400 hover:text-gray-600 text-xl"></button>
         </div>
         <div class="p-6 sm:p-7 md:p-8">
           <textarea 
             v-model="notasActuales" 
-            :readonly="!modoEdicion && reservaActual?.notas"
+            :readonly="!modoEdicion && reservaActual.notas"
             placeholder="Escribe los detalles aquí..." 
             class="w-full h-40 sm:h-44 md:h-48 bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 resize-none font-medium"
-            :class="{ 'opacity-70 cursor-not-allowed': !modoEdicion && reservaActual?.notas }"
+            :class="{ 'opacity-70 cursor-not-allowed': !modoEdicion && reservaActual.notas }"
           ></textarea>
         </div>
         <div class="p-6 sm:p-7 md:p-8 bg-gray-50/50 dark:bg-black/20 flex justify-end gap-3">
           <button @click="cerrarModalNotas" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-gray-500 text-xs sm:text-sm">Cancelar</button>
-          <button v-if="!modoEdicion && reservaActual?.notas" @click="habilitarEdicion" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-amber-500 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20">Editar</button>
+          <button v-if="!modoEdicion && reservaActual.notas" @click="habilitarEdicion" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-amber-500 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20">Editar</button>
           <button @click="guardarNotas" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-cyan-600/20 transition-all">
             {{ modoEdicion ? 'Guardar Cambios' : 'Guardar Notas' }}
           </button>
@@ -338,3 +382,6 @@ const getBadgeStyles = (estado: string) => {
     </div>
   </div>
 </template>
+
+
+

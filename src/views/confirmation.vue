@@ -33,7 +33,7 @@ const successClass = "border-blue-500/50 ring-2 ring-blue-500/10 bg-blue-50/30 d
 const errorClass = "border-red-500/50 ring-2 ring-red-500/10 bg-red-50/30 dark:bg-red-900/10"
 
 onMounted(() => {
-  console.log("✅ API disponible:", !!window.api)
+  console.log(" API disponible:", !!window.api)
 })
 
 // --- LÓGICA DE FORMATEO AUTOMÁTICO DE CÉDULA ---
@@ -56,8 +56,7 @@ const descargarTicket = () => {
         <div class="section-title">Garantía</div>
         <div class="row"><span>Tipo:</span> <span class="val">${garantiaTipo.value} en garantía</span></div>
         <div class="row"><span>Fecha de compra:</span> <span class="val">${garantiaFechaCompra.value}</span></div>
-        ${garantiaTipo.value === 'Service'
-          ? `<div class="row"><span>Número de service:</span> <span class="val">${garantiaNumeroService.value}</span></div>`
+        ${garantiaTipo.value === 'Service' ? `<div class="row"><span>Número de service:</span> <span class="val">${garantiaNumeroService.value}</span></div>`
           : `<div class="row"><span>Problema:</span> <span class="val">${garantiaProblema.value}</span></div>`
         }
       `
@@ -221,7 +220,7 @@ const esValido = computed(() => {
           <div class="flex items-center gap-3 sm:gap-4">
             <div
               class="w-10 sm:w-12 h-10 sm:h-12 bg-blue-50 dark:bg-blue-900/30 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl">
-              📅</div>
+              </div>
             <div>
               <p class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Fecha</p>
               <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ fecha }}</p>
@@ -230,7 +229,7 @@ const esValido = computed(() => {
           <div class="flex items-center gap-3 sm:gap-4">
             <div
               class="w-10 sm:w-12 h-10 sm:h-12 bg-purple-50 dark:bg-purple-900/30 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl">
-              🕒</div>
+              </div>
             <div>
               <p class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Horario</p>
               <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ hora }} hs</p>
@@ -240,7 +239,7 @@ const esValido = computed(() => {
       </div>
       <div class="bg-blue-600 p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-lg text-white">
         <p class="text-xs sm:text-sm opacity-80 mb-1 font-medium">Ubicación</p>
-        <p class="text-sm sm:text-base font-bold flex items-center gap-2">📍 Taller Central Rosas</p>
+        <p class="text-sm sm:text-base font-bold flex items-center gap-2"> Taller Central Rosas</p>
       </div>
     </div>
     <div
@@ -291,7 +290,7 @@ const esValido = computed(() => {
           <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1 text-balance">Tipo de
             Turno</label>
           <div class="grid grid-cols-2 gap-2 sm:gap-3">
-            <button v-for="t in ['Garantía', 'Particular']" :key="t" type="button" @click="tipoTurno = t"
+            <button v-for="t in ['Garantía', 'Particular'] as const" :key="t" type="button" @click="tipoTurno = t"
               :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm',
                 tipoTurno === t ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">
               {{ t }}
@@ -329,7 +328,7 @@ const esValido = computed(() => {
           <div class="space-y-2">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1 text-balance">Tipo Particular</label>
             <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <button v-for="t in ['Service', 'Taller']" :key="t" type="button" @click="particularTipo = t"
+              <button v-for="t in ['Service', 'Taller'] as const" :key="t" type="button" @click="particularTipo = t"
                 :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm',
                   particularTipo === t ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">
                 {{ t }}
@@ -353,3 +352,7 @@ const esValido = computed(() => {
   </div>
 </div>
 </template>
+
+
+
+
