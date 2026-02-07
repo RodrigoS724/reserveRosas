@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('api', {
   moverReserva: (d: any) => invokeSafe('reservas:mover', d), actualizarReserva: (d: any) => invokeSafe('reservas:actualizar', d),
   obtenerReservasSemana: (d: any) => invokeSafe('reservas:semana', d),
   obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (id: number, notas: string) => invokeSafe('reservas:actualizar-notas', id, notas),
+  obtenerCambiosReservas: (d: any) => invokeSafe('reservas:cambios', d),
 
   // Horarios
   obtenerHorariosBase: () => invokeSafe('horarios:base'),

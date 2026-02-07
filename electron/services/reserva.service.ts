@@ -870,6 +870,44 @@ export async function actualizarNotasReserva(id: number, notas: string) {
   }
 }
 
+/* =========================
+ * OBTENER CAMBIOS RECIENTES
+ * ========================= */
+export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 200) {
+  console.log('[Service] Buscando cambios de reservas desde:', since, 'id>', lastId)
+
+  const mysqlResult = await tryMysql(async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT h.id, h.reserva_id, h.campo, h.valor_anterior, h.valor_nuevo, h.fecha,
+               r.nombre, r.fecha AS reserva_fecha, r.hora AS reserva_hora
+        FROM historial_reservas h
+        LEFT JOIN reservas r ON r.id = h.reserva_id
+        WHERE (h.fecha > ? OR (h.fecha = ? AND h.id > ?))
+        ORDER BY h.fecha ASC, h.id ASC
+        LIMIT ?
+      `,
+      [since, since, lastId, limit]
+    )
+    return rows
+  })
+  if (mysqlResult.ok) return mysqlResult.value
+
+  const db = initDatabase()
+  const rows = db.prepare(
+    `
+      SELECT h.id, h.reserva_id, h.campo, h.valor_anterior, h.valor_nuevo, h.fecha,
+             r.nombre, r.fecha AS reserva_fecha, r.hora AS reserva_hora
+      FROM historial_reservas h
+      LEFT JOIN reservas r ON r.id = h.reserva_id
+      WHERE (h.fecha > ? OR (h.fecha = ? AND h.id > ?))
+      ORDER BY h.fecha ASC, h.id ASC
+      LIMIT ?
+    `
+  ).all(since, since, lastId, limit)
+  return rows
+}
+
 
 
 

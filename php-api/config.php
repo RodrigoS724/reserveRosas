@@ -159,4 +159,27 @@ function normalizeMatricula(string $value): string
     return strtoupper(trim($value));
 }
 
+function normalizeTelefonoUy(string $value): string
+{
+    $digits = preg_replace('/\D+/', '', $value) ?? '';
+    if (str_starts_with($digits, '598')) {
+        $digits = substr($digits, 3);
+    }
+    $digits = substr($digits, 0, 8);
+    if (strlen($digits) !== 8) {
+        return '';
+    }
+    return '+598 ' . substr($digits, 0, 2) . ' ' . substr($digits, 2, 3) . ' ' . substr($digits, 5, 3);
+}
+
+function isValidTelefonoUy(string $value): bool
+{
+    return (bool) preg_match('/^\+598\s\d{2}\s\d{3}\s\d{3}$/', trim($value));
+}
+
+function isValidMatriculaUy(string $value): bool
+{
+    return (bool) preg_match('/^[A-Z]{3}\d{3,4}$/', normalizeMatricula($value));
+}
+
 

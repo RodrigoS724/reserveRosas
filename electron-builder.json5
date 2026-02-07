@@ -11,6 +11,13 @@
     "dist",
     "dist-electron"
   ],
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "RodrigoS724",
+      "repo": "reserveRosas"
+    }
+  ],
   "mac": {
     "target": [
       "dmg"

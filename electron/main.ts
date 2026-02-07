@@ -1,5 +1,7 @@
 import 'dotenv/config'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { autoUpdater } from 'electron-updater'
+import log from 'electron-log'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
@@ -51,7 +53,9 @@ function createWindow() {
       contextIsolation: true,
     },
   })
- win.webContents.openDevTools({ mode: 'detach' })
+  if (VITE_DEV_SERVER_URL) {
+    win.webContents.openDevTools({ mode: 'detach' })
+  }
   // 1. ELIMINAR MENÚ DE RAÍZ
  // win.setMenu(null); // Elimina el menú de la instancia
  // win.removeMenu();  // Refuerza la eliminación
@@ -76,4 +80,34 @@ app.whenReady().then(() => {
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana
+
+  // Auto-update solo en builds de producción
+  if (!VITE_DEV_SERVER_URL) {
+    const sendUpdateStatus = (channel: string, payload?: unknown) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send(channel, payload)
+      }
+    }
+
+    autoUpdater.on('update-available', (info) => sendUpdateStatus('app:update-available', info))
+    autoUpdater.on('download-progress', (progress) => {
+      sendUpdateStatus('app:update-progress', {
+        percent: progress.percent,
+        transferred: progress.transferred,
+        total: progress.total,
+      })
+    })
+    autoUpdater.on('update-downloaded', (info) => sendUpdateStatus('app:update-downloaded', info))
+    autoUpdater.on('error', (err) => {
+      sendUpdateStatus('app:update-error', { message: err?.message || String(err) })
+    })
+
+    ipcMain.on('app:quit-and-install', () => {
+      autoUpdater.quitAndInstall()
+    })
+
+    autoUpdater.logger = log
+    autoUpdater.autoDownload = true
+    autoUpdater.checkForUpdatesAndNotify()
+  }
 })

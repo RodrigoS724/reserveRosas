@@ -11,6 +11,15 @@ const horariosDisponibles = ref<string[]>([])
 
 // Intervalo para auto-refresh
 let intervaloRefresco: number | null = null
+let currentRangeKey = ''
+let isInitialLoad = true
+const knownReservaIds = new Set<number>()
+const knownChangeIds = new Set<number>()
+const changeQueue: number[] = []
+let lastChangeAt = new Date().toISOString()
+let lastChangeId = 0
+let isInitialChangesLoad = true
+const suppressUntilByReservaId = new Map<number, number>()
 
 // Estructura de semana
 const diasSemana = ref([
@@ -83,11 +92,36 @@ const cargarReservas = async () => {
 
     const desdeStr = lunes.toISOString().split('T')[0]
     const hastaStr = sabado.toISOString().split('T')[0]
+    const rangeKey = `${desdeStr}_${hastaStr}`
+    if (rangeKey !== currentRangeKey) {
+      currentRangeKey = rangeKey
+      isInitialLoad = true
+      knownReservaIds.clear()
+    }
 
     console.log('[Reserve] Cargando reservas desde', desdeStr, 'hasta', hastaStr)
 
     const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
     console.log('[Reserve] Reservas recibidas:', nuevasReservas)
+
+    if (Array.isArray(nuevasReservas)) {
+      const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
+      nuevasReservas.forEach((r: any) => {
+        if (r?.id) knownReservaIds.add(Number(r.id))
+      })
+
+      if (!isInitialLoad && nuevas.length > 0) {
+        for (const r of nuevas) {
+          const nombre = r?.nombre || 'Reserva'
+          const fecha = r?.fecha ? ` ${r.fecha}` : ''
+          const hora = r?.hora ? ` ${r.hora}` : ''
+          const message = `Nueva reserva web: ${nombre}${fecha}${hora}`.trim()
+          window.dispatchEvent(new CustomEvent('ui:notify', {
+            detail: { message, variant: 'success' }
+          }))
+        }
+      }
+    }
 
     // Inicializar matriz vacía
     const nuevaMatriz: Record<string, Record<string, any[]>> = {}
@@ -111,9 +145,92 @@ const cargarReservas = async () => {
 
     matrizReservas.value = nuevaMatriz
     console.log('[Reserve] Matriz actualizada')
+    isInitialLoad = false
 
   } catch (error: any) {
     console.error('[Reserve] Error cargando reservas:', error)
+  }
+}
+
+const chequearCambiosRemotos = async () => {
+  try {
+    const cambios = await window.api.obtenerCambiosReservas({
+      since: lastChangeAt,
+      lastId: lastChangeId,
+      limit: 200
+    })
+
+    if (!Array.isArray(cambios) || cambios.length === 0) return
+
+    const pendingByReservaId = new Map<number, {
+      accion: 'creada' | 'modificada' | 'eliminada'
+      nombre: string
+      fecha: string
+      hora: string
+    }>()
+    const prioridad = { creada: 3, eliminada: 2, modificada: 1 } as const
+
+    for (const c of cambios) {
+      const id = Number(c?.id)
+      if (!id || knownChangeIds.has(id)) continue
+
+      knownChangeIds.add(id)
+      changeQueue.push(id)
+      if (changeQueue.length > 1000) {
+        const old = changeQueue.shift()
+        if (old) knownChangeIds.delete(old)
+      }
+
+      const reservaId = Number(c?.reserva_id)
+      if (!reservaId) continue
+      const suppressUntil = suppressUntilByReservaId.get(reservaId)
+      if (suppressUntil && suppressUntil > Date.now()) continue
+      if (suppressUntil && suppressUntil <= Date.now()) {
+        suppressUntilByReservaId.delete(reservaId)
+      }
+
+      const campo = String(c?.campo || '').toLowerCase()
+      let accion: 'creada' | 'modificada' | 'eliminada' = 'modificada'
+      if (campo === 'creación' || campo === 'creacion') accion = 'creada'
+      if (campo === 'eliminación' || campo === 'eliminacion') accion = 'eliminada'
+
+      const nombre = c?.nombre || 'Reserva'
+      const fecha = c?.reserva_fecha ? ` ${c.reserva_fecha}` : ''
+      const hora = c?.reserva_hora ? ` ${c.reserva_hora}` : ''
+
+      const existente = pendingByReservaId.get(reservaId)
+      if (!existente || prioridad[accion] > prioridad[existente.accion]) {
+        pendingByReservaId.set(reservaId, { accion, nombre, fecha, hora })
+      }
+    }
+
+    if (!isInitialChangesLoad && pendingByReservaId.size > 0) {
+      for (const data of pendingByReservaId.values()) {
+        if (data.accion === 'creada') {
+          const message = `Nueva reserva web: ${data.nombre}${data.fecha}${data.hora}`.trim()
+          window.dispatchEvent(new CustomEvent('ui:notify', {
+            detail: { message, variant: 'success' }
+          }))
+        } else if (data.accion === 'eliminada') {
+          const message = `Reserva eliminada: ${data.nombre}${data.fecha}${data.hora}`.trim()
+          window.dispatchEvent(new CustomEvent('ui:notify', {
+            detail: { message, variant: 'info' }
+          }))
+        } else {
+          const message = `Reserva modificada: ${data.nombre}${data.fecha}${data.hora}`.trim()
+          window.dispatchEvent(new CustomEvent('ui:notify', {
+            detail: { message, variant: 'info' }
+          }))
+        }
+      }
+    }
+
+    const last = cambios[cambios.length - 1]
+    if (last?.fecha) lastChangeAt = String(last.fecha)
+    if (last?.id) lastChangeId = Number(last.id)
+    isInitialChangesLoad = false
+  } catch (error) {
+    console.warn('[Reserve] Error checando cambios remotos:', error)
   }
 }
 
@@ -121,10 +238,26 @@ onMounted(async () => {
   console.log('[Reserve] Inicializando vista...')
   await cargarHorariosBase()
   await cargarReservas()
+  await chequearCambiosRemotos()
+
+  const ipc = window.ipcRenderer
+  if (ipc?.on) {
+    const onLocalNotify = (_event: any, payload: any) => {
+      const id = Number(payload?.reserva?.id || 0)
+      if (id) {
+        suppressUntilByReservaId.set(id, Date.now() + 10000)
+      }
+    }
+    ipc.on('reservas:notify', onLocalNotify)
+    onBeforeUnmount(() => {
+      ipc.off('reservas:notify', onLocalNotify)
+    })
+  }
   
   console.log('[Reserve] Iniciando auto-refresh cada 5 segundos...')
   intervaloRefresco = window.setInterval(async () => {
     console.log('[Reserve] Auto-refresh: Recargando reservas...')
+    await chequearCambiosRemotos()
     await cargarReservas()
   }, 5000) // Recargar cada 5 segundos
 })
