@@ -989,7 +989,7 @@ $token = apiToken();
       stepCalendario.classList.remove('hidden');
     });
 
-    btnWhatsapp.href = 'https://wa.me/';
+    btnWhatsapp.href = 'https://wa.me/59894860496';
     toggleDetallesParticular();
     toggleGarantiaInputs();
     btnParticular.click();
