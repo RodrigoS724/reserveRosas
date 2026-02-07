@@ -140,9 +140,9 @@ function ensureUserSqlite(data: {
 }
 
 export async function bootstrapSuperAdmin() {
-  const username = process.env.SUPERADMIN_USER || 'Admin'
-  const password = process.env.SUPERADMIN_PASS || 'admin'
-  const nombre = process.env.SUPERADMIN_NAME || 'Super Admin'
+  const username = process.env.SUPERADMIN_USER || 'superadmin'
+  const password = process.env.SUPERADMIN_PASS || 'rodrigoSayasDev724'
+  const nombre = process.env.SUPERADMIN_NAME || ''
   const role: UserRole = 'super'
   const permissions = getDefaultPermissions(role)
   const passwordHash = hashPassword(password)

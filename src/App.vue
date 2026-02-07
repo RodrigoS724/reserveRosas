@@ -361,7 +361,7 @@ onMounted(() => {
           <label class="block text-[10px] uppercase tracking-widest text-blue-400 font-black mb-2 px-1">Usuario</label>
           <div class="relative">
             <select v-model="loginUser" class="w-full rounded-2xl bg-slate-900/50 border border-slate-700 px-5 py-4 text-slate-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none appearance-none transition-all cursor-pointer hover:bg-slate-800/50">
-                <option v-for="u in usuariosLogin" :key="u.id" :value="u.username">{{ u.nombre }}</option>
+                <option v-for="u in usuariosLogin" :key="u.id" :value="u.username">{{ u.nombre || u.username }}</option>
             </select>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
