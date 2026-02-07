@@ -1,46 +1,46 @@
-var MN = Object.defineProperty;
-var BN = (e, c, o) => c in e ? MN(e, c, { enumerable: !0, configurable: !0, writable: !0, value: o }) : e[c] = o;
-var De = (e, c, o) => BN(e, typeof c != "symbol" ? c + "" : c, o);
+var LN = Object.defineProperty;
+var UN = (e, c, o) => c in e ? LN(e, c, { enumerable: !0, configurable: !0, writable: !0, value: o }) : e[c] = o;
+var De = (e, c, o) => UN(e, typeof c != "symbol" ? c + "" : c, o);
 import nn from "fs";
 import Fe from "path";
 import mn from "os";
 import On from "crypto";
-import Hn, { ipcMain as dn, app as ft, BrowserWindow as iI } from "electron";
-import LN from "constants";
+import Hn, { ipcMain as Rn, app as ft, Notification as Eu, shell as wN, BrowserWindow as aI } from "electron";
+import mN from "constants";
 import rt from "stream";
 import ht from "util";
-import EI from "assert";
+import _I from "assert";
 import Er from "child_process";
 import on from "events";
-import aI from "tty";
+import sI from "tty";
 import Fn from "url";
-import Os from "zlib";
-import _I from "http";
-import UN from "https";
-import { fileURLToPath as sI } from "node:url";
+import Cs from "zlib";
+import uI from "http";
+import FN from "https";
+import { fileURLToPath as oI } from "node:url";
 import en from "node:path";
-import wN from "better-sqlite3";
+import PN from "better-sqlite3";
 import En from "node:fs";
 import Hr from "process";
-import mN from "net";
-import uI from "tls";
-import Cs from "timers";
-import oI from "buffer";
-import FN from "string_decoder";
+import GN from "net";
+import cI from "tls";
+import Ds from "timers";
+import AI from "buffer";
+import bN from "string_decoder";
 import Yr from "node:crypto";
-var Rn = typeof globalThis < "u" ? globalThis : typeof window < "u" ? window : typeof global < "u" ? global : typeof self < "u" ? self : {};
-function cI(e) {
+var ln = typeof globalThis < "u" ? globalThis : typeof window < "u" ? window : typeof global < "u" ? global : typeof self < "u" ? self : {};
+function RI(e) {
   return e && e.__esModule && Object.prototype.hasOwnProperty.call(e, "default") ? e.default : e;
 }
-var iu = {}, hn = { exports: {} };
-const PN = "16.6.1", GN = {
-  version: PN
+var au = {}, dn = { exports: {} };
+const vN = "16.6.1", yN = {
+  version: vN
 };
-var Eu;
-function bN() {
-  if (Eu) return hn.exports;
-  Eu = 1;
-  const e = nn, c = Fe, o = mn, i = On, u = GN.version, E = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
+var _u;
+function QN() {
+  if (_u) return dn.exports;
+  _u = 1;
+  const e = nn, c = Fe, o = mn, i = On, u = yN.version, E = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
   function n(g) {
     const M = {};
     let B = g.toString();
@@ -48,12 +48,12 @@ function bN() {
 `);
     let S;
     for (; (S = E.exec(B)) != null; ) {
-      const y = S[1];
-      let Q = S[2] || "";
-      Q = Q.trim();
-      const G = Q[0];
-      Q = Q.replace(/^(['"`])([\s\S]*)\1$/mg, "$2"), G === '"' && (Q = Q.replace(/\\n/g, `
-`), Q = Q.replace(/\\r/g, "\r")), M[y] = Q;
+      const Q = S[1];
+      let y = S[2] || "";
+      y = y.trim();
+      const G = y[0];
+      y = y.replace(/^(['"`])([\s\S]*)\1$/mg, "$2"), G === '"' && (y = y.replace(/\\n/g, `
+`), y = y.replace(/\\r/g, "\r")), M[Q] = y;
     }
     return M;
   }
@@ -66,18 +66,18 @@ function bN() {
       const G = new Error(`MISSING_DATA: Cannot parse ${M} for an unknown reason`);
       throw G.code = "MISSING_DATA", G;
     }
-    const S = A(g).split(","), y = S.length;
-    let Q;
-    for (let G = 0; G < y; G++)
+    const S = A(g).split(","), Q = S.length;
+    let y;
+    for (let G = 0; G < Q; G++)
       try {
         const F = S[G].trim(), w = R(B, F);
-        Q = C.decrypt(w.ciphertext, w.key);
+        y = C.decrypt(w.ciphertext, w.key);
         break;
       } catch (F) {
-        if (G + 1 >= y)
+        if (G + 1 >= Q)
           throw F;
       }
-    return C.parse(Q);
+    return C.parse(y);
   }
   function t(g) {
     console.log(`[dotenv@${u}][WARN] ${g}`);
@@ -107,14 +107,14 @@ function bN() {
       const F = new Error("INVALID_DOTENV_KEY: Missing key part");
       throw F.code = "INVALID_DOTENV_KEY", F;
     }
-    const y = B.searchParams.get("environment");
-    if (!y) {
+    const Q = B.searchParams.get("environment");
+    if (!Q) {
       const F = new Error("INVALID_DOTENV_KEY: Missing environment part");
       throw F.code = "INVALID_DOTENV_KEY", F;
     }
-    const Q = `DOTENV_VAULT_${y.toUpperCase()}`, G = g.parsed[Q];
+    const y = `DOTENV_VAULT_${Q.toUpperCase()}`, G = g.parsed[y];
     if (!G) {
-      const F = new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${Q} in your .env.vault file.`);
+      const F = new Error(`NOT_FOUND_DOTENV_ENVIRONMENT: Cannot locate environment ${y} in your .env.vault file.`);
       throw F.code = "NOT_FOUND_DOTENV_ENVIRONMENT", F;
     }
     return { ciphertext: G, key: S };
@@ -138,26 +138,26 @@ function bN() {
     const M = !!(g && g.debug), B = g && "quiet" in g ? g.quiet : !0;
     (M || !B) && _("Loading env from encrypted .env.vault");
     const S = C._parseVault(g);
-    let y = process.env;
-    return g && g.processEnv != null && (y = g.processEnv), C.populate(y, S, g), { parsed: S };
+    let Q = process.env;
+    return g && g.processEnv != null && (Q = g.processEnv), C.populate(Q, S, g), { parsed: S };
   }
   function T(g) {
     const M = c.resolve(process.cwd(), ".env");
     let B = "utf8";
-    const S = !!(g && g.debug), y = g && "quiet" in g ? g.quiet : !0;
+    const S = !!(g && g.debug), Q = g && "quiet" in g ? g.quiet : !0;
     g && g.encoding ? B = g.encoding : S && a("No encoding is specified. UTF-8 is used by default");
-    let Q = [M];
+    let y = [M];
     if (g && g.path)
       if (!Array.isArray(g.path))
-        Q = [I(g.path)];
+        y = [I(g.path)];
       else {
-        Q = [];
+        y = [];
         for (const D of g.path)
-          Q.push(I(D));
+          y.push(I(D));
       }
     let G;
     const F = {};
-    for (const D of Q)
+    for (const D of y)
       try {
         const v = C.parse(e.readFileSync(D, { encoding: B }));
         C.populate(F, v, g);
@@ -165,9 +165,9 @@ function bN() {
         S && a(`Failed to load ${D} ${v.message}`), G = v;
       }
     let w = process.env;
-    if (g && g.processEnv != null && (w = g.processEnv), C.populate(w, F, g), S || !y) {
+    if (g && g.processEnv != null && (w = g.processEnv), C.populate(w, F, g), S || !Q) {
       const D = Object.keys(F).length, v = [];
-      for (const b of Q)
+      for (const b of y)
         try {
           const H = c.relative(process.cwd(), b);
           v.push(H);
@@ -187,11 +187,11 @@ function bN() {
   function d(g, M) {
     const B = Buffer.from(M.slice(-64), "hex");
     let S = Buffer.from(g, "base64");
-    const y = S.subarray(0, 12), Q = S.subarray(-16);
+    const Q = S.subarray(0, 12), y = S.subarray(-16);
     S = S.subarray(12, -16);
     try {
-      const G = i.createDecipheriv("aes-256-gcm", B, y);
-      return G.setAuthTag(Q), `${G.update(S)}${G.final()}`;
+      const G = i.createDecipheriv("aes-256-gcm", B, Q);
+      return G.setAuthTag(y), `${G.update(S)}${G.final()}`;
     } catch (G) {
       const F = G instanceof RangeError, w = G.message === "Invalid key length", D = G.message === "Unsupported state or unable to authenticate data";
       if (F || w) {
@@ -205,13 +205,13 @@ function bN() {
     }
   }
   function O(g, M, B = {}) {
-    const S = !!(B && B.debug), y = !!(B && B.override);
+    const S = !!(B && B.debug), Q = !!(B && B.override);
     if (typeof M != "object") {
-      const Q = new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
-      throw Q.code = "OBJECT_REQUIRED", Q;
+      const y = new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
+      throw y.code = "OBJECT_REQUIRED", y;
     }
-    for (const Q of Object.keys(M))
-      Object.prototype.hasOwnProperty.call(g, Q) ? (y === !0 && (g[Q] = M[Q]), S && a(y === !0 ? `"${Q}" is already defined and WAS overwritten` : `"${Q}" is already defined and was NOT overwritten`)) : g[Q] = M[Q];
+    for (const y of Object.keys(M))
+      Object.prototype.hasOwnProperty.call(g, y) ? (Q === !0 && (g[y] = M[y]), S && a(Q === !0 ? `"${y}" is already defined and WAS overwritten` : `"${y}" is already defined and was NOT overwritten`)) : g[y] = M[y];
   }
   const C = {
     configDotenv: T,
@@ -222,19 +222,19 @@ function bN() {
     parse: n,
     populate: O
   };
-  return hn.exports.configDotenv = C.configDotenv, hn.exports._configVault = C._configVault, hn.exports._parseVault = C._parseVault, hn.exports.config = C.config, hn.exports.decrypt = C.decrypt, hn.exports.parse = C.parse, hn.exports.populate = C.populate, hn.exports = C, hn.exports;
+  return dn.exports.configDotenv = C.configDotenv, dn.exports._configVault = C._configVault, dn.exports._parseVault = C._parseVault, dn.exports.config = C.config, dn.exports.decrypt = C.decrypt, dn.exports.parse = C.parse, dn.exports.populate = C.populate, dn.exports = C, dn.exports;
 }
-var ii, au;
-function vN() {
-  if (au) return ii;
-  au = 1;
+var ii, su;
+function VN() {
+  if (su) return ii;
+  su = 1;
   const e = {};
   return process.env.DOTENV_CONFIG_ENCODING != null && (e.encoding = process.env.DOTENV_CONFIG_ENCODING), process.env.DOTENV_CONFIG_PATH != null && (e.path = process.env.DOTENV_CONFIG_PATH), process.env.DOTENV_CONFIG_QUIET != null && (e.quiet = process.env.DOTENV_CONFIG_QUIET), process.env.DOTENV_CONFIG_DEBUG != null && (e.debug = process.env.DOTENV_CONFIG_DEBUG), process.env.DOTENV_CONFIG_OVERRIDE != null && (e.override = process.env.DOTENV_CONFIG_OVERRIDE), process.env.DOTENV_CONFIG_DOTENV_KEY != null && (e.DOTENV_KEY = process.env.DOTENV_CONFIG_DOTENV_KEY), ii = e, ii;
 }
-var Ei, _u;
-function QN() {
-  if (_u) return Ei;
-  _u = 1;
+var Ei, uu;
+function YN() {
+  if (uu) return Ei;
+  uu = 1;
   const e = /^dotenv_config_(encoding|path|quiet|debug|override|DOTENV_KEY)=(.+)$/;
   return Ei = function(o) {
     const i = o.reduce(function(s, u) {
@@ -244,22 +244,22 @@ function QN() {
     return "quiet" in i || (i.quiet = "true"), i;
   }, Ei;
 }
-var su;
-function yN() {
-  return su || (su = 1, (function() {
-    bN().config(
+var ou;
+function HN() {
+  return ou || (ou = 1, (function() {
+    QN().config(
       Object.assign(
         {},
-        vN(),
-        QN()(process.argv)
+        VN(),
+        YN()(process.argv)
       )
     );
-  })()), iu;
+  })()), au;
 }
-yN();
-var Zn = {}, ai = {}, fr = {}, uu;
+HN();
+var Zn = {}, ai = {}, fr = {}, cu;
 function an() {
-  return uu || (uu = 1, fr.fromCallback = function(e) {
+  return cu || (cu = 1, fr.fromCallback = function(e) {
     return Object.defineProperty(function(...c) {
       if (typeof c[c.length - 1] == "function") e.apply(this, c);
       else
@@ -275,11 +275,11 @@ function an() {
     }, "name", { value: e.name });
   }), fr;
 }
-var _i, ou;
-function VN() {
-  if (ou) return _i;
-  ou = 1;
-  var e = LN, c = process.cwd, o = null, i = process.env.GRACEFUL_FS_PLATFORM || process.platform;
+var _i, Au;
+function WN() {
+  if (Au) return _i;
+  Au = 1;
+  var e = mN, c = process.cwd, o = null, i = process.env.GRACEFUL_FS_PLATFORM || process.platform;
   process.cwd = function() {
     return o || (o = c.call(process)), o;
   };
@@ -307,7 +307,7 @@ function VN() {
         l(f, d, function M(B) {
           if (B && (B.code === "EACCES" || B.code === "EPERM" || B.code === "EBUSY") && Date.now() - C < 6e4) {
             setTimeout(function() {
-              E.stat(d, function(S, y) {
+              E.stat(d, function(S, Q) {
                 S && S.code === "ENOENT" ? l(f, d, M) : O(B);
               });
             }, g), g < 100 && (g += 10);
@@ -322,8 +322,8 @@ function VN() {
         var B;
         if (M && typeof M == "function") {
           var S = 0;
-          B = function(y, Q, G) {
-            if (y && y.code === "EAGAIN" && S < 10)
+          B = function(Q, y, G) {
+            if (Q && Q.code === "EAGAIN" && S < 10)
               return S++, l.call(E, f, d, O, C, g, B);
             M.apply(this, arguments);
           };
@@ -467,10 +467,10 @@ function VN() {
   }
   return _i;
 }
-var si, cu;
-function YN() {
-  if (cu) return si;
-  cu = 1;
+var si, Ru;
+function pN() {
+  if (Ru) return si;
+  Ru = 1;
   var e = rt.Stream;
   si = c;
   function c(o) {
@@ -531,10 +531,10 @@ function YN() {
   }
   return si;
 }
-var ui, Au;
-function HN() {
-  if (Au) return ui;
-  Au = 1, ui = c;
+var ui, lu;
+function kN() {
+  if (lu) return ui;
+  lu = 1, ui = c;
   var e = Object.getPrototypeOf || function(o) {
     return o.__proto__;
   };
@@ -551,11 +551,11 @@ function HN() {
   }
   return ui;
 }
-var hr, Ru;
+var hr, Iu;
 function tn() {
-  if (Ru) return hr;
-  Ru = 1;
-  var e = nn, c = VN(), o = YN(), i = HN(), s = ht, u, E;
+  if (Iu) return hr;
+  Iu = 1;
+  var e = nn, c = WN(), o = pN(), i = kN(), s = ht, u, E;
   typeof Symbol == "function" && typeof Symbol.for == "function" ? (u = Symbol.for("graceful-fs.queue"), E = Symbol.for("graceful-fs.previous")) : (u = "___graceful-fs.queue", E = "___graceful-fs.previous");
   function n() {
   }
@@ -572,7 +572,7 @@ function tn() {
     l = "GFS4: " + l.split(/\n/).join(`
 GFS4: `), console.error(l);
   }), !e[u]) {
-    var a = Rn[u] || [];
+    var a = ln[u] || [];
     r(e, a), e.close = (function(l) {
       function T(f, d) {
         return l.call(e, f, function(O) {
@@ -590,10 +590,10 @@ GFS4: `), console.error(l);
         value: l
       }), T;
     })(e.closeSync), /\bgfs4\b/i.test(process.env.NODE_DEBUG || "") && process.on("exit", function() {
-      t(e[u]), EI.equal(e[u].length, 0);
+      t(e[u]), _I.equal(e[u].length, 0);
     });
   }
-  Rn[u] || r(Rn, e[u]), hr = _(i(e)), process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !e.__patched && (hr = _(e), e.__patched = !0);
+  ln[u] || r(ln, e[u]), hr = _(i(e)), process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !e.__patched && (hr = _(e), e.__patched = !0);
   function _(l) {
     c(l), l.gracefulify = _, l.createReadStream = ie, l.createWriteStream = ne;
     var T = l.readFile;
@@ -637,11 +637,11 @@ GFS4: `), console.error(l);
       }
     }
     var S = l.readdir;
-    l.readdir = Q;
-    var y = /^v[0-5]\./;
-    function Q(j, _e, U) {
+    l.readdir = y;
+    var Q = /^v[0-5]\./;
+    function y(j, _e, U) {
       typeof _e == "function" && (U = _e, _e = null);
-      var L = y.test(process.version) ? function(Re, Te, Ne, Oe) {
+      var L = Q.test(process.version) ? function(Re, Te, Ne, Oe) {
         return S(Re, X(
           Re,
           Te,
@@ -780,9 +780,9 @@ GFS4: `), console.error(l);
   }
   return hr;
 }
-var lu;
+var Tu;
 function dt() {
-  return lu || (lu = 1, (function(e) {
+  return Tu || (Tu = 1, (function(e) {
     const c = an().fromCallback, o = tn(), i = [
       "access",
       "appendFile",
@@ -851,10 +851,10 @@ function dt() {
     );
   })(ai)), ai;
 }
-var dr = {}, oi = {}, Iu;
-function WN() {
-  if (Iu) return oi;
-  Iu = 1;
+var dr = {}, oi = {}, Nu;
+function XN() {
+  if (Nu) return oi;
+  Nu = 1;
   const e = Fe;
   return oi.checkPath = function(o) {
     if (process.platform === "win32" && /[<>:"|?*]/.test(o.replace(e.parse(o).root, ""))) {
@@ -863,11 +863,11 @@ function WN() {
     }
   }, oi;
 }
-var Tu;
-function pN() {
-  if (Tu) return dr;
-  Tu = 1;
-  const e = /* @__PURE__ */ dt(), { checkPath: c } = /* @__PURE__ */ WN(), o = (i) => {
+var fu;
+function jN() {
+  if (fu) return dr;
+  fu = 1;
+  const e = /* @__PURE__ */ dt(), { checkPath: c } = /* @__PURE__ */ XN(), o = (i) => {
     const s = { mode: 511 };
     return typeof i == "number" ? i : { ...s, ...i }.mode;
   };
@@ -879,11 +879,11 @@ function pN() {
     recursive: !0
   })), dr;
 }
-var ci, Nu;
+var ci, hu;
 function Cn() {
-  if (Nu) return ci;
-  Nu = 1;
-  const e = an().fromPromise, { makeDir: c, makeDirSync: o } = /* @__PURE__ */ pN(), i = e(c);
+  if (hu) return ci;
+  hu = 1;
+  const e = an().fromPromise, { makeDir: c, makeDirSync: o } = /* @__PURE__ */ jN(), i = e(c);
   return ci = {
     mkdirs: i,
     mkdirsSync: o,
@@ -894,10 +894,10 @@ function Cn() {
     ensureDirSync: o
   }, ci;
 }
-var Ai, fu;
+var Ai, du;
 function it() {
-  if (fu) return Ai;
-  fu = 1;
+  if (du) return Ai;
+  du = 1;
   const e = an().fromPromise, c = /* @__PURE__ */ dt();
   function o(i) {
     return c.access(i).then(() => !0).catch(() => !1);
@@ -907,10 +907,10 @@ function it() {
     pathExistsSync: c.existsSync
   }, Ai;
 }
-var Ri, hu;
-function AI() {
-  if (hu) return Ri;
-  hu = 1;
+var Ri, Ou;
+function lI() {
+  if (Ou) return Ri;
+  Ou = 1;
   const e = tn();
   function c(i, s, u, E) {
     e.open(i, "r+", (n, r) => {
@@ -931,10 +931,10 @@ function AI() {
     utimesMillisSync: o
   }, Ri;
 }
-var li, du;
+var li, Cu;
 function Ot() {
-  if (du) return li;
-  du = 1;
+  if (Cu) return li;
+  Cu = 1;
   const e = /* @__PURE__ */ dt(), c = Fe, o = ht;
   function i(A, R, N) {
     const I = N.dereference ? (l) => e.stat(l, { bigint: !0 }) : (l) => e.lstat(l, { bigint: !0 });
@@ -1030,12 +1030,12 @@ function Ot() {
     areIdentical: t
   }, li;
 }
-var Ii, Ou;
-function kN() {
-  if (Ou) return Ii;
-  Ou = 1;
-  const e = tn(), c = Fe, o = Cn().mkdirs, i = it().pathExists, s = AI().utimesMillis, u = /* @__PURE__ */ Ot();
-  function E(Q, G, F, w) {
+var Ii, Du;
+function qN() {
+  if (Du) return Ii;
+  Du = 1;
+  const e = tn(), c = Fe, o = Cn().mkdirs, i = it().pathExists, s = lI().utimesMillis, u = /* @__PURE__ */ Ot();
+  function E(y, G, F, w) {
     typeof F == "function" && !w ? (w = F, F = {}) : typeof F == "function" && (F = { filter: F }), w = w || function() {
     }, F = F || {}, F.clobber = "clobber" in F ? !!F.clobber : !0, F.overwrite = "overwrite" in F ? !!F.overwrite : F.clobber, F.preserveTimestamps && process.arch === "ia32" && process.emitWarning(
       `Using the preserveTimestamps option in 32-bit node is not recommended;
@@ -1043,101 +1043,101 @@ function kN() {
 	see https://github.com/jprichardson/node-fs-extra/issues/269`,
       "Warning",
       "fs-extra-WARN0001"
-    ), u.checkPaths(Q, G, "copy", F, (D, v) => {
+    ), u.checkPaths(y, G, "copy", F, (D, v) => {
       if (D) return w(D);
       const { srcStat: b, destStat: H } = v;
-      u.checkParentPaths(Q, b, G, "copy", (p) => p ? w(p) : F.filter ? r(n, H, Q, G, F, w) : n(H, Q, G, F, w));
+      u.checkParentPaths(y, b, G, "copy", (p) => p ? w(p) : F.filter ? r(n, H, y, G, F, w) : n(H, y, G, F, w));
     });
   }
-  function n(Q, G, F, w, D) {
+  function n(y, G, F, w, D) {
     const v = c.dirname(F);
     i(v, (b, H) => {
       if (b) return D(b);
-      if (H) return a(Q, G, F, w, D);
-      o(v, (p) => p ? D(p) : a(Q, G, F, w, D));
+      if (H) return a(y, G, F, w, D);
+      o(v, (p) => p ? D(p) : a(y, G, F, w, D));
     });
   }
-  function r(Q, G, F, w, D, v) {
-    Promise.resolve(D.filter(F, w)).then((b) => b ? Q(G, F, w, D, v) : v(), (b) => v(b));
+  function r(y, G, F, w, D, v) {
+    Promise.resolve(D.filter(F, w)).then((b) => b ? y(G, F, w, D, v) : v(), (b) => v(b));
   }
-  function t(Q, G, F, w, D) {
-    return w.filter ? r(a, Q, G, F, w, D) : a(Q, G, F, w, D);
+  function t(y, G, F, w, D) {
+    return w.filter ? r(a, y, G, F, w, D) : a(y, G, F, w, D);
   }
-  function a(Q, G, F, w, D) {
-    (w.dereference ? e.stat : e.lstat)(G, (b, H) => b ? D(b) : H.isDirectory() ? O(H, Q, G, F, w, D) : H.isFile() || H.isCharacterDevice() || H.isBlockDevice() ? _(H, Q, G, F, w, D) : H.isSymbolicLink() ? S(Q, G, F, w, D) : H.isSocket() ? D(new Error(`Cannot copy a socket file: ${G}`)) : H.isFIFO() ? D(new Error(`Cannot copy a FIFO pipe: ${G}`)) : D(new Error(`Unknown file: ${G}`)));
+  function a(y, G, F, w, D) {
+    (w.dereference ? e.stat : e.lstat)(G, (b, H) => b ? D(b) : H.isDirectory() ? O(H, y, G, F, w, D) : H.isFile() || H.isCharacterDevice() || H.isBlockDevice() ? _(H, y, G, F, w, D) : H.isSymbolicLink() ? S(y, G, F, w, D) : H.isSocket() ? D(new Error(`Cannot copy a socket file: ${G}`)) : H.isFIFO() ? D(new Error(`Cannot copy a FIFO pipe: ${G}`)) : D(new Error(`Unknown file: ${G}`)));
   }
-  function _(Q, G, F, w, D, v) {
-    return G ? A(Q, F, w, D, v) : R(Q, F, w, D, v);
+  function _(y, G, F, w, D, v) {
+    return G ? A(y, F, w, D, v) : R(y, F, w, D, v);
   }
-  function A(Q, G, F, w, D) {
+  function A(y, G, F, w, D) {
     if (w.overwrite)
-      e.unlink(F, (v) => v ? D(v) : R(Q, G, F, w, D));
+      e.unlink(F, (v) => v ? D(v) : R(y, G, F, w, D));
     else return w.errorOnExist ? D(new Error(`'${F}' already exists`)) : D();
   }
-  function R(Q, G, F, w, D) {
-    e.copyFile(G, F, (v) => v ? D(v) : w.preserveTimestamps ? N(Q.mode, G, F, D) : f(F, Q.mode, D));
+  function R(y, G, F, w, D) {
+    e.copyFile(G, F, (v) => v ? D(v) : w.preserveTimestamps ? N(y.mode, G, F, D) : f(F, y.mode, D));
   }
-  function N(Q, G, F, w) {
-    return I(Q) ? l(F, Q, (D) => D ? w(D) : T(Q, G, F, w)) : T(Q, G, F, w);
+  function N(y, G, F, w) {
+    return I(y) ? l(F, y, (D) => D ? w(D) : T(y, G, F, w)) : T(y, G, F, w);
   }
-  function I(Q) {
-    return (Q & 128) === 0;
+  function I(y) {
+    return (y & 128) === 0;
   }
-  function l(Q, G, F) {
-    return f(Q, G | 128, F);
+  function l(y, G, F) {
+    return f(y, G | 128, F);
   }
-  function T(Q, G, F, w) {
-    d(G, F, (D) => D ? w(D) : f(F, Q, w));
+  function T(y, G, F, w) {
+    d(G, F, (D) => D ? w(D) : f(F, y, w));
   }
-  function f(Q, G, F) {
-    return e.chmod(Q, G, F);
+  function f(y, G, F) {
+    return e.chmod(y, G, F);
   }
-  function d(Q, G, F) {
-    e.stat(Q, (w, D) => w ? F(w) : s(G, D.atime, D.mtime, F));
+  function d(y, G, F) {
+    e.stat(y, (w, D) => w ? F(w) : s(G, D.atime, D.mtime, F));
   }
-  function O(Q, G, F, w, D, v) {
-    return G ? g(F, w, D, v) : C(Q.mode, F, w, D, v);
+  function O(y, G, F, w, D, v) {
+    return G ? g(F, w, D, v) : C(y.mode, F, w, D, v);
   }
-  function C(Q, G, F, w, D) {
+  function C(y, G, F, w, D) {
     e.mkdir(F, (v) => {
       if (v) return D(v);
-      g(G, F, w, (b) => b ? D(b) : f(F, Q, D));
+      g(G, F, w, (b) => b ? D(b) : f(F, y, D));
     });
   }
-  function g(Q, G, F, w) {
-    e.readdir(Q, (D, v) => D ? w(D) : M(v, Q, G, F, w));
+  function g(y, G, F, w) {
+    e.readdir(y, (D, v) => D ? w(D) : M(v, y, G, F, w));
   }
-  function M(Q, G, F, w, D) {
-    const v = Q.pop();
-    return v ? B(Q, v, G, F, w, D) : D();
+  function M(y, G, F, w, D) {
+    const v = y.pop();
+    return v ? B(y, v, G, F, w, D) : D();
   }
-  function B(Q, G, F, w, D, v) {
+  function B(y, G, F, w, D, v) {
     const b = c.join(F, G), H = c.join(w, G);
     u.checkPaths(b, H, "copy", D, (p, K) => {
       if (p) return v(p);
       const { destStat: ie } = K;
-      t(ie, b, H, D, (ne) => ne ? v(ne) : M(Q, F, w, D, v));
+      t(ie, b, H, D, (ne) => ne ? v(ne) : M(y, F, w, D, v));
     });
   }
-  function S(Q, G, F, w, D) {
+  function S(y, G, F, w, D) {
     e.readlink(G, (v, b) => {
       if (v) return D(v);
-      if (w.dereference && (b = c.resolve(process.cwd(), b)), Q)
-        e.readlink(F, (H, p) => H ? H.code === "EINVAL" || H.code === "UNKNOWN" ? e.symlink(b, F, D) : D(H) : (w.dereference && (p = c.resolve(process.cwd(), p)), u.isSrcSubdir(b, p) ? D(new Error(`Cannot copy '${b}' to a subdirectory of itself, '${p}'.`)) : Q.isDirectory() && u.isSrcSubdir(p, b) ? D(new Error(`Cannot overwrite '${p}' with '${b}'.`)) : y(b, F, D)));
+      if (w.dereference && (b = c.resolve(process.cwd(), b)), y)
+        e.readlink(F, (H, p) => H ? H.code === "EINVAL" || H.code === "UNKNOWN" ? e.symlink(b, F, D) : D(H) : (w.dereference && (p = c.resolve(process.cwd(), p)), u.isSrcSubdir(b, p) ? D(new Error(`Cannot copy '${b}' to a subdirectory of itself, '${p}'.`)) : y.isDirectory() && u.isSrcSubdir(p, b) ? D(new Error(`Cannot overwrite '${p}' with '${b}'.`)) : Q(b, F, D)));
       else
         return e.symlink(b, F, D);
     });
   }
-  function y(Q, G, F) {
-    e.unlink(G, (w) => w ? F(w) : e.symlink(Q, G, F));
+  function Q(y, G, F) {
+    e.unlink(G, (w) => w ? F(w) : e.symlink(y, G, F));
   }
   return Ii = E, Ii;
 }
-var Ti, Cu;
-function XN() {
-  if (Cu) return Ti;
-  Cu = 1;
-  const e = tn(), c = Fe, o = Cn().mkdirsSync, i = AI().utimesMillisSync, s = /* @__PURE__ */ Ot();
+var Ti, Su;
+function KN() {
+  if (Su) return Ti;
+  Su = 1;
+  const e = tn(), c = Fe, o = Cn().mkdirsSync, i = lI().utimesMillisSync, s = /* @__PURE__ */ Ot();
   function u(M, B, S) {
     typeof S == "function" && (S = { filter: S }), S = S || {}, S.clobber = "clobber" in S ? !!S.clobber : !0, S.overwrite = "overwrite" in S ? !!S.overwrite : S.clobber, S.preserveTimestamps && process.arch === "ia32" && process.emitWarning(
       `Using the preserveTimestamps option in 32-bit node is not recommended;
@@ -1146,36 +1146,36 @@ function XN() {
       "Warning",
       "fs-extra-WARN0002"
     );
-    const { srcStat: y, destStat: Q } = s.checkPathsSync(M, B, "copy", S);
-    return s.checkParentPathsSync(M, y, B, "copy"), E(Q, M, B, S);
+    const { srcStat: Q, destStat: y } = s.checkPathsSync(M, B, "copy", S);
+    return s.checkParentPathsSync(M, Q, B, "copy"), E(y, M, B, S);
   }
-  function E(M, B, S, y) {
-    if (y.filter && !y.filter(B, S)) return;
-    const Q = c.dirname(S);
-    return e.existsSync(Q) || o(Q), r(M, B, S, y);
+  function E(M, B, S, Q) {
+    if (Q.filter && !Q.filter(B, S)) return;
+    const y = c.dirname(S);
+    return e.existsSync(y) || o(y), r(M, B, S, Q);
   }
-  function n(M, B, S, y) {
-    if (!(y.filter && !y.filter(B, S)))
-      return r(M, B, S, y);
+  function n(M, B, S, Q) {
+    if (!(Q.filter && !Q.filter(B, S)))
+      return r(M, B, S, Q);
   }
-  function r(M, B, S, y) {
-    const G = (y.dereference ? e.statSync : e.lstatSync)(B);
-    if (G.isDirectory()) return T(G, M, B, S, y);
-    if (G.isFile() || G.isCharacterDevice() || G.isBlockDevice()) return t(G, M, B, S, y);
-    if (G.isSymbolicLink()) return C(M, B, S, y);
+  function r(M, B, S, Q) {
+    const G = (Q.dereference ? e.statSync : e.lstatSync)(B);
+    if (G.isDirectory()) return T(G, M, B, S, Q);
+    if (G.isFile() || G.isCharacterDevice() || G.isBlockDevice()) return t(G, M, B, S, Q);
+    if (G.isSymbolicLink()) return C(M, B, S, Q);
     throw G.isSocket() ? new Error(`Cannot copy a socket file: ${B}`) : G.isFIFO() ? new Error(`Cannot copy a FIFO pipe: ${B}`) : new Error(`Unknown file: ${B}`);
   }
-  function t(M, B, S, y, Q) {
-    return B ? a(M, S, y, Q) : _(M, S, y, Q);
+  function t(M, B, S, Q, y) {
+    return B ? a(M, S, Q, y) : _(M, S, Q, y);
   }
-  function a(M, B, S, y) {
-    if (y.overwrite)
-      return e.unlinkSync(S), _(M, B, S, y);
-    if (y.errorOnExist)
+  function a(M, B, S, Q) {
+    if (Q.overwrite)
+      return e.unlinkSync(S), _(M, B, S, Q);
+    if (Q.errorOnExist)
       throw new Error(`'${S}' already exists`);
   }
-  function _(M, B, S, y) {
-    return e.copyFileSync(B, S), y.preserveTimestamps && A(M.mode, B, S), I(S, M.mode);
+  function _(M, B, S, Q) {
+    return e.copyFileSync(B, S), Q.preserveTimestamps && A(M.mode, B, S), I(S, M.mode);
   }
   function A(M, B, S) {
     return R(M) && N(S, M), l(B, S);
@@ -1193,57 +1193,57 @@ function XN() {
     const S = e.statSync(M);
     return i(B, S.atime, S.mtime);
   }
-  function T(M, B, S, y, Q) {
-    return B ? d(S, y, Q) : f(M.mode, S, y, Q);
+  function T(M, B, S, Q, y) {
+    return B ? d(S, Q, y) : f(M.mode, S, Q, y);
   }
-  function f(M, B, S, y) {
-    return e.mkdirSync(S), d(B, S, y), I(S, M);
+  function f(M, B, S, Q) {
+    return e.mkdirSync(S), d(B, S, Q), I(S, M);
   }
   function d(M, B, S) {
-    e.readdirSync(M).forEach((y) => O(y, M, B, S));
+    e.readdirSync(M).forEach((Q) => O(Q, M, B, S));
   }
-  function O(M, B, S, y) {
-    const Q = c.join(B, M), G = c.join(S, M), { destStat: F } = s.checkPathsSync(Q, G, "copy", y);
-    return n(F, Q, G, y);
+  function O(M, B, S, Q) {
+    const y = c.join(B, M), G = c.join(S, M), { destStat: F } = s.checkPathsSync(y, G, "copy", Q);
+    return n(F, y, G, Q);
   }
-  function C(M, B, S, y) {
-    let Q = e.readlinkSync(B);
-    if (y.dereference && (Q = c.resolve(process.cwd(), Q)), M) {
+  function C(M, B, S, Q) {
+    let y = e.readlinkSync(B);
+    if (Q.dereference && (y = c.resolve(process.cwd(), y)), M) {
       let G;
       try {
         G = e.readlinkSync(S);
       } catch (F) {
-        if (F.code === "EINVAL" || F.code === "UNKNOWN") return e.symlinkSync(Q, S);
+        if (F.code === "EINVAL" || F.code === "UNKNOWN") return e.symlinkSync(y, S);
         throw F;
       }
-      if (y.dereference && (G = c.resolve(process.cwd(), G)), s.isSrcSubdir(Q, G))
-        throw new Error(`Cannot copy '${Q}' to a subdirectory of itself, '${G}'.`);
-      if (e.statSync(S).isDirectory() && s.isSrcSubdir(G, Q))
-        throw new Error(`Cannot overwrite '${G}' with '${Q}'.`);
-      return g(Q, S);
+      if (Q.dereference && (G = c.resolve(process.cwd(), G)), s.isSrcSubdir(y, G))
+        throw new Error(`Cannot copy '${y}' to a subdirectory of itself, '${G}'.`);
+      if (e.statSync(S).isDirectory() && s.isSrcSubdir(G, y))
+        throw new Error(`Cannot overwrite '${G}' with '${y}'.`);
+      return g(y, S);
     } else
-      return e.symlinkSync(Q, S);
+      return e.symlinkSync(y, S);
   }
   function g(M, B) {
     return e.unlinkSync(B), e.symlinkSync(M, B);
   }
   return Ti = u, Ti;
 }
-var Ni, Du;
-function Ds() {
-  if (Du) return Ni;
-  Du = 1;
+var Ni, gu;
+function Ss() {
+  if (gu) return Ni;
+  gu = 1;
   const e = an().fromCallback;
   return Ni = {
-    copy: e(/* @__PURE__ */ kN()),
-    copySync: /* @__PURE__ */ XN()
+    copy: e(/* @__PURE__ */ qN()),
+    copySync: /* @__PURE__ */ KN()
   }, Ni;
 }
-var fi, Su;
-function jN() {
-  if (Su) return fi;
-  Su = 1;
-  const e = tn(), c = Fe, o = EI, i = process.platform === "win32";
+var fi, Mu;
+function zN() {
+  if (Mu) return fi;
+  Mu = 1;
+  const e = tn(), c = Fe, o = _I, i = process.platform === "win32";
   function s(N) {
     [
       "unlink",
@@ -1386,11 +1386,11 @@ function jN() {
   }
   return fi = u, u.sync = _, fi;
 }
-var hi, gu;
+var hi, Bu;
 function Wr() {
-  if (gu) return hi;
-  gu = 1;
-  const e = tn(), c = an().fromCallback, o = /* @__PURE__ */ jN();
+  if (Bu) return hi;
+  Bu = 1;
+  const e = tn(), c = an().fromCallback, o = /* @__PURE__ */ zN();
   function i(u, E) {
     if (e.rm) return e.rm(u, { recursive: !0, force: !0 }, E);
     o(u, E);
@@ -1404,10 +1404,10 @@ function Wr() {
     removeSync: s
   }, hi;
 }
-var di, Mu;
-function qN() {
-  if (Mu) return di;
-  Mu = 1;
+var di, Lu;
+function JN() {
+  if (Lu) return di;
+  Lu = 1;
   const e = an().fromPromise, c = /* @__PURE__ */ dt(), o = Fe, i = /* @__PURE__ */ Cn(), s = /* @__PURE__ */ Wr(), u = e(async function(r) {
     let t;
     try {
@@ -1435,10 +1435,10 @@ function qN() {
     emptydir: u
   }, di;
 }
-var Oi, Bu;
-function KN() {
-  if (Bu) return Oi;
-  Bu = 1;
+var Oi, Uu;
+function ZN() {
+  if (Uu) return Oi;
+  Uu = 1;
   const e = an().fromCallback, c = Fe, o = tn(), i = /* @__PURE__ */ Cn();
   function s(E, n) {
     function r() {
@@ -1483,10 +1483,10 @@ function KN() {
     createFileSync: u
   }, Oi;
 }
-var Ci, Lu;
-function zN() {
-  if (Lu) return Ci;
-  Lu = 1;
+var Ci, wu;
+function xN() {
+  if (wu) return Ci;
+  wu = 1;
   const e = an().fromCallback, c = Fe, o = tn(), i = /* @__PURE__ */ Cn(), s = it().pathExists, { areIdentical: u } = /* @__PURE__ */ Ot();
   function E(r, t, a) {
     function _(A, R) {
@@ -1532,10 +1532,10 @@ function zN() {
     createLinkSync: n
   }, Ci;
 }
-var Di, Uu;
-function JN() {
-  if (Uu) return Di;
-  Uu = 1;
+var Di, mu;
+function $N() {
+  if (mu) return Di;
+  mu = 1;
   const e = Fe, c = tn(), o = it().pathExists;
   function i(u, E, n) {
     if (e.isAbsolute(u))
@@ -1581,10 +1581,10 @@ function JN() {
     symlinkPathsSync: s
   }, Di;
 }
-var Si, wu;
-function ZN() {
-  if (wu) return Si;
-  wu = 1;
+var Si, Fu;
+function ef() {
+  if (Fu) return Si;
+  Fu = 1;
   const e = tn();
   function c(i, s, u) {
     if (u = typeof s == "function" ? s : u, s = typeof s == "function" ? !1 : s, s) return u(null, s);
@@ -1608,11 +1608,11 @@ function ZN() {
     symlinkTypeSync: o
   }, Si;
 }
-var gi, mu;
-function xN() {
-  if (mu) return gi;
-  mu = 1;
-  const e = an().fromCallback, c = Fe, o = /* @__PURE__ */ dt(), i = /* @__PURE__ */ Cn(), s = i.mkdirs, u = i.mkdirsSync, E = /* @__PURE__ */ JN(), n = E.symlinkPaths, r = E.symlinkPathsSync, t = /* @__PURE__ */ ZN(), a = t.symlinkType, _ = t.symlinkTypeSync, A = it().pathExists, { areIdentical: R } = /* @__PURE__ */ Ot();
+var gi, Pu;
+function nf() {
+  if (Pu) return gi;
+  Pu = 1;
+  const e = an().fromCallback, c = Fe, o = /* @__PURE__ */ dt(), i = /* @__PURE__ */ Cn(), s = i.mkdirs, u = i.mkdirsSync, E = /* @__PURE__ */ $N(), n = E.symlinkPaths, r = E.symlinkPathsSync, t = /* @__PURE__ */ ef(), a = t.symlinkType, _ = t.symlinkTypeSync, A = it().pathExists, { areIdentical: R } = /* @__PURE__ */ Ot();
   function N(T, f, d, O) {
     O = typeof d == "function" ? d : O, d = typeof d == "function" ? !1 : d, o.lstat(f, (C, g) => {
       !C && g.isSymbolicLink() ? Promise.all([
@@ -1630,9 +1630,9 @@ function xN() {
       T = g.toDst, a(g.toCwd, d, (M, B) => {
         if (M) return O(M);
         const S = c.dirname(f);
-        A(S, (y, Q) => {
-          if (y) return O(y);
-          if (Q) return o.symlink(T, f, B, O);
+        A(S, (Q, y) => {
+          if (Q) return O(Q);
+          if (y) return o.symlink(T, f, B, O);
           s(S, (G) => {
             if (G) return O(G);
             o.symlink(T, f, B, O);
@@ -1661,11 +1661,11 @@ function xN() {
     createSymlinkSync: l
   }, gi;
 }
-var Mi, Fu;
-function $N() {
-  if (Fu) return Mi;
-  Fu = 1;
-  const { createFile: e, createFileSync: c } = /* @__PURE__ */ KN(), { createLink: o, createLinkSync: i } = /* @__PURE__ */ zN(), { createSymlink: s, createSymlinkSync: u } = /* @__PURE__ */ xN();
+var Mi, Gu;
+function tf() {
+  if (Gu) return Mi;
+  Gu = 1;
+  const { createFile: e, createFileSync: c } = /* @__PURE__ */ ZN(), { createLink: o, createLinkSync: i } = /* @__PURE__ */ xN(), { createSymlink: s, createSymlinkSync: u } = /* @__PURE__ */ nf();
   return Mi = {
     // file
     createFile: e,
@@ -1684,10 +1684,10 @@ function $N() {
     ensureSymlinkSync: u
   }, Mi;
 }
-var Bi, Pu;
-function Ss() {
-  if (Pu) return Bi;
-  Pu = 1;
+var Bi, bu;
+function gs() {
+  if (bu) return Bi;
+  bu = 1;
   function e(o, { EOL: i = `
 `, finalEOL: s = !0, replacer: u = null, spaces: E } = {}) {
     const n = s ? i : "";
@@ -1698,17 +1698,17 @@ function Ss() {
   }
   return Bi = { stringify: e, stripBom: c }, Bi;
 }
-var Li, Gu;
-function ef() {
-  if (Gu) return Li;
-  Gu = 1;
+var Li, vu;
+function rf() {
+  if (vu) return Li;
+  vu = 1;
   let e;
   try {
     e = tn();
   } catch {
     e = nn;
   }
-  const c = an(), { stringify: o, stripBom: i } = Ss();
+  const c = an(), { stringify: o, stripBom: i } = gs();
   async function s(a, _ = {}) {
     typeof _ == "string" && (_ = { encoding: _ });
     const A = _.fs || e, R = "throws" in _ ? _.throws : !0;
@@ -1753,11 +1753,11 @@ function ef() {
     writeFileSync: t
   }, Li;
 }
-var Ui, bu;
-function nf() {
-  if (bu) return Ui;
-  bu = 1;
-  const e = ef();
+var Ui, yu;
+function Ef() {
+  if (yu) return Ui;
+  yu = 1;
+  const e = rf();
   return Ui = {
     // jsonfile exports
     readJson: e.readFile,
@@ -1766,10 +1766,10 @@ function nf() {
     writeJsonSync: e.writeFileSync
   }, Ui;
 }
-var wi, vu;
-function gs() {
-  if (vu) return wi;
-  vu = 1;
+var wi, Qu;
+function Ms() {
+  if (Qu) return wi;
+  Qu = 1;
   const e = an().fromCallback, c = tn(), o = Fe, i = /* @__PURE__ */ Cn(), s = it().pathExists;
   function u(n, r, t, a) {
     typeof t == "function" && (a = t, t = "utf8");
@@ -1794,40 +1794,40 @@ function gs() {
     outputFileSync: E
   }, wi;
 }
-var mi, Qu;
-function tf() {
-  if (Qu) return mi;
-  Qu = 1;
-  const { stringify: e } = Ss(), { outputFile: c } = /* @__PURE__ */ gs();
+var mi, Vu;
+function af() {
+  if (Vu) return mi;
+  Vu = 1;
+  const { stringify: e } = gs(), { outputFile: c } = /* @__PURE__ */ Ms();
   async function o(i, s, u = {}) {
     const E = e(s, u);
     await c(i, E, u);
   }
   return mi = o, mi;
 }
-var Fi, yu;
-function rf() {
-  if (yu) return Fi;
-  yu = 1;
-  const { stringify: e } = Ss(), { outputFileSync: c } = /* @__PURE__ */ gs();
+var Fi, Yu;
+function _f() {
+  if (Yu) return Fi;
+  Yu = 1;
+  const { stringify: e } = gs(), { outputFileSync: c } = /* @__PURE__ */ Ms();
   function o(i, s, u) {
     const E = e(s, u);
     c(i, E, u);
   }
   return Fi = o, Fi;
 }
-var Pi, Vu;
-function Ef() {
-  if (Vu) return Pi;
-  Vu = 1;
-  const e = an().fromPromise, c = /* @__PURE__ */ nf();
-  return c.outputJson = e(/* @__PURE__ */ tf()), c.outputJsonSync = /* @__PURE__ */ rf(), c.outputJSON = c.outputJson, c.outputJSONSync = c.outputJsonSync, c.writeJSON = c.writeJson, c.writeJSONSync = c.writeJsonSync, c.readJSON = c.readJson, c.readJSONSync = c.readJsonSync, Pi = c, Pi;
+var Pi, Hu;
+function sf() {
+  if (Hu) return Pi;
+  Hu = 1;
+  const e = an().fromPromise, c = /* @__PURE__ */ Ef();
+  return c.outputJson = e(/* @__PURE__ */ af()), c.outputJsonSync = /* @__PURE__ */ _f(), c.outputJSON = c.outputJson, c.outputJSONSync = c.outputJsonSync, c.writeJSON = c.writeJson, c.writeJSONSync = c.writeJsonSync, c.readJSON = c.readJson, c.readJSONSync = c.readJsonSync, Pi = c, Pi;
 }
-var Gi, Yu;
-function af() {
-  if (Yu) return Gi;
-  Yu = 1;
-  const e = tn(), c = Fe, o = Ds().copy, i = Wr().remove, s = Cn().mkdirp, u = it().pathExists, E = /* @__PURE__ */ Ot();
+var Gi, Wu;
+function uf() {
+  if (Wu) return Gi;
+  Wu = 1;
+  const e = tn(), c = Fe, o = Ss().copy, i = Wr().remove, s = Cn().mkdirp, u = it().pathExists, E = /* @__PURE__ */ Ot();
   function n(A, R, N, I) {
     typeof N == "function" && (I = N, N = {}), N = N || {};
     const l = N.overwrite || N.clobber || !1;
@@ -1862,11 +1862,11 @@ function af() {
   }
   return Gi = n, Gi;
 }
-var bi, Hu;
-function _f() {
-  if (Hu) return bi;
-  Hu = 1;
-  const e = tn(), c = Fe, o = Ds().copySync, i = Wr().removeSync, s = Cn().mkdirpSync, u = /* @__PURE__ */ Ot();
+var bi, pu;
+function of() {
+  if (pu) return bi;
+  pu = 1;
+  const e = tn(), c = Fe, o = Ss().copySync, i = Wr().removeSync, s = Cn().mkdirpSync, u = /* @__PURE__ */ Ot();
   function E(_, A, R) {
     R = R || {};
     const N = R.overwrite || R.clobber || !1, { srcStat: I, isChangingCase: l = !1 } = u.checkPathsSync(_, A, "move", R);
@@ -1899,37 +1899,37 @@ function _f() {
   }
   return bi = E, bi;
 }
-var vi, Wu;
-function sf() {
-  if (Wu) return vi;
-  Wu = 1;
+var vi, ku;
+function cf() {
+  if (ku) return vi;
+  ku = 1;
   const e = an().fromCallback;
   return vi = {
-    move: e(/* @__PURE__ */ af()),
-    moveSync: /* @__PURE__ */ _f()
+    move: e(/* @__PURE__ */ uf()),
+    moveSync: /* @__PURE__ */ of()
   }, vi;
 }
-var Qi, pu;
+var yi, Xu;
 function Wn() {
-  return pu || (pu = 1, Qi = {
+  return Xu || (Xu = 1, yi = {
     // Export promiseified graceful-fs:
     .../* @__PURE__ */ dt(),
     // Export extra methods:
-    .../* @__PURE__ */ Ds(),
-    .../* @__PURE__ */ qN(),
-    .../* @__PURE__ */ $N(),
-    .../* @__PURE__ */ Ef(),
-    .../* @__PURE__ */ Cn(),
+    .../* @__PURE__ */ Ss(),
+    .../* @__PURE__ */ JN(),
+    .../* @__PURE__ */ tf(),
     .../* @__PURE__ */ sf(),
-    .../* @__PURE__ */ gs(),
+    .../* @__PURE__ */ Cn(),
+    .../* @__PURE__ */ cf(),
+    .../* @__PURE__ */ Ms(),
     .../* @__PURE__ */ it(),
     .../* @__PURE__ */ Wr()
-  }), Qi;
+  }), yi;
 }
-var Lt = {}, xn = {}, yi = {}, $n = {}, ku;
-function Ms() {
-  if (ku) return $n;
-  ku = 1, Object.defineProperty($n, "__esModule", { value: !0 }), $n.CancellationError = $n.CancellationToken = void 0;
+var Lt = {}, xn = {}, Qi = {}, $n = {}, ju;
+function Bs() {
+  if (ju) return $n;
+  ju = 1, Object.defineProperty($n, "__esModule", { value: !0 }), $n.CancellationError = $n.CancellationToken = void 0;
   const e = on;
   let c = class extends e.EventEmitter {
     get cancelled() {
@@ -1998,20 +1998,20 @@ function Ms() {
   }
   return $n.CancellationError = o, $n;
 }
-var Or = {}, Xu;
+var Or = {}, qu;
 function pr() {
-  if (Xu) return Or;
-  Xu = 1, Object.defineProperty(Or, "__esModule", { value: !0 }), Or.newError = e;
+  if (qu) return Or;
+  qu = 1, Object.defineProperty(Or, "__esModule", { value: !0 }), Or.newError = e;
   function e(c, o) {
     const i = new Error(c);
     return i.code = o, i;
   }
   return Or;
 }
-var qe = {}, Cr = { exports: {} }, Dr = { exports: {} }, Vi, ju;
-function uf() {
-  if (ju) return Vi;
-  ju = 1;
+var qe = {}, Cr = { exports: {} }, Dr = { exports: {} }, Vi, Ku;
+function Af() {
+  if (Ku) return Vi;
+  Ku = 1;
   var e = 1e3, c = e * 60, o = c * 60, i = o * 24, s = i * 7, u = i * 365.25;
   Vi = function(a, _) {
     _ = _ || {};
@@ -2090,12 +2090,12 @@ function uf() {
   }
   return Vi;
 }
-var Yi, qu;
-function RI() {
-  if (qu) return Yi;
-  qu = 1;
+var Yi, zu;
+function II() {
+  if (zu) return Yi;
+  zu = 1;
   function e(c) {
-    i.debug = i, i.default = i, i.coerce = t, i.disable = n, i.enable = u, i.enabled = r, i.humanize = uf(), i.destroy = a, Object.keys(c).forEach((_) => {
+    i.debug = i, i.default = i, i.coerce = t, i.disable = n, i.enable = u, i.enabled = r, i.humanize = Af(), i.destroy = a, Object.keys(c).forEach((_) => {
       i[_] = c[_];
     }), i.names = [], i.skips = [], i.formatters = {};
     function o(_) {
@@ -2119,8 +2119,8 @@ function RI() {
           C++;
           const S = i.formatters[B];
           if (typeof S == "function") {
-            const y = T[C];
-            M = S.call(f, y), T.splice(C, 1), C--;
+            const Q = T[C];
+            M = S.call(f, Q), T.splice(C, 1), C--;
           }
           return M;
         }), i.formatArgs.call(f, T), (f.log || i.log).apply(f, T);
@@ -2183,9 +2183,9 @@ function RI() {
   }
   return Yi = e, Yi;
 }
-var Ku;
-function of() {
-  return Ku || (Ku = 1, (function(e, c) {
+var Ju;
+function Rf() {
+  return Ju || (Ju = 1, (function(e, c) {
     c.formatArgs = i, c.save = s, c.load = u, c.useColors = o, c.storage = E(), c.destroy = /* @__PURE__ */ (() => {
       let r = !1;
       return () => {
@@ -2313,7 +2313,7 @@ function of() {
       } catch {
       }
     }
-    e.exports = RI()(c);
+    e.exports = II()(c);
     const { formatters: n } = e.exports;
     n.j = function(r) {
       try {
@@ -2324,18 +2324,18 @@ function of() {
     };
   })(Dr, Dr.exports)), Dr.exports;
 }
-var Sr = { exports: {} }, Hi, zu;
-function cf() {
-  return zu || (zu = 1, Hi = (e, c = process.argv) => {
+var Sr = { exports: {} }, Hi, Zu;
+function lf() {
+  return Zu || (Zu = 1, Hi = (e, c = process.argv) => {
     const o = e.startsWith("-") ? "" : e.length === 1 ? "-" : "--", i = c.indexOf(o + e), s = c.indexOf("--");
     return i !== -1 && (s === -1 || i < s);
   }), Hi;
 }
-var Wi, Ju;
-function Af() {
-  if (Ju) return Wi;
-  Ju = 1;
-  const e = mn, c = aI, o = cf(), { env: i } = process;
+var Wi, xu;
+function If() {
+  if (xu) return Wi;
+  xu = 1;
+  const e = mn, c = sI, o = lf(), { env: i } = process;
   let s;
   o("no-color") || o("no-colors") || o("color=false") || o("color=never") ? s = 0 : (o("color") || o("colors") || o("color=true") || o("color=always")) && (s = 1), "FORCE_COLOR" in i && (i.FORCE_COLOR === "true" ? s = 1 : i.FORCE_COLOR === "false" ? s = 0 : s = i.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(i.FORCE_COLOR, 10), 3));
   function u(r) {
@@ -2389,17 +2389,17 @@ function Af() {
     stderr: u(E(!0, c.isatty(2)))
   }, Wi;
 }
-var Zu;
-function Rf() {
-  return Zu || (Zu = 1, (function(e, c) {
-    const o = aI, i = ht;
+var $u;
+function Tf() {
+  return $u || ($u = 1, (function(e, c) {
+    const o = sI, i = ht;
     c.init = a, c.log = n, c.formatArgs = u, c.save = r, c.load = t, c.useColors = s, c.destroy = i.deprecate(
       () => {
       },
       "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."
     ), c.colors = [6, 2, 3, 4, 5, 1];
     try {
-      const A = Af();
+      const A = If();
       A && (A.stderr || A).level >= 2 && (c.colors = [
         20,
         21,
@@ -2517,7 +2517,7 @@ function Rf() {
       for (let N = 0; N < R.length; N++)
         A.inspectOpts[R[N]] = c.inspectOpts[R[N]];
     }
-    e.exports = RI()(c);
+    e.exports = II()(c);
     const { formatters: _ } = e.exports;
     _.o = function(A) {
       return this.inspectOpts.colors = this.useColors, i.inspect(A, this.inspectOpts).split(`
@@ -2527,14 +2527,14 @@ function Rf() {
     };
   })(Sr, Sr.exports)), Sr.exports;
 }
-var xu;
-function lf() {
-  return xu || (xu = 1, typeof process > "u" || process.type === "renderer" || process.browser === !0 || process.__nwjs ? Cr.exports = of() : Cr.exports = Rf()), Cr.exports;
+var eo;
+function Nf() {
+  return eo || (eo = 1, typeof process > "u" || process.type === "renderer" || process.browser === !0 || process.__nwjs ? Cr.exports = Rf() : Cr.exports = Tf()), Cr.exports;
 }
-var Ut = {}, $u;
-function lI() {
-  if ($u) return Ut;
-  $u = 1, Object.defineProperty(Ut, "__esModule", { value: !0 }), Ut.ProgressCallbackTransform = void 0;
+var Ut = {}, no;
+function TI() {
+  if (no) return Ut;
+  no = 1, Object.defineProperty(Ut, "__esModule", { value: !0 }), Ut.ProgressCallbackTransform = void 0;
   const e = rt;
   let c = class extends e.Transform {
     constructor(i, s, u) {
@@ -2571,11 +2571,11 @@ function lI() {
   };
   return Ut.ProgressCallbackTransform = c, Ut;
 }
-var eo;
-function If() {
-  if (eo) return qe;
-  eo = 1, Object.defineProperty(qe, "__esModule", { value: !0 }), qe.DigestTransform = qe.HttpExecutor = qe.HttpError = void 0, qe.createHttpError = t, qe.parseJson = A, qe.configureRequestOptionsFromUrl = I, qe.configureRequestUrl = l, qe.safeGetHeader = d, qe.configureRequestOptions = C, qe.safeStringifyJson = g;
-  const e = On, c = lf(), o = nn, i = rt, s = Fn, u = Ms(), E = pr(), n = lI(), r = (0, c.default)("electron-builder");
+var to;
+function ff() {
+  if (to) return qe;
+  to = 1, Object.defineProperty(qe, "__esModule", { value: !0 }), qe.DigestTransform = qe.HttpExecutor = qe.HttpError = void 0, qe.createHttpError = t, qe.parseJson = A, qe.configureRequestOptionsFromUrl = I, qe.configureRequestUrl = l, qe.safeGetHeader = d, qe.configureRequestOptions = C, qe.safeStringifyJson = g;
+  const e = On, c = Nf(), o = nn, i = rt, s = Fn, u = Bs(), E = pr(), n = TI(), r = (0, c.default)("electron-builder");
   function t(M, B = null) {
     return new _(M.statusCode || -1, `${M.statusCode} ${M.statusMessage}` + (B == null ? "" : `
 ` + JSON.stringify(B, null, "  ")) + `
@@ -2597,8 +2597,8 @@ Headers: ` + g(M.headers), B);
     [505, "HTTP version not supported"]
   ]);
   class _ extends Error {
-    constructor(B, S = `HTTP error: ${a.get(B) || B}`, y = null) {
-      super(S), this.statusCode = B, this.description = y, this.name = "HttpError", this.code = `HTTP_ERROR_${B}`;
+    constructor(B, S = `HTTP error: ${a.get(B) || B}`, Q = null) {
+      super(S), this.statusCode = B, this.description = Q, this.name = "HttpError", this.code = `HTTP_ERROR_${B}`;
     }
     isServerError() {
       return this.statusCode >= 500 && this.statusCode <= 599;
@@ -2612,11 +2612,11 @@ Headers: ` + g(M.headers), B);
     constructor() {
       this.maxRedirects = 10;
     }
-    request(B, S = new u.CancellationToken(), y) {
+    request(B, S = new u.CancellationToken(), Q) {
       C(B);
-      const Q = y == null ? void 0 : JSON.stringify(y), G = Q ? Buffer.from(Q) : void 0;
+      const y = Q == null ? void 0 : JSON.stringify(Q), G = y ? Buffer.from(y) : void 0;
       if (G != null) {
-        r(Q);
+        r(y);
         const { headers: F, ...w } = B;
         B = {
           method: "post",
@@ -2630,30 +2630,30 @@ Headers: ` + g(M.headers), B);
       }
       return this.doApiRequest(B, S, (F) => F.end(G));
     }
-    doApiRequest(B, S, y, Q = 0) {
+    doApiRequest(B, S, Q, y = 0) {
       return r.enabled && r(`Request: ${g(B)}`), S.createPromise((G, F, w) => {
         const D = this.createRequest(B, (v) => {
           try {
-            this.handleResponse(v, B, S, G, F, Q, y);
+            this.handleResponse(v, B, S, G, F, y, Q);
           } catch (b) {
             F(b);
           }
         });
-        this.addErrorAndTimeoutHandlers(D, F, B.timeout), this.addRedirectHandlers(D, B, F, Q, (v) => {
-          this.doApiRequest(v, S, y, Q).then(G).catch(F);
-        }), y(D, F), w(() => D.abort());
+        this.addErrorAndTimeoutHandlers(D, F, B.timeout), this.addRedirectHandlers(D, B, F, y, (v) => {
+          this.doApiRequest(v, S, Q, y).then(G).catch(F);
+        }), Q(D, F), w(() => D.abort());
       });
     }
     // noinspection JSUnusedLocalSymbols
     // eslint-disable-next-line
-    addRedirectHandlers(B, S, y, Q, G) {
+    addRedirectHandlers(B, S, Q, y, G) {
     }
-    addErrorAndTimeoutHandlers(B, S, y = 60 * 1e3) {
-      this.addTimeOutHandler(B, S, y), B.on("error", S), B.on("aborted", () => {
+    addErrorAndTimeoutHandlers(B, S, Q = 60 * 1e3) {
+      this.addTimeOutHandler(B, S, Q), B.on("error", S), B.on("aborted", () => {
         S(new Error("Request has been aborted by the server"));
       });
     }
-    handleResponse(B, S, y, Q, G, F, w) {
+    handleResponse(B, S, Q, y, G, F, w) {
       var D;
       if (r.enabled && r(`Response: ${B.statusCode} ${B.statusMessage}, request options: ${g(S)}`), B.statusCode === 404) {
         G(t(B, `method: ${S.method || "GET"} url: ${S.protocol || "https:"}//${S.hostname}${S.port ? `:${S.port}` : ""}${S.path}
@@ -2662,7 +2662,7 @@ Please double check that your authentication token is correct. Due to security r
 `));
         return;
       } else if (B.statusCode === 204) {
-        Q();
+        y();
         return;
       }
       const v = (D = B.statusCode) !== null && D !== void 0 ? D : 0, b = v >= 300 && v < 400, H = d(B, "location");
@@ -2671,7 +2671,7 @@ Please double check that your authentication token is correct. Due to security r
           G(this.createMaxRedirectError());
           return;
         }
-        this.doApiRequest(R.prepareRedirectUrlOptions(H, S), y, w, F).then(Q).catch(G);
+        this.doApiRequest(R.prepareRedirectUrlOptions(H, S), Q, w, F).then(y).catch(G);
         return;
       }
       B.setEncoding("utf8");
@@ -2686,14 +2686,14 @@ Please double check that your authentication token is correct. Due to security r
           ${ie ? JSON.stringify(JSON.parse(p)) : p}
           `));
           } else
-            Q(p.length === 0 ? null : p);
+            y(p.length === 0 ? null : p);
         } catch (K) {
           G(K);
         }
       });
     }
     async downloadToBuffer(B, S) {
-      return await S.cancellationToken.createPromise((y, Q, G) => {
+      return await S.cancellationToken.createPromise((Q, y, G) => {
         const F = [], w = {
           headers: S.headers || void 0,
           // because PrivateGitHubProvider requires HttpExecutor.prepareRedirectUrlOptions logic, so, we need to redirect manually
@@ -2704,7 +2704,7 @@ Please double check that your authentication token is correct. Due to security r
           options: S,
           onCancel: G,
           callback: (D) => {
-            D == null ? y(Buffer.concat(F)) : Q(D);
+            D == null ? Q(Buffer.concat(F)) : y(D);
           },
           responseHandler: (D, v) => {
             let b = 0;
@@ -2721,8 +2721,8 @@ Please double check that your authentication token is correct. Due to security r
         }, 0);
       });
     }
-    doDownload(B, S, y) {
-      const Q = this.createRequest(B, (G) => {
+    doDownload(B, S, Q) {
+      const y = this.createRequest(B, (G) => {
         if (G.statusCode >= 400) {
           S.callback(new Error(`Cannot download "${B.protocol || "https:"}//${B.hostname}${B.path}", status ${G.statusCode}: ${G.statusMessage}`));
           return;
@@ -2730,39 +2730,39 @@ Please double check that your authentication token is correct. Due to security r
         G.on("error", S.callback);
         const F = d(G, "location");
         if (F != null) {
-          y < this.maxRedirects ? this.doDownload(R.prepareRedirectUrlOptions(F, B), S, y++) : S.callback(this.createMaxRedirectError());
+          Q < this.maxRedirects ? this.doDownload(R.prepareRedirectUrlOptions(F, B), S, Q++) : S.callback(this.createMaxRedirectError());
           return;
         }
         S.responseHandler == null ? O(S, G) : S.responseHandler(G, S.callback);
       });
-      this.addErrorAndTimeoutHandlers(Q, S.callback, B.timeout), this.addRedirectHandlers(Q, B, S.callback, y, (G) => {
-        this.doDownload(G, S, y++);
-      }), Q.end();
+      this.addErrorAndTimeoutHandlers(y, S.callback, B.timeout), this.addRedirectHandlers(y, B, S.callback, Q, (G) => {
+        this.doDownload(G, S, Q++);
+      }), y.end();
     }
     createMaxRedirectError() {
       return new Error(`Too many redirects (> ${this.maxRedirects})`);
     }
-    addTimeOutHandler(B, S, y) {
-      B.on("socket", (Q) => {
-        Q.setTimeout(y, () => {
+    addTimeOutHandler(B, S, Q) {
+      B.on("socket", (y) => {
+        y.setTimeout(Q, () => {
           B.abort(), S(new Error("Request timed out"));
         });
       });
     }
     static prepareRedirectUrlOptions(B, S) {
-      const y = I(B, { ...S }), Q = y.headers;
-      if (Q != null && Q.authorization) {
+      const Q = I(B, { ...S }), y = Q.headers;
+      if (y != null && y.authorization) {
         const G = R.reconstructOriginalUrl(S), F = N(B, S);
-        R.isCrossOriginRedirect(G, F) && (r.enabled && r(`Given the cross-origin redirect (from ${G.host} to ${F.host}), the Authorization header will be stripped out.`), delete Q.authorization);
+        R.isCrossOriginRedirect(G, F) && (r.enabled && r(`Given the cross-origin redirect (from ${G.host} to ${F.host}), the Authorization header will be stripped out.`), delete y.authorization);
       }
-      return y;
+      return Q;
     }
     static reconstructOriginalUrl(B) {
       const S = B.protocol || "https:";
       if (!B.hostname)
         throw new Error("Missing hostname in request options");
-      const y = B.hostname, Q = B.port ? `:${B.port}` : "", G = B.path || "/";
-      return new s.URL(`${S}//${y}${Q}${G}`);
+      const Q = B.hostname, y = B.port ? `:${B.port}` : "", G = B.path || "/";
+      return new s.URL(`${S}//${Q}${y}${G}`);
     }
     static isCrossOriginRedirect(B, S) {
       if (B.hostname.toLowerCase() !== S.hostname.toLowerCase())
@@ -2773,17 +2773,17 @@ Please double check that your authentication token is correct. Due to security r
         return !1;
       if (B.protocol !== S.protocol)
         return !0;
-      const y = B.port, Q = S.port;
-      return y !== Q;
+      const Q = B.port, y = S.port;
+      return Q !== y;
     }
     static retryOnServerError(B, S = 3) {
-      for (let y = 0; ; y++)
+      for (let Q = 0; ; Q++)
         try {
           return B();
-        } catch (Q) {
-          if (y < S && (Q instanceof _ && Q.isServerError() || Q.code === "EPIPE"))
+        } catch (y) {
+          if (Q < S && (y instanceof _ && y.isServerError() || y.code === "EPIPE"))
             continue;
-          throw Q;
+          throw y;
         }
     }
   }
@@ -2792,13 +2792,13 @@ Please double check that your authentication token is correct. Due to security r
     try {
       return new s.URL(M);
     } catch {
-      const S = B.hostname, y = B.protocol || "https:", Q = B.port ? `:${B.port}` : "", G = `${y}//${S}${Q}`;
+      const S = B.hostname, Q = B.protocol || "https:", y = B.port ? `:${B.port}` : "", G = `${Q}//${S}${y}`;
       return new s.URL(M, G);
     }
   }
   function I(M, B) {
-    const S = C(B), y = N(M, B);
-    return l(y, S), S;
+    const S = C(B), Q = N(M, B);
+    return l(Q, S), S;
   }
   function l(M, B) {
     B.protocol = M.protocol, B.hostname = M.hostname, M.port ? B.port = M.port : B.port && delete B.port, B.path = M.pathname + M.search;
@@ -2808,12 +2808,12 @@ Please double check that your authentication token is correct. Due to security r
     get actual() {
       return this._actual;
     }
-    constructor(B, S = "sha512", y = "base64") {
-      super(), this.expected = B, this.algorithm = S, this.encoding = y, this._actual = null, this.isValidateOnEnd = !0, this.digester = (0, e.createHash)(S);
+    constructor(B, S = "sha512", Q = "base64") {
+      super(), this.expected = B, this.algorithm = S, this.encoding = Q, this._actual = null, this.isValidateOnEnd = !0, this.digester = (0, e.createHash)(S);
     }
     // noinspection JSUnusedGlobalSymbols
-    _transform(B, S, y) {
-      this.digester.update(B), y(null, B);
+    _transform(B, S, Q) {
+      this.digester.update(B), Q(null, B);
     }
     // noinspection JSUnusedGlobalSymbols
     _flush(B) {
@@ -2850,33 +2850,33 @@ Please double check that your authentication token is correct. Due to security r
       const F = d(B, "content-length");
       F != null && S.push(new n.ProgressCallbackTransform(parseInt(F, 10), M.options.cancellationToken, M.options.onProgress));
     }
-    const y = M.options.sha512;
-    y != null ? S.push(new T(y, "sha512", y.length === 128 && !y.includes("+") && !y.includes("Z") && !y.includes("=") ? "hex" : "base64")) : M.options.sha2 != null && S.push(new T(M.options.sha2, "sha256", "hex"));
-    const Q = (0, o.createWriteStream)(M.destination);
-    S.push(Q);
+    const Q = M.options.sha512;
+    Q != null ? S.push(new T(Q, "sha512", Q.length === 128 && !Q.includes("+") && !Q.includes("Z") && !Q.includes("=") ? "hex" : "base64")) : M.options.sha2 != null && S.push(new T(M.options.sha2, "sha256", "hex"));
+    const y = (0, o.createWriteStream)(M.destination);
+    S.push(y);
     let G = B;
     for (const F of S)
       F.on("error", (w) => {
-        Q.close(), M.options.cancellationToken.cancelled || M.callback(w);
+        y.close(), M.options.cancellationToken.cancelled || M.callback(w);
       }), G = G.pipe(F);
-    Q.on("finish", () => {
-      Q.close(M.callback);
+    y.on("finish", () => {
+      y.close(M.callback);
     });
   }
   function C(M, B, S) {
     S != null && (M.method = S), M.headers = { ...M.headers };
-    const y = M.headers;
-    return B != null && (y.authorization = B.startsWith("Basic") || B.startsWith("Bearer") ? B : `token ${B}`), y["User-Agent"] == null && (y["User-Agent"] = "electron-builder"), (S == null || S === "GET" || y["Cache-Control"] == null) && (y["Cache-Control"] = "no-cache"), M.protocol == null && process.versions.electron != null && (M.protocol = "https:"), M;
+    const Q = M.headers;
+    return B != null && (Q.authorization = B.startsWith("Basic") || B.startsWith("Bearer") ? B : `token ${B}`), Q["User-Agent"] == null && (Q["User-Agent"] = "electron-builder"), (S == null || S === "GET" || Q["Cache-Control"] == null) && (Q["Cache-Control"] = "no-cache"), M.protocol == null && process.versions.electron != null && (M.protocol = "https:"), M;
   }
   function g(M, B) {
-    return JSON.stringify(M, (S, y) => S.endsWith("Authorization") || S.endsWith("authorization") || S.endsWith("Password") || S.endsWith("PASSWORD") || S.endsWith("Token") || S.includes("password") || S.includes("token") || B != null && B.has(S) ? "<stripped sensitive data>" : y, 2);
+    return JSON.stringify(M, (S, Q) => S.endsWith("Authorization") || S.endsWith("authorization") || S.endsWith("Password") || S.endsWith("PASSWORD") || S.endsWith("Token") || S.includes("password") || S.includes("token") || B != null && B.has(S) ? "<stripped sensitive data>" : Q, 2);
   }
   return qe;
 }
-var wt = {}, no;
-function Tf() {
-  if (no) return wt;
-  no = 1, Object.defineProperty(wt, "__esModule", { value: !0 }), wt.MemoLazy = void 0;
+var wt = {}, ro;
+function hf() {
+  if (ro) return wt;
+  ro = 1, Object.defineProperty(wt, "__esModule", { value: !0 }), wt.MemoLazy = void 0;
   let e = class {
     constructor(i, s) {
       this.selector = i, this.creator = s, this.selected = void 0, this._value = void 0;
@@ -2906,10 +2906,10 @@ function Tf() {
   }
   return wt;
 }
-var ot = {}, to;
-function Nf() {
-  if (to) return ot;
-  to = 1, Object.defineProperty(ot, "__esModule", { value: !0 }), ot.githubUrl = e, ot.githubTagPrefix = c, ot.getS3LikeProviderBaseUrl = o;
+var ot = {}, io;
+function df() {
+  if (io) return ot;
+  io = 1, Object.defineProperty(ot, "__esModule", { value: !0 }), ot.githubUrl = e, ot.githubTagPrefix = c, ot.getS3LikeProviderBaseUrl = o;
   function e(E, n = "github.com") {
     return `${E.protocol || "https"}://${E.host || n}`;
   }
@@ -2950,11 +2950,11 @@ function Nf() {
   }
   return ot;
 }
-var gr = {}, ro;
-function ff() {
-  if (ro) return gr;
-  ro = 1, Object.defineProperty(gr, "__esModule", { value: !0 }), gr.retry = c;
-  const e = Ms();
+var gr = {}, Eo;
+function Of() {
+  if (Eo) return gr;
+  Eo = 1, Object.defineProperty(gr, "__esModule", { value: !0 }), gr.retry = c;
+  const e = Bs();
   async function c(o, i) {
     var s;
     const { retries: u, interval: E, backoff: n = 0, attempt: r = 0, shouldRetry: t, cancellationToken: a = new e.CancellationToken() } = i;
@@ -2968,10 +2968,10 @@ function ff() {
   }
   return gr;
 }
-var Mr = {}, io;
-function hf() {
-  if (io) return Mr;
-  io = 1, Object.defineProperty(Mr, "__esModule", { value: !0 }), Mr.parseDn = e;
+var Mr = {}, ao;
+function Cf() {
+  if (ao) return Mr;
+  ao = 1, Object.defineProperty(Mr, "__esModule", { value: !0 }), Mr.parseDn = e;
   function e(c) {
     let o = !1, i = null, s = "", u = 0;
     c = c.trim();
@@ -3027,10 +3027,10 @@ function hf() {
   }
   return Mr;
 }
-var et = {}, Eo;
-function df() {
-  if (Eo) return et;
-  Eo = 1, Object.defineProperty(et, "__esModule", { value: !0 }), et.nil = et.UUID = void 0;
+var et = {}, _o;
+function Df() {
+  if (_o) return et;
+  _o = 1, Object.defineProperty(et, "__esModule", { value: !0 }), et.nil = et.UUID = void 0;
   const e = On, c = pr(), o = "options.name must be either a string or a Buffer", i = (0, e.randomBytes)(16);
   i[0] = i[0] | 1;
   const s = {}, u = [];
@@ -3130,9 +3130,9 @@ function df() {
   }
   return et.nil = new E("00000000-0000-0000-0000-000000000000"), et;
 }
-var ct = {}, pi = {}, ao;
-function Of() {
-  return ao || (ao = 1, (function(e) {
+var ct = {}, pi = {}, so;
+function Sf() {
+  return so || (so = 1, (function(e) {
     (function(c) {
       c.parser = function(U, L) {
         return new i(U, L);
@@ -3175,7 +3175,7 @@ function Of() {
         if (!(this instanceof i))
           return new i(U, L);
         var X = this;
-        u(X), X.q = X.c = "", X.bufferCheckPosition = c.MAX_BUFFER_LENGTH, X.opt = L || {}, X.opt.lowercase = X.opt.lowercase || X.opt.lowercasetags, X.looseCase = X.opt.lowercase ? "toLowerCase" : "toUpperCase", X.tags = [], X.closed = X.closedRoot = X.sawRoot = !1, X.tag = X.error = null, X.strict = !!U, X.noscript = !!(U || X.opt.noscript), X.state = S.BEGIN, X.strictEntities = X.opt.strictEntities, X.ENTITIES = X.strictEntities ? Object.create(c.XML_ENTITIES) : Object.create(c.ENTITIES), X.attribList = [], X.opt.xmlns && (X.ns = Object.create(I)), X.opt.unquotedAttributeValues === void 0 && (X.opt.unquotedAttributeValues = !U), X.trackPosition = X.opt.position !== !1, X.trackPosition && (X.position = X.line = X.column = 0), Q(X, "onready");
+        u(X), X.q = X.c = "", X.bufferCheckPosition = c.MAX_BUFFER_LENGTH, X.opt = L || {}, X.opt.lowercase = X.opt.lowercase || X.opt.lowercasetags, X.looseCase = X.opt.lowercase ? "toLowerCase" : "toUpperCase", X.tags = [], X.closed = X.closedRoot = X.sawRoot = !1, X.tag = X.error = null, X.strict = !!U, X.noscript = !!(U || X.opt.noscript), X.state = S.BEGIN, X.strictEntities = X.opt.strictEntities, X.ENTITIES = X.strictEntities ? Object.create(c.XML_ENTITIES) : Object.create(c.ENTITIES), X.attribList = [], X.opt.xmlns && (X.ns = Object.create(I)), X.opt.unquotedAttributeValues === void 0 && (X.opt.unquotedAttributeValues = !U), X.trackPosition = X.opt.position !== !1, X.trackPosition && (X.position = X.line = X.column = 0), y(X, "onready");
       }
       Object.create || (Object.create = function(U) {
         function L() {
@@ -3645,17 +3645,17 @@ function Of() {
         var L = c.ENTITIES[U], X = typeof L == "number" ? String.fromCharCode(L) : L;
         c.ENTITIES[U] = X;
       });
-      for (var y in c.STATE)
-        c.STATE[c.STATE[y]] = y;
+      for (var Q in c.STATE)
+        c.STATE[c.STATE[Q]] = Q;
       S = c.STATE;
-      function Q(U, L, X) {
+      function y(U, L, X) {
         U[L] && U[L](X);
       }
       function G(U, L, X) {
-        U.textNode && F(U), Q(U, L, X);
+        U.textNode && F(U), y(U, L, X);
       }
       function F(U) {
-        U.textNode = w(U.opt, U.textNode), U.textNode && Q(U, "ontext", U.textNode), U.textNode = "";
+        U.textNode = w(U.opt, U.textNode), U.textNode && y(U, "ontext", U.textNode), U.textNode = "";
       }
       function w(U, L) {
         return U.trim && (L = L.trim()), U.normalize && (L = L.replace(/\s+/g, " ")), L;
@@ -3664,10 +3664,10 @@ function Of() {
         return F(U), U.trackPosition && (L += `
 Line: ` + U.line + `
 Column: ` + U.column + `
-Char: ` + U.c), L = new Error(L), U.error = L, Q(U, "onerror", L), U;
+Char: ` + U.c), L = new Error(L), U.error = L, y(U, "onerror", L), U;
       }
       function v(U) {
-        return U.sawRoot && !U.closedRoot && b(U, "Unclosed root tag"), U.state !== S.BEGIN && U.state !== S.BEGIN_WHITESPACE && U.state !== S.TEXT && D(U, "Unexpected end"), F(U), U.c = "", U.closed = !0, Q(U, "onend"), i.call(U, U.strict, U.opt), U;
+        return U.sawRoot && !U.closedRoot && b(U, "Unclosed root tag"), U.state !== S.BEGIN && U.state !== S.BEGIN_WHITESPACE && U.state !== S.TEXT && D(U, "Unexpected end"), F(U), U.c = "", U.closed = !0, y(U, "onend"), i.call(U, U.strict, U.opt), U;
       }
       function b(U, L) {
         if (typeof U != "object" || !(U instanceof i))
@@ -3730,7 +3730,7 @@ Actual: ` + U.attribValue
             });
           });
           for (var Te = 0, Ne = U.attribList.length; Te < Ne; Te++) {
-            var Oe = U.attribList[Te], he = Oe[0], $e = Oe[1], Me = p(he, !0), Je = Me.prefix, Gn = Me.local, gn = Je === "" ? "" : X.ns[Je] || "", fn = {
+            var Oe = U.attribList[Te], he = Oe[0], $e = Oe[1], Me = p(he, !0), Je = Me.prefix, Gn = Me.local, gn = Je === "" ? "" : X.ns[Je] || "", hn = {
               name: he,
               value: $e,
               prefix: Je,
@@ -3740,7 +3740,7 @@ Actual: ` + U.attribValue
             Je && Je !== "xmlns" && !gn && (b(
               U,
               "Unbound namespace prefix: " + JSON.stringify(Je)
-            ), fn.uri = Je), U.tag.attributes[he] = fn, G(U, "onattribute", fn);
+            ), hn.uri = Je), U.tag.attributes[he] = hn, G(U, "onattribute", hn);
           }
           U.attribList.length = 0;
         }
@@ -4028,11 +4028,11 @@ Actual: ` + U.attribValue
     })(e);
   })(pi)), pi;
 }
-var _o;
-function Cf() {
-  if (_o) return ct;
-  _o = 1, Object.defineProperty(ct, "__esModule", { value: !0 }), ct.XElement = void 0, ct.parseXml = E;
-  const e = Of(), c = pr();
+var uo;
+function gf() {
+  if (uo) return ct;
+  uo = 1, Object.defineProperty(ct, "__esModule", { value: !0 }), ct.XElement = void 0, ct.parseXml = E;
+  const e = Sf(), c = pr();
   class o {
     constructor(r) {
       if (this.name = r, this.value = "", this.attributes = null, this.isCData = !1, this.elements = null, !r)
@@ -4105,11 +4105,11 @@ function Cf() {
   }
   return ct;
 }
-var so;
+var oo;
 function pe() {
-  return so || (so = 1, (function(e) {
+  return oo || (oo = 1, (function(e) {
     Object.defineProperty(e, "__esModule", { value: !0 }), e.CURRENT_APP_PACKAGE_FILE_NAME = e.CURRENT_APP_INSTALLER_FILE_NAME = e.XElement = e.parseXml = e.UUID = e.parseDn = e.retry = e.githubTagPrefix = e.githubUrl = e.getS3LikeProviderBaseUrl = e.ProgressCallbackTransform = e.MemoLazy = e.safeStringifyJson = e.safeGetHeader = e.parseJson = e.HttpExecutor = e.HttpError = e.DigestTransform = e.createHttpError = e.configureRequestUrl = e.configureRequestOptionsFromUrl = e.configureRequestOptions = e.newError = e.CancellationToken = e.CancellationError = void 0, e.asArray = _;
-    var c = Ms();
+    var c = Bs();
     Object.defineProperty(e, "CancellationError", { enumerable: !0, get: function() {
       return c.CancellationError;
     } }), Object.defineProperty(e, "CancellationToken", { enumerable: !0, get: function() {
@@ -4119,7 +4119,7 @@ function pe() {
     Object.defineProperty(e, "newError", { enumerable: !0, get: function() {
       return o.newError;
     } });
-    var i = If();
+    var i = ff();
     Object.defineProperty(e, "configureRequestOptions", { enumerable: !0, get: function() {
       return i.configureRequestOptions;
     } }), Object.defineProperty(e, "configureRequestOptionsFromUrl", { enumerable: !0, get: function() {
@@ -4141,15 +4141,15 @@ function pe() {
     } }), Object.defineProperty(e, "safeStringifyJson", { enumerable: !0, get: function() {
       return i.safeStringifyJson;
     } });
-    var s = Tf();
+    var s = hf();
     Object.defineProperty(e, "MemoLazy", { enumerable: !0, get: function() {
       return s.MemoLazy;
     } });
-    var u = lI();
+    var u = TI();
     Object.defineProperty(e, "ProgressCallbackTransform", { enumerable: !0, get: function() {
       return u.ProgressCallbackTransform;
     } });
-    var E = Nf();
+    var E = df();
     Object.defineProperty(e, "getS3LikeProviderBaseUrl", { enumerable: !0, get: function() {
       return E.getS3LikeProviderBaseUrl;
     } }), Object.defineProperty(e, "githubUrl", { enumerable: !0, get: function() {
@@ -4157,19 +4157,19 @@ function pe() {
     } }), Object.defineProperty(e, "githubTagPrefix", { enumerable: !0, get: function() {
       return E.githubTagPrefix;
     } });
-    var n = ff();
+    var n = Of();
     Object.defineProperty(e, "retry", { enumerable: !0, get: function() {
       return n.retry;
     } });
-    var r = hf();
+    var r = Cf();
     Object.defineProperty(e, "parseDn", { enumerable: !0, get: function() {
       return r.parseDn;
     } });
-    var t = df();
+    var t = Df();
     Object.defineProperty(e, "UUID", { enumerable: !0, get: function() {
       return t.UUID;
     } });
-    var a = Cf();
+    var a = gf();
     Object.defineProperty(e, "parseXml", { enumerable: !0, get: function() {
       return a.parseXml;
     } }), Object.defineProperty(e, "XElement", { enumerable: !0, get: function() {
@@ -4178,12 +4178,12 @@ function pe() {
     function _(A) {
       return A == null ? [] : Array.isArray(A) ? A : [A];
     }
-  })(yi)), yi;
+  })(Qi)), Qi;
 }
-var Ke = {}, Br = {}, yn = {}, uo;
+var Ke = {}, Br = {}, Qn = {}, co;
 function ar() {
-  if (uo) return yn;
-  uo = 1;
+  if (co) return Qn;
+  co = 1;
   function e(E) {
     return typeof E > "u" || E === null;
   }
@@ -4209,12 +4209,12 @@ function ar() {
   function u(E) {
     return E === 0 && Number.NEGATIVE_INFINITY === 1 / E;
   }
-  return yn.isNothing = e, yn.isObject = c, yn.toArray = o, yn.repeat = s, yn.isNegativeZero = u, yn.extend = i, yn;
+  return Qn.isNothing = e, Qn.isObject = c, Qn.toArray = o, Qn.repeat = s, Qn.isNegativeZero = u, Qn.extend = i, Qn;
 }
-var ki, oo;
+var ki, Ao;
 function _r() {
-  if (oo) return ki;
-  oo = 1;
+  if (Ao) return ki;
+  Ao = 1;
   function e(o, i) {
     var s = "", u = o.reason || "(unknown reason)";
     return o.mark ? (o.mark.name && (s += 'in "' + o.mark.name + '" '), s += "(" + (o.mark.line + 1) + ":" + (o.mark.column + 1) + ")", !i && o.mark.snippet && (s += `
@@ -4228,10 +4228,10 @@ function _r() {
     return this.name + ": " + e(this, i);
   }, ki = c, ki;
 }
-var Xi, co;
-function Df() {
-  if (co) return Xi;
-  co = 1;
+var Xi, Ro;
+function Mf() {
+  if (Ro) return Xi;
+  Ro = 1;
   var e = ar();
   function c(s, u, E, n, r) {
     var t = "", a = "", _ = Math.floor(r / 2) - 1;
@@ -4275,10 +4275,10 @@ function Df() {
   }
   return Xi = i, Xi;
 }
-var ji, Ao;
+var ji, lo;
 function Ze() {
-  if (Ao) return ji;
-  Ao = 1;
+  if (lo) return ji;
+  lo = 1;
   var e = _r(), c = [
     "kind",
     "multi",
@@ -4316,10 +4316,10 @@ function Ze() {
   }
   return ji = s, ji;
 }
-var qi, Ro;
-function II() {
-  if (Ro) return qi;
-  Ro = 1;
+var qi, Io;
+function NI() {
+  if (Io) return qi;
+  Io = 1;
   var e = _r(), c = Ze();
   function o(u, E) {
     var n = [];
@@ -4378,10 +4378,10 @@ function II() {
     return t.implicit = (this.implicit || []).concat(n), t.explicit = (this.explicit || []).concat(r), t.compiledImplicit = o(t, "implicit"), t.compiledExplicit = o(t, "explicit"), t.compiledTypeMap = i(t.compiledImplicit, t.compiledExplicit), t;
   }, qi = s, qi;
 }
-var Ki, lo;
-function TI() {
-  if (lo) return Ki;
-  lo = 1;
+var Ki, To;
+function fI() {
+  if (To) return Ki;
+  To = 1;
   var e = Ze();
   return Ki = new e("tag:yaml.org,2002:str", {
     kind: "scalar",
@@ -4390,10 +4390,10 @@ function TI() {
     }
   }), Ki;
 }
-var zi, Io;
-function NI() {
-  if (Io) return zi;
-  Io = 1;
+var zi, No;
+function hI() {
+  if (No) return zi;
+  No = 1;
   var e = Ze();
   return zi = new e("tag:yaml.org,2002:seq", {
     kind: "sequence",
@@ -4402,10 +4402,10 @@ function NI() {
     }
   }), zi;
 }
-var Ji, To;
-function fI() {
-  if (To) return Ji;
-  To = 1;
+var Ji, fo;
+function dI() {
+  if (fo) return Ji;
+  fo = 1;
   var e = Ze();
   return Ji = new e("tag:yaml.org,2002:map", {
     kind: "mapping",
@@ -4414,23 +4414,23 @@ function fI() {
     }
   }), Ji;
 }
-var Zi, No;
-function hI() {
-  if (No) return Zi;
-  No = 1;
-  var e = II();
+var Zi, ho;
+function OI() {
+  if (ho) return Zi;
+  ho = 1;
+  var e = NI();
   return Zi = new e({
     explicit: [
-      TI(),
-      NI(),
-      fI()
+      fI(),
+      hI(),
+      dI()
     ]
   }), Zi;
 }
-var xi, fo;
-function dI() {
-  if (fo) return xi;
-  fo = 1;
+var xi, Oo;
+function CI() {
+  if (Oo) return xi;
+  Oo = 1;
   var e = Ze();
   function c(s) {
     if (s === null) return !0;
@@ -4468,10 +4468,10 @@ function dI() {
     defaultStyle: "lowercase"
   }), xi;
 }
-var $i, ho;
-function OI() {
-  if (ho) return $i;
-  ho = 1;
+var $i, Co;
+function DI() {
+  if (Co) return $i;
+  Co = 1;
   var e = Ze();
   function c(s) {
     if (s === null) return !1;
@@ -4503,10 +4503,10 @@ function OI() {
     defaultStyle: "lowercase"
   }), $i;
 }
-var eE, Oo;
-function CI() {
-  if (Oo) return eE;
-  Oo = 1;
+var eE, Do;
+function SI() {
+  if (Do) return eE;
+  Do = 1;
   var e = ar(), c = Ze();
   function o(r) {
     return 48 <= r && r <= 57 || 65 <= r && r <= 70 || 97 <= r && r <= 102;
@@ -4599,10 +4599,10 @@ function CI() {
     }
   }), eE;
 }
-var nE, Co;
-function DI() {
-  if (Co) return nE;
-  Co = 1;
+var nE, So;
+function gI() {
+  if (So) return nE;
+  So = 1;
   var e = ar(), c = Ze(), o = new RegExp(
     // 2.5e4, 2.5 and integers
     "^(?:[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?|[-+]?\\.(?:inf|Inf|INF)|\\.(?:nan|NaN|NAN))$"
@@ -4662,25 +4662,25 @@ function DI() {
     defaultStyle: "lowercase"
   }), nE;
 }
-var tE, Do;
-function SI() {
-  return Do || (Do = 1, tE = hI().extend({
+var tE, go;
+function MI() {
+  return go || (go = 1, tE = OI().extend({
     implicit: [
-      dI(),
-      OI(),
       CI(),
-      DI()
+      DI(),
+      SI(),
+      gI()
     ]
   })), tE;
 }
-var rE, So;
-function gI() {
-  return So || (So = 1, rE = SI()), rE;
+var rE, Mo;
+function BI() {
+  return Mo || (Mo = 1, rE = MI()), rE;
 }
-var iE, go;
-function MI() {
-  if (go) return iE;
-  go = 1;
+var iE, Bo;
+function LI() {
+  if (Bo) return iE;
+  Bo = 1;
   var e = Ze(), c = new RegExp(
     "^([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])$"
   ), o = new RegExp(
@@ -4712,10 +4712,10 @@ function MI() {
     represent: u
   }), iE;
 }
-var EE, Mo;
-function BI() {
-  if (Mo) return EE;
-  Mo = 1;
+var EE, Lo;
+function UI() {
+  if (Lo) return EE;
+  Lo = 1;
   var e = Ze();
   function c(o) {
     return o === "<<" || o === null;
@@ -4725,10 +4725,10 @@ function BI() {
     resolve: c
   }), EE;
 }
-var aE, Bo;
-function LI() {
-  if (Bo) return aE;
-  Bo = 1;
+var aE, Uo;
+function wI() {
+  if (Uo) return aE;
+  Uo = 1;
   var e = Ze(), c = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=
 \r`;
   function o(E) {
@@ -4764,10 +4764,10 @@ function LI() {
     represent: s
   }), aE;
 }
-var _E, Lo;
-function UI() {
-  if (Lo) return _E;
-  Lo = 1;
+var _E, wo;
+function mI() {
+  if (wo) return _E;
+  wo = 1;
   var e = Ze(), c = Object.prototype.hasOwnProperty, o = Object.prototype.toString;
   function i(u) {
     if (u === null) return !0;
@@ -4793,10 +4793,10 @@ function UI() {
     construct: s
   }), _E;
 }
-var sE, Uo;
-function wI() {
-  if (Uo) return sE;
-  Uo = 1;
+var sE, mo;
+function FI() {
+  if (mo) return sE;
+  mo = 1;
   var e = Ze(), c = Object.prototype.toString;
   function o(s) {
     if (s === null) return !0;
@@ -4820,10 +4820,10 @@ function wI() {
     construct: i
   }), sE;
 }
-var uE, wo;
-function mI() {
-  if (wo) return uE;
-  wo = 1;
+var uE, Fo;
+function PI() {
+  if (Fo) return uE;
+  Fo = 1;
   var e = Ze(), c = Object.prototype.hasOwnProperty;
   function o(s) {
     if (s === null) return !0;
@@ -4842,26 +4842,26 @@ function mI() {
     construct: i
   }), uE;
 }
-var oE, mo;
-function Bs() {
-  return mo || (mo = 1, oE = gI().extend({
+var oE, Po;
+function Ls() {
+  return Po || (Po = 1, oE = BI().extend({
     implicit: [
-      MI(),
-      BI()
+      LI(),
+      UI()
     ],
     explicit: [
-      LI(),
-      UI(),
       wI(),
-      mI()
+      mI(),
+      FI(),
+      PI()
     ]
   })), oE;
 }
-var Fo;
-function Sf() {
-  if (Fo) return Br;
-  Fo = 1;
-  var e = ar(), c = _r(), o = Df(), i = Bs(), s = Object.prototype.hasOwnProperty, u = 1, E = 2, n = 3, r = 4, t = 1, a = 2, _ = 3, A = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/, R = /[\x85\u2028\u2029]/, N = /[,\[\]\{\}]/, I = /^(?:!|!!|![a-z\-]+!)$/i, l = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+var Go;
+function Bf() {
+  if (Go) return Br;
+  Go = 1;
+  var e = ar(), c = _r(), o = Mf(), i = Ls(), s = Object.prototype.hasOwnProperty, u = 1, E = 2, n = 3, r = 4, t = 1, a = 2, _ = 3, A = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/, R = /[\x85\u2028\u2029]/, N = /[,\[\]\{\}]/, I = /^(?:!|!!|![a-z\-]+!)$/i, l = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
   function T(h) {
     return Object.prototype.toString.call(h);
   }
@@ -4891,13 +4891,13 @@ function Sf() {
     return h === 48 ? "\0" : h === 97 ? "\x07" : h === 98 ? "\b" : h === 116 || h === 9 ? "	" : h === 110 ? `
 ` : h === 118 ? "\v" : h === 102 ? "\f" : h === 114 ? "\r" : h === 101 ? "\x1B" : h === 32 ? " " : h === 34 ? '"' : h === 47 ? "/" : h === 92 ? "\\" : h === 78 ? "" : h === 95 ? " " : h === 76 ? "\u2028" : h === 80 ? "\u2029" : "";
   }
-  function y(h) {
+  function Q(h) {
     return h <= 65535 ? String.fromCharCode(h) : String.fromCharCode(
       (h - 65536 >> 10) + 55296,
       (h - 65536 & 1023) + 56320
     );
   }
-  function Q(h, k, q) {
+  function y(h, k, q) {
     k === "__proto__" ? Object.defineProperty(h, k, {
       configurable: !0,
       enumerable: !0,
@@ -4956,7 +4956,7 @@ function Sf() {
   function ie(h, k, q, Ee) {
     var z, re, ee, se;
     for (e.isObject(q) || b(h, "cannot merge mappings; the provided source object is unacceptable"), z = Object.keys(q), ee = 0, se = z.length; ee < se; ee += 1)
-      re = z[ee], s.call(k, re) || (Q(k, re, q[re]), Ee[re] = !0);
+      re = z[ee], s.call(k, re) || (y(k, re, q[re]), Ee[re] = !0);
   }
   function ne(h, k, q, Ee, z, re, ee, se, Ae) {
     var Be, Le;
@@ -4970,7 +4970,7 @@ function Sf() {
       else
         ie(h, k, re, q);
     else
-      !h.json && !s.call(q, z) && s.call(k, z) && (h.line = ee || h.line, h.lineStart = se || h.lineStart, h.position = Ae || h.position, b(h, "duplicated mapping key")), Q(k, z, re), delete q[z];
+      !h.json && !s.call(q, z) && s.call(k, z) && (h.line = ee || h.line, h.lineStart = se || h.lineStart, h.position = Ae || h.position, b(h, "duplicated mapping key")), y(k, z, re), delete q[z];
     return k;
   }
   function le(h) {
@@ -5056,7 +5056,7 @@ function Sf() {
         else if ((ee = M(se)) > 0) {
           for (z = ee, re = 0; z > 0; z--)
             se = h.input.charCodeAt(++h.position), (ee = g(se)) >= 0 ? re = (re << 4) + ee : b(h, "expected hexadecimal character");
-          h.result += y(re), h.position++;
+          h.result += Q(re), h.position++;
         } else
           b(h, "unknown escape sequence");
         q = Ee = h.position;
@@ -5280,7 +5280,7 @@ function Sf() {
     for (var z = 0, re = Ee.length; z < re; z += 1)
       k(Ee[z]);
   }
-  function fn(h, k) {
+  function hn(h, k) {
     var q = Gn(h, k);
     if (q.length !== 0) {
       if (q.length === 1)
@@ -5288,13 +5288,13 @@ function Sf() {
       throw new c("expected a single document in the stream, but found more");
     }
   }
-  return Br.loadAll = gn, Br.load = fn, Br;
+  return Br.loadAll = gn, Br.load = hn, Br;
 }
-var cE = {}, Po;
-function gf() {
-  if (Po) return cE;
-  Po = 1;
-  var e = ar(), c = _r(), o = Bs(), i = Object.prototype.toString, s = Object.prototype.hasOwnProperty, u = 65279, E = 9, n = 10, r = 13, t = 32, a = 33, _ = 34, A = 35, R = 37, N = 38, I = 39, l = 42, T = 44, f = 45, d = 58, O = 61, C = 62, g = 63, M = 64, B = 91, S = 93, y = 96, Q = 123, G = 124, F = 125, w = {};
+var cE = {}, bo;
+function Lf() {
+  if (bo) return cE;
+  bo = 1;
+  var e = ar(), c = _r(), o = Ls(), i = Object.prototype.toString, s = Object.prototype.hasOwnProperty, u = 65279, E = 9, n = 10, r = 13, t = 32, a = 33, _ = 34, A = 35, R = 37, N = 38, I = 39, l = 42, T = 44, f = 45, d = 58, O = 61, C = 62, g = 63, M = 64, B = 91, S = 93, Q = 96, y = 123, G = 124, F = 125, w = {};
   w[0] = "\\0", w[7] = "\\a", w[8] = "\\b", w[9] = "\\t", w[10] = "\\n", w[11] = "\\v", w[12] = "\\f", w[13] = "\\r", w[27] = "\\e", w[34] = '\\"', w[92] = "\\\\", w[133] = "\\N", w[160] = "\\_", w[8232] = "\\L", w[8233] = "\\P";
   var D = [
     "y",
@@ -5371,11 +5371,11 @@ function gf() {
       (J ? (
         // c = flow-in
         Z
-      ) : Z && m !== T && m !== B && m !== S && m !== Q && m !== F) && m !== A && !(W === d && !x) || U(W) && !j(W) && m === A || W === d && x
+      ) : Z && m !== T && m !== B && m !== S && m !== y && m !== F) && m !== A && !(W === d && !x) || U(W) && !j(W) && m === A || W === d && x
     );
   }
   function X(m) {
-    return _e(m) && m !== u && !j(m) && m !== f && m !== g && m !== d && m !== T && m !== B && m !== S && m !== Q && m !== F && m !== A && m !== N && m !== l && m !== a && m !== G && m !== O && m !== C && m !== I && m !== _ && m !== R && m !== M && m !== y;
+    return _e(m) && m !== u && !j(m) && m !== f && m !== g && m !== d && m !== T && m !== B && m !== S && m !== y && m !== F && m !== A && m !== N && m !== l && m !== a && m !== G && m !== O && m !== C && m !== I && m !== _ && m !== R && m !== M && m !== Q;
   }
   function V(m) {
     return !j(m) && m !== d;
@@ -5390,7 +5390,7 @@ function gf() {
   }
   var Ne = 1, Oe = 2, he = 3, $e = 4, Me = 5;
   function Je(m, W, J, Z, x, ae, te, oe) {
-    var Ie, de = 0, be = null, ye = !1, we = !1, st = Z !== -1, cn = -1, jn = X(Re(m, 0)) && V(Re(m, m.length - 1));
+    var Ie, de = 0, be = null, Qe = !1, we = !1, st = Z !== -1, cn = -1, jn = X(Re(m, 0)) && V(Re(m, m.length - 1));
     if (W || te)
       for (Ie = 0; Ie < m.length; de >= 65536 ? Ie += 2 : Ie++) {
         if (de = Re(m, Ie), !_e(de))
@@ -5400,7 +5400,7 @@ function gf() {
     else {
       for (Ie = 0; Ie < m.length; de >= 65536 ? Ie += 2 : Ie++) {
         if (de = Re(m, Ie), de === n)
-          ye = !0, st && (we = we || // Foldable line = too long, and not more-indented.
+          Qe = !0, st && (we = we || // Foldable line = too long, and not more-indented.
           Ie - cn - 1 > Z && m[cn + 1] !== " ", cn = Ie);
         else if (!_e(de))
           return Me;
@@ -5408,7 +5408,7 @@ function gf() {
       }
       we = we || st && Ie - cn - 1 > Z && m[cn + 1] !== " ";
     }
-    return !ye && !we ? jn && !te && !x(m) ? Ne : ae === K ? Me : Oe : J > 9 && Te(m) ? Me : te ? ae === K ? Me : Oe : we ? $e : he;
+    return !Qe && !we ? jn && !te && !x(m) ? Ne : ae === K ? Me : Oe : J > 9 && Te(m) ? Me : te ? ae === K ? Me : Oe : we ? $e : he;
   }
   function Gn(m, W, J, Z, x) {
     m.dump = (function() {
@@ -5435,9 +5435,9 @@ function gf() {
         case Oe:
           return "'" + W.replace(/'/g, "''") + "'";
         case he:
-          return "|" + gn(W, m.indent) + fn(ne(W, ae));
+          return "|" + gn(W, m.indent) + hn(ne(W, ae));
         case $e:
-          return ">" + gn(W, m.indent) + fn(ne(h(W, te), ae));
+          return ">" + gn(W, m.indent) + hn(ne(h(W, te), ae));
         case Me:
           return '"' + q(W) + '"';
         default:
@@ -5453,7 +5453,7 @@ function gf() {
     return J + ae + `
 `;
   }
-  function fn(m) {
+  function hn(m) {
     return m[m.length - 1] === `
 ` ? m.slice(0, -1) : m;
   }
@@ -5503,7 +5503,7 @@ function gf() {
     m.tag = x, m.dump = "{" + Z + "}";
   }
   function ee(m, W, J, Z) {
-    var x = "", ae = m.tag, te = Object.keys(J), oe, Ie, de, be, ye, we;
+    var x = "", ae = m.tag, te = Object.keys(J), oe, Ie, de, be, Qe, we;
     if (m.sortKeys === !0)
       te.sort();
     else if (typeof m.sortKeys == "function")
@@ -5511,7 +5511,7 @@ function gf() {
     else if (m.sortKeys)
       throw new c("sortKeys must be a boolean or a function");
     for (oe = 0, Ie = te.length; oe < Ie; oe += 1)
-      we = "", (!Z || x !== "") && (we += le(m, W)), de = te[oe], be = J[de], m.replacer && (be = m.replacer.call(J, de, be)), Ae(m, W + 1, de, !0, !0, !0) && (ye = m.tag !== null && m.tag !== "?" || m.dump && m.dump.length > 1024, ye && (m.dump && n === m.dump.charCodeAt(0) ? we += "?" : we += "? "), we += m.dump, ye && (we += le(m, W)), Ae(m, W + 1, be, !0, ye) && (m.dump && n === m.dump.charCodeAt(0) ? we += ":" : we += ": ", we += m.dump, x += we));
+      we = "", (!Z || x !== "") && (we += le(m, W)), de = te[oe], be = J[de], m.replacer && (be = m.replacer.call(J, de, be)), Ae(m, W + 1, de, !0, !0, !0) && (Qe = m.tag !== null && m.tag !== "?" || m.dump && m.dump.length > 1024, Qe && (m.dump && n === m.dump.charCodeAt(0) ? we += "?" : we += "? "), we += m.dump, Qe && (we += le(m, W)), Ae(m, W + 1, be, !0, Qe) && (m.dump && n === m.dump.charCodeAt(0) ? we += ":" : we += ": ", we += m.dump, x += we));
     m.tag = ae, m.dump = x || "{}";
   }
   function se(m, W, J) {
@@ -5535,14 +5535,14 @@ function gf() {
     m.tag = null, m.dump = J, se(m, J, !1) || se(m, J, !0);
     var oe = i.call(m.dump), Ie = Z, de;
     Z && (Z = m.flowLevel < 0 || m.flowLevel > W);
-    var be = oe === "[object Object]" || oe === "[object Array]", ye, we;
-    if (be && (ye = m.duplicates.indexOf(J), we = ye !== -1), (m.tag !== null && m.tag !== "?" || we || m.indent !== 2 && W > 0) && (x = !1), we && m.usedDuplicates[ye])
-      m.dump = "*ref_" + ye;
+    var be = oe === "[object Object]" || oe === "[object Array]", Qe, we;
+    if (be && (Qe = m.duplicates.indexOf(J), we = Qe !== -1), (m.tag !== null && m.tag !== "?" || we || m.indent !== 2 && W > 0) && (x = !1), we && m.usedDuplicates[Qe])
+      m.dump = "*ref_" + Qe;
     else {
-      if (be && we && !m.usedDuplicates[ye] && (m.usedDuplicates[ye] = !0), oe === "[object Object]")
-        Z && Object.keys(m.dump).length !== 0 ? (ee(m, W, m.dump, x), we && (m.dump = "&ref_" + ye + m.dump)) : (re(m, W, m.dump), we && (m.dump = "&ref_" + ye + " " + m.dump));
+      if (be && we && !m.usedDuplicates[Qe] && (m.usedDuplicates[Qe] = !0), oe === "[object Object]")
+        Z && Object.keys(m.dump).length !== 0 ? (ee(m, W, m.dump, x), we && (m.dump = "&ref_" + Qe + m.dump)) : (re(m, W, m.dump), we && (m.dump = "&ref_" + Qe + " " + m.dump));
       else if (oe === "[object Array]")
-        Z && m.dump.length !== 0 ? (m.noArrayIndent && !te && W > 0 ? z(m, W - 1, m.dump, x) : z(m, W, m.dump, x), we && (m.dump = "&ref_" + ye + m.dump)) : (Ee(m, W, m.dump), we && (m.dump = "&ref_" + ye + " " + m.dump));
+        Z && m.dump.length !== 0 ? (m.noArrayIndent && !te && W > 0 ? z(m, W - 1, m.dump, x) : z(m, W, m.dump, x), we && (m.dump = "&ref_" + Qe + m.dump)) : (Ee(m, W, m.dump), we && (m.dump = "&ref_" + Qe + " " + m.dump));
       else if (oe === "[object String]")
         m.tag !== "?" && Gn(m, m.dump, W, ae, Ie);
       else {
@@ -5585,36 +5585,36 @@ function gf() {
   }
   return cE.dump = fe, cE;
 }
-var Go;
-function Ls() {
-  if (Go) return Ke;
-  Go = 1;
-  var e = Sf(), c = gf();
+var vo;
+function Us() {
+  if (vo) return Ke;
+  vo = 1;
+  var e = Bf(), c = Lf();
   function o(i, s) {
     return function() {
       throw new Error("Function yaml." + i + " is removed in js-yaml 4. Use yaml." + s + " instead, which is now safe by default.");
     };
   }
-  return Ke.Type = Ze(), Ke.Schema = II(), Ke.FAILSAFE_SCHEMA = hI(), Ke.JSON_SCHEMA = SI(), Ke.CORE_SCHEMA = gI(), Ke.DEFAULT_SCHEMA = Bs(), Ke.load = e.load, Ke.loadAll = e.loadAll, Ke.dump = c.dump, Ke.YAMLException = _r(), Ke.types = {
-    binary: LI(),
-    float: DI(),
-    map: fI(),
-    null: dI(),
-    pairs: wI(),
-    set: mI(),
-    timestamp: MI(),
-    bool: OI(),
-    int: CI(),
-    merge: BI(),
-    omap: UI(),
-    seq: NI(),
-    str: TI()
+  return Ke.Type = Ze(), Ke.Schema = NI(), Ke.FAILSAFE_SCHEMA = OI(), Ke.JSON_SCHEMA = MI(), Ke.CORE_SCHEMA = BI(), Ke.DEFAULT_SCHEMA = Ls(), Ke.load = e.load, Ke.loadAll = e.loadAll, Ke.dump = c.dump, Ke.YAMLException = _r(), Ke.types = {
+    binary: wI(),
+    float: gI(),
+    map: dI(),
+    null: CI(),
+    pairs: FI(),
+    set: PI(),
+    timestamp: LI(),
+    bool: DI(),
+    int: SI(),
+    merge: UI(),
+    omap: mI(),
+    seq: hI(),
+    str: fI()
   }, Ke.safeLoad = o("safeLoad", "load"), Ke.safeLoadAll = o("safeLoadAll", "loadAll"), Ke.safeDump = o("safeDump", "dump"), Ke;
 }
-var mt = {}, bo;
-function Mf() {
-  if (bo) return mt;
-  bo = 1, Object.defineProperty(mt, "__esModule", { value: !0 }), mt.Lazy = void 0;
+var mt = {}, yo;
+function Uf() {
+  if (yo) return mt;
+  yo = 1, Object.defineProperty(mt, "__esModule", { value: !0 }), mt.Lazy = void 0;
   class e {
     constructor(o) {
       this._value = null, this.creator = o;
@@ -5634,10 +5634,10 @@ function Mf() {
   }
   return mt.Lazy = e, mt;
 }
-var Lr = { exports: {} }, AE, vo;
+var Lr = { exports: {} }, AE, Qo;
 function kr() {
-  if (vo) return AE;
-  vo = 1;
+  if (Qo) return AE;
+  Qo = 1;
   const e = "2.0.0", c = 256, o = Number.MAX_SAFE_INTEGER || /* istanbul ignore next */
   9007199254740991, i = 16, s = c - 6;
   return AE = {
@@ -5659,14 +5659,14 @@ function kr() {
     FLAG_LOOSE: 2
   }, AE;
 }
-var RE, Qo;
+var RE, Vo;
 function Xr() {
-  return Qo || (Qo = 1, RE = typeof process == "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...c) => console.error("SEMVER", ...c) : () => {
+  return Vo || (Vo = 1, RE = typeof process == "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...c) => console.error("SEMVER", ...c) : () => {
   }), RE;
 }
-var yo;
+var Yo;
 function sr() {
-  return yo || (yo = 1, (function(e, c) {
+  return Yo || (Yo = 1, (function(e, c) {
     const {
       MAX_SAFE_COMPONENT_LENGTH: o,
       MAX_SAFE_BUILD_LENGTH: i,
@@ -5690,17 +5690,17 @@ function sr() {
     I("NUMERICIDENTIFIER", "0|[1-9]\\d*"), I("NUMERICIDENTIFIERLOOSE", "\\d+"), I("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${A}*`), I("MAINVERSION", `(${r[a.NUMERICIDENTIFIER]})\\.(${r[a.NUMERICIDENTIFIER]})\\.(${r[a.NUMERICIDENTIFIER]})`), I("MAINVERSIONLOOSE", `(${r[a.NUMERICIDENTIFIERLOOSE]})\\.(${r[a.NUMERICIDENTIFIERLOOSE]})\\.(${r[a.NUMERICIDENTIFIERLOOSE]})`), I("PRERELEASEIDENTIFIER", `(?:${r[a.NONNUMERICIDENTIFIER]}|${r[a.NUMERICIDENTIFIER]})`), I("PRERELEASEIDENTIFIERLOOSE", `(?:${r[a.NONNUMERICIDENTIFIER]}|${r[a.NUMERICIDENTIFIERLOOSE]})`), I("PRERELEASE", `(?:-(${r[a.PRERELEASEIDENTIFIER]}(?:\\.${r[a.PRERELEASEIDENTIFIER]})*))`), I("PRERELEASELOOSE", `(?:-?(${r[a.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${r[a.PRERELEASEIDENTIFIERLOOSE]})*))`), I("BUILDIDENTIFIER", `${A}+`), I("BUILD", `(?:\\+(${r[a.BUILDIDENTIFIER]}(?:\\.${r[a.BUILDIDENTIFIER]})*))`), I("FULLPLAIN", `v?${r[a.MAINVERSION]}${r[a.PRERELEASE]}?${r[a.BUILD]}?`), I("FULL", `^${r[a.FULLPLAIN]}$`), I("LOOSEPLAIN", `[v=\\s]*${r[a.MAINVERSIONLOOSE]}${r[a.PRERELEASELOOSE]}?${r[a.BUILD]}?`), I("LOOSE", `^${r[a.LOOSEPLAIN]}$`), I("GTLT", "((?:<|>)?=?)"), I("XRANGEIDENTIFIERLOOSE", `${r[a.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`), I("XRANGEIDENTIFIER", `${r[a.NUMERICIDENTIFIER]}|x|X|\\*`), I("XRANGEPLAIN", `[v=\\s]*(${r[a.XRANGEIDENTIFIER]})(?:\\.(${r[a.XRANGEIDENTIFIER]})(?:\\.(${r[a.XRANGEIDENTIFIER]})(?:${r[a.PRERELEASE]})?${r[a.BUILD]}?)?)?`), I("XRANGEPLAINLOOSE", `[v=\\s]*(${r[a.XRANGEIDENTIFIERLOOSE]})(?:\\.(${r[a.XRANGEIDENTIFIERLOOSE]})(?:\\.(${r[a.XRANGEIDENTIFIERLOOSE]})(?:${r[a.PRERELEASELOOSE]})?${r[a.BUILD]}?)?)?`), I("XRANGE", `^${r[a.GTLT]}\\s*${r[a.XRANGEPLAIN]}$`), I("XRANGELOOSE", `^${r[a.GTLT]}\\s*${r[a.XRANGEPLAINLOOSE]}$`), I("COERCEPLAIN", `(^|[^\\d])(\\d{1,${o}})(?:\\.(\\d{1,${o}}))?(?:\\.(\\d{1,${o}}))?`), I("COERCE", `${r[a.COERCEPLAIN]}(?:$|[^\\d])`), I("COERCEFULL", r[a.COERCEPLAIN] + `(?:${r[a.PRERELEASE]})?(?:${r[a.BUILD]})?(?:$|[^\\d])`), I("COERCERTL", r[a.COERCE], !0), I("COERCERTLFULL", r[a.COERCEFULL], !0), I("LONETILDE", "(?:~>?)"), I("TILDETRIM", `(\\s*)${r[a.LONETILDE]}\\s+`, !0), c.tildeTrimReplace = "$1~", I("TILDE", `^${r[a.LONETILDE]}${r[a.XRANGEPLAIN]}$`), I("TILDELOOSE", `^${r[a.LONETILDE]}${r[a.XRANGEPLAINLOOSE]}$`), I("LONECARET", "(?:\\^)"), I("CARETTRIM", `(\\s*)${r[a.LONECARET]}\\s+`, !0), c.caretTrimReplace = "$1^", I("CARET", `^${r[a.LONECARET]}${r[a.XRANGEPLAIN]}$`), I("CARETLOOSE", `^${r[a.LONECARET]}${r[a.XRANGEPLAINLOOSE]}$`), I("COMPARATORLOOSE", `^${r[a.GTLT]}\\s*(${r[a.LOOSEPLAIN]})$|^$`), I("COMPARATOR", `^${r[a.GTLT]}\\s*(${r[a.FULLPLAIN]})$|^$`), I("COMPARATORTRIM", `(\\s*)${r[a.GTLT]}\\s*(${r[a.LOOSEPLAIN]}|${r[a.XRANGEPLAIN]})`, !0), c.comparatorTrimReplace = "$1$2$3", I("HYPHENRANGE", `^\\s*(${r[a.XRANGEPLAIN]})\\s+-\\s+(${r[a.XRANGEPLAIN]})\\s*$`), I("HYPHENRANGELOOSE", `^\\s*(${r[a.XRANGEPLAINLOOSE]})\\s+-\\s+(${r[a.XRANGEPLAINLOOSE]})\\s*$`), I("STAR", "(<|>)?=?\\s*\\*"), I("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$"), I("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
   })(Lr, Lr.exports)), Lr.exports;
 }
-var lE, Vo;
-function Us() {
-  if (Vo) return lE;
-  Vo = 1;
+var lE, Ho;
+function ws() {
+  if (Ho) return lE;
+  Ho = 1;
   const e = Object.freeze({ loose: !0 }), c = Object.freeze({});
   return lE = (i) => i ? typeof i != "object" ? e : i : c, lE;
 }
-var IE, Yo;
-function FI() {
-  if (Yo) return IE;
-  Yo = 1;
+var IE, Wo;
+function GI() {
+  if (Wo) return IE;
+  Wo = 1;
   const e = /^[0-9]+$/, c = (i, s) => {
     if (typeof i == "number" && typeof s == "number")
       return i === s ? 0 : i < s ? -1 : 1;
@@ -5712,11 +5712,11 @@ function FI() {
     rcompareIdentifiers: (i, s) => c(s, i)
   }, IE;
 }
-var TE, Ho;
+var TE, po;
 function xe() {
-  if (Ho) return TE;
-  Ho = 1;
-  const e = Xr(), { MAX_LENGTH: c, MAX_SAFE_INTEGER: o } = kr(), { safeRe: i, t: s } = sr(), u = Us(), { compareIdentifiers: E } = FI();
+  if (po) return TE;
+  po = 1;
+  const e = Xr(), { MAX_LENGTH: c, MAX_SAFE_INTEGER: o } = kr(), { safeRe: i, t: s } = sr(), u = ws(), { compareIdentifiers: E } = GI();
   class n {
     constructor(t, a) {
       if (a = u(a), t instanceof n) {
@@ -5873,10 +5873,10 @@ function xe() {
   }
   return TE = n, TE;
 }
-var NE, Wo;
+var NE, ko;
 function Ct() {
-  if (Wo) return NE;
-  Wo = 1;
+  if (ko) return NE;
+  ko = 1;
   const e = xe();
   return NE = (o, i, s = !1) => {
     if (o instanceof e)
@@ -5890,30 +5890,30 @@ function Ct() {
     }
   }, NE;
 }
-var fE, po;
-function Bf() {
-  if (po) return fE;
-  po = 1;
+var fE, Xo;
+function wf() {
+  if (Xo) return fE;
+  Xo = 1;
   const e = Ct();
   return fE = (o, i) => {
     const s = e(o, i);
     return s ? s.version : null;
   }, fE;
 }
-var hE, ko;
-function Lf() {
-  if (ko) return hE;
-  ko = 1;
+var hE, jo;
+function mf() {
+  if (jo) return hE;
+  jo = 1;
   const e = Ct();
   return hE = (o, i) => {
     const s = e(o.trim().replace(/^[=v]+/, ""), i);
     return s ? s.version : null;
   }, hE;
 }
-var dE, Xo;
-function Uf() {
-  if (Xo) return dE;
-  Xo = 1;
+var dE, qo;
+function Ff() {
+  if (qo) return dE;
+  qo = 1;
   const e = xe();
   return dE = (o, i, s, u, E) => {
     typeof s == "string" && (E = u, u = s, s = void 0);
@@ -5927,10 +5927,10 @@ function Uf() {
     }
   }, dE;
 }
-var OE, jo;
-function wf() {
-  if (jo) return OE;
-  jo = 1;
+var OE, Ko;
+function Pf() {
+  if (Ko) return OE;
+  Ko = 1;
   const e = Ct();
   return OE = (o, i) => {
     const s = e(o, null, !0), u = e(i, null, !0), E = s.compare(u);
@@ -5947,130 +5947,130 @@ function wf() {
     return s.major !== u.major ? A + "major" : s.minor !== u.minor ? A + "minor" : s.patch !== u.patch ? A + "patch" : "prerelease";
   }, OE;
 }
-var CE, qo;
-function mf() {
-  if (qo) return CE;
-  qo = 1;
+var CE, zo;
+function Gf() {
+  if (zo) return CE;
+  zo = 1;
   const e = xe();
   return CE = (o, i) => new e(o, i).major, CE;
 }
-var DE, Ko;
-function Ff() {
-  if (Ko) return DE;
-  Ko = 1;
+var DE, Jo;
+function bf() {
+  if (Jo) return DE;
+  Jo = 1;
   const e = xe();
   return DE = (o, i) => new e(o, i).minor, DE;
 }
-var SE, zo;
-function Pf() {
-  if (zo) return SE;
-  zo = 1;
+var SE, Zo;
+function vf() {
+  if (Zo) return SE;
+  Zo = 1;
   const e = xe();
   return SE = (o, i) => new e(o, i).patch, SE;
 }
-var gE, Jo;
-function Gf() {
-  if (Jo) return gE;
-  Jo = 1;
+var gE, xo;
+function yf() {
+  if (xo) return gE;
+  xo = 1;
   const e = Ct();
   return gE = (o, i) => {
     const s = e(o, i);
     return s && s.prerelease.length ? s.prerelease : null;
   }, gE;
 }
-var ME, Zo;
-function ln() {
-  if (Zo) return ME;
-  Zo = 1;
+var ME, $o;
+function In() {
+  if ($o) return ME;
+  $o = 1;
   const e = xe();
   return ME = (o, i, s) => new e(o, s).compare(new e(i, s)), ME;
 }
-var BE, xo;
-function bf() {
-  if (xo) return BE;
-  xo = 1;
-  const e = ln();
+var BE, ec;
+function Qf() {
+  if (ec) return BE;
+  ec = 1;
+  const e = In();
   return BE = (o, i, s) => e(i, o, s), BE;
 }
-var LE, $o;
-function vf() {
-  if ($o) return LE;
-  $o = 1;
-  const e = ln();
+var LE, nc;
+function Vf() {
+  if (nc) return LE;
+  nc = 1;
+  const e = In();
   return LE = (o, i) => e(o, i, !0), LE;
 }
-var UE, ec;
-function ws() {
-  if (ec) return UE;
-  ec = 1;
+var UE, tc;
+function ms() {
+  if (tc) return UE;
+  tc = 1;
   const e = xe();
   return UE = (o, i, s) => {
     const u = new e(o, s), E = new e(i, s);
     return u.compare(E) || u.compareBuild(E);
   }, UE;
 }
-var wE, nc;
-function Qf() {
-  if (nc) return wE;
-  nc = 1;
-  const e = ws();
+var wE, rc;
+function Yf() {
+  if (rc) return wE;
+  rc = 1;
+  const e = ms();
   return wE = (o, i) => o.sort((s, u) => e(s, u, i)), wE;
 }
-var mE, tc;
-function yf() {
-  if (tc) return mE;
-  tc = 1;
-  const e = ws();
+var mE, ic;
+function Hf() {
+  if (ic) return mE;
+  ic = 1;
+  const e = ms();
   return mE = (o, i) => o.sort((s, u) => e(u, s, i)), mE;
 }
-var FE, rc;
+var FE, Ec;
 function jr() {
-  if (rc) return FE;
-  rc = 1;
-  const e = ln();
+  if (Ec) return FE;
+  Ec = 1;
+  const e = In();
   return FE = (o, i, s) => e(o, i, s) > 0, FE;
 }
-var PE, ic;
-function ms() {
-  if (ic) return PE;
-  ic = 1;
-  const e = ln();
+var PE, ac;
+function Fs() {
+  if (ac) return PE;
+  ac = 1;
+  const e = In();
   return PE = (o, i, s) => e(o, i, s) < 0, PE;
 }
-var GE, Ec;
-function PI() {
-  if (Ec) return GE;
-  Ec = 1;
-  const e = ln();
+var GE, _c;
+function bI() {
+  if (_c) return GE;
+  _c = 1;
+  const e = In();
   return GE = (o, i, s) => e(o, i, s) === 0, GE;
 }
-var bE, ac;
-function GI() {
-  if (ac) return bE;
-  ac = 1;
-  const e = ln();
+var bE, sc;
+function vI() {
+  if (sc) return bE;
+  sc = 1;
+  const e = In();
   return bE = (o, i, s) => e(o, i, s) !== 0, bE;
 }
-var vE, _c;
-function Fs() {
-  if (_c) return vE;
-  _c = 1;
-  const e = ln();
+var vE, uc;
+function Ps() {
+  if (uc) return vE;
+  uc = 1;
+  const e = In();
   return vE = (o, i, s) => e(o, i, s) >= 0, vE;
 }
-var QE, sc;
-function Ps() {
-  if (sc) return QE;
-  sc = 1;
-  const e = ln();
-  return QE = (o, i, s) => e(o, i, s) <= 0, QE;
+var yE, oc;
+function Gs() {
+  if (oc) return yE;
+  oc = 1;
+  const e = In();
+  return yE = (o, i, s) => e(o, i, s) <= 0, yE;
 }
-var yE, uc;
-function bI() {
-  if (uc) return yE;
-  uc = 1;
-  const e = PI(), c = GI(), o = jr(), i = Fs(), s = ms(), u = Ps();
-  return yE = (n, r, t, a) => {
+var QE, cc;
+function yI() {
+  if (cc) return QE;
+  cc = 1;
+  const e = bI(), c = vI(), o = jr(), i = Ps(), s = Fs(), u = Gs();
+  return QE = (n, r, t, a) => {
     switch (r) {
       case "===":
         return typeof n == "object" && (n = n.version), typeof t == "object" && (t = t.version), n === t;
@@ -6093,12 +6093,12 @@ function bI() {
       default:
         throw new TypeError(`Invalid operator: ${r}`);
     }
-  }, yE;
+  }, QE;
 }
-var VE, oc;
-function Vf() {
-  if (oc) return VE;
-  oc = 1;
+var VE, Ac;
+function Wf() {
+  if (Ac) return VE;
+  Ac = 1;
   const e = xe(), c = Ct(), { safeRe: o, t: i } = sr();
   return VE = (u, E) => {
     if (u instanceof e)
@@ -6122,10 +6122,10 @@ function Vf() {
     return c(`${r}.${t}.${a}${_}${A}`, E);
   }, VE;
 }
-var YE, cc;
-function Yf() {
-  if (cc) return YE;
-  cc = 1;
+var YE, Rc;
+function pf() {
+  if (Rc) return YE;
+  Rc = 1;
   class e {
     constructor() {
       this.max = 1e3, this.map = /* @__PURE__ */ new Map();
@@ -6151,10 +6151,10 @@ function Yf() {
   }
   return YE = e, YE;
 }
-var HE, Ac;
-function In() {
-  if (Ac) return HE;
-  Ac = 1;
+var HE, lc;
+function Tn() {
+  if (lc) return HE;
+  lc = 1;
   const e = /\s+/g;
   class c {
     constructor(D, v) {
@@ -6202,7 +6202,7 @@ function In() {
         return H;
       const p = this.options.loose, K = p ? r[t.HYPHENRANGELOOSE] : r[t.HYPHENRANGE];
       D = D.replace(K, G(this.options.includePrerelease)), E("hyphen replace", D), D = D.replace(r[t.COMPARATORTRIM], a), E("comparator trim", D), D = D.replace(r[t.TILDETRIM], _), E("tilde trim", D), D = D.replace(r[t.CARETTRIM], A), E("caret trim", D);
-      let ie = D.split(" ").map((j) => f(j, this.options)).join(" ").split(/\s+/).map((j) => Q(j, this.options));
+      let ie = D.split(" ").map((j) => f(j, this.options)).join(" ").split(/\s+/).map((j) => y(j, this.options));
       p && (ie = ie.filter((j) => (E("loose invalid filter", j, this.options), !!j.match(r[t.COMPARATORLOOSE])))), E("range list", ie);
       const ne = /* @__PURE__ */ new Map(), le = ie.map((j) => new u(j, this.options));
       for (const j of le) {
@@ -6236,7 +6236,7 @@ function In() {
     }
   }
   HE = c;
-  const o = Yf(), i = new o(), s = Us(), u = qr(), E = Xr(), n = xe(), {
+  const o = pf(), i = new o(), s = ws(), u = qr(), E = Xr(), n = xe(), {
     safeRe: r,
     t,
     comparatorTrimReplace: a,
@@ -6249,7 +6249,7 @@ function In() {
     for (; v && b.length; )
       v = b.every((p) => H.intersects(p, D)), H = b.pop();
     return v;
-  }, f = (w, D) => (w = w.replace(r[t.BUILD], ""), E("comp", w, D), w = g(w, D), E("caret", w), w = O(w, D), E("tildes", w), w = B(w, D), E("xrange", w), w = y(w, D), E("stars", w), w), d = (w) => !w || w.toLowerCase() === "x" || w === "*", O = (w, D) => w.trim().split(/\s+/).map((v) => C(v, D)).join(" "), C = (w, D) => {
+  }, f = (w, D) => (w = w.replace(r[t.BUILD], ""), E("comp", w, D), w = g(w, D), E("caret", w), w = O(w, D), E("tildes", w), w = B(w, D), E("xrange", w), w = Q(w, D), E("stars", w), w), d = (w) => !w || w.toLowerCase() === "x" || w === "*", O = (w, D) => w.trim().split(/\s+/).map((v) => C(v, D)).join(" "), C = (w, D) => {
     const v = D.loose ? r[t.TILDELOOSE] : r[t.TILDE];
     return w.replace(v, (b, H, p, K, ie) => {
       E("tilde", w, b, H, p, K, ie);
@@ -6272,7 +6272,7 @@ function In() {
       const le = d(p), ue = le || d(K), j = ue || d(ie), _e = j;
       return H === "=" && _e && (H = ""), ne = D.includePrerelease ? "-0" : "", le ? H === ">" || H === "<" ? b = "<0.0.0-0" : b = "*" : H && _e ? (ue && (K = 0), ie = 0, H === ">" ? (H = ">=", ue ? (p = +p + 1, K = 0, ie = 0) : (K = +K + 1, ie = 0)) : H === "<=" && (H = "<", ue ? p = +p + 1 : K = +K + 1), H === "<" && (ne = "-0"), b = `${H + p}.${K}.${ie}${ne}`) : ue ? b = `>=${p}.0.0${ne} <${+p + 1}.0.0-0` : j && (b = `>=${p}.${K}.0${ne} <${p}.${+K + 1}.0-0`), E("xRange return", b), b;
     });
-  }, y = (w, D) => (E("replaceStars", w, D), w.trim().replace(r[t.STAR], "")), Q = (w, D) => (E("replaceGTE0", w, D), w.trim().replace(r[D.includePrerelease ? t.GTE0PRE : t.GTE0], "")), G = (w) => (D, v, b, H, p, K, ie, ne, le, ue, j, _e) => (d(b) ? v = "" : d(H) ? v = `>=${b}.0.0${w ? "-0" : ""}` : d(p) ? v = `>=${b}.${H}.0${w ? "-0" : ""}` : K ? v = `>=${v}` : v = `>=${v}${w ? "-0" : ""}`, d(le) ? ne = "" : d(ue) ? ne = `<${+le + 1}.0.0-0` : d(j) ? ne = `<${le}.${+ue + 1}.0-0` : _e ? ne = `<=${le}.${ue}.${j}-${_e}` : w ? ne = `<${le}.${ue}.${+j + 1}-0` : ne = `<=${ne}`, `${v} ${ne}`.trim()), F = (w, D, v) => {
+  }, Q = (w, D) => (E("replaceStars", w, D), w.trim().replace(r[t.STAR], "")), y = (w, D) => (E("replaceGTE0", w, D), w.trim().replace(r[D.includePrerelease ? t.GTE0PRE : t.GTE0], "")), G = (w) => (D, v, b, H, p, K, ie, ne, le, ue, j, _e) => (d(b) ? v = "" : d(H) ? v = `>=${b}.0.0${w ? "-0" : ""}` : d(p) ? v = `>=${b}.${H}.0${w ? "-0" : ""}` : K ? v = `>=${v}` : v = `>=${v}${w ? "-0" : ""}`, d(le) ? ne = "" : d(ue) ? ne = `<${+le + 1}.0.0-0` : d(j) ? ne = `<${le}.${+ue + 1}.0-0` : _e ? ne = `<=${le}.${ue}.${j}-${_e}` : w ? ne = `<${le}.${ue}.${+j + 1}-0` : ne = `<=${ne}`, `${v} ${ne}`.trim()), F = (w, D, v) => {
     for (let b = 0; b < w.length; b++)
       if (!w[b].test(D))
         return !1;
@@ -6289,10 +6289,10 @@ function In() {
   };
   return HE;
 }
-var WE, Rc;
+var WE, Ic;
 function qr() {
-  if (Rc) return WE;
-  Rc = 1;
+  if (Ic) return WE;
+  Ic = 1;
   const e = Symbol("SemVer ANY");
   class c {
     static get ANY() {
@@ -6333,14 +6333,14 @@ function qr() {
     }
   }
   WE = c;
-  const o = Us(), { safeRe: i, t: s } = sr(), u = bI(), E = Xr(), n = xe(), r = In();
+  const o = ws(), { safeRe: i, t: s } = sr(), u = yI(), E = Xr(), n = xe(), r = Tn();
   return WE;
 }
-var pE, lc;
+var pE, Tc;
 function Kr() {
-  if (lc) return pE;
-  lc = 1;
-  const e = In();
+  if (Tc) return pE;
+  Tc = 1;
+  const e = Tn();
   return pE = (o, i, s) => {
     try {
       i = new e(i, s);
@@ -6350,18 +6350,18 @@ function Kr() {
     return i.test(o);
   }, pE;
 }
-var kE, Ic;
-function Hf() {
-  if (Ic) return kE;
-  Ic = 1;
-  const e = In();
+var kE, Nc;
+function kf() {
+  if (Nc) return kE;
+  Nc = 1;
+  const e = Tn();
   return kE = (o, i) => new e(o, i).set.map((s) => s.map((u) => u.value).join(" ").trim().split(" ")), kE;
 }
-var XE, Tc;
-function Wf() {
-  if (Tc) return XE;
-  Tc = 1;
-  const e = xe(), c = In();
+var XE, fc;
+function Xf() {
+  if (fc) return XE;
+  fc = 1;
+  const e = xe(), c = Tn();
   return XE = (i, s, u) => {
     let E = null, n = null, r = null;
     try {
@@ -6374,11 +6374,11 @@ function Wf() {
     }), E;
   }, XE;
 }
-var jE, Nc;
-function pf() {
-  if (Nc) return jE;
-  Nc = 1;
-  const e = xe(), c = In();
+var jE, hc;
+function jf() {
+  if (hc) return jE;
+  hc = 1;
+  const e = xe(), c = Tn();
   return jE = (i, s, u) => {
     let E = null, n = null, r = null;
     try {
@@ -6391,11 +6391,11 @@ function pf() {
     }), E;
   }, jE;
 }
-var qE, fc;
-function kf() {
-  if (fc) return qE;
-  fc = 1;
-  const e = xe(), c = In(), o = jr();
+var qE, dc;
+function qf() {
+  if (dc) return qE;
+  dc = 1;
+  const e = xe(), c = Tn(), o = jr();
   return qE = (s, u) => {
     s = new c(s, u);
     let E = new e("0.0.0");
@@ -6427,11 +6427,11 @@ function kf() {
     return E && s.test(E) ? E : null;
   }, qE;
 }
-var KE, hc;
-function Xf() {
-  if (hc) return KE;
-  hc = 1;
-  const e = In();
+var KE, Oc;
+function Kf() {
+  if (Oc) return KE;
+  Oc = 1;
+  const e = Tn();
   return KE = (o, i) => {
     try {
       return new e(o, i).range || "*";
@@ -6440,11 +6440,11 @@ function Xf() {
     }
   }, KE;
 }
-var zE, dc;
-function Gs() {
-  if (dc) return zE;
-  dc = 1;
-  const e = xe(), c = qr(), { ANY: o } = c, i = In(), s = Kr(), u = jr(), E = ms(), n = Ps(), r = Fs();
+var zE, Cc;
+function bs() {
+  if (Cc) return zE;
+  Cc = 1;
+  const e = xe(), c = qr(), { ANY: o } = c, i = Tn(), s = Kr(), u = jr(), E = Fs(), n = Gs(), r = Ps();
   return zE = (a, _, A, R) => {
     a = new e(a, R), _ = new i(_, R);
     let N, I, l, T, f;
@@ -6473,32 +6473,32 @@ function Gs() {
     return !0;
   }, zE;
 }
-var JE, Oc;
-function jf() {
-  if (Oc) return JE;
-  Oc = 1;
-  const e = Gs();
+var JE, Dc;
+function zf() {
+  if (Dc) return JE;
+  Dc = 1;
+  const e = bs();
   return JE = (o, i, s) => e(o, i, ">", s), JE;
 }
-var ZE, Cc;
-function qf() {
-  if (Cc) return ZE;
-  Cc = 1;
-  const e = Gs();
+var ZE, Sc;
+function Jf() {
+  if (Sc) return ZE;
+  Sc = 1;
+  const e = bs();
   return ZE = (o, i, s) => e(o, i, "<", s), ZE;
 }
-var xE, Dc;
-function Kf() {
-  if (Dc) return xE;
-  Dc = 1;
-  const e = In();
+var xE, gc;
+function Zf() {
+  if (gc) return xE;
+  gc = 1;
+  const e = Tn();
   return xE = (o, i, s) => (o = new e(o, s), i = new e(i, s), o.intersects(i, s)), xE;
 }
-var $E, Sc;
-function zf() {
-  if (Sc) return $E;
-  Sc = 1;
-  const e = Kr(), c = ln();
+var $E, Mc;
+function xf() {
+  if (Mc) return $E;
+  Mc = 1;
+  const e = Kr(), c = In();
   return $E = (o, i, s) => {
     const u = [];
     let E = null, n = null;
@@ -6513,11 +6513,11 @@ function zf() {
     return a.length < _.length ? a : i;
   }, $E;
 }
-var ea, gc;
-function Jf() {
-  if (gc) return ea;
-  gc = 1;
-  const e = In(), c = qr(), { ANY: o } = c, i = Kr(), s = ln(), u = (_, A, R = {}) => {
+var ea, Bc;
+function $f() {
+  if (Bc) return ea;
+  Bc = 1;
+  const e = Tn(), c = qr(), { ANY: o } = c, i = Kr(), s = In(), u = (_, A, R = {}) => {
     if (_ === A)
       return !0;
     _ = new e(_, R), A = new e(A, R);
@@ -6600,11 +6600,11 @@ function Jf() {
   };
   return ea = u, ea;
 }
-var na, Mc;
-function vI() {
-  if (Mc) return na;
-  Mc = 1;
-  const e = sr(), c = kr(), o = xe(), i = FI(), s = Ct(), u = Bf(), E = Lf(), n = Uf(), r = wf(), t = mf(), a = Ff(), _ = Pf(), A = Gf(), R = ln(), N = bf(), I = vf(), l = ws(), T = Qf(), f = yf(), d = jr(), O = ms(), C = PI(), g = GI(), M = Fs(), B = Ps(), S = bI(), y = Vf(), Q = qr(), G = In(), F = Kr(), w = Hf(), D = Wf(), v = pf(), b = kf(), H = Xf(), p = Gs(), K = jf(), ie = qf(), ne = Kf(), le = zf(), ue = Jf();
+var na, Lc;
+function QI() {
+  if (Lc) return na;
+  Lc = 1;
+  const e = sr(), c = kr(), o = xe(), i = GI(), s = Ct(), u = wf(), E = mf(), n = Ff(), r = Pf(), t = Gf(), a = bf(), _ = vf(), A = yf(), R = In(), N = Qf(), I = Vf(), l = ms(), T = Yf(), f = Hf(), d = jr(), O = Fs(), C = bI(), g = vI(), M = Ps(), B = Gs(), S = yI(), Q = Wf(), y = qr(), G = Tn(), F = Kr(), w = kf(), D = Xf(), v = jf(), b = qf(), H = Kf(), p = bs(), K = zf(), ie = Jf(), ne = Zf(), le = xf(), ue = $f();
   return na = {
     parse: s,
     valid: u,
@@ -6628,8 +6628,8 @@ function vI() {
     gte: M,
     lte: B,
     cmp: S,
-    coerce: y,
-    Comparator: Q,
+    coerce: Q,
+    Comparator: y,
     Range: G,
     satisfies: F,
     toComparators: w,
@@ -6655,12 +6655,12 @@ function vI() {
 }
 var At = {}, tr = { exports: {} };
 tr.exports;
-var Bc;
-function Zf() {
-  return Bc || (Bc = 1, (function(e, c) {
-    var o = 200, i = "__lodash_hash_undefined__", s = 1, u = 2, E = 9007199254740991, n = "[object Arguments]", r = "[object Array]", t = "[object AsyncFunction]", a = "[object Boolean]", _ = "[object Date]", A = "[object Error]", R = "[object Function]", N = "[object GeneratorFunction]", I = "[object Map]", l = "[object Number]", T = "[object Null]", f = "[object Object]", d = "[object Promise]", O = "[object Proxy]", C = "[object RegExp]", g = "[object Set]", M = "[object String]", B = "[object Symbol]", S = "[object Undefined]", y = "[object WeakMap]", Q = "[object ArrayBuffer]", G = "[object DataView]", F = "[object Float32Array]", w = "[object Float64Array]", D = "[object Int8Array]", v = "[object Int16Array]", b = "[object Int32Array]", H = "[object Uint8Array]", p = "[object Uint8ClampedArray]", K = "[object Uint16Array]", ie = "[object Uint32Array]", ne = /[\\^$.*+?()[\]{}|]/g, le = /^\[object .+?Constructor\]$/, ue = /^(?:0|[1-9]\d*)$/, j = {};
-    j[F] = j[w] = j[D] = j[v] = j[b] = j[H] = j[p] = j[K] = j[ie] = !0, j[n] = j[r] = j[Q] = j[a] = j[G] = j[_] = j[A] = j[R] = j[I] = j[l] = j[f] = j[C] = j[g] = j[M] = j[y] = !1;
-    var _e = typeof Rn == "object" && Rn && Rn.Object === Object && Rn, U = typeof self == "object" && self && self.Object === Object && self, L = _e || U || Function("return this")(), X = c && !c.nodeType && c, V = X && !0 && e && !e.nodeType && e, Re = V && V.exports === X, Te = Re && _e.process, Ne = (function() {
+var Uc;
+function eh() {
+  return Uc || (Uc = 1, (function(e, c) {
+    var o = 200, i = "__lodash_hash_undefined__", s = 1, u = 2, E = 9007199254740991, n = "[object Arguments]", r = "[object Array]", t = "[object AsyncFunction]", a = "[object Boolean]", _ = "[object Date]", A = "[object Error]", R = "[object Function]", N = "[object GeneratorFunction]", I = "[object Map]", l = "[object Number]", T = "[object Null]", f = "[object Object]", d = "[object Promise]", O = "[object Proxy]", C = "[object RegExp]", g = "[object Set]", M = "[object String]", B = "[object Symbol]", S = "[object Undefined]", Q = "[object WeakMap]", y = "[object ArrayBuffer]", G = "[object DataView]", F = "[object Float32Array]", w = "[object Float64Array]", D = "[object Int8Array]", v = "[object Int16Array]", b = "[object Int32Array]", H = "[object Uint8Array]", p = "[object Uint8ClampedArray]", K = "[object Uint16Array]", ie = "[object Uint32Array]", ne = /[\\^$.*+?()[\]{}|]/g, le = /^\[object .+?Constructor\]$/, ue = /^(?:0|[1-9]\d*)$/, j = {};
+    j[F] = j[w] = j[D] = j[v] = j[b] = j[H] = j[p] = j[K] = j[ie] = !0, j[n] = j[r] = j[y] = j[a] = j[G] = j[_] = j[A] = j[R] = j[I] = j[l] = j[f] = j[C] = j[g] = j[M] = j[Q] = !1;
+    var _e = typeof ln == "object" && ln && ln.Object === Object && ln, U = typeof self == "object" && self && self.Object === Object && self, L = _e || U || Function("return this")(), X = c && !c.nodeType && c, V = X && !0 && e && !e.nodeType && e, Re = V && V.exports === X, Te = Re && _e.process, Ne = (function() {
       try {
         return Te && Te.binding && Te.binding("util");
       } catch {
@@ -6697,7 +6697,7 @@ function Zf() {
     function gn(P, Y) {
       return P.has(Y);
     }
-    function fn(P, Y) {
+    function hn(P, Y) {
       return P == null ? void 0 : P[Y];
     }
     function h(P) {
@@ -6722,7 +6722,7 @@ function Zf() {
       return P ? "Symbol(src)_1." + P : "";
     })(), Le = re.toString, fe = RegExp(
       "^" + se.call(Ae).replace(ne, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
-    ), m = Re ? L.Buffer : void 0, W = L.Symbol, J = L.Uint8Array, Z = re.propertyIsEnumerable, x = Ee.splice, ae = W ? W.toStringTag : void 0, te = Object.getOwnPropertySymbols, oe = m ? m.isBuffer : void 0, Ie = k(Object.keys, Object), de = ut(L, "DataView"), be = ut(L, "Map"), ye = ut(L, "Promise"), we = ut(L, "Set"), st = ut(L, "WeakMap"), cn = ut(Object, "create"), jn = zn(de), PT = zn(be), GT = zn(ye), bT = zn(we), vT = zn(st), qs = W ? W.prototype : void 0, ti = qs ? qs.valueOf : void 0;
+    ), m = Re ? L.Buffer : void 0, W = L.Symbol, J = L.Uint8Array, Z = re.propertyIsEnumerable, x = Ee.splice, ae = W ? W.toStringTag : void 0, te = Object.getOwnPropertySymbols, oe = m ? m.isBuffer : void 0, Ie = k(Object.keys, Object), de = ut(L, "DataView"), be = ut(L, "Map"), Qe = ut(L, "Promise"), we = ut(L, "Set"), st = ut(L, "WeakMap"), cn = ut(Object, "create"), jn = zn(de), bT = zn(be), vT = zn(Qe), yT = zn(we), QT = zn(st), Ks = W ? W.prototype : void 0, ti = Ks ? Ks.valueOf : void 0;
     function qn(P) {
       var Y = -1, $ = P == null ? 0 : P.length;
       for (this.clear(); ++Y < $; ) {
@@ -6730,14 +6730,14 @@ function Zf() {
         this.set(ce[0], ce[1]);
       }
     }
-    function QT() {
+    function VT() {
       this.__data__ = cn ? cn(null) : {}, this.size = 0;
     }
-    function yT(P) {
+    function YT(P) {
       var Y = this.has(P) && delete this.__data__[P];
       return this.size -= Y ? 1 : 0, Y;
     }
-    function VT(P) {
+    function HT(P) {
       var Y = this.__data__;
       if (cn) {
         var $ = Y[P];
@@ -6745,15 +6745,15 @@ function Zf() {
       }
       return Ae.call(Y, P) ? Y[P] : void 0;
     }
-    function YT(P) {
+    function WT(P) {
       var Y = this.__data__;
       return cn ? Y[P] !== void 0 : Ae.call(Y, P);
     }
-    function HT(P, Y) {
+    function pT(P, Y) {
       var $ = this.__data__;
       return this.size += this.has(P) ? 0 : 1, $[P] = cn && Y === void 0 ? i : Y, this;
     }
-    qn.prototype.clear = QT, qn.prototype.delete = yT, qn.prototype.get = VT, qn.prototype.has = YT, qn.prototype.set = HT;
+    qn.prototype.clear = VT, qn.prototype.delete = YT, qn.prototype.get = HT, qn.prototype.has = WT, qn.prototype.set = pT;
     function Mn(P) {
       var Y = -1, $ = P == null ? 0 : P.length;
       for (this.clear(); ++Y < $; ) {
@@ -6761,28 +6761,28 @@ function Zf() {
         this.set(ce[0], ce[1]);
       }
     }
-    function WT() {
+    function kT() {
       this.__data__ = [], this.size = 0;
     }
-    function pT(P) {
+    function XT(P) {
       var Y = this.__data__, $ = Rr(Y, P);
       if ($ < 0)
         return !1;
       var ce = Y.length - 1;
       return $ == ce ? Y.pop() : x.call(Y, $, 1), --this.size, !0;
     }
-    function kT(P) {
+    function jT(P) {
       var Y = this.__data__, $ = Rr(Y, P);
       return $ < 0 ? void 0 : Y[$][1];
     }
-    function XT(P) {
+    function qT(P) {
       return Rr(this.__data__, P) > -1;
     }
-    function jT(P, Y) {
+    function KT(P, Y) {
       var $ = this.__data__, ce = Rr($, P);
       return ce < 0 ? (++this.size, $.push([P, Y])) : $[ce][1] = Y, this;
     }
-    Mn.prototype.clear = WT, Mn.prototype.delete = pT, Mn.prototype.get = kT, Mn.prototype.has = XT, Mn.prototype.set = jT;
+    Mn.prototype.clear = kT, Mn.prototype.delete = XT, Mn.prototype.get = jT, Mn.prototype.has = qT, Mn.prototype.set = KT;
     function Kn(P) {
       var Y = -1, $ = P == null ? 0 : P.length;
       for (this.clear(); ++Y < $; ) {
@@ -6790,58 +6790,58 @@ function Zf() {
         this.set(ce[0], ce[1]);
       }
     }
-    function qT() {
+    function zT() {
       this.size = 0, this.__data__ = {
         hash: new qn(),
         map: new (be || Mn)(),
         string: new qn()
       };
     }
-    function KT(P) {
+    function JT(P) {
       var Y = lr(this, P).delete(P);
       return this.size -= Y ? 1 : 0, Y;
     }
-    function zT(P) {
+    function ZT(P) {
       return lr(this, P).get(P);
     }
-    function JT(P) {
+    function xT(P) {
       return lr(this, P).has(P);
     }
-    function ZT(P, Y) {
+    function $T(P, Y) {
       var $ = lr(this, P), ce = $.size;
       return $.set(P, Y), this.size += $.size == ce ? 0 : 1, this;
     }
-    Kn.prototype.clear = qT, Kn.prototype.delete = KT, Kn.prototype.get = zT, Kn.prototype.has = JT, Kn.prototype.set = ZT;
+    Kn.prototype.clear = zT, Kn.prototype.delete = JT, Kn.prototype.get = ZT, Kn.prototype.has = xT, Kn.prototype.set = $T;
     function Ar(P) {
       var Y = -1, $ = P == null ? 0 : P.length;
       for (this.__data__ = new Kn(); ++Y < $; )
         this.add(P[Y]);
     }
-    function xT(P) {
+    function eN(P) {
       return this.__data__.set(P, i), this;
     }
-    function $T(P) {
+    function nN(P) {
       return this.__data__.has(P);
     }
-    Ar.prototype.add = Ar.prototype.push = xT, Ar.prototype.has = $T;
+    Ar.prototype.add = Ar.prototype.push = eN, Ar.prototype.has = nN;
     function bn(P) {
       var Y = this.__data__ = new Mn(P);
       this.size = Y.size;
     }
-    function eN() {
+    function tN() {
       this.__data__ = new Mn(), this.size = 0;
     }
-    function nN(P) {
+    function rN(P) {
       var Y = this.__data__, $ = Y.delete(P);
       return this.size = Y.size, $;
     }
-    function tN(P) {
+    function iN(P) {
       return this.__data__.get(P);
     }
-    function rN(P) {
+    function EN(P) {
       return this.__data__.has(P);
     }
-    function iN(P, Y) {
+    function aN(P, Y) {
       var $ = this.__data__;
       if ($ instanceof Mn) {
         var ce = $.__data__;
@@ -6851,87 +6851,87 @@ function Zf() {
       }
       return $.set(P, Y), this.size = $.size, this;
     }
-    bn.prototype.clear = eN, bn.prototype.delete = nN, bn.prototype.get = tN, bn.prototype.has = rN, bn.prototype.set = iN;
-    function EN(P, Y) {
-      var $ = Ir(P), ce = !$ && dN(P), ve = !$ && !ce && ri(P), Ce = !$ && !ce && !ve && tu(P), Ve = $ || ce || ve || Ce, We = Ve ? Je(P.length, String) : [], ke = We.length;
-      for (var Qe in P)
-        Ae.call(P, Qe) && !(Ve && // Safari 9 has enumerable `arguments.length` in strict mode.
-        (Qe == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
-        ve && (Qe == "offset" || Qe == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
-        Ce && (Qe == "buffer" || Qe == "byteLength" || Qe == "byteOffset") || // Skip index properties.
-        IN(Qe, ke))) && We.push(Qe);
+    bn.prototype.clear = tN, bn.prototype.delete = rN, bn.prototype.get = iN, bn.prototype.has = EN, bn.prototype.set = aN;
+    function _N(P, Y) {
+      var $ = Ir(P), ce = !$ && CN(P), ve = !$ && !ce && ri(P), Ce = !$ && !ce && !ve && ru(P), Ve = $ || ce || ve || Ce, We = Ve ? Je(P.length, String) : [], ke = We.length;
+      for (var ye in P)
+        Ae.call(P, ye) && !(Ve && // Safari 9 has enumerable `arguments.length` in strict mode.
+        (ye == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
+        ve && (ye == "offset" || ye == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
+        Ce && (ye == "buffer" || ye == "byteLength" || ye == "byteOffset") || // Skip index properties.
+        NN(ye, ke))) && We.push(ye);
       return We;
     }
     function Rr(P, Y) {
       for (var $ = P.length; $--; )
-        if (xs(P[$][0], Y))
+        if ($s(P[$][0], Y))
           return $;
       return -1;
     }
-    function aN(P, Y, $) {
+    function sN(P, Y, $) {
       var ce = Y(P);
       return Ir(P) ? ce : $e(ce, $(P));
     }
     function Mt(P) {
-      return P == null ? P === void 0 ? S : T : ae && ae in Object(P) ? RN(P) : hN(P);
+      return P == null ? P === void 0 ? S : T : ae && ae in Object(P) ? IN(P) : ON(P);
     }
-    function Ks(P) {
+    function zs(P) {
       return Bt(P) && Mt(P) == n;
     }
-    function zs(P, Y, $, ce, ve) {
-      return P === Y ? !0 : P == null || Y == null || !Bt(P) && !Bt(Y) ? P !== P && Y !== Y : _N(P, Y, $, ce, zs, ve);
+    function Js(P, Y, $, ce, ve) {
+      return P === Y ? !0 : P == null || Y == null || !Bt(P) && !Bt(Y) ? P !== P && Y !== Y : uN(P, Y, $, ce, Js, ve);
     }
-    function _N(P, Y, $, ce, ve, Ce) {
-      var Ve = Ir(P), We = Ir(Y), ke = Ve ? r : vn(P), Qe = We ? r : vn(Y);
-      ke = ke == n ? f : ke, Qe = Qe == n ? f : Qe;
-      var rn = ke == f, An = Qe == f, je = ke == Qe;
+    function uN(P, Y, $, ce, ve, Ce) {
+      var Ve = Ir(P), We = Ir(Y), ke = Ve ? r : vn(P), ye = We ? r : vn(Y);
+      ke = ke == n ? f : ke, ye = ye == n ? f : ye;
+      var rn = ke == f, An = ye == f, je = ke == ye;
       if (je && ri(P)) {
         if (!ri(Y))
           return !1;
         Ve = !0, rn = !1;
       }
       if (je && !rn)
-        return Ce || (Ce = new bn()), Ve || tu(P) ? Js(P, Y, $, ce, ve, Ce) : cN(P, Y, ke, $, ce, ve, Ce);
+        return Ce || (Ce = new bn()), Ve || ru(P) ? Zs(P, Y, $, ce, ve, Ce) : RN(P, Y, ke, $, ce, ve, Ce);
       if (!($ & s)) {
         var sn = rn && Ae.call(P, "__wrapped__"), un = An && Ae.call(Y, "__wrapped__");
         if (sn || un) {
-          var Qn = sn ? P.value() : P, Bn = un ? Y.value() : Y;
-          return Ce || (Ce = new bn()), ve(Qn, Bn, $, ce, Ce);
+          var yn = sn ? P.value() : P, Bn = un ? Y.value() : Y;
+          return Ce || (Ce = new bn()), ve(yn, Bn, $, ce, Ce);
         }
       }
-      return je ? (Ce || (Ce = new bn()), AN(P, Y, $, ce, ve, Ce)) : !1;
-    }
-    function sN(P) {
-      if (!nu(P) || NN(P))
-        return !1;
-      var Y = $s(P) ? fe : le;
-      return Y.test(zn(P));
-    }
-    function uN(P) {
-      return Bt(P) && eu(P.length) && !!j[Mt(P)];
+      return je ? (Ce || (Ce = new bn()), lN(P, Y, $, ce, ve, Ce)) : !1;
     }
     function oN(P) {
-      if (!fN(P))
+      if (!tu(P) || hN(P))
+        return !1;
+      var Y = eu(P) ? fe : le;
+      return Y.test(zn(P));
+    }
+    function cN(P) {
+      return Bt(P) && nu(P.length) && !!j[Mt(P)];
+    }
+    function AN(P) {
+      if (!dN(P))
         return Ie(P);
       var Y = [];
       for (var $ in Object(P))
         Ae.call(P, $) && $ != "constructor" && Y.push($);
       return Y;
     }
-    function Js(P, Y, $, ce, ve, Ce) {
+    function Zs(P, Y, $, ce, ve, Ce) {
       var Ve = $ & s, We = P.length, ke = Y.length;
       if (We != ke && !(Ve && ke > We))
         return !1;
-      var Qe = Ce.get(P);
-      if (Qe && Ce.get(Y))
-        return Qe == Y;
+      var ye = Ce.get(P);
+      if (ye && Ce.get(Y))
+        return ye == Y;
       var rn = -1, An = !0, je = $ & u ? new Ar() : void 0;
       for (Ce.set(P, Y), Ce.set(Y, P); ++rn < We; ) {
         var sn = P[rn], un = Y[rn];
         if (ce)
-          var Qn = Ve ? ce(un, sn, rn, Y, P, Ce) : ce(sn, un, rn, P, Y, Ce);
-        if (Qn !== void 0) {
-          if (Qn)
+          var yn = Ve ? ce(un, sn, rn, Y, P, Ce) : ce(sn, un, rn, P, Y, Ce);
+        if (yn !== void 0) {
+          if (yn)
             continue;
           An = !1;
           break;
@@ -6951,18 +6951,18 @@ function Zf() {
       }
       return Ce.delete(P), Ce.delete(Y), An;
     }
-    function cN(P, Y, $, ce, ve, Ce, Ve) {
+    function RN(P, Y, $, ce, ve, Ce, Ve) {
       switch ($) {
         case G:
           if (P.byteLength != Y.byteLength || P.byteOffset != Y.byteOffset)
             return !1;
           P = P.buffer, Y = Y.buffer;
-        case Q:
+        case y:
           return !(P.byteLength != Y.byteLength || !Ce(new J(P), new J(Y)));
         case a:
         case _:
         case l:
-          return xs(+P, +Y);
+          return $s(+P, +Y);
         case A:
           return P.name == Y.name && P.message == Y.message;
         case C:
@@ -6974,11 +6974,11 @@ function Zf() {
           var ke = ce & s;
           if (We || (We = q), P.size != Y.size && !ke)
             return !1;
-          var Qe = Ve.get(P);
-          if (Qe)
-            return Qe == Y;
+          var ye = Ve.get(P);
+          if (ye)
+            return ye == Y;
           ce |= u, Ve.set(P, Y);
-          var rn = Js(We(P), We(Y), ce, ve, Ce, Ve);
+          var rn = Zs(We(P), We(Y), ce, ve, Ce, Ve);
           return Ve.delete(P), rn;
         case B:
           if (ti)
@@ -6986,8 +6986,8 @@ function Zf() {
       }
       return !1;
     }
-    function AN(P, Y, $, ce, ve, Ce) {
-      var Ve = $ & s, We = Zs(P), ke = We.length, Qe = Zs(Y), rn = Qe.length;
+    function lN(P, Y, $, ce, ve, Ce) {
+      var Ve = $ & s, We = xs(P), ke = We.length, ye = xs(Y), rn = ye.length;
       if (ke != rn && !Ve)
         return !1;
       for (var An = ke; An--; ) {
@@ -7000,35 +7000,35 @@ function Zf() {
         return sn == Y;
       var un = !0;
       Ce.set(P, Y), Ce.set(Y, P);
-      for (var Qn = Ve; ++An < ke; ) {
+      for (var yn = Ve; ++An < ke; ) {
         je = We[An];
         var Bn = P[je], Jn = Y[je];
         if (ce)
-          var ru = Ve ? ce(Jn, Bn, je, Y, P, Ce) : ce(Bn, Jn, je, P, Y, Ce);
-        if (!(ru === void 0 ? Bn === Jn || ve(Bn, Jn, $, ce, Ce) : ru)) {
+          var iu = Ve ? ce(Jn, Bn, je, Y, P, Ce) : ce(Bn, Jn, je, P, Y, Ce);
+        if (!(iu === void 0 ? Bn === Jn || ve(Bn, Jn, $, ce, Ce) : iu)) {
           un = !1;
           break;
         }
-        Qn || (Qn = je == "constructor");
+        yn || (yn = je == "constructor");
       }
-      if (un && !Qn) {
+      if (un && !yn) {
         var Tr = P.constructor, Nr = Y.constructor;
         Tr != Nr && "constructor" in P && "constructor" in Y && !(typeof Tr == "function" && Tr instanceof Tr && typeof Nr == "function" && Nr instanceof Nr) && (un = !1);
       }
       return Ce.delete(P), Ce.delete(Y), un;
     }
-    function Zs(P) {
-      return aN(P, DN, lN);
+    function xs(P) {
+      return sN(P, gN, TN);
     }
     function lr(P, Y) {
       var $ = P.__data__;
-      return TN(Y) ? $[typeof Y == "string" ? "string" : "hash"] : $.map;
+      return fN(Y) ? $[typeof Y == "string" ? "string" : "hash"] : $.map;
     }
     function ut(P, Y) {
-      var $ = fn(P, Y);
-      return sN($) ? $ : void 0;
+      var $ = hn(P, Y);
+      return oN($) ? $ : void 0;
     }
-    function RN(P) {
+    function IN(P) {
       var Y = Ae.call(P, ae), $ = P[ae];
       try {
         P[ae] = void 0;
@@ -7038,43 +7038,43 @@ function Zf() {
       var ve = Le.call(P);
       return ce && (Y ? P[ae] = $ : delete P[ae]), ve;
     }
-    var lN = te ? function(P) {
+    var TN = te ? function(P) {
       return P == null ? [] : (P = Object(P), he(te(P), function(Y) {
         return Z.call(P, Y);
       }));
-    } : SN, vn = Mt;
-    (de && vn(new de(new ArrayBuffer(1))) != G || be && vn(new be()) != I || ye && vn(ye.resolve()) != d || we && vn(new we()) != g || st && vn(new st()) != y) && (vn = function(P) {
+    } : MN, vn = Mt;
+    (de && vn(new de(new ArrayBuffer(1))) != G || be && vn(new be()) != I || Qe && vn(Qe.resolve()) != d || we && vn(new we()) != g || st && vn(new st()) != Q) && (vn = function(P) {
       var Y = Mt(P), $ = Y == f ? P.constructor : void 0, ce = $ ? zn($) : "";
       if (ce)
         switch (ce) {
           case jn:
             return G;
-          case PT:
-            return I;
-          case GT:
-            return d;
           case bT:
-            return g;
+            return I;
           case vT:
-            return y;
+            return d;
+          case yT:
+            return g;
+          case QT:
+            return Q;
         }
       return Y;
     });
-    function IN(P, Y) {
+    function NN(P, Y) {
       return Y = Y ?? E, !!Y && (typeof P == "number" || ue.test(P)) && P > -1 && P % 1 == 0 && P < Y;
     }
-    function TN(P) {
+    function fN(P) {
       var Y = typeof P;
       return Y == "string" || Y == "number" || Y == "symbol" || Y == "boolean" ? P !== "__proto__" : P === null;
     }
-    function NN(P) {
+    function hN(P) {
       return !!Be && Be in P;
     }
-    function fN(P) {
+    function dN(P) {
       var Y = P && P.constructor, $ = typeof Y == "function" && Y.prototype || re;
       return P === $;
     }
-    function hN(P) {
+    function ON(P) {
       return Le.call(P);
     }
     function zn(P) {
@@ -7090,55 +7090,55 @@ function Zf() {
       }
       return "";
     }
-    function xs(P, Y) {
+    function $s(P, Y) {
       return P === Y || P !== P && Y !== Y;
     }
-    var dN = Ks(/* @__PURE__ */ (function() {
+    var CN = zs(/* @__PURE__ */ (function() {
       return arguments;
-    })()) ? Ks : function(P) {
+    })()) ? zs : function(P) {
       return Bt(P) && Ae.call(P, "callee") && !Z.call(P, "callee");
     }, Ir = Array.isArray;
-    function ON(P) {
-      return P != null && eu(P.length) && !$s(P);
+    function DN(P) {
+      return P != null && nu(P.length) && !eu(P);
     }
-    var ri = oe || gN;
-    function CN(P, Y) {
-      return zs(P, Y);
+    var ri = oe || BN;
+    function SN(P, Y) {
+      return Js(P, Y);
     }
-    function $s(P) {
-      if (!nu(P))
+    function eu(P) {
+      if (!tu(P))
         return !1;
       var Y = Mt(P);
       return Y == R || Y == N || Y == t || Y == O;
     }
-    function eu(P) {
+    function nu(P) {
       return typeof P == "number" && P > -1 && P % 1 == 0 && P <= E;
     }
-    function nu(P) {
+    function tu(P) {
       var Y = typeof P;
       return P != null && (Y == "object" || Y == "function");
     }
     function Bt(P) {
       return P != null && typeof P == "object";
     }
-    var tu = Oe ? Gn(Oe) : uN;
-    function DN(P) {
-      return ON(P) ? EN(P) : oN(P);
+    var ru = Oe ? Gn(Oe) : cN;
+    function gN(P) {
+      return DN(P) ? _N(P) : AN(P);
     }
-    function SN() {
+    function MN() {
       return [];
     }
-    function gN() {
+    function BN() {
       return !1;
     }
-    e.exports = CN;
+    e.exports = SN;
   })(tr, tr.exports)), tr.exports;
 }
-var Lc;
-function xf() {
-  if (Lc) return At;
-  Lc = 1, Object.defineProperty(At, "__esModule", { value: !0 }), At.DownloadedUpdateHelper = void 0, At.createTempUpdateFile = n;
-  const e = On, c = nn, o = Zf(), i = /* @__PURE__ */ Wn(), s = Fe;
+var wc;
+function nh() {
+  if (wc) return At;
+  wc = 1, Object.defineProperty(At, "__esModule", { value: !0 }), At.DownloadedUpdateHelper = void 0, At.createTempUpdateFile = n;
+  const e = On, c = nn, o = eh(), i = /* @__PURE__ */ Wn(), s = Fe;
   let u = class {
     constructor(t) {
       this.cacheDir = t, this._file = null, this._packageFile = null, this.versionInfo = null, this.fileInfo = null, this._downloadedFileInfo = null;
@@ -7234,10 +7234,10 @@ function xf() {
   }
   return At;
 }
-var Ft = {}, Ur = {}, Uc;
-function $f() {
-  if (Uc) return Ur;
-  Uc = 1, Object.defineProperty(Ur, "__esModule", { value: !0 }), Ur.getAppCacheDir = o;
+var Ft = {}, Ur = {}, mc;
+function th() {
+  if (mc) return Ur;
+  mc = 1, Object.defineProperty(Ur, "__esModule", { value: !0 }), Ur.getAppCacheDir = o;
   const e = Fe, c = mn;
   function o() {
     const i = (0, c.homedir)();
@@ -7246,11 +7246,11 @@ function $f() {
   }
   return Ur;
 }
-var wc;
-function eh() {
-  if (wc) return Ft;
-  wc = 1, Object.defineProperty(Ft, "__esModule", { value: !0 }), Ft.ElectronAppAdapter = void 0;
-  const e = Fe, c = $f();
+var Fc;
+function rh() {
+  if (Fc) return Ft;
+  Fc = 1, Object.defineProperty(Ft, "__esModule", { value: !0 }), Ft.ElectronAppAdapter = void 0;
+  const e = Fe, c = th();
   let o = class {
     constructor(s = Hn.app) {
       this.app = s;
@@ -7288,9 +7288,9 @@ function eh() {
   };
   return Ft.ElectronAppAdapter = o, Ft;
 }
-var ta = {}, mc;
-function nh() {
-  return mc || (mc = 1, (function(e) {
+var ta = {}, Pc;
+function ih() {
+  return Pc || (Pc = 1, (function(e) {
     Object.defineProperty(e, "__esModule", { value: !0 }), e.ElectronHttpExecutor = e.NET_SESSION_NAME = void 0, e.getNetSession = o;
     const c = pe();
     e.NET_SESSION_NAME = "electron-updater";
@@ -7337,10 +7337,10 @@ function nh() {
     e.ElectronHttpExecutor = i;
   })(ta)), ta;
 }
-var Pt = {}, Rt = {}, Fc;
+var Pt = {}, Rt = {}, Gc;
 function Et() {
-  if (Fc) return Rt;
-  Fc = 1, Object.defineProperty(Rt, "__esModule", { value: !0 }), Rt.newBaseUrl = c, Rt.newUrlFromBase = o, Rt.getChannelFilename = i;
+  if (Gc) return Rt;
+  Gc = 1, Object.defineProperty(Rt, "__esModule", { value: !0 }), Rt.newBaseUrl = c, Rt.newUrlFromBase = o, Rt.getChannelFilename = i;
   const e = Fn;
   function c(s) {
     const u = new e.URL(s);
@@ -7355,11 +7355,11 @@ function Et() {
   }
   return Rt;
 }
-var Ln = {}, ra, Pc;
-function QI() {
-  if (Pc) return ra;
-  Pc = 1;
-  var e = "[object Symbol]", c = /[\\^$.*+?()[\]{}|]/g, o = RegExp(c.source), i = typeof Rn == "object" && Rn && Rn.Object === Object && Rn, s = typeof self == "object" && self && self.Object === Object && self, u = i || s || Function("return this")(), E = Object.prototype, n = E.toString, r = u.Symbol, t = r ? r.prototype : void 0, a = t ? t.toString : void 0;
+var Ln = {}, ra, bc;
+function VI() {
+  if (bc) return ra;
+  bc = 1;
+  var e = "[object Symbol]", c = /[\\^$.*+?()[\]{}|]/g, o = RegExp(c.source), i = typeof ln == "object" && ln && ln.Object === Object && ln, s = typeof self == "object" && self && self.Object === Object && self, u = i || s || Function("return this")(), E = Object.prototype, n = E.toString, r = u.Symbol, t = r ? r.prototype : void 0, a = t ? t.toString : void 0;
   function _(l) {
     if (typeof l == "string")
       return l;
@@ -7382,11 +7382,11 @@ function QI() {
   }
   return ra = I, ra;
 }
-var Gc;
+var vc;
 function _n() {
-  if (Gc) return Ln;
-  Gc = 1, Object.defineProperty(Ln, "__esModule", { value: !0 }), Ln.Provider = void 0, Ln.findFile = E, Ln.parseUpdateInfo = n, Ln.getFileList = r, Ln.resolveFiles = t;
-  const e = pe(), c = Ls(), o = Fn, i = Et(), s = QI();
+  if (vc) return Ln;
+  vc = 1, Object.defineProperty(Ln, "__esModule", { value: !0 }), Ln.Provider = void 0, Ln.findFile = E, Ln.parseUpdateInfo = n, Ln.getFileList = r, Ln.resolveFiles = t;
+  const e = pe(), c = Us(), o = Fn, i = Et(), s = VI();
   let u = class {
     constructor(_) {
       this.runtimeOptions = _, this.requestHeaders = null, this.executor = _.executor;
@@ -7480,10 +7480,10 @@ function _n() {
   }
   return Ln;
 }
-var bc;
-function yI() {
-  if (bc) return Pt;
-  bc = 1, Object.defineProperty(Pt, "__esModule", { value: !0 }), Pt.GenericProvider = void 0;
+var yc;
+function YI() {
+  if (yc) return Pt;
+  yc = 1, Object.defineProperty(Pt, "__esModule", { value: !0 }), Pt.GenericProvider = void 0;
   const e = pe(), c = Et(), o = _n();
   let i = class extends o.Provider {
     constructor(u, E, n) {
@@ -7520,10 +7520,10 @@ function yI() {
   };
   return Pt.GenericProvider = i, Pt;
 }
-var Gt = {}, bt = {}, vc;
-function th() {
-  if (vc) return bt;
-  vc = 1, Object.defineProperty(bt, "__esModule", { value: !0 }), bt.BitbucketProvider = void 0;
+var Gt = {}, bt = {}, Qc;
+function Eh() {
+  if (Qc) return bt;
+  Qc = 1, Object.defineProperty(bt, "__esModule", { value: !0 }), bt.BitbucketProvider = void 0;
   const e = pe(), c = Et(), o = _n();
   let i = class extends o.Provider {
     constructor(u, E, n) {
@@ -7556,11 +7556,11 @@ function th() {
   };
   return bt.BitbucketProvider = i, bt;
 }
-var Vn = {}, Qc;
-function VI() {
-  if (Qc) return Vn;
-  Qc = 1, Object.defineProperty(Vn, "__esModule", { value: !0 }), Vn.GitHubProvider = Vn.BaseGitHubProvider = void 0, Vn.computeReleaseNotes = t;
-  const e = pe(), c = vI(), o = Fn, i = Et(), s = _n(), u = /\/tag\/([^/]+)$/;
+var Vn = {}, Vc;
+function HI() {
+  if (Vc) return Vn;
+  Vc = 1, Object.defineProperty(Vn, "__esModule", { value: !0 }), Vn.GitHubProvider = Vn.BaseGitHubProvider = void 0, Vn.computeReleaseNotes = t;
+  const e = pe(), c = QI(), o = Fn, i = Et(), s = _n(), u = /\/tag\/([^/]+)$/;
   class E extends s.Provider {
     constructor(_, A, R) {
       super({
@@ -7593,57 +7593,57 @@ function VI() {
       let d = f.element("entry", !1, "No published versions on GitHub"), O = null;
       try {
         if (this.updater.allowPrerelease) {
-          const y = ((_ = this.updater) === null || _ === void 0 ? void 0 : _.channel) || ((A = c.prerelease(this.updater.currentVersion)) === null || A === void 0 ? void 0 : A[0]) || null;
-          if (y === null)
+          const Q = ((_ = this.updater) === null || _ === void 0 ? void 0 : _.channel) || ((A = c.prerelease(this.updater.currentVersion)) === null || A === void 0 ? void 0 : A[0]) || null;
+          if (Q === null)
             O = u.exec(d.element("link").attribute("href"))[1];
           else
-            for (const Q of f.getElements("entry")) {
-              const G = u.exec(Q.element("link").attribute("href"));
+            for (const y of f.getElements("entry")) {
+              const G = u.exec(y.element("link").attribute("href"));
               if (G === null)
                 continue;
-              const F = G[1], w = ((R = c.prerelease(F)) === null || R === void 0 ? void 0 : R[0]) || null, D = !y || ["alpha", "beta"].includes(y), v = w !== null && !["alpha", "beta"].includes(String(w));
-              if (D && !v && !(y === "beta" && w === "alpha")) {
+              const F = G[1], w = ((R = c.prerelease(F)) === null || R === void 0 ? void 0 : R[0]) || null, D = !Q || ["alpha", "beta"].includes(Q), v = w !== null && !["alpha", "beta"].includes(String(w));
+              if (D && !v && !(Q === "beta" && w === "alpha")) {
                 O = F;
                 break;
               }
-              if (w && w === y) {
+              if (w && w === Q) {
                 O = F;
                 break;
               }
             }
         } else {
           O = await this.getLatestTagName(l);
-          for (const y of f.getElements("entry"))
-            if (u.exec(y.element("link").attribute("href"))[1] === O) {
-              d = y;
+          for (const Q of f.getElements("entry"))
+            if (u.exec(Q.element("link").attribute("href"))[1] === O) {
+              d = Q;
               break;
             }
         }
-      } catch (y) {
-        throw (0, e.newError)(`Cannot parse releases feed: ${y.stack || y.message},
+      } catch (Q) {
+        throw (0, e.newError)(`Cannot parse releases feed: ${Q.stack || Q.message},
 XML:
 ${T}`, "ERR_UPDATER_INVALID_RELEASE_FEED");
       }
       if (O == null)
         throw (0, e.newError)("No published versions on GitHub", "ERR_UPDATER_NO_PUBLISHED_VERSIONS");
       let C, g = "", M = "";
-      const B = async (y) => {
-        g = (0, i.getChannelFilename)(y), M = (0, i.newUrlFromBase)(this.getBaseDownloadPath(String(O), g), this.baseUrl);
-        const Q = this.createRequestOptions(M);
+      const B = async (Q) => {
+        g = (0, i.getChannelFilename)(Q), M = (0, i.newUrlFromBase)(this.getBaseDownloadPath(String(O), g), this.baseUrl);
+        const y = this.createRequestOptions(M);
         try {
-          return await this.executor.request(Q, l);
+          return await this.executor.request(y, l);
         } catch (G) {
           throw G instanceof e.HttpError && G.statusCode === 404 ? (0, e.newError)(`Cannot find ${g} in the latest release artifacts (${M}): ${G.stack || G.message}`, "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND") : G;
         }
       };
       try {
-        let y = this.channel;
-        this.updater.allowPrerelease && (!((N = c.prerelease(O)) === null || N === void 0) && N[0]) && (y = this.getCustomChannelName(String((I = c.prerelease(O)) === null || I === void 0 ? void 0 : I[0]))), C = await B(y);
-      } catch (y) {
+        let Q = this.channel;
+        this.updater.allowPrerelease && (!((N = c.prerelease(O)) === null || N === void 0) && N[0]) && (Q = this.getCustomChannelName(String((I = c.prerelease(O)) === null || I === void 0 ? void 0 : I[0]))), C = await B(Q);
+      } catch (Q) {
         if (this.updater.allowPrerelease)
           C = await B(this.getDefaultChannelName());
         else
-          throw y;
+          throw Q;
       }
       const S = (0, s.parseUpdateInfo)(C, g, M);
       return S.releaseName == null && (S.releaseName = d.elementValueOrEmpty("title")), S.releaseNotes == null && (S.releaseNotes = t(this.updater.currentVersion, this.updater.fullChangelog, f, d)), {
@@ -7690,11 +7690,11 @@ ${T}`, "ERR_UPDATER_INVALID_RELEASE_FEED");
   }
   return Vn;
 }
-var vt = {}, yc;
-function rh() {
-  if (yc) return vt;
-  yc = 1, Object.defineProperty(vt, "__esModule", { value: !0 }), vt.GitLabProvider = void 0;
-  const e = pe(), c = Fn, o = QI(), i = Et(), s = _n();
+var vt = {}, Yc;
+function ah() {
+  if (Yc) return vt;
+  Yc = 1, Object.defineProperty(vt, "__esModule", { value: !0 }), vt.GitLabProvider = void 0;
+  const e = pe(), c = Fn, o = VI(), i = Et(), s = _n();
   let u = class extends s.Provider {
     /**
      * Normalizes filenames by replacing spaces and underscores with dashes.
@@ -7875,10 +7875,10 @@ function rh() {
   };
   return vt.GitLabProvider = u, vt;
 }
-var Qt = {}, Vc;
-function ih() {
-  if (Vc) return Qt;
-  Vc = 1, Object.defineProperty(Qt, "__esModule", { value: !0 }), Qt.KeygenProvider = void 0;
+var yt = {}, Hc;
+function _h() {
+  if (Hc) return yt;
+  Hc = 1, Object.defineProperty(yt, "__esModule", { value: !0 }), yt.KeygenProvider = void 0;
   const e = pe(), c = Et(), o = _n();
   let i = class extends o.Provider {
     constructor(u, E, n) {
@@ -7912,13 +7912,13 @@ function ih() {
       return `Keygen (account: ${u}, product: ${E}, platform: ${n}, channel: ${this.channel})`;
     }
   };
-  return Qt.KeygenProvider = i, Qt;
+  return yt.KeygenProvider = i, yt;
 }
-var yt = {}, Yc;
-function Eh() {
-  if (Yc) return yt;
-  Yc = 1, Object.defineProperty(yt, "__esModule", { value: !0 }), yt.PrivateGitHubProvider = void 0;
-  const e = pe(), c = Ls(), o = Fe, i = Fn, s = Et(), u = VI(), E = _n();
+var Qt = {}, Wc;
+function sh() {
+  if (Wc) return Qt;
+  Wc = 1, Object.defineProperty(Qt, "__esModule", { value: !0 }), Qt.PrivateGitHubProvider = void 0;
+  const e = pe(), c = Us(), o = Fe, i = Fn, s = Et(), u = HI(), E = _n();
   let n = class extends u.BaseGitHubProvider {
     constructor(t, a, _, A) {
       super(t, "api.github.com", A), this.updater = a, this.token = _;
@@ -7976,13 +7976,13 @@ function Eh() {
       });
     }
   };
-  return yt.PrivateGitHubProvider = n, yt;
+  return Qt.PrivateGitHubProvider = n, Qt;
 }
-var Hc;
-function ah() {
-  if (Hc) return Gt;
-  Hc = 1, Object.defineProperty(Gt, "__esModule", { value: !0 }), Gt.isUrlProbablySupportMultiRangeRequests = n, Gt.createClient = r;
-  const e = pe(), c = th(), o = yI(), i = VI(), s = rh(), u = ih(), E = Eh();
+var pc;
+function uh() {
+  if (pc) return Gt;
+  pc = 1, Object.defineProperty(Gt, "__esModule", { value: !0 }), Gt.isUrlProbablySupportMultiRangeRequests = n, Gt.createClient = r;
+  const e = pe(), c = Eh(), o = YI(), i = HI(), s = ah(), u = _h(), E = sh();
   function n(t) {
     return !t.includes("s3.amazonaws.com");
   }
@@ -8031,10 +8031,10 @@ function ah() {
   }
   return Gt;
 }
-var Vt = {}, Yt = {}, lt = {}, It = {}, Wc;
-function bs() {
-  if (Wc) return It;
-  Wc = 1, Object.defineProperty(It, "__esModule", { value: !0 }), It.OperationKind = void 0, It.computeOperations = c;
+var Vt = {}, Yt = {}, lt = {}, It = {}, kc;
+function vs() {
+  if (kc) return It;
+  kc = 1, Object.defineProperty(It, "__esModule", { value: !0 }), It.OperationKind = void 0, It.computeOperations = c;
   var e;
   (function(E) {
     E[E.COPY = 0] = "COPY", E[E.DOWNLOAD = 1] = "DOWNLOAD";
@@ -8102,11 +8102,11 @@ rel: ${a.start - _} until ${a.end - _} and ${E.start - _} until ${E.end - _}`);
   }
   return It;
 }
-var pc;
-function YI() {
-  if (pc) return lt;
-  pc = 1, Object.defineProperty(lt, "__esModule", { value: !0 }), lt.DataSplitter = void 0, lt.copyData = E;
-  const e = pe(), c = nn, o = rt, i = bs(), s = Buffer.from(`\r
+var Xc;
+function WI() {
+  if (Xc) return lt;
+  Xc = 1, Object.defineProperty(lt, "__esModule", { value: !0 }), lt.DataSplitter = void 0, lt.copyData = E;
+  const e = pe(), c = nn, o = rt, i = vs(), s = Buffer.from(`\r
 \r
 `);
   var u;
@@ -8240,11 +8240,11 @@ function YI() {
   };
   return lt.DataSplitter = n, lt;
 }
-var Ht = {}, kc;
-function _h() {
-  if (kc) return Ht;
-  kc = 1, Object.defineProperty(Ht, "__esModule", { value: !0 }), Ht.executeTasksUsingMultipleRangeRequests = i, Ht.checkIsRangesSupported = u;
-  const e = pe(), c = YI(), o = bs();
+var Ht = {}, jc;
+function oh() {
+  if (jc) return Ht;
+  jc = 1, Object.defineProperty(Ht, "__esModule", { value: !0 }), Ht.executeTasksUsingMultipleRangeRequests = i, Ht.checkIsRangesSupported = u;
+  const e = pe(), c = WI(), o = vs();
   function i(E, n, r, t, a) {
     const _ = (A) => {
       if (A >= n.length) {
@@ -8322,10 +8322,10 @@ function _h() {
   }
   return Ht;
 }
-var Wt = {}, Xc;
-function sh() {
-  if (Xc) return Wt;
-  Xc = 1, Object.defineProperty(Wt, "__esModule", { value: !0 }), Wt.ProgressDifferentialDownloadCallbackTransform = void 0;
+var Wt = {}, qc;
+function ch() {
+  if (qc) return Wt;
+  qc = 1, Object.defineProperty(Wt, "__esModule", { value: !0 }), Wt.ProgressDifferentialDownloadCallbackTransform = void 0;
   const e = rt;
   var c;
   (function(i) {
@@ -8386,11 +8386,11 @@ function sh() {
   };
   return Wt.ProgressDifferentialDownloadCallbackTransform = o, Wt;
 }
-var jc;
-function HI() {
-  if (jc) return Yt;
-  jc = 1, Object.defineProperty(Yt, "__esModule", { value: !0 }), Yt.DifferentialDownloader = void 0;
-  const e = pe(), c = /* @__PURE__ */ Wn(), o = nn, i = YI(), s = Fn, u = bs(), E = _h(), n = sh();
+var Kc;
+function pI() {
+  if (Kc) return Yt;
+  Kc = 1, Object.defineProperty(Yt, "__esModule", { value: !0 }), Yt.DifferentialDownloader = void 0;
+  const e = pe(), c = /* @__PURE__ */ Wn(), o = nn, i = WI(), s = Fn, u = vs(), E = oh(), n = ch();
   let r = class {
     // noinspection TypeScriptAbstractClassConstructorCanBeMadeProtected
     constructor(A, R, N) {
@@ -8480,10 +8480,10 @@ function HI() {
           B = (0, E.executeTasksUsingMultipleRangeRequests)(this, A, M, N, f), B(0);
           return;
         }
-        let S = 0, y = null;
+        let S = 0, Q = null;
         this.logger.info(`Differential download: ${this.options.newUrl}`);
-        const Q = this.createRequestOptions();
-        Q.redirect = "manual", B = (G) => {
+        const y = this.createRequestOptions();
+        y.redirect = "manual", B = (G) => {
           var F, w;
           if (G >= A.length) {
             this.fileMetadataBuffer != null && M.write(this.fileMetadataBuffer), M.end();
@@ -8495,8 +8495,8 @@ function HI() {
             return;
           }
           const v = `bytes=${D.start}-${D.end - 1}`;
-          Q.headers.range = v, (w = (F = this.logger) === null || F === void 0 ? void 0 : F.debug) === null || w === void 0 || w.call(F, `download range: ${v}`), O && O.beginRangeDownload();
-          const b = this.httpExecutor.createRequest(Q, (H) => {
+          y.headers.range = v, (w = (F = this.logger) === null || F === void 0 ? void 0 : F.debug) === null || w === void 0 || w.call(F, `download range: ${v}`), O && O.beginRangeDownload();
+          const b = this.httpExecutor.createRequest(y, (H) => {
             H.on("error", f), H.on("aborted", () => {
               f(new Error("response has been aborted by the server"));
             }), H.statusCode >= 400 && f((0, e.createHttpError)(H)), H.pipe(M, {
@@ -8506,7 +8506,7 @@ function HI() {
             });
           });
           b.on("redirect", (H, p, K) => {
-            this.logger.info(`Redirect to ${a(K)}`), y = K, (0, e.configureRequestUrl)(new s.URL(y), Q), b.followRedirect();
+            this.logger.info(`Redirect to ${a(K)}`), Q = K, (0, e.configureRequestUrl)(new s.URL(Q), y), b.followRedirect();
           }), this.httpExecutor.addErrorAndTimeoutHandlers(b, f), b.end();
         }, B(0);
       });
@@ -8542,11 +8542,11 @@ function HI() {
   }
   return Yt;
 }
-var qc;
-function uh() {
-  if (qc) return Vt;
-  qc = 1, Object.defineProperty(Vt, "__esModule", { value: !0 }), Vt.GenericDifferentialDownloader = void 0;
-  const e = HI();
+var zc;
+function Ah() {
+  if (zc) return Vt;
+  zc = 1, Object.defineProperty(Vt, "__esModule", { value: !0 }), Vt.GenericDifferentialDownloader = void 0;
+  const e = pI();
   let c = class extends e.DifferentialDownloader {
     download(i, s) {
       return this.doDownload(i, s);
@@ -8554,9 +8554,9 @@ function uh() {
   };
   return Vt.GenericDifferentialDownloader = c, Vt;
 }
-var ia = {}, Kc;
+var ia = {}, Jc;
 function at() {
-  return Kc || (Kc = 1, (function(e) {
+  return Jc || (Jc = 1, (function(e) {
     Object.defineProperty(e, "__esModule", { value: !0 }), e.UpdaterSignal = e.UPDATE_DOWNLOADED = e.DOWNLOAD_PROGRESS = e.CancellationToken = void 0, e.addHandler = i;
     const c = pe();
     Object.defineProperty(e, "CancellationToken", { enumerable: !0, get: function() {
@@ -8588,12 +8588,12 @@ function at() {
     }
   })(ia)), ia;
 }
-var zc;
-function vs() {
-  if (zc) return xn;
-  zc = 1, Object.defineProperty(xn, "__esModule", { value: !0 }), xn.NoOpLogger = xn.AppUpdater = void 0;
-  const e = pe(), c = On, o = mn, i = on, s = /* @__PURE__ */ Wn(), u = Ls(), E = Mf(), n = Fe, r = vI(), t = xf(), a = eh(), _ = nh(), A = yI(), R = ah(), N = Os, I = uh(), l = at();
-  let T = class WI extends i.EventEmitter {
+var Zc;
+function ys() {
+  if (Zc) return xn;
+  Zc = 1, Object.defineProperty(xn, "__esModule", { value: !0 }), xn.NoOpLogger = xn.AppUpdater = void 0;
+  const e = pe(), c = On, o = mn, i = on, s = /* @__PURE__ */ Wn(), u = Us(), E = Uf(), n = Fe, r = QI(), t = nh(), a = rh(), _ = ih(), A = YI(), R = uh(), N = Cs, I = Ah(), l = at();
+  let T = class kI extends i.EventEmitter {
     /**
      * Get the update channel. Doesn't return `channel` from the update configuration, only if was previously set.
      */
@@ -8668,7 +8668,7 @@ function vs() {
     constructor(C, g) {
       super(), this.autoDownload = !0, this.autoInstallOnAppQuit = !0, this.autoRunAppAfterInstall = !0, this.allowPrerelease = !1, this.fullChangelog = !1, this.allowDowngrade = !1, this.disableWebInstaller = !1, this.disableDifferentialDownload = !1, this.forceDevUpdateConfig = !1, this.previousBlockmapBaseUrlOverride = null, this._channel = null, this.downloadedUpdateHelper = null, this.requestHeaders = null, this._logger = console, this.signals = new l.UpdaterSignal(this), this._appUpdateConfigPath = null, this._isUpdateSupported = (S) => this.checkIfUpdateSupported(S), this._isUserWithinRollout = (S) => this.isStagingMatch(S), this.clientPromise = null, this.stagingUserIdPromise = new E.Lazy(() => this.getOrCreateStagingUserId()), this.configOnDisk = new E.Lazy(() => this.loadUpdateConfig()), this.checkForUpdatesPromise = null, this.downloadPromise = null, this.updateInfoAndProvider = null, this._testOnlyOptions = null, this.on("error", (S) => {
         this._logger.error(`Error: ${S.stack || S.message}`);
-      }), g == null ? (this.app = new a.ElectronAppAdapter(), this.httpExecutor = new _.ElectronHttpExecutor((S, y) => this.emit("login", S, y))) : (this.app = g, this.httpExecutor = null);
+      }), g == null ? (this.app = new a.ElectronAppAdapter(), this.httpExecutor = new _.ElectronHttpExecutor((S, Q) => this.emit("login", S, Q))) : (this.app = g, this.httpExecutor = null);
       const M = this.app.version, B = (0, r.parse)(M);
       if (B == null)
         throw (0, e.newError)(`App version is not a valid semver version: "${M}"`, "ERR_UPDATER_INVALID_VERSION");
@@ -8711,7 +8711,7 @@ function vs() {
     // noinspection JSUnusedGlobalSymbols
     checkForUpdatesAndNotify(C) {
       return this.checkForUpdates().then((g) => g != null && g.downloadPromise ? (g.downloadPromise.then(() => {
-        const M = WI.formatDownloadNotification(g.updateInfo.version, this.app.name, C);
+        const M = kI.formatDownloadNotification(g.updateInfo.version, this.app.name, C);
         new Hn.Notification(M).show();
       }), g) : (this._logger.debug != null && this._logger.debug("checkForUpdatesAndNotify called, downloadPromise is null"), g));
     }
@@ -8732,8 +8732,8 @@ function vs() {
       if (M = parseInt(M, 10), isNaN(M))
         return this._logger.warn(`Staging percentage is NaN: ${g}`), !0;
       M = M / 100;
-      const B = await this.stagingUserIdPromise.value, y = e.UUID.parse(B).readUInt32BE(12) / 4294967295;
-      return this._logger.info(`Staging percentage: ${M}, percentage: ${y}, user id: ${B}`), y < M;
+      const B = await this.stagingUserIdPromise.value, Q = e.UUID.parse(B).readUInt32BE(12) / 4294967295;
+      return this._logger.info(`Staging percentage: ${M}, percentage: ${Q}, user id: ${B}`), Q < M;
     }
     computeFinalHeaders(C) {
       return this.requestHeaders != null && Object.assign(C, this.requestHeaders), C;
@@ -8745,8 +8745,8 @@ function vs() {
       const M = this.currentVersion;
       if ((0, r.eq)(g, M) || !await Promise.resolve(this.isUpdateSupported(C)) || !await Promise.resolve(this.isUserWithinRollout(C)))
         return !1;
-      const S = (0, r.gt)(g, M), y = (0, r.lt)(g, M);
-      return S ? !0 : this.allowDowngrade && y;
+      const S = (0, r.gt)(g, M), Q = (0, r.lt)(g, M);
+      return S ? !0 : this.allowDowngrade && Q;
     }
     checkIfUpdateSupported(C) {
       const g = C == null ? void 0 : C.minimumSystemVersion, M = (0, o.release)();
@@ -8899,16 +8899,16 @@ function vs() {
         sha512: g.info.sha512
       };
       this.listenerCount(l.DOWNLOAD_PROGRESS) > 0 && (M.onProgress = (ne) => this.emit(l.DOWNLOAD_PROGRESS, ne));
-      const B = C.downloadUpdateOptions.updateInfoAndProvider.info, S = B.version, y = g.packageInfo;
-      function Q() {
+      const B = C.downloadUpdateOptions.updateInfoAndProvider.info, S = B.version, Q = g.packageInfo;
+      function y() {
         const ne = decodeURIComponent(C.fileInfo.url.pathname);
         return ne.toLowerCase().endsWith(`.${C.fileExtension.toLowerCase()}`) ? n.basename(ne) : C.fileInfo.info.url;
       }
       const G = await this.getOrCreateDownloadHelper(), F = G.cacheDirForPendingUpdate;
       await (0, s.mkdir)(F, { recursive: !0 });
-      const w = Q();
+      const w = y();
       let D = n.join(F, w);
-      const v = y == null ? null : n.join(F, `package-${S}${n.extname(y.path) || ".7z"}`), b = async (ne) => {
+      const v = Q == null ? null : n.join(F, `package-${S}${n.extname(Q.path) || ".7z"}`), b = async (ne) => {
         await G.setDownloadedFile(D, v, B, g, w, ne), await C.done({
           ...B,
           downloadedFile: D
@@ -8936,8 +8936,8 @@ function vs() {
       try {
         if (this._testOnlyOptions != null && !this._testOnlyOptions.isUseDifferentialDownload)
           return !0;
-        const y = g.updateInfoAndProvider.provider, Q = await y.getBlockMapFiles(C.url, this.app.version, g.updateInfoAndProvider.info.version, this.previousBlockmapBaseUrlOverride);
-        this._logger.info(`Download block maps (old: "${Q[0]}", new: ${Q[1]})`);
+        const Q = g.updateInfoAndProvider.provider, y = await Q.getBlockMapFiles(C.url, this.app.version, g.updateInfoAndProvider.info.version, this.previousBlockmapBaseUrlOverride);
+        this._logger.info(`Download block maps (old: "${y[0]}", new: ${y[1]})`);
         const G = async (H) => {
           const p = await this.httpExecutor.downloadToBuffer(H, {
             headers: g.requestHeaders,
@@ -8955,7 +8955,7 @@ function vs() {
           oldFile: n.join(this.downloadedUpdateHelper.cacheDir, S),
           logger: this._logger,
           newFile: M,
-          isUseMultipleRangeRequest: y.isUseMultipleRangeRequest,
+          isUseMultipleRangeRequest: Q.isUseMultipleRangeRequest,
           requestHeaders: g.requestHeaders,
           cancellationToken: g.cancellationToken
         };
@@ -8972,13 +8972,13 @@ function vs() {
             this._logger.warn(`Cannot parse blockmap "${p}", error: ${K}`);
           }
           return null;
-        }, v = await G(Q[1]);
+        }, v = await G(y[1]);
         await w(v, this.downloadedUpdateHelper.cacheDirForPendingUpdate);
         let b = await D(this.downloadedUpdateHelper.cacheDir);
-        return b == null && (b = await G(Q[0])), await new I.GenericDifferentialDownloader(C.info, this.httpExecutor, F).download(b, v), !1;
-      } catch (y) {
-        if (this._logger.error(`Cannot download differentially, fallback to full download: ${y.stack || y}`), this._testOnlyOptions != null)
-          throw y;
+        return b == null && (b = await G(y[0])), await new I.GenericDifferentialDownloader(C.info, this.httpExecutor, F).download(b, v), !1;
+      } catch (Q) {
+        if (this._logger.error(`Cannot download differentially, fallback to full download: ${Q.stack || Q}`), this._testOnlyOptions != null)
+          throw Q;
         return !0;
       }
     }
@@ -9001,11 +9001,11 @@ function vs() {
   }
   return xn.NoOpLogger = d, xn;
 }
-var Jc;
+var xc;
 function zr() {
-  if (Jc) return Lt;
-  Jc = 1, Object.defineProperty(Lt, "__esModule", { value: !0 }), Lt.BaseUpdater = void 0;
-  const e = Er, c = vs();
+  if (xc) return Lt;
+  xc = 1, Object.defineProperty(Lt, "__esModule", { value: !0 }), Lt.BaseUpdater = void 0;
+  const e = Er, c = ys();
   let o = class extends c.AppUpdater {
     constructor(s, u) {
       super(s, u), this.quitAndInstallCalled = !1, this.quitHandlerAdded = !1;
@@ -9094,11 +9094,11 @@ function zr() {
   };
   return Lt.BaseUpdater = o, Lt;
 }
-var pt = {}, kt = {}, Zc;
-function pI() {
-  if (Zc) return kt;
-  Zc = 1, Object.defineProperty(kt, "__esModule", { value: !0 }), kt.FileWithEmbeddedBlockMapDifferentialDownloader = void 0;
-  const e = /* @__PURE__ */ Wn(), c = HI(), o = Os;
+var pt = {}, kt = {}, $c;
+function XI() {
+  if ($c) return kt;
+  $c = 1, Object.defineProperty(kt, "__esModule", { value: !0 }), kt.FileWithEmbeddedBlockMapDifferentialDownloader = void 0;
+  const e = /* @__PURE__ */ Wn(), c = pI(), o = Cs;
   let i = class extends c.DifferentialDownloader {
     async download() {
       const n = this.blockAwareFileInfo, r = n.size, t = r - (n.blockMapSize + 4);
@@ -9124,11 +9124,11 @@ function pI() {
   }
   return kt;
 }
-var xc;
-function $c() {
-  if (xc) return pt;
-  xc = 1, Object.defineProperty(pt, "__esModule", { value: !0 }), pt.AppImageUpdater = void 0;
-  const e = pe(), c = Er, o = /* @__PURE__ */ Wn(), i = nn, s = Fe, u = zr(), E = pI(), n = _n(), r = at();
+var eA;
+function nA() {
+  if (eA) return pt;
+  eA = 1, Object.defineProperty(pt, "__esModule", { value: !0 }), pt.AppImageUpdater = void 0;
+  const e = pe(), c = Er, o = /* @__PURE__ */ Wn(), i = nn, s = Fe, u = zr(), E = XI(), n = _n(), r = at();
   let t = class extends u.BaseUpdater {
     constructor(_, A) {
       super(_, A);
@@ -9186,10 +9186,10 @@ function $c() {
   };
   return pt.AppImageUpdater = t, pt;
 }
-var Xt = {}, jt = {}, eA;
+var Xt = {}, jt = {}, tA;
 function Qs() {
-  if (eA) return jt;
-  eA = 1, Object.defineProperty(jt, "__esModule", { value: !0 }), jt.LinuxUpdater = void 0;
+  if (tA) return jt;
+  tA = 1, Object.defineProperty(jt, "__esModule", { value: !0 }), jt.LinuxUpdater = void 0;
   const e = zr();
   let c = class extends e.BaseUpdater {
     constructor(i, s) {
@@ -9256,12 +9256,12 @@ function Qs() {
   };
   return jt.LinuxUpdater = c, jt;
 }
-var nA;
-function tA() {
-  if (nA) return Xt;
-  nA = 1, Object.defineProperty(Xt, "__esModule", { value: !0 }), Xt.DebUpdater = void 0;
+var rA;
+function iA() {
+  if (rA) return Xt;
+  rA = 1, Object.defineProperty(Xt, "__esModule", { value: !0 }), Xt.DebUpdater = void 0;
   const e = _n(), c = at(), o = Qs();
-  let i = class kI extends o.LinuxUpdater {
+  let i = class jI extends o.LinuxUpdater {
     constructor(u, E) {
       super(u, E);
     }
@@ -9285,7 +9285,7 @@ function tA() {
         return this.dispatchError(new Error("Neither dpkg nor apt command found. Cannot install .deb package.")), !1;
       const n = ["dpkg", "apt"], r = this.detectPackageManager(n);
       try {
-        kI.installWithCommandRunner(r, E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
+        jI.installWithCommandRunner(r, E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
       } catch (t) {
         return this.dispatchError(t), !1;
       }
@@ -9317,12 +9317,12 @@ function tA() {
   };
   return Xt.DebUpdater = i, Xt;
 }
-var qt = {}, rA;
-function iA() {
-  if (rA) return qt;
-  rA = 1, Object.defineProperty(qt, "__esModule", { value: !0 }), qt.PacmanUpdater = void 0;
+var qt = {}, EA;
+function aA() {
+  if (EA) return qt;
+  EA = 1, Object.defineProperty(qt, "__esModule", { value: !0 }), qt.PacmanUpdater = void 0;
   const e = at(), c = _n(), o = Qs();
-  let i = class XI extends o.LinuxUpdater {
+  let i = class qI extends o.LinuxUpdater {
     constructor(u, E) {
       super(u, E);
     }
@@ -9343,7 +9343,7 @@ function iA() {
       if (E == null)
         return this.dispatchError(new Error("No update filepath provided, can't quit and install")), !1;
       try {
-        XI.installWithCommandRunner(E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
+        qI.installWithCommandRunner(E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
       } catch (n) {
         return this.dispatchError(n), !1;
       }
@@ -9365,12 +9365,12 @@ function iA() {
   };
   return qt.PacmanUpdater = i, qt;
 }
-var Kt = {}, EA;
-function aA() {
-  if (EA) return Kt;
-  EA = 1, Object.defineProperty(Kt, "__esModule", { value: !0 }), Kt.RpmUpdater = void 0;
+var Kt = {}, _A;
+function sA() {
+  if (_A) return Kt;
+  _A = 1, Object.defineProperty(Kt, "__esModule", { value: !0 }), Kt.RpmUpdater = void 0;
   const e = at(), c = _n(), o = Qs();
-  let i = class jI extends o.LinuxUpdater {
+  let i = class KI extends o.LinuxUpdater {
     constructor(u, E) {
       super(u, E);
     }
@@ -9392,7 +9392,7 @@ function aA() {
         return this.dispatchError(new Error("No update filepath provided, can't quit and install")), !1;
       const n = ["zypper", "dnf", "yum", "rpm"], r = this.detectPackageManager(n);
       try {
-        jI.installWithCommandRunner(r, E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
+        KI.installWithCommandRunner(r, E, this.runCommandWithSudoIfNeeded.bind(this), this._logger);
       } catch (t) {
         return this.dispatchError(t), !1;
       }
@@ -9412,11 +9412,11 @@ function aA() {
   };
   return Kt.RpmUpdater = i, Kt;
 }
-var zt = {}, _A;
-function sA() {
-  if (_A) return zt;
-  _A = 1, Object.defineProperty(zt, "__esModule", { value: !0 }), zt.MacUpdater = void 0;
-  const e = pe(), c = /* @__PURE__ */ Wn(), o = nn, i = Fe, s = _I, u = vs(), E = _n(), n = Er, r = On;
+var zt = {}, uA;
+function oA() {
+  if (uA) return zt;
+  uA = 1, Object.defineProperty(zt, "__esModule", { value: !0 }), zt.MacUpdater = void 0;
+  const e = pe(), c = /* @__PURE__ */ Wn(), o = nn, i = Fe, s = uI, u = ys(), E = _n(), n = Er, r = On;
   let t = class extends u.AppUpdater {
     constructor(_, A) {
       super(_, A), this.nativeUpdater = Hn.autoUpdater, this.squirrelDownloadedUpdate = !1, this.nativeUpdater.on("error", (R) => {
@@ -9494,8 +9494,8 @@ function sA() {
       return await new Promise((d, O) => {
         const C = (0, r.randomBytes)(64).toString("base64").replace(/\//g, "_").replace(/\+/g, "-"), g = Buffer.from(`autoupdater:${C}`, "ascii"), M = `/${(0, r.randomBytes)(64).toString("hex")}.zip`;
         this.server.on("request", (B, S) => {
-          const y = B.url;
-          if (l.info(`${y} requested`), y === "/") {
+          const Q = B.url;
+          if (l.info(`${Q} requested`), Q === "/") {
             if (!B.headers.authorization || B.headers.authorization.indexOf("Basic ") === -1) {
               S.statusCode = 401, S.statusMessage = "Invalid Authentication Credentials", S.end(), l.warn("No authenthication info");
               return;
@@ -9509,14 +9509,14 @@ function sA() {
             S.writeHead(200, { "Content-Type": "application/json", "Content-Length": b.length }), S.end(b);
             return;
           }
-          if (!y.startsWith(M)) {
-            l.warn(`${y} requested, but not supported`), S.writeHead(404), S.end();
+          if (!Q.startsWith(M)) {
+            l.warn(`${Q} requested, but not supported`), S.writeHead(404), S.end();
             return;
           }
           l.info(`${M} requested by Squirrel.Mac, pipe ${N}`);
-          let Q = !1;
+          let y = !1;
           S.on("finish", () => {
-            Q || (this.nativeUpdater.removeListener("error", O), d([]));
+            y || (this.nativeUpdater.removeListener("error", O), d([]));
           });
           const G = (0, o.createReadStream)(N);
           G.on("error", (F) => {
@@ -9525,7 +9525,7 @@ function sA() {
             } catch (w) {
               l.warn(`cannot end response: ${w}`);
             }
-            Q = !0, this.nativeUpdater.removeListener("error", O), O(new Error(`Cannot pipe "${N}": ${F}`));
+            y = !0, this.nativeUpdater.removeListener("error", O), O(new Error(`Cannot pipe "${N}": ${F}`));
           }), S.writeHead(200, {
             "Content-Type": "application/zip",
             "Content-Length": I
@@ -9550,10 +9550,10 @@ function sA() {
   };
   return zt.MacUpdater = t, zt;
 }
-var Jt = {}, wr = {}, uA;
-function oh() {
-  if (uA) return wr;
-  uA = 1, Object.defineProperty(wr, "__esModule", { value: !0 }), wr.verifySignature = u;
+var Jt = {}, wr = {}, cA;
+function Rh() {
+  if (cA) return wr;
+  cA = 1, Object.defineProperty(wr, "__esModule", { value: !0 }), wr.verifySignature = u;
   const e = pe(), c = Er, o = mn, i = Fe;
   function s(t, a) {
     return ['set "PSModulePath=" & chcp 65001 >NUL & powershell.exe', ["-NoProfile", "-NonInteractive", "-InputFormat", "None", "-Command", t], {
@@ -9586,7 +9586,7 @@ function oh() {
             let g = !1;
             for (const M of t) {
               const B = (0, e.parseDn)(M);
-              if (B.size ? g = Array.from(B.keys()).every((y) => B.get(y) === C.get(y)) : M === C.get("CN") && (_.warn(`Signature validated using only CN ${M}. Please add your full Distinguished Name (DN) to publisherNames configuration`), g = !0), g) {
+              if (B.size ? g = Array.from(B.keys()).every((Q) => B.get(Q) === C.get(Q)) : M === C.get("CN") && (_.warn(`Signature validated using only CN ${M}. Please add your full Distinguished Name (DN) to publisherNames configuration`), g = !0), g) {
                 A(null);
                 return;
               }
@@ -9626,11 +9626,11 @@ function oh() {
   }
   return wr;
 }
-var oA;
-function cA() {
-  if (oA) return Jt;
-  oA = 1, Object.defineProperty(Jt, "__esModule", { value: !0 }), Jt.NsisUpdater = void 0;
-  const e = pe(), c = Fe, o = zr(), i = pI(), s = at(), u = _n(), E = /* @__PURE__ */ Wn(), n = oh(), r = Fn;
+var AA;
+function RA() {
+  if (AA) return Jt;
+  AA = 1, Object.defineProperty(Jt, "__esModule", { value: !0 }), Jt.NsisUpdater = void 0;
+  const e = pe(), c = Fe, o = zr(), i = XI(), s = at(), u = _n(), E = /* @__PURE__ */ Wn(), n = Rh(), r = Fn;
   let t = class extends o.BaseUpdater {
     constructor(_, A) {
       super(_, A), this._verifyUpdateCodeSignature = (R, N) => (0, n.verifySignature)(R, N, this._logger);
@@ -9730,9 +9730,9 @@ function cA() {
   };
   return Jt.NsisUpdater = t, Jt;
 }
-var AA;
-function ch() {
-  return AA || (AA = 1, (function(e) {
+var lA;
+function lh() {
+  return lA || (lA = 1, (function(e) {
     var c = Zn && Zn.__createBinding || (Object.create ? (function(l, T, f, d) {
       d === void 0 && (d = f);
       var O = Object.getOwnPropertyDescriptor(T, f);
@@ -9750,7 +9750,7 @@ function ch() {
     Object.defineProperty(e, "BaseUpdater", { enumerable: !0, get: function() {
       return u.BaseUpdater;
     } });
-    var E = vs();
+    var E = ys();
     Object.defineProperty(e, "AppUpdater", { enumerable: !0, get: function() {
       return E.AppUpdater;
     } }), Object.defineProperty(e, "NoOpLogger", { enumerable: !0, get: function() {
@@ -9760,38 +9760,38 @@ function ch() {
     Object.defineProperty(e, "Provider", { enumerable: !0, get: function() {
       return n.Provider;
     } });
-    var r = $c();
+    var r = nA();
     Object.defineProperty(e, "AppImageUpdater", { enumerable: !0, get: function() {
       return r.AppImageUpdater;
     } });
-    var t = tA();
+    var t = iA();
     Object.defineProperty(e, "DebUpdater", { enumerable: !0, get: function() {
       return t.DebUpdater;
     } });
-    var a = iA();
+    var a = aA();
     Object.defineProperty(e, "PacmanUpdater", { enumerable: !0, get: function() {
       return a.PacmanUpdater;
     } });
-    var _ = aA();
+    var _ = sA();
     Object.defineProperty(e, "RpmUpdater", { enumerable: !0, get: function() {
       return _.RpmUpdater;
     } });
-    var A = sA();
+    var A = oA();
     Object.defineProperty(e, "MacUpdater", { enumerable: !0, get: function() {
       return A.MacUpdater;
     } });
-    var R = cA();
+    var R = RA();
     Object.defineProperty(e, "NsisUpdater", { enumerable: !0, get: function() {
       return R.NsisUpdater;
     } }), o(at(), e);
     let N;
     function I() {
       if (process.platform === "win32")
-        N = new (cA()).NsisUpdater();
+        N = new (RA()).NsisUpdater();
       else if (process.platform === "darwin")
-        N = new (sA()).MacUpdater();
+        N = new (oA()).MacUpdater();
       else {
-        N = new ($c()).AppImageUpdater();
+        N = new (nA()).AppImageUpdater();
         try {
           const l = s.join(process.resourcesPath, "package-type");
           if (!(0, i.existsSync)(l))
@@ -9800,13 +9800,13 @@ function ch() {
           const T = (0, i.readFileSync)(l).toString().trim();
           switch (console.info("Found package-type:", T), T) {
             case "deb":
-              N = new (tA()).DebUpdater();
+              N = new (iA()).DebUpdater();
               break;
             case "rpm":
-              N = new (aA()).RpmUpdater();
+              N = new (sA()).RpmUpdater();
               break;
             case "pacman":
-              N = new (iA()).PacmanUpdater();
+              N = new (aA()).PacmanUpdater();
               break;
             default:
               break;
@@ -9823,9 +9823,9 @@ function ch() {
     });
   })(Zn)), Zn;
 }
-var Yn = ch(), Zt = { exports: {} }, Ea = { exports: {} }, RA;
-function qI() {
-  return RA || (RA = 1, (function(e) {
+var Yn = lh(), Zt = { exports: {} }, Ea = { exports: {} }, IA;
+function zI() {
+  return IA || (IA = 1, (function(e) {
     let c = {};
     try {
       c = require("electron");
@@ -9870,10 +9870,10 @@ function qI() {
     }
   })(Ea)), Ea.exports;
 }
-var aa = { exports: {} }, _a, lA;
-function Ah() {
-  if (lA) return _a;
-  lA = 1, _a = e;
+var aa = { exports: {} }, _a, TA;
+function Ih() {
+  if (TA) return _a;
+  TA = 1, _a = e;
   function e(c) {
     return Object.defineProperties(o, {
       defaultLabel: { value: "", writable: !0 },
@@ -9902,10 +9902,10 @@ function Ah() {
   }
   return _a;
 }
-var sa, IA;
-function Rh() {
-  if (IA) return sa;
-  IA = 1;
+var sa, NA;
+function Th() {
+  if (NA) return sa;
+  NA = 1;
   class e {
     constructor({ processMessage: o }) {
       this.processMessage = o, this.buffer = [], this.enabled = !1, this.begin = this.begin.bind(this), this.commit = this.commit.bind(this), this.reject = this.reject.bind(this);
@@ -9925,11 +9925,11 @@ function Rh() {
   }
   return sa = e, sa;
 }
-var ua, TA;
-function KI() {
-  if (TA) return ua;
-  TA = 1;
-  const e = Ah(), c = Rh(), i = class i {
+var ua, fA;
+function JI() {
+  if (fA) return ua;
+  fA = 1;
+  const e = Ih(), c = Th(), i = class i {
     constructor({
       allowUnknownLevel: u = !1,
       dependencies: E = {},
@@ -10046,10 +10046,10 @@ function KI() {
   let o = i;
   return ua = o, ua;
 }
-var oa, NA;
-function lh() {
-  if (NA) return oa;
-  NA = 1;
+var oa, hA;
+function Nh() {
+  if (hA) return oa;
+  hA = 1;
   const e = console.error;
   class c {
     constructor({ logFn: i = null } = {}) {
@@ -10093,10 +10093,10 @@ function lh() {
   }
   return oa = c, oa;
 }
-var ca, fA;
+var ca, dA;
 function _t() {
-  if (fA) return ca;
-  fA = 1, ca = { transform: e };
+  if (dA) return ca;
+  dA = 1, ca = { transform: e };
   function e({
     logger: c,
     message: o,
@@ -10108,10 +10108,10 @@ function _t() {
   }
   return ca;
 }
-var Aa, hA;
-function Ih() {
-  if (hA) return Aa;
-  hA = 1;
+var Aa, OA;
+function fh() {
+  if (OA) return Aa;
+  OA = 1;
   const { transform: e } = _t();
   Aa = o;
   const c = {
@@ -10192,10 +10192,10 @@ function Ih() {
   }
   return Aa;
 }
-var Ra, dA;
-function Th() {
-  if (dA) return Ra;
-  dA = 1;
+var Ra, CA;
+function hh() {
+  if (CA) return Ra;
+  CA = 1;
   const { transform: e } = _t();
   Ra = o;
   const c = /* @__PURE__ */ new Set([Promise, WeakMap, WeakSet]);
@@ -10265,10 +10265,10 @@ function Th() {
   }
   return Ra;
 }
-var OA;
-function Nh() {
-  return OA || (OA = 1, (function(e) {
-    const c = KI(), o = lh(), i = Ih(), s = Th();
+var DA;
+function dh() {
+  return DA || (DA = 1, (function(e) {
+    const c = JI(), o = Nh(), i = fh(), s = hh();
     typeof process == "object" && process.type === "browser" && console.warn(
       "electron-log/renderer is loaded in the main process. It could cause unexpected behaviour."
     ), e.exports = u(), e.exports.Logger = c, e.exports.default = e.exports;
@@ -10317,10 +10317,10 @@ function Nh() {
     }
   })(aa)), aa.exports;
 }
-var la, CA;
-function fh() {
-  if (CA) return la;
-  CA = 1;
+var la, SA;
+function Oh() {
+  if (SA) return la;
+  SA = 1;
   const e = nn, c = Fe;
   la = {
     findAndReadPackageJson: o,
@@ -10366,11 +10366,11 @@ function fh() {
   }
   return la;
 }
-var Ia, DA;
-function zI() {
-  if (DA) return Ia;
-  DA = 1;
-  const e = Er, c = mn, o = Fe, i = fh();
+var Ia, gA;
+function ZI() {
+  if (gA) return Ia;
+  gA = 1;
+  const e = Er, c = mn, o = Fe, i = Oh();
   class s {
     constructor() {
       De(this, "appName");
@@ -10521,11 +10521,11 @@ function zI() {
   }
   return Ia = s, Ia;
 }
-var Ta, SA;
-function hh() {
-  if (SA) return Ta;
-  SA = 1;
-  const e = Fe, c = zI();
+var Ta, MA;
+function Ch() {
+  if (MA) return Ta;
+  MA = 1;
+  const e = Fe, c = ZI();
   class o extends c {
     /**
      * @param {object} options
@@ -10676,11 +10676,11 @@ function hh() {
   }
   return Ta = o, Ta;
 }
-var Na, gA;
-function dh() {
-  if (gA) return Na;
-  gA = 1;
-  const e = nn, c = mn, o = Fe, i = qI();
+var Na, BA;
+function Dh() {
+  if (BA) return Na;
+  BA = 1;
+  const e = nn, c = mn, o = Fe, i = zI();
   let s = !1, u = !1;
   Na = {
     initialize({
@@ -10768,10 +10768,10 @@ function dh() {
   }
   return Na;
 }
-var fa, MA;
-function Oh() {
-  if (MA) return fa;
-  MA = 1;
+var fa, LA;
+function Sh() {
+  if (LA) return fa;
+  LA = 1;
   class e {
     constructor({
       externalApi: i,
@@ -10854,10 +10854,10 @@ function Oh() {
   }
   return fa = e, fa;
 }
-var ha, BA;
-function Ch() {
-  if (BA) return ha;
-  BA = 1;
+var ha, UA;
+function gh() {
+  if (UA) return ha;
+  UA = 1;
   class e {
     constructor(o = {}) {
       De(this, "disposers", []);
@@ -11000,10 +11000,10 @@ function Ch() {
   }
   return ha = e, ha;
 }
-var da, LA;
-function JI() {
-  if (LA) return da;
-  LA = 1;
+var da, wA;
+function xI() {
+  if (wA) return da;
+  wA = 1;
   const { transform: e } = _t();
   da = {
     concatFirstStringElements: c,
@@ -11096,9 +11096,9 @@ function JI() {
   }
   return da;
 }
-var Oa = { exports: {} }, UA;
+var Oa = { exports: {} }, mA;
 function Jr() {
-  return UA || (UA = 1, (function(e) {
+  return mA || (mA = 1, (function(e) {
     const c = ht;
     e.exports = {
       serialize: i,
@@ -11159,10 +11159,10 @@ function Jr() {
     }
   })(Oa)), Oa.exports;
 }
-var Ca, wA;
-function ys() {
-  if (wA) return Ca;
-  wA = 1, Ca = {
+var Ca, FA;
+function Vs() {
+  if (FA) return Ca;
+  FA = 1, Ca = {
     transformStyles: i,
     applyAnsiStyles({ data: s }) {
       return i(s, c, o);
@@ -11209,17 +11209,17 @@ function ys() {
   }
   return Ca;
 }
-var Da, mA;
-function Dh() {
-  if (mA) return Da;
-  mA = 1;
+var Da, PA;
+function Mh() {
+  if (PA) return Da;
+  PA = 1;
   const {
     concatFirstStringElements: e,
     format: c
-  } = JI(), { maxDepth: o, toJSON: i } = Jr(), {
+  } = xI(), { maxDepth: o, toJSON: i } = Jr(), {
     applyAnsiStyles: s,
     removeStyles: u
-  } = ys(), { transform: E } = _t(), n = {
+  } = Vs(), { transform: E } = _t(), n = {
     error: console.error,
     warn: console.warn,
     info: console.info,
@@ -11288,10 +11288,10 @@ function Dh() {
   }
   return Da;
 }
-var Sa, FA;
-function ZI() {
-  if (FA) return Sa;
-  FA = 1;
+var Sa, GA;
+function $I() {
+  if (GA) return Sa;
+  GA = 1;
   const e = on, c = nn, o = mn;
   class i extends e {
     constructor({
@@ -11392,11 +11392,11 @@ function ZI() {
   }
   return Sa;
 }
-var ga, PA;
-function Sh() {
-  if (PA) return ga;
-  PA = 1;
-  const e = ZI();
+var ga, bA;
+function Bh() {
+  if (bA) return ga;
+  bA = 1;
+  const e = $I();
   class c extends e {
     clear() {
     }
@@ -11413,11 +11413,11 @@ function Sh() {
   }
   return ga = c, ga;
 }
-var Ma, GA;
-function gh() {
-  if (GA) return Ma;
-  GA = 1;
-  const e = on, c = nn, o = Fe, i = ZI(), s = Sh();
+var Ma, vA;
+function Lh() {
+  if (vA) return Ma;
+  vA = 1;
+  const e = on, c = nn, o = Fe, i = $I(), s = Bh();
   class u extends e {
     constructor() {
       super();
@@ -11471,14 +11471,14 @@ function gh() {
   }
   return Ma = u, Ma;
 }
-var Ba, bA;
-function Mh() {
-  if (bA) return Ba;
-  bA = 1;
-  const e = nn, c = mn, o = Fe, i = gh(), { transform: s } = _t(), { removeStyles: u } = ys(), {
+var Ba, yA;
+function Uh() {
+  if (yA) return Ba;
+  yA = 1;
+  const e = nn, c = mn, o = Fe, i = Lh(), { transform: s } = _t(), { removeStyles: u } = Vs(), {
     format: E,
     concatFirstStringElements: n
-  } = JI(), { toString: r } = Jr();
+  } = xI(), { toString: r } = Jr();
   Ba = a;
   const t = new i();
   function a(A, { registry: R = t, externalApi: N } = {}) {
@@ -11575,10 +11575,10 @@ function Mh() {
   }
   return Ba;
 }
-var La, vA;
-function Bh() {
-  if (vA) return La;
-  vA = 1;
+var La, QA;
+function wh() {
+  if (QA) return La;
+  QA = 1;
   const { maxDepth: e, toJSON: c } = Jr(), { transform: o } = _t();
   La = i;
   function i(s, { externalApi: u }) {
@@ -11598,11 +11598,11 @@ function Bh() {
   }
   return La;
 }
-var Ua, QA;
-function Lh() {
-  if (QA) return Ua;
-  QA = 1;
-  const e = _I, c = UN, { transform: o } = _t(), { removeStyles: i } = ys(), { toJSON: s, maxDepth: u } = Jr();
+var Ua, VA;
+function mh() {
+  if (VA) return Ua;
+  VA = 1;
+  const e = uI, c = FN, { transform: o } = _t(), { removeStyles: i } = Vs(), { toJSON: s, maxDepth: u } = Jr();
   Ua = E;
   function E(n) {
     return Object.assign(r, {
@@ -11666,11 +11666,11 @@ function Lh() {
   }
   return Ua;
 }
-var wa, yA;
-function xI() {
-  if (yA) return wa;
-  yA = 1;
-  const e = KI(), c = Oh(), o = Ch(), i = Dh(), s = Mh(), u = Bh(), E = Lh();
+var wa, YA;
+function eT() {
+  if (YA) return wa;
+  YA = 1;
+  const e = JI(), c = Sh(), o = gh(), i = Mh(), s = Uh(), u = wh(), E = mh();
   wa = n;
   function n({ dependencies: r, initializeFn: t }) {
     var _;
@@ -11702,11 +11702,11 @@ function xI() {
   }
   return wa;
 }
-var ma, VA;
-function Uh() {
-  if (VA) return ma;
-  VA = 1;
-  const e = Hn, c = hh(), { initialize: o } = dh(), i = xI(), s = new c({ electron: e }), u = i({
+var ma, HA;
+function Fh() {
+  if (HA) return ma;
+  HA = 1;
+  const e = Hn, c = Ch(), { initialize: o } = Dh(), i = eT(), s = new c({ electron: e }), u = i({
     dependencies: { externalApi: s },
     initializeFn: o
   });
@@ -11734,26 +11734,26 @@ function Uh() {
   }
   return ma;
 }
-var Fa, YA;
-function wh() {
-  if (YA) return Fa;
-  YA = 1;
-  const e = zI(), c = xI(), o = new e();
+var Fa, WA;
+function Ph() {
+  if (WA) return Fa;
+  WA = 1;
+  const e = ZI(), c = eT(), o = new e();
   return Fa = c({
     dependencies: { externalApi: o }
   }), Fa;
 }
-var HA;
-function mh() {
-  if (HA) return Zt.exports;
-  HA = 1;
+var pA;
+function Gh() {
+  if (pA) return Zt.exports;
+  pA = 1;
   const e = typeof process > "u" || process.type === "renderer" || process.type === "worker", c = typeof process == "object" && process.type === "browser";
-  return e ? (qI(), Zt.exports = Nh()) : c ? Zt.exports = Uh() : Zt.exports = wh(), Zt.exports;
+  return e ? (zI(), Zt.exports = dh()) : c ? Zt.exports = Fh() : Zt.exports = Ph(), Zt.exports;
 }
-var Fh = mh();
-const Ph = /* @__PURE__ */ cI(Fh);
+var bh = Gh();
+const vh = /* @__PURE__ */ RI(bh);
 function Ge(e, c) {
-  dn.handle(e, async (o, ...i) => {
+  Rn.handle(e, async (o, ...i) => {
     try {
       return await c(o, ...i);
     } catch (s) {
@@ -11765,8 +11765,8 @@ function Ge(e, c) {
     }
   });
 }
-const $I = sI(import.meta.url), Gh = en.dirname($I);
-typeof globalThis < "u" && (globalThis.__filename = $I, globalThis.__dirname = Gh);
+const nT = oI(import.meta.url), yh = en.dirname(nT);
+typeof globalThis < "u" && (globalThis.__filename = nT, globalThis.__dirname = yh);
 let me = null, Pa = !1;
 function Se() {
   if (me)
@@ -11778,7 +11778,7 @@ function Se() {
     if (!ft.isReady())
       throw new Error("Electron app not ready");
     const e = ft.getPath("userData"), c = en.join(e, "reservas.db");
-    if (En.existsSync(e) || En.mkdirSync(e, { recursive: !0 }), console.log(" [DB] Creando nueva conexión a:", c), me = new wN(c, {
+    if (En.existsSync(e) || En.mkdirSync(e, { recursive: !0 }), console.log(" [DB] Creando nueva conexión a:", c), me = new PN(c, {
       readonly: !1,
       fileMustExist: !1,
       timeout: 3e4
@@ -11926,9 +11926,9 @@ function Se() {
     Pa = !1;
   }
 }
-var Ga = {}, ba = {}, WA;
-function bh() {
-  return WA || (WA = 1, (function(e) {
+var Ga = {}, ba = {}, kA;
+function Qh() {
+  return kA || (kA = 1, (function(e) {
     var c = e, o = /`/g, i = /\./g, s = /[\0\b\t\n\r\x1a\"\'\\]/g, u = {
       "\0": "\\0",
       "\b": "\\b",
@@ -12026,14 +12026,14 @@ function bh() {
     }
   })(ba)), ba;
 }
-var va, pA;
-function Vs() {
-  return pA || (pA = 1, va = bh()), va;
+var va, XA;
+function Ys() {
+  return XA || (XA = 1, va = Qh()), va;
 }
-var xt = {}, kA;
+var xt = {}, jA;
 function Zr() {
-  if (kA) return xt;
-  kA = 1, Object.defineProperty(xt, "__esModule", { value: !0 }), xt.createLRU = void 0;
+  if (jA) return xt;
+  jA = 1, Object.defineProperty(xt, "__esModule", { value: !0 }), xt.createLRU = void 0;
   const e = (c) => {
     let { max: o } = c;
     if (!(Number.isInteger(o) && o > 0))
@@ -12169,10 +12169,10 @@ function Zr() {
   };
   return xt.createLRU = e, xt;
 }
-var Qa, XA;
-function Ys() {
-  if (XA) return Qa;
-  XA = 1;
+var ya, qA;
+function Hs() {
+  if (qA) return ya;
+  qA = 1;
   const { createLRU: e } = Zr(), c = e({
     max: 15e3
   });
@@ -12214,17 +12214,17 @@ function Ys() {
   function u() {
     c.clear();
   }
-  return Qa = {
+  return ya = {
     getParser: i,
     setMaxCache: s,
     clearCache: u,
     _keyFromFields: o
-  }, Qa;
+  }, ya;
 }
-var ya, jA;
-function eT() {
-  if (jA) return ya;
-  jA = 1;
+var Qa, KA;
+function tT() {
+  if (KA) return Qa;
+  KA = 1;
   function e(c, i) {
     var i = i || {};
     this._capacity = i.capacity, this._head = 0, this._tail = 0, Array.isArray(c) ? this._fromArray(c) : (this._capacityMask = 3, this._list = new Array(4));
@@ -12391,24 +12391,24 @@ function eT() {
   }, e.prototype._nextPowerOf2 = function(o) {
     var i = Math.log(o) / Math.log(2), s = 1 << i + 1;
     return Math.max(s, 4);
-  }, ya = e, ya;
+  }, Qa = e, Qa;
 }
-var Va = {}, qA;
-function nT() {
-  return qA || (qA = 1, (function(e) {
+var Va = {}, zA;
+function rT() {
+  return zA || (zA = 1, (function(e) {
     e.EE_CANTCREATEFILE = 1, e.EE_READ = 2, e.EE_WRITE = 3, e.EE_BADCLOSE = 4, e.EE_OUTOFMEMORY = 5, e.EE_DELETE = 6, e.EE_LINK = 7, e.EE_EOFERR = 9, e.EE_CANTLOCK = 10, e.EE_CANTUNLOCK = 11, e.EE_DIR = 12, e.EE_STAT = 13, e.EE_CANT_CHSIZE = 14, e.EE_CANT_OPEN_STREAM = 15, e.EE_GETWD = 16, e.EE_SETWD = 17, e.EE_LINK_WARNING = 18, e.EE_OPEN_WARNING = 19, e.EE_DISK_FULL = 20, e.EE_CANT_MKDIR = 21, e.EE_UNKNOWN_CHARSET = 22, e.EE_OUT_OF_FILERESOURCES = 23, e.EE_CANT_READLINK = 24, e.EE_CANT_SYMLINK = 25, e.EE_REALPATH = 26, e.EE_SYNC = 27, e.EE_UNKNOWN_COLLATION = 28, e.EE_FILENOTFOUND = 29, e.EE_FILE_NOT_CLOSED = 30, e.EE_CHANGE_OWNERSHIP = 31, e.EE_CHANGE_PERMISSIONS = 32, e.EE_CANT_SEEK = 33, e.EE_CAPACITY_EXCEEDED = 34, e.EE_DISK_FULL_WITH_RETRY_MSG = 35, e.EE_FAILED_TO_CREATE_TIMER = 36, e.EE_FAILED_TO_DELETE_TIMER = 37, e.EE_FAILED_TO_CREATE_TIMER_QUEUE = 38, e.EE_FAILED_TO_START_TIMER_NOTIFY_THREAD = 39, e.EE_FAILED_TO_CREATE_TIMER_NOTIFY_THREAD_INTERRUPT_EVENT = 40, e.EE_EXITING_TIMER_NOTIFY_THREAD = 41, e.EE_WIN_LIBRARY_LOAD_FAILED = 42, e.EE_WIN_RUN_TIME_ERROR_CHECK = 43, e.EE_FAILED_TO_DETERMINE_LARGE_PAGE_SIZE = 44, e.EE_FAILED_TO_KILL_ALL_THREADS = 45, e.EE_FAILED_TO_CREATE_IO_COMPLETION_PORT = 46, e.EE_FAILED_TO_OPEN_DEFAULTS_FILE = 47, e.EE_FAILED_TO_HANDLE_DEFAULTS_FILE = 48, e.EE_WRONG_DIRECTIVE_IN_CONFIG_FILE = 49, e.EE_SKIPPING_DIRECTIVE_DUE_TO_MAX_INCLUDE_RECURSION = 50, e.EE_INCORRECT_GRP_DEFINITION_IN_CONFIG_FILE = 51, e.EE_OPTION_WITHOUT_GRP_IN_CONFIG_FILE = 52, e.EE_CONFIG_FILE_PERMISSION_ERROR = 53, e.EE_IGNORE_WORLD_WRITABLE_CONFIG_FILE = 54, e.EE_USING_DISABLED_OPTION = 55, e.EE_USING_DISABLED_SHORT_OPTION = 56, e.EE_USING_PASSWORD_ON_CLI_IS_INSECURE = 57, e.EE_UNKNOWN_SUFFIX_FOR_VARIABLE = 58, e.EE_SSL_ERROR_FROM_FILE = 59, e.EE_SSL_ERROR = 60, e.EE_NET_SEND_ERROR_IN_BOOTSTRAP = 61, e.EE_PACKETS_OUT_OF_ORDER = 62, e.EE_UNKNOWN_PROTOCOL_OPTION = 63, e.EE_FAILED_TO_LOCATE_SERVER_PUBLIC_KEY = 64, e.EE_PUBLIC_KEY_NOT_IN_PEM_FORMAT = 65, e.EE_DEBUG_INFO = 66, e.EE_UNKNOWN_VARIABLE = 67, e.EE_UNKNOWN_OPTION = 68, e.EE_UNKNOWN_SHORT_OPTION = 69, e.EE_OPTION_WITHOUT_ARGUMENT = 70, e.EE_OPTION_REQUIRES_ARGUMENT = 71, e.EE_SHORT_OPTION_REQUIRES_ARGUMENT = 72, e.EE_OPTION_IGNORED_DUE_TO_INVALID_VALUE = 73, e.EE_OPTION_WITH_EMPTY_VALUE = 74, e.EE_FAILED_TO_ASSIGN_MAX_VALUE_TO_OPTION = 75, e.EE_INCORRECT_BOOLEAN_VALUE_FOR_OPTION = 76, e.EE_FAILED_TO_SET_OPTION_VALUE = 77, e.EE_INCORRECT_INT_VALUE_FOR_OPTION = 78, e.EE_INCORRECT_UINT_VALUE_FOR_OPTION = 79, e.EE_ADJUSTED_SIGNED_VALUE_FOR_OPTION = 80, e.EE_ADJUSTED_UNSIGNED_VALUE_FOR_OPTION = 81, e.EE_ADJUSTED_ULONGLONG_VALUE_FOR_OPTION = 82, e.EE_ADJUSTED_DOUBLE_VALUE_FOR_OPTION = 83, e.EE_INVALID_DECIMAL_VALUE_FOR_OPTION = 84, e.EE_COLLATION_PARSER_ERROR = 85, e.EE_FAILED_TO_RESET_BEFORE_PRIMARY_IGNORABLE_CHAR = 86, e.EE_FAILED_TO_RESET_BEFORE_TERTIARY_IGNORABLE_CHAR = 87, e.EE_SHIFT_CHAR_OUT_OF_RANGE = 88, e.EE_RESET_CHAR_OUT_OF_RANGE = 89, e.EE_UNKNOWN_LDML_TAG = 90, e.EE_FAILED_TO_RESET_BEFORE_SECONDARY_IGNORABLE_CHAR = 91, e.EE_FAILED_PROCESSING_DIRECTIVE = 92, e.EE_PTHREAD_KILL_FAILED = 93, e.HA_ERR_KEY_NOT_FOUND = 120, e.HA_ERR_FOUND_DUPP_KEY = 121, e.HA_ERR_INTERNAL_ERROR = 122, e.HA_ERR_RECORD_CHANGED = 123, e.HA_ERR_WRONG_INDEX = 124, e.HA_ERR_ROLLED_BACK = 125, e.HA_ERR_CRASHED = 126, e.HA_ERR_WRONG_IN_RECORD = 127, e.HA_ERR_OUT_OF_MEM = 128, e.HA_ERR_NOT_A_TABLE = 130, e.HA_ERR_WRONG_COMMAND = 131, e.HA_ERR_OLD_FILE = 132, e.HA_ERR_NO_ACTIVE_RECORD = 133, e.HA_ERR_RECORD_DELETED = 134, e.HA_ERR_RECORD_FILE_FULL = 135, e.HA_ERR_INDEX_FILE_FULL = 136, e.HA_ERR_END_OF_FILE = 137, e.HA_ERR_UNSUPPORTED = 138, e.HA_ERR_TOO_BIG_ROW = 139, e.HA_WRONG_CREATE_OPTION = 140, e.HA_ERR_FOUND_DUPP_UNIQUE = 141, e.HA_ERR_UNKNOWN_CHARSET = 142, e.HA_ERR_WRONG_MRG_TABLE_DEF = 143, e.HA_ERR_CRASHED_ON_REPAIR = 144, e.HA_ERR_CRASHED_ON_USAGE = 145, e.HA_ERR_LOCK_WAIT_TIMEOUT = 146, e.HA_ERR_LOCK_TABLE_FULL = 147, e.HA_ERR_READ_ONLY_TRANSACTION = 148, e.HA_ERR_LOCK_DEADLOCK = 149, e.HA_ERR_CANNOT_ADD_FOREIGN = 150, e.HA_ERR_NO_REFERENCED_ROW = 151, e.HA_ERR_ROW_IS_REFERENCED = 152, e.HA_ERR_NO_SAVEPOINT = 153, e.HA_ERR_NON_UNIQUE_BLOCK_SIZE = 154, e.HA_ERR_NO_SUCH_TABLE = 155, e.HA_ERR_TABLE_EXIST = 156, e.HA_ERR_NO_CONNECTION = 157, e.HA_ERR_NULL_IN_SPATIAL = 158, e.HA_ERR_TABLE_DEF_CHANGED = 159, e.HA_ERR_NO_PARTITION_FOUND = 160, e.HA_ERR_RBR_LOGGING_FAILED = 161, e.HA_ERR_DROP_INDEX_FK = 162, e.HA_ERR_FOREIGN_DUPLICATE_KEY = 163, e.HA_ERR_TABLE_NEEDS_UPGRADE = 164, e.HA_ERR_TABLE_READONLY = 165, e.HA_ERR_AUTOINC_READ_FAILED = 166, e.HA_ERR_AUTOINC_ERANGE = 167, e.HA_ERR_GENERIC = 168, e.HA_ERR_RECORD_IS_THE_SAME = 169, e.HA_ERR_LOGGING_IMPOSSIBLE = 170, e.HA_ERR_CORRUPT_EVENT = 171, e.HA_ERR_NEW_FILE = 172, e.HA_ERR_ROWS_EVENT_APPLY = 173, e.HA_ERR_INITIALIZATION = 174, e.HA_ERR_FILE_TOO_SHORT = 175, e.HA_ERR_WRONG_CRC = 176, e.HA_ERR_TOO_MANY_CONCURRENT_TRXS = 177, e.HA_ERR_NOT_IN_LOCK_PARTITIONS = 178, e.HA_ERR_INDEX_COL_TOO_LONG = 179, e.HA_ERR_INDEX_CORRUPT = 180, e.HA_ERR_UNDO_REC_TOO_BIG = 181, e.HA_FTS_INVALID_DOCID = 182, e.HA_ERR_TABLE_IN_FK_CHECK = 183, e.HA_ERR_TABLESPACE_EXISTS = 184, e.HA_ERR_TOO_MANY_FIELDS = 185, e.HA_ERR_ROW_IN_WRONG_PARTITION = 186, e.HA_ERR_INNODB_READ_ONLY = 187, e.HA_ERR_FTS_EXCEED_RESULT_CACHE_LIMIT = 188, e.HA_ERR_TEMP_FILE_WRITE_FAILURE = 189, e.HA_ERR_INNODB_FORCED_RECOVERY = 190, e.HA_ERR_FTS_TOO_MANY_WORDS_IN_PHRASE = 191, e.HA_ERR_FK_DEPTH_EXCEEDED = 192, e.HA_MISSING_CREATE_OPTION = 193, e.HA_ERR_SE_OUT_OF_MEMORY = 194, e.HA_ERR_TABLE_CORRUPT = 195, e.HA_ERR_QUERY_INTERRUPTED = 196, e.HA_ERR_TABLESPACE_MISSING = 197, e.HA_ERR_TABLESPACE_IS_NOT_EMPTY = 198, e.HA_ERR_WRONG_FILE_NAME = 199, e.HA_ERR_NOT_ALLOWED_COMMAND = 200, e.HA_ERR_COMPUTE_FAILED = 201, e.HA_ERR_ROW_FORMAT_CHANGED = 202, e.HA_ERR_NO_WAIT_LOCK = 203, e.HA_ERR_DISK_FULL_NOWAIT = 204, e.HA_ERR_NO_SESSION_TEMP = 205, e.HA_ERR_WRONG_TABLE_NAME = 206, e.HA_ERR_TOO_LONG_PATH = 207, e.HA_ERR_SAMPLING_INIT_FAILED = 208, e.HA_ERR_FTS_TOO_MANY_NESTED_EXP = 209, e.ER_HASHCHK = 1e3, e.ER_NISAMCHK = 1001, e.ER_NO = 1002, e.ER_YES = 1003, e.ER_CANT_CREATE_FILE = 1004, e.ER_CANT_CREATE_TABLE = 1005, e.ER_CANT_CREATE_DB = 1006, e.ER_DB_CREATE_EXISTS = 1007, e.ER_DB_DROP_EXISTS = 1008, e.ER_DB_DROP_DELETE = 1009, e.ER_DB_DROP_RMDIR = 1010, e.ER_CANT_DELETE_FILE = 1011, e.ER_CANT_FIND_SYSTEM_REC = 1012, e.ER_CANT_GET_STAT = 1013, e.ER_CANT_GET_WD = 1014, e.ER_CANT_LOCK = 1015, e.ER_CANT_OPEN_FILE = 1016, e.ER_FILE_NOT_FOUND = 1017, e.ER_CANT_READ_DIR = 1018, e.ER_CANT_SET_WD = 1019, e.ER_CHECKREAD = 1020, e.ER_DISK_FULL = 1021, e.ER_DUP_KEY = 1022, e.ER_ERROR_ON_CLOSE = 1023, e.ER_ERROR_ON_READ = 1024, e.ER_ERROR_ON_RENAME = 1025, e.ER_ERROR_ON_WRITE = 1026, e.ER_FILE_USED = 1027, e.ER_FILSORT_ABORT = 1028, e.ER_FORM_NOT_FOUND = 1029, e.ER_GET_ERRNO = 1030, e.ER_ILLEGAL_HA = 1031, e.ER_KEY_NOT_FOUND = 1032, e.ER_NOT_FORM_FILE = 1033, e.ER_NOT_KEYFILE = 1034, e.ER_OLD_KEYFILE = 1035, e.ER_OPEN_AS_READONLY = 1036, e.ER_OUTOFMEMORY = 1037, e.ER_OUT_OF_SORTMEMORY = 1038, e.ER_UNEXPECTED_EOF = 1039, e.ER_CON_COUNT_ERROR = 1040, e.ER_OUT_OF_RESOURCES = 1041, e.ER_BAD_HOST_ERROR = 1042, e.ER_HANDSHAKE_ERROR = 1043, e.ER_DBACCESS_DENIED_ERROR = 1044, e.ER_ACCESS_DENIED_ERROR = 1045, e.ER_NO_DB_ERROR = 1046, e.ER_UNKNOWN_COM_ERROR = 1047, e.ER_BAD_NULL_ERROR = 1048, e.ER_BAD_DB_ERROR = 1049, e.ER_TABLE_EXISTS_ERROR = 1050, e.ER_BAD_TABLE_ERROR = 1051, e.ER_NON_UNIQ_ERROR = 1052, e.ER_SERVER_SHUTDOWN = 1053, e.ER_BAD_FIELD_ERROR = 1054, e.ER_WRONG_FIELD_WITH_GROUP = 1055, e.ER_WRONG_GROUP_FIELD = 1056, e.ER_WRONG_SUM_SELECT = 1057, e.ER_WRONG_VALUE_COUNT = 1058, e.ER_TOO_LONG_IDENT = 1059, e.ER_DUP_FIELDNAME = 1060, e.ER_DUP_KEYNAME = 1061, e.ER_DUP_ENTRY = 1062, e.ER_WRONG_FIELD_SPEC = 1063, e.ER_PARSE_ERROR = 1064, e.ER_EMPTY_QUERY = 1065, e.ER_NONUNIQ_TABLE = 1066, e.ER_INVALID_DEFAULT = 1067, e.ER_MULTIPLE_PRI_KEY = 1068, e.ER_TOO_MANY_KEYS = 1069, e.ER_TOO_MANY_KEY_PARTS = 1070, e.ER_TOO_LONG_KEY = 1071, e.ER_KEY_COLUMN_DOES_NOT_EXITS = 1072, e.ER_BLOB_USED_AS_KEY = 1073, e.ER_TOO_BIG_FIELDLENGTH = 1074, e.ER_WRONG_AUTO_KEY = 1075, e.ER_READY = 1076, e.ER_NORMAL_SHUTDOWN = 1077, e.ER_GOT_SIGNAL = 1078, e.ER_SHUTDOWN_COMPLETE = 1079, e.ER_FORCING_CLOSE = 1080, e.ER_IPSOCK_ERROR = 1081, e.ER_NO_SUCH_INDEX = 1082, e.ER_WRONG_FIELD_TERMINATORS = 1083, e.ER_BLOBS_AND_NO_TERMINATED = 1084, e.ER_TEXTFILE_NOT_READABLE = 1085, e.ER_FILE_EXISTS_ERROR = 1086, e.ER_LOAD_INFO = 1087, e.ER_ALTER_INFO = 1088, e.ER_WRONG_SUB_KEY = 1089, e.ER_CANT_REMOVE_ALL_FIELDS = 1090, e.ER_CANT_DROP_FIELD_OR_KEY = 1091, e.ER_INSERT_INFO = 1092, e.ER_UPDATE_TABLE_USED = 1093, e.ER_NO_SUCH_THREAD = 1094, e.ER_KILL_DENIED_ERROR = 1095, e.ER_NO_TABLES_USED = 1096, e.ER_TOO_BIG_SET = 1097, e.ER_NO_UNIQUE_LOGFILE = 1098, e.ER_TABLE_NOT_LOCKED_FOR_WRITE = 1099, e.ER_TABLE_NOT_LOCKED = 1100, e.ER_BLOB_CANT_HAVE_DEFAULT = 1101, e.ER_WRONG_DB_NAME = 1102, e.ER_WRONG_TABLE_NAME = 1103, e.ER_TOO_BIG_SELECT = 1104, e.ER_UNKNOWN_ERROR = 1105, e.ER_UNKNOWN_PROCEDURE = 1106, e.ER_WRONG_PARAMCOUNT_TO_PROCEDURE = 1107, e.ER_WRONG_PARAMETERS_TO_PROCEDURE = 1108, e.ER_UNKNOWN_TABLE = 1109, e.ER_FIELD_SPECIFIED_TWICE = 1110, e.ER_INVALID_GROUP_FUNC_USE = 1111, e.ER_UNSUPPORTED_EXTENSION = 1112, e.ER_TABLE_MUST_HAVE_COLUMNS = 1113, e.ER_RECORD_FILE_FULL = 1114, e.ER_UNKNOWN_CHARACTER_SET = 1115, e.ER_TOO_MANY_TABLES = 1116, e.ER_TOO_MANY_FIELDS = 1117, e.ER_TOO_BIG_ROWSIZE = 1118, e.ER_STACK_OVERRUN = 1119, e.ER_WRONG_OUTER_JOIN = 1120, e.ER_NULL_COLUMN_IN_INDEX = 1121, e.ER_CANT_FIND_UDF = 1122, e.ER_CANT_INITIALIZE_UDF = 1123, e.ER_UDF_NO_PATHS = 1124, e.ER_UDF_EXISTS = 1125, e.ER_CANT_OPEN_LIBRARY = 1126, e.ER_CANT_FIND_DL_ENTRY = 1127, e.ER_FUNCTION_NOT_DEFINED = 1128, e.ER_HOST_IS_BLOCKED = 1129, e.ER_HOST_NOT_PRIVILEGED = 1130, e.ER_PASSWORD_ANONYMOUS_USER = 1131, e.ER_PASSWORD_NOT_ALLOWED = 1132, e.ER_PASSWORD_NO_MATCH = 1133, e.ER_UPDATE_INFO = 1134, e.ER_CANT_CREATE_THREAD = 1135, e.ER_WRONG_VALUE_COUNT_ON_ROW = 1136, e.ER_CANT_REOPEN_TABLE = 1137, e.ER_INVALID_USE_OF_NULL = 1138, e.ER_REGEXP_ERROR = 1139, e.ER_MIX_OF_GROUP_FUNC_AND_FIELDS = 1140, e.ER_NONEXISTING_GRANT = 1141, e.ER_TABLEACCESS_DENIED_ERROR = 1142, e.ER_COLUMNACCESS_DENIED_ERROR = 1143, e.ER_ILLEGAL_GRANT_FOR_TABLE = 1144, e.ER_GRANT_WRONG_HOST_OR_USER = 1145, e.ER_NO_SUCH_TABLE = 1146, e.ER_NONEXISTING_TABLE_GRANT = 1147, e.ER_NOT_ALLOWED_COMMAND = 1148, e.ER_SYNTAX_ERROR = 1149, e.ER_UNUSED1 = 1150, e.ER_UNUSED2 = 1151, e.ER_ABORTING_CONNECTION = 1152, e.ER_NET_PACKET_TOO_LARGE = 1153, e.ER_NET_READ_ERROR_FROM_PIPE = 1154, e.ER_NET_FCNTL_ERROR = 1155, e.ER_NET_PACKETS_OUT_OF_ORDER = 1156, e.ER_NET_UNCOMPRESS_ERROR = 1157, e.ER_NET_READ_ERROR = 1158, e.ER_NET_READ_INTERRUPTED = 1159, e.ER_NET_ERROR_ON_WRITE = 1160, e.ER_NET_WRITE_INTERRUPTED = 1161, e.ER_TOO_LONG_STRING = 1162, e.ER_TABLE_CANT_HANDLE_BLOB = 1163, e.ER_TABLE_CANT_HANDLE_AUTO_INCREMENT = 1164, e.ER_UNUSED3 = 1165, e.ER_WRONG_COLUMN_NAME = 1166, e.ER_WRONG_KEY_COLUMN = 1167, e.ER_WRONG_MRG_TABLE = 1168, e.ER_DUP_UNIQUE = 1169, e.ER_BLOB_KEY_WITHOUT_LENGTH = 1170, e.ER_PRIMARY_CANT_HAVE_NULL = 1171, e.ER_TOO_MANY_ROWS = 1172, e.ER_REQUIRES_PRIMARY_KEY = 1173, e.ER_NO_RAID_COMPILED = 1174, e.ER_UPDATE_WITHOUT_KEY_IN_SAFE_MODE = 1175, e.ER_KEY_DOES_NOT_EXITS = 1176, e.ER_CHECK_NO_SUCH_TABLE = 1177, e.ER_CHECK_NOT_IMPLEMENTED = 1178, e.ER_CANT_DO_THIS_DURING_AN_TRANSACTION = 1179, e.ER_ERROR_DURING_COMMIT = 1180, e.ER_ERROR_DURING_ROLLBACK = 1181, e.ER_ERROR_DURING_FLUSH_LOGS = 1182, e.ER_ERROR_DURING_CHECKPOINT = 1183, e.ER_NEW_ABORTING_CONNECTION = 1184, e.ER_DUMP_NOT_IMPLEMENTED = 1185, e.ER_FLUSH_MASTER_BINLOG_CLOSED = 1186, e.ER_INDEX_REBUILD = 1187, e.ER_SOURCE = 1188, e.ER_SOURCE_NET_READ = 1189, e.ER_SOURCE_NET_WRITE = 1190, e.ER_FT_MATCHING_KEY_NOT_FOUND = 1191, e.ER_LOCK_OR_ACTIVE_TRANSACTION = 1192, e.ER_UNKNOWN_SYSTEM_VARIABLE = 1193, e.ER_CRASHED_ON_USAGE = 1194, e.ER_CRASHED_ON_REPAIR = 1195, e.ER_WARNING_NOT_COMPLETE_ROLLBACK = 1196, e.ER_TRANS_CACHE_FULL = 1197, e.ER_SLAVE_MUST_STOP = 1198, e.ER_REPLICA_NOT_RUNNING = 1199, e.ER_BAD_REPLICA = 1200, e.ER_CONNECTION_METADATA = 1201, e.ER_REPLICA_THREAD = 1202, e.ER_TOO_MANY_USER_CONNECTIONS = 1203, e.ER_SET_CONSTANTS_ONLY = 1204, e.ER_LOCK_WAIT_TIMEOUT = 1205, e.ER_LOCK_TABLE_FULL = 1206, e.ER_READ_ONLY_TRANSACTION = 1207, e.ER_DROP_DB_WITH_READ_LOCK = 1208, e.ER_CREATE_DB_WITH_READ_LOCK = 1209, e.ER_WRONG_ARGUMENTS = 1210, e.ER_NO_PERMISSION_TO_CREATE_USER = 1211, e.ER_UNION_TABLES_IN_DIFFERENT_DIR = 1212, e.ER_LOCK_DEADLOCK = 1213, e.ER_TABLE_CANT_HANDLE_FT = 1214, e.ER_CANNOT_ADD_FOREIGN = 1215, e.ER_NO_REFERENCED_ROW = 1216, e.ER_ROW_IS_REFERENCED = 1217, e.ER_CONNECT_TO_SOURCE = 1218, e.ER_QUERY_ON_MASTER = 1219, e.ER_ERROR_WHEN_EXECUTING_COMMAND = 1220, e.ER_WRONG_USAGE = 1221, e.ER_WRONG_NUMBER_OF_COLUMNS_IN_SELECT = 1222, e.ER_CANT_UPDATE_WITH_READLOCK = 1223, e.ER_MIXING_NOT_ALLOWED = 1224, e.ER_DUP_ARGUMENT = 1225, e.ER_USER_LIMIT_REACHED = 1226, e.ER_SPECIFIC_ACCESS_DENIED_ERROR = 1227, e.ER_LOCAL_VARIABLE = 1228, e.ER_GLOBAL_VARIABLE = 1229, e.ER_NO_DEFAULT = 1230, e.ER_WRONG_VALUE_FOR_VAR = 1231, e.ER_WRONG_TYPE_FOR_VAR = 1232, e.ER_VAR_CANT_BE_READ = 1233, e.ER_CANT_USE_OPTION_HERE = 1234, e.ER_NOT_SUPPORTED_YET = 1235, e.ER_SOURCE_FATAL_ERROR_READING_BINLOG = 1236, e.ER_REPLICA_IGNORED_TABLE = 1237, e.ER_INCORRECT_GLOBAL_LOCAL_VAR = 1238, e.ER_WRONG_FK_DEF = 1239, e.ER_KEY_REF_DO_NOT_MATCH_TABLE_REF = 1240, e.ER_OPERAND_COLUMNS = 1241, e.ER_SUBQUERY_NO_1_ROW = 1242, e.ER_UNKNOWN_STMT_HANDLER = 1243, e.ER_CORRUPT_HELP_DB = 1244, e.ER_CYCLIC_REFERENCE = 1245, e.ER_AUTO_CONVERT = 1246, e.ER_ILLEGAL_REFERENCE = 1247, e.ER_DERIVED_MUST_HAVE_ALIAS = 1248, e.ER_SELECT_REDUCED = 1249, e.ER_TABLENAME_NOT_ALLOWED_HERE = 1250, e.ER_NOT_SUPPORTED_AUTH_MODE = 1251, e.ER_SPATIAL_CANT_HAVE_NULL = 1252, e.ER_COLLATION_CHARSET_MISMATCH = 1253, e.ER_SLAVE_WAS_RUNNING = 1254, e.ER_SLAVE_WAS_NOT_RUNNING = 1255, e.ER_TOO_BIG_FOR_UNCOMPRESS = 1256, e.ER_ZLIB_Z_MEM_ERROR = 1257, e.ER_ZLIB_Z_BUF_ERROR = 1258, e.ER_ZLIB_Z_DATA_ERROR = 1259, e.ER_CUT_VALUE_GROUP_CONCAT = 1260, e.ER_WARN_TOO_FEW_RECORDS = 1261, e.ER_WARN_TOO_MANY_RECORDS = 1262, e.ER_WARN_NULL_TO_NOTNULL = 1263, e.ER_WARN_DATA_OUT_OF_RANGE = 1264, e.WARN_DATA_TRUNCATED = 1265, e.ER_WARN_USING_OTHER_HANDLER = 1266, e.ER_CANT_AGGREGATE_2COLLATIONS = 1267, e.ER_DROP_USER = 1268, e.ER_REVOKE_GRANTS = 1269, e.ER_CANT_AGGREGATE_3COLLATIONS = 1270, e.ER_CANT_AGGREGATE_NCOLLATIONS = 1271, e.ER_VARIABLE_IS_NOT_STRUCT = 1272, e.ER_UNKNOWN_COLLATION = 1273, e.ER_REPLICA_IGNORED_SSL_PARAMS = 1274, e.ER_SERVER_IS_IN_SECURE_AUTH_MODE = 1275, e.ER_WARN_FIELD_RESOLVED = 1276, e.ER_BAD_REPLICA_UNTIL_COND = 1277, e.ER_MISSING_SKIP_REPLICA = 1278, e.ER_UNTIL_COND_IGNORED = 1279, e.ER_WRONG_NAME_FOR_INDEX = 1280, e.ER_WRONG_NAME_FOR_CATALOG = 1281, e.ER_WARN_QC_RESIZE = 1282, e.ER_BAD_FT_COLUMN = 1283, e.ER_UNKNOWN_KEY_CACHE = 1284, e.ER_WARN_HOSTNAME_WONT_WORK = 1285, e.ER_UNKNOWN_STORAGE_ENGINE = 1286, e.ER_WARN_DEPRECATED_SYNTAX = 1287, e.ER_NON_UPDATABLE_TABLE = 1288, e.ER_FEATURE_DISABLED = 1289, e.ER_OPTION_PREVENTS_STATEMENT = 1290, e.ER_DUPLICATED_VALUE_IN_TYPE = 1291, e.ER_TRUNCATED_WRONG_VALUE = 1292, e.ER_TOO_MUCH_AUTO_TIMESTAMP_COLS = 1293, e.ER_INVALID_ON_UPDATE = 1294, e.ER_UNSUPPORTED_PS = 1295, e.ER_GET_ERRMSG = 1296, e.ER_GET_TEMPORARY_ERRMSG = 1297, e.ER_UNKNOWN_TIME_ZONE = 1298, e.ER_WARN_INVALID_TIMESTAMP = 1299, e.ER_INVALID_CHARACTER_STRING = 1300, e.ER_WARN_ALLOWED_PACKET_OVERFLOWED = 1301, e.ER_CONFLICTING_DECLARATIONS = 1302, e.ER_SP_NO_RECURSIVE_CREATE = 1303, e.ER_SP_ALREADY_EXISTS = 1304, e.ER_SP_DOES_NOT_EXIST = 1305, e.ER_SP_DROP_FAILED = 1306, e.ER_SP_STORE_FAILED = 1307, e.ER_SP_LILABEL_MISMATCH = 1308, e.ER_SP_LABEL_REDEFINE = 1309, e.ER_SP_LABEL_MISMATCH = 1310, e.ER_SP_UNINIT_VAR = 1311, e.ER_SP_BADSELECT = 1312, e.ER_SP_BADRETURN = 1313, e.ER_SP_BADSTATEMENT = 1314, e.ER_UPDATE_LOG_DEPRECATED_IGNORED = 1315, e.ER_UPDATE_LOG_DEPRECATED_TRANSLATED = 1316, e.ER_QUERY_INTERRUPTED = 1317, e.ER_SP_WRONG_NO_OF_ARGS = 1318, e.ER_SP_COND_MISMATCH = 1319, e.ER_SP_NORETURN = 1320, e.ER_SP_NORETURNEND = 1321, e.ER_SP_BAD_CURSOR_QUERY = 1322, e.ER_SP_BAD_CURSOR_SELECT = 1323, e.ER_SP_CURSOR_MISMATCH = 1324, e.ER_SP_CURSOR_ALREADY_OPEN = 1325, e.ER_SP_CURSOR_NOT_OPEN = 1326, e.ER_SP_UNDECLARED_VAR = 1327, e.ER_SP_WRONG_NO_OF_FETCH_ARGS = 1328, e.ER_SP_FETCH_NO_DATA = 1329, e.ER_SP_DUP_PARAM = 1330, e.ER_SP_DUP_VAR = 1331, e.ER_SP_DUP_COND = 1332, e.ER_SP_DUP_CURS = 1333, e.ER_SP_CANT_ALTER = 1334, e.ER_SP_SUBSELECT_NYI = 1335, e.ER_STMT_NOT_ALLOWED_IN_SF_OR_TRG = 1336, e.ER_SP_VARCOND_AFTER_CURSHNDLR = 1337, e.ER_SP_CURSOR_AFTER_HANDLER = 1338, e.ER_SP_CASE_NOT_FOUND = 1339, e.ER_FPARSER_TOO_BIG_FILE = 1340, e.ER_FPARSER_BAD_HEADER = 1341, e.ER_FPARSER_EOF_IN_COMMENT = 1342, e.ER_FPARSER_ERROR_IN_PARAMETER = 1343, e.ER_FPARSER_EOF_IN_UNKNOWN_PARAMETER = 1344, e.ER_VIEW_NO_EXPLAIN = 1345, e.ER_FRM_UNKNOWN_TYPE = 1346, e.ER_WRONG_OBJECT = 1347, e.ER_NONUPDATEABLE_COLUMN = 1348, e.ER_VIEW_SELECT_DERIVED = 1349, e.ER_VIEW_SELECT_CLAUSE = 1350, e.ER_VIEW_SELECT_VARIABLE = 1351, e.ER_VIEW_SELECT_TMPTABLE = 1352, e.ER_VIEW_WRONG_LIST = 1353, e.ER_WARN_VIEW_MERGE = 1354, e.ER_WARN_VIEW_WITHOUT_KEY = 1355, e.ER_VIEW_INVALID = 1356, e.ER_SP_NO_DROP_SP = 1357, e.ER_SP_GOTO_IN_HNDLR = 1358, e.ER_TRG_ALREADY_EXISTS = 1359, e.ER_TRG_DOES_NOT_EXIST = 1360, e.ER_TRG_ON_VIEW_OR_TEMP_TABLE = 1361, e.ER_TRG_CANT_CHANGE_ROW = 1362, e.ER_TRG_NO_SUCH_ROW_IN_TRG = 1363, e.ER_NO_DEFAULT_FOR_FIELD = 1364, e.ER_DIVISION_BY_ZERO = 1365, e.ER_TRUNCATED_WRONG_VALUE_FOR_FIELD = 1366, e.ER_ILLEGAL_VALUE_FOR_TYPE = 1367, e.ER_VIEW_NONUPD_CHECK = 1368, e.ER_VIEW_CHECK_FAILED = 1369, e.ER_PROCACCESS_DENIED_ERROR = 1370, e.ER_RELAY_LOG_FAIL = 1371, e.ER_PASSWD_LENGTH = 1372, e.ER_UNKNOWN_TARGET_BINLOG = 1373, e.ER_IO_ERR_LOG_INDEX_READ = 1374, e.ER_BINLOG_PURGE_PROHIBITED = 1375, e.ER_FSEEK_FAIL = 1376, e.ER_BINLOG_PURGE_FATAL_ERR = 1377, e.ER_LOG_IN_USE = 1378, e.ER_LOG_PURGE_UNKNOWN_ERR = 1379, e.ER_RELAY_LOG_INIT = 1380, e.ER_NO_BINARY_LOGGING = 1381, e.ER_RESERVED_SYNTAX = 1382, e.ER_WSAS_FAILED = 1383, e.ER_DIFF_GROUPS_PROC = 1384, e.ER_NO_GROUP_FOR_PROC = 1385, e.ER_ORDER_WITH_PROC = 1386, e.ER_LOGGING_PROHIBIT_CHANGING_OF = 1387, e.ER_NO_FILE_MAPPING = 1388, e.ER_WRONG_MAGIC = 1389, e.ER_PS_MANY_PARAM = 1390, e.ER_KEY_PART_0 = 1391, e.ER_VIEW_CHECKSUM = 1392, e.ER_VIEW_MULTIUPDATE = 1393, e.ER_VIEW_NO_INSERT_FIELD_LIST = 1394, e.ER_VIEW_DELETE_MERGE_VIEW = 1395, e.ER_CANNOT_USER = 1396, e.ER_XAER_NOTA = 1397, e.ER_XAER_INVAL = 1398, e.ER_XAER_RMFAIL = 1399, e.ER_XAER_OUTSIDE = 1400, e.ER_XAER_RMERR = 1401, e.ER_XA_RBROLLBACK = 1402, e.ER_NONEXISTING_PROC_GRANT = 1403, e.ER_PROC_AUTO_GRANT_FAIL = 1404, e.ER_PROC_AUTO_REVOKE_FAIL = 1405, e.ER_DATA_TOO_LONG = 1406, e.ER_SP_BAD_SQLSTATE = 1407, e.ER_STARTUP = 1408, e.ER_LOAD_FROM_FIXED_SIZE_ROWS_TO_VAR = 1409, e.ER_CANT_CREATE_USER_WITH_GRANT = 1410, e.ER_WRONG_VALUE_FOR_TYPE = 1411, e.ER_TABLE_DEF_CHANGED = 1412, e.ER_SP_DUP_HANDLER = 1413, e.ER_SP_NOT_VAR_ARG = 1414, e.ER_SP_NO_RETSET = 1415, e.ER_CANT_CREATE_GEOMETRY_OBJECT = 1416, e.ER_FAILED_ROUTINE_BREAK_BINLOG = 1417, e.ER_BINLOG_UNSAFE_ROUTINE = 1418, e.ER_BINLOG_CREATE_ROUTINE_NEED_SUPER = 1419, e.ER_EXEC_STMT_WITH_OPEN_CURSOR = 1420, e.ER_STMT_HAS_NO_OPEN_CURSOR = 1421, e.ER_COMMIT_NOT_ALLOWED_IN_SF_OR_TRG = 1422, e.ER_NO_DEFAULT_FOR_VIEW_FIELD = 1423, e.ER_SP_NO_RECURSION = 1424, e.ER_TOO_BIG_SCALE = 1425, e.ER_TOO_BIG_PRECISION = 1426, e.ER_M_BIGGER_THAN_D = 1427, e.ER_WRONG_LOCK_OF_SYSTEM_TABLE = 1428, e.ER_CONNECT_TO_FOREIGN_DATA_SOURCE = 1429, e.ER_QUERY_ON_FOREIGN_DATA_SOURCE = 1430, e.ER_FOREIGN_DATA_SOURCE_DOESNT_EXIST = 1431, e.ER_FOREIGN_DATA_STRING_INVALID_CANT_CREATE = 1432, e.ER_FOREIGN_DATA_STRING_INVALID = 1433, e.ER_CANT_CREATE_FEDERATED_TABLE = 1434, e.ER_TRG_IN_WRONG_SCHEMA = 1435, e.ER_STACK_OVERRUN_NEED_MORE = 1436, e.ER_TOO_LONG_BODY = 1437, e.ER_WARN_CANT_DROP_DEFAULT_KEYCACHE = 1438, e.ER_TOO_BIG_DISPLAYWIDTH = 1439, e.ER_XAER_DUPID = 1440, e.ER_DATETIME_FUNCTION_OVERFLOW = 1441, e.ER_CANT_UPDATE_USED_TABLE_IN_SF_OR_TRG = 1442, e.ER_VIEW_PREVENT_UPDATE = 1443, e.ER_PS_NO_RECURSION = 1444, e.ER_SP_CANT_SET_AUTOCOMMIT = 1445, e.ER_MALFORMED_DEFINER = 1446, e.ER_VIEW_FRM_NO_USER = 1447, e.ER_VIEW_OTHER_USER = 1448, e.ER_NO_SUCH_USER = 1449, e.ER_FORBID_SCHEMA_CHANGE = 1450, e.ER_ROW_IS_REFERENCED_2 = 1451, e.ER_NO_REFERENCED_ROW_2 = 1452, e.ER_SP_BAD_VAR_SHADOW = 1453, e.ER_TRG_NO_DEFINER = 1454, e.ER_OLD_FILE_FORMAT = 1455, e.ER_SP_RECURSION_LIMIT = 1456, e.ER_SP_PROC_TABLE_CORRUPT = 1457, e.ER_SP_WRONG_NAME = 1458, e.ER_TABLE_NEEDS_UPGRADE = 1459, e.ER_SP_NO_AGGREGATE = 1460, e.ER_MAX_PREPARED_STMT_COUNT_REACHED = 1461, e.ER_VIEW_RECURSIVE = 1462, e.ER_NON_GROUPING_FIELD_USED = 1463, e.ER_TABLE_CANT_HANDLE_SPKEYS = 1464, e.ER_NO_TRIGGERS_ON_SYSTEM_SCHEMA = 1465, e.ER_REMOVED_SPACES = 1466, e.ER_AUTOINC_READ_FAILED = 1467, e.ER_USERNAME = 1468, e.ER_HOSTNAME = 1469, e.ER_WRONG_STRING_LENGTH = 1470, e.ER_NON_INSERTABLE_TABLE = 1471, e.ER_ADMIN_WRONG_MRG_TABLE = 1472, e.ER_TOO_HIGH_LEVEL_OF_NESTING_FOR_SELECT = 1473, e.ER_NAME_BECOMES_EMPTY = 1474, e.ER_AMBIGUOUS_FIELD_TERM = 1475, e.ER_FOREIGN_SERVER_EXISTS = 1476, e.ER_FOREIGN_SERVER_DOESNT_EXIST = 1477, e.ER_ILLEGAL_HA_CREATE_OPTION = 1478, e.ER_PARTITION_REQUIRES_VALUES_ERROR = 1479, e.ER_PARTITION_WRONG_VALUES_ERROR = 1480, e.ER_PARTITION_MAXVALUE_ERROR = 1481, e.ER_PARTITION_SUBPARTITION_ERROR = 1482, e.ER_PARTITION_SUBPART_MIX_ERROR = 1483, e.ER_PARTITION_WRONG_NO_PART_ERROR = 1484, e.ER_PARTITION_WRONG_NO_SUBPART_ERROR = 1485, e.ER_WRONG_EXPR_IN_PARTITION_FUNC_ERROR = 1486, e.ER_NO_CONST_EXPR_IN_RANGE_OR_LIST_ERROR = 1487, e.ER_FIELD_NOT_FOUND_PART_ERROR = 1488, e.ER_LIST_OF_FIELDS_ONLY_IN_HASH_ERROR = 1489, e.ER_INCONSISTENT_PARTITION_INFO_ERROR = 1490, e.ER_PARTITION_FUNC_NOT_ALLOWED_ERROR = 1491, e.ER_PARTITIONS_MUST_BE_DEFINED_ERROR = 1492, e.ER_RANGE_NOT_INCREASING_ERROR = 1493, e.ER_INCONSISTENT_TYPE_OF_FUNCTIONS_ERROR = 1494, e.ER_MULTIPLE_DEF_CONST_IN_LIST_PART_ERROR = 1495, e.ER_PARTITION_ENTRY_ERROR = 1496, e.ER_MIX_HANDLER_ERROR = 1497, e.ER_PARTITION_NOT_DEFINED_ERROR = 1498, e.ER_TOO_MANY_PARTITIONS_ERROR = 1499, e.ER_SUBPARTITION_ERROR = 1500, e.ER_CANT_CREATE_HANDLER_FILE = 1501, e.ER_BLOB_FIELD_IN_PART_FUNC_ERROR = 1502, e.ER_UNIQUE_KEY_NEED_ALL_FIELDS_IN_PF = 1503, e.ER_NO_PARTS_ERROR = 1504, e.ER_PARTITION_MGMT_ON_NONPARTITIONED = 1505, e.ER_FOREIGN_KEY_ON_PARTITIONED = 1506, e.ER_DROP_PARTITION_NON_EXISTENT = 1507, e.ER_DROP_LAST_PARTITION = 1508, e.ER_COALESCE_ONLY_ON_HASH_PARTITION = 1509, e.ER_REORG_HASH_ONLY_ON_SAME_NO = 1510, e.ER_REORG_NO_PARAM_ERROR = 1511, e.ER_ONLY_ON_RANGE_LIST_PARTITION = 1512, e.ER_ADD_PARTITION_SUBPART_ERROR = 1513, e.ER_ADD_PARTITION_NO_NEW_PARTITION = 1514, e.ER_COALESCE_PARTITION_NO_PARTITION = 1515, e.ER_REORG_PARTITION_NOT_EXIST = 1516, e.ER_SAME_NAME_PARTITION = 1517, e.ER_NO_BINLOG_ERROR = 1518, e.ER_CONSECUTIVE_REORG_PARTITIONS = 1519, e.ER_REORG_OUTSIDE_RANGE = 1520, e.ER_PARTITION_FUNCTION_FAILURE = 1521, e.ER_PART_STATE_ERROR = 1522, e.ER_LIMITED_PART_RANGE = 1523, e.ER_PLUGIN_IS_NOT_LOADED = 1524, e.ER_WRONG_VALUE = 1525, e.ER_NO_PARTITION_FOR_GIVEN_VALUE = 1526, e.ER_FILEGROUP_OPTION_ONLY_ONCE = 1527, e.ER_CREATE_FILEGROUP_FAILED = 1528, e.ER_DROP_FILEGROUP_FAILED = 1529, e.ER_TABLESPACE_AUTO_EXTEND_ERROR = 1530, e.ER_WRONG_SIZE_NUMBER = 1531, e.ER_SIZE_OVERFLOW_ERROR = 1532, e.ER_ALTER_FILEGROUP_FAILED = 1533, e.ER_BINLOG_ROW_LOGGING_FAILED = 1534, e.ER_BINLOG_ROW_WRONG_TABLE_DEF = 1535, e.ER_BINLOG_ROW_RBR_TO_SBR = 1536, e.ER_EVENT_ALREADY_EXISTS = 1537, e.ER_EVENT_STORE_FAILED = 1538, e.ER_EVENT_DOES_NOT_EXIST = 1539, e.ER_EVENT_CANT_ALTER = 1540, e.ER_EVENT_DROP_FAILED = 1541, e.ER_EVENT_INTERVAL_NOT_POSITIVE_OR_TOO_BIG = 1542, e.ER_EVENT_ENDS_BEFORE_STARTS = 1543, e.ER_EVENT_EXEC_TIME_IN_THE_PAST = 1544, e.ER_EVENT_OPEN_TABLE_FAILED = 1545, e.ER_EVENT_NEITHER_M_EXPR_NOR_M_AT = 1546, e.ER_COL_COUNT_DOESNT_MATCH_CORRUPTED = 1547, e.ER_CANNOT_LOAD_FROM_TABLE = 1548, e.ER_EVENT_CANNOT_DELETE = 1549, e.ER_EVENT_COMPILE_ERROR = 1550, e.ER_EVENT_SAME_NAME = 1551, e.ER_EVENT_DATA_TOO_LONG = 1552, e.ER_DROP_INDEX_FK = 1553, e.ER_WARN_DEPRECATED_SYNTAX_WITH_VER = 1554, e.ER_CANT_WRITE_LOCK_LOG_TABLE = 1555, e.ER_CANT_LOCK_LOG_TABLE = 1556, e.ER_FOREIGN_DUPLICATE_KEY = 1557, e.ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE = 1558, e.ER_TEMP_TABLE_PREVENTS_SWITCH_OUT_OF_RBR = 1559, e.ER_STORED_FUNCTION_PREVENTS_SWITCH_BINLOG_FORMAT = 1560, e.ER_NDB_CANT_SWITCH_BINLOG_FORMAT = 1561, e.ER_PARTITION_NO_TEMPORARY = 1562, e.ER_PARTITION_CONST_DOMAIN_ERROR = 1563, e.ER_PARTITION_FUNCTION_IS_NOT_ALLOWED = 1564, e.ER_DDL_LOG_ERROR = 1565, e.ER_NULL_IN_VALUES_LESS_THAN = 1566, e.ER_WRONG_PARTITION_NAME = 1567, e.ER_CANT_CHANGE_TX_CHARACTERISTICS = 1568, e.ER_DUP_ENTRY_AUTOINCREMENT_CASE = 1569, e.ER_EVENT_MODIFY_QUEUE_ERROR = 1570, e.ER_EVENT_SET_VAR_ERROR = 1571, e.ER_PARTITION_MERGE_ERROR = 1572, e.ER_CANT_ACTIVATE_LOG = 1573, e.ER_RBR_NOT_AVAILABLE = 1574, e.ER_BASE64_DECODE_ERROR = 1575, e.ER_EVENT_RECURSION_FORBIDDEN = 1576, e.ER_EVENTS_DB_ERROR = 1577, e.ER_ONLY_INTEGERS_ALLOWED = 1578, e.ER_UNSUPORTED_LOG_ENGINE = 1579, e.ER_BAD_LOG_STATEMENT = 1580, e.ER_CANT_RENAME_LOG_TABLE = 1581, e.ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT = 1582, e.ER_WRONG_PARAMETERS_TO_NATIVE_FCT = 1583, e.ER_WRONG_PARAMETERS_TO_STORED_FCT = 1584, e.ER_NATIVE_FCT_NAME_COLLISION = 1585, e.ER_DUP_ENTRY_WITH_KEY_NAME = 1586, e.ER_BINLOG_PURGE_EMFILE = 1587, e.ER_EVENT_CANNOT_CREATE_IN_THE_PAST = 1588, e.ER_EVENT_CANNOT_ALTER_IN_THE_PAST = 1589, e.ER_SLAVE_INCIDENT = 1590, e.ER_NO_PARTITION_FOR_GIVEN_VALUE_SILENT = 1591, e.ER_BINLOG_UNSAFE_STATEMENT = 1592, e.ER_BINLOG_FATAL_ERROR = 1593, e.ER_SLAVE_RELAY_LOG_READ_FAILURE = 1594, e.ER_SLAVE_RELAY_LOG_WRITE_FAILURE = 1595, e.ER_SLAVE_CREATE_EVENT_FAILURE = 1596, e.ER_SLAVE_MASTER_COM_FAILURE = 1597, e.ER_BINLOG_LOGGING_IMPOSSIBLE = 1598, e.ER_VIEW_NO_CREATION_CTX = 1599, e.ER_VIEW_INVALID_CREATION_CTX = 1600, e.ER_SR_INVALID_CREATION_CTX = 1601, e.ER_TRG_CORRUPTED_FILE = 1602, e.ER_TRG_NO_CREATION_CTX = 1603, e.ER_TRG_INVALID_CREATION_CTX = 1604, e.ER_EVENT_INVALID_CREATION_CTX = 1605, e.ER_TRG_CANT_OPEN_TABLE = 1606, e.ER_CANT_CREATE_SROUTINE = 1607, e.ER_NEVER_USED = 1608, e.ER_NO_FORMAT_DESCRIPTION_EVENT_BEFORE_BINLOG_STATEMENT = 1609, e.ER_REPLICA_CORRUPT_EVENT = 1610, e.ER_LOAD_DATA_INVALID_COLUMN = 1611, e.ER_LOG_PURGE_NO_FILE = 1612, e.ER_XA_RBTIMEOUT = 1613, e.ER_XA_RBDEADLOCK = 1614, e.ER_NEED_REPREPARE = 1615, e.ER_DELAYED_NOT_SUPPORTED = 1616, e.WARN_NO_CONNECTION_METADATA = 1617, e.WARN_OPTION_IGNORED = 1618, e.ER_PLUGIN_DELETE_BUILTIN = 1619, e.WARN_PLUGIN_BUSY = 1620, e.ER_VARIABLE_IS_READONLY = 1621, e.ER_WARN_ENGINE_TRANSACTION_ROLLBACK = 1622, e.ER_SLAVE_HEARTBEAT_FAILURE = 1623, e.ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE = 1624, e.ER_NDB_REPLICATION_SCHEMA_ERROR = 1625, e.ER_CONFLICT_FN_PARSE_ERROR = 1626, e.ER_EXCEPTIONS_WRITE_ERROR = 1627, e.ER_TOO_LONG_TABLE_COMMENT = 1628, e.ER_TOO_LONG_FIELD_COMMENT = 1629, e.ER_FUNC_INEXISTENT_NAME_COLLISION = 1630, e.ER_DATABASE_NAME = 1631, e.ER_TABLE_NAME = 1632, e.ER_PARTITION_NAME = 1633, e.ER_SUBPARTITION_NAME = 1634, e.ER_TEMPORARY_NAME = 1635, e.ER_RENAMED_NAME = 1636, e.ER_TOO_MANY_CONCURRENT_TRXS = 1637, e.WARN_NON_ASCII_SEPARATOR_NOT_IMPLEMENTED = 1638, e.ER_DEBUG_SYNC_TIMEOUT = 1639, e.ER_DEBUG_SYNC_HIT_LIMIT = 1640, e.ER_DUP_SIGNAL_SET = 1641, e.ER_SIGNAL_WARN = 1642, e.ER_SIGNAL_NOT_FOUND = 1643, e.ER_SIGNAL_EXCEPTION = 1644, e.ER_RESIGNAL_WITHOUT_ACTIVE_HANDLER = 1645, e.ER_SIGNAL_BAD_CONDITION_TYPE = 1646, e.WARN_COND_ITEM_TRUNCATED = 1647, e.ER_COND_ITEM_TOO_LONG = 1648, e.ER_UNKNOWN_LOCALE = 1649, e.ER_REPLICA_IGNORE_SERVER_IDS = 1650, e.ER_QUERY_CACHE_DISABLED = 1651, e.ER_SAME_NAME_PARTITION_FIELD = 1652, e.ER_PARTITION_COLUMN_LIST_ERROR = 1653, e.ER_WRONG_TYPE_COLUMN_VALUE_ERROR = 1654, e.ER_TOO_MANY_PARTITION_FUNC_FIELDS_ERROR = 1655, e.ER_MAXVALUE_IN_VALUES_IN = 1656, e.ER_TOO_MANY_VALUES_ERROR = 1657, e.ER_ROW_SINGLE_PARTITION_FIELD_ERROR = 1658, e.ER_FIELD_TYPE_NOT_ALLOWED_AS_PARTITION_FIELD = 1659, e.ER_PARTITION_FIELDS_TOO_LONG = 1660, e.ER_BINLOG_ROW_ENGINE_AND_STMT_ENGINE = 1661, e.ER_BINLOG_ROW_MODE_AND_STMT_ENGINE = 1662, e.ER_BINLOG_UNSAFE_AND_STMT_ENGINE = 1663, e.ER_BINLOG_ROW_INJECTION_AND_STMT_ENGINE = 1664, e.ER_BINLOG_STMT_MODE_AND_ROW_ENGINE = 1665, e.ER_BINLOG_ROW_INJECTION_AND_STMT_MODE = 1666, e.ER_BINLOG_MULTIPLE_ENGINES_AND_SELF_LOGGING_ENGINE = 1667, e.ER_BINLOG_UNSAFE_LIMIT = 1668, e.ER_UNUSED4 = 1669, e.ER_BINLOG_UNSAFE_SYSTEM_TABLE = 1670, e.ER_BINLOG_UNSAFE_AUTOINC_COLUMNS = 1671, e.ER_BINLOG_UNSAFE_UDF = 1672, e.ER_BINLOG_UNSAFE_SYSTEM_VARIABLE = 1673, e.ER_BINLOG_UNSAFE_SYSTEM_FUNCTION = 1674, e.ER_BINLOG_UNSAFE_NONTRANS_AFTER_TRANS = 1675, e.ER_MESSAGE_AND_STATEMENT = 1676, e.ER_SLAVE_CONVERSION_FAILED = 1677, e.ER_REPLICA_CANT_CREATE_CONVERSION = 1678, e.ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_BINLOG_FORMAT = 1679, e.ER_PATH_LENGTH = 1680, e.ER_WARN_DEPRECATED_SYNTAX_NO_REPLACEMENT = 1681, e.ER_WRONG_NATIVE_TABLE_STRUCTURE = 1682, e.ER_WRONG_PERFSCHEMA_USAGE = 1683, e.ER_WARN_I_S_SKIPPED_TABLE = 1684, e.ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_BINLOG_DIRECT = 1685, e.ER_STORED_FUNCTION_PREVENTS_SWITCH_BINLOG_DIRECT = 1686, e.ER_SPATIAL_MUST_HAVE_GEOM_COL = 1687, e.ER_TOO_LONG_INDEX_COMMENT = 1688, e.ER_LOCK_ABORTED = 1689, e.ER_DATA_OUT_OF_RANGE = 1690, e.ER_WRONG_SPVAR_TYPE_IN_LIMIT = 1691, e.ER_BINLOG_UNSAFE_MULTIPLE_ENGINES_AND_SELF_LOGGING_ENGINE = 1692, e.ER_BINLOG_UNSAFE_MIXED_STATEMENT = 1693, e.ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_SQL_LOG_BIN = 1694, e.ER_STORED_FUNCTION_PREVENTS_SWITCH_SQL_LOG_BIN = 1695, e.ER_FAILED_READ_FROM_PAR_FILE = 1696, e.ER_VALUES_IS_NOT_INT_TYPE_ERROR = 1697, e.ER_ACCESS_DENIED_NO_PASSWORD_ERROR = 1698, e.ER_SET_PASSWORD_AUTH_PLUGIN = 1699, e.ER_GRANT_PLUGIN_USER_EXISTS = 1700, e.ER_TRUNCATE_ILLEGAL_FK = 1701, e.ER_PLUGIN_IS_PERMANENT = 1702, e.ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE_MIN = 1703, e.ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE_MAX = 1704, e.ER_STMT_CACHE_FULL = 1705, e.ER_MULTI_UPDATE_KEY_CONFLICT = 1706, e.ER_TABLE_NEEDS_REBUILD = 1707, e.WARN_OPTION_BELOW_LIMIT = 1708, e.ER_INDEX_COLUMN_TOO_LONG = 1709, e.ER_ERROR_IN_TRIGGER_BODY = 1710, e.ER_ERROR_IN_UNKNOWN_TRIGGER_BODY = 1711, e.ER_INDEX_CORRUPT = 1712, e.ER_UNDO_RECORD_TOO_BIG = 1713, e.ER_BINLOG_UNSAFE_INSERT_IGNORE_SELECT = 1714, e.ER_BINLOG_UNSAFE_INSERT_SELECT_UPDATE = 1715, e.ER_BINLOG_UNSAFE_REPLACE_SELECT = 1716, e.ER_BINLOG_UNSAFE_CREATE_IGNORE_SELECT = 1717, e.ER_BINLOG_UNSAFE_CREATE_REPLACE_SELECT = 1718, e.ER_BINLOG_UNSAFE_UPDATE_IGNORE = 1719, e.ER_PLUGIN_NO_UNINSTALL = 1720, e.ER_PLUGIN_NO_INSTALL = 1721, e.ER_BINLOG_UNSAFE_WRITE_AUTOINC_SELECT = 1722, e.ER_BINLOG_UNSAFE_CREATE_SELECT_AUTOINC = 1723, e.ER_BINLOG_UNSAFE_INSERT_TWO_KEYS = 1724, e.ER_TABLE_IN_FK_CHECK = 1725, e.ER_UNSUPPORTED_ENGINE = 1726, e.ER_BINLOG_UNSAFE_AUTOINC_NOT_FIRST = 1727, e.ER_CANNOT_LOAD_FROM_TABLE_V2 = 1728, e.ER_SOURCE_DELAY_VALUE_OUT_OF_RANGE = 1729, e.ER_ONLY_FD_AND_RBR_EVENTS_ALLOWED_IN_BINLOG_STATEMENT = 1730, e.ER_PARTITION_EXCHANGE_DIFFERENT_OPTION = 1731, e.ER_PARTITION_EXCHANGE_PART_TABLE = 1732, e.ER_PARTITION_EXCHANGE_TEMP_TABLE = 1733, e.ER_PARTITION_INSTEAD_OF_SUBPARTITION = 1734, e.ER_UNKNOWN_PARTITION = 1735, e.ER_TABLES_DIFFERENT_METADATA = 1736, e.ER_ROW_DOES_NOT_MATCH_PARTITION = 1737, e.ER_BINLOG_CACHE_SIZE_GREATER_THAN_MAX = 1738, e.ER_WARN_INDEX_NOT_APPLICABLE = 1739, e.ER_PARTITION_EXCHANGE_FOREIGN_KEY = 1740, e.ER_NO_SUCH_KEY_VALUE = 1741, e.ER_RPL_INFO_DATA_TOO_LONG = 1742, e.ER_NETWORK_READ_EVENT_CHECKSUM_FAILURE = 1743, e.ER_BINLOG_READ_EVENT_CHECKSUM_FAILURE = 1744, e.ER_BINLOG_STMT_CACHE_SIZE_GREATER_THAN_MAX = 1745, e.ER_CANT_UPDATE_TABLE_IN_CREATE_TABLE_SELECT = 1746, e.ER_PARTITION_CLAUSE_ON_NONPARTITIONED = 1747, e.ER_ROW_DOES_NOT_MATCH_GIVEN_PARTITION_SET = 1748, e.ER_NO_SUCH_PARTITION = 1749, e.ER_CHANGE_RPL_INFO_REPOSITORY_FAILURE = 1750, e.ER_WARNING_NOT_COMPLETE_ROLLBACK_WITH_CREATED_TEMP_TABLE = 1751, e.ER_WARNING_NOT_COMPLETE_ROLLBACK_WITH_DROPPED_TEMP_TABLE = 1752, e.ER_MTA_FEATURE_IS_NOT_SUPPORTED = 1753, e.ER_MTA_UPDATED_DBS_GREATER_MAX = 1754, e.ER_MTA_CANT_PARALLEL = 1755, e.ER_MTA_INCONSISTENT_DATA = 1756, e.ER_FULLTEXT_NOT_SUPPORTED_WITH_PARTITIONING = 1757, e.ER_DA_INVALID_CONDITION_NUMBER = 1758, e.ER_INSECURE_PLAIN_TEXT = 1759, e.ER_INSECURE_CHANGE_SOURCE = 1760, e.ER_FOREIGN_DUPLICATE_KEY_WITH_CHILD_INFO = 1761, e.ER_FOREIGN_DUPLICATE_KEY_WITHOUT_CHILD_INFO = 1762, e.ER_SQLTHREAD_WITH_SECURE_REPLICA = 1763, e.ER_TABLE_HAS_NO_FT = 1764, e.ER_VARIABLE_NOT_SETTABLE_IN_SF_OR_TRIGGER = 1765, e.ER_VARIABLE_NOT_SETTABLE_IN_TRANSACTION = 1766, e.ER_GTID_NEXT_IS_NOT_IN_GTID_NEXT_LIST = 1767, e.ER_CANT_CHANGE_GTID_NEXT_IN_TRANSACTION = 1768, e.ER_SET_STATEMENT_CANNOT_INVOKE_FUNCTION = 1769, e.ER_GTID_NEXT_CANT_BE_AUTOMATIC_IF_GTID_NEXT_LIST_IS_NON_NULL = 1770, e.ER_SKIPPING_LOGGED_TRANSACTION = 1771, e.ER_MALFORMED_GTID_SET_SPECIFICATION = 1772, e.ER_MALFORMED_GTID_SET_ENCODING = 1773, e.ER_MALFORMED_GTID_SPECIFICATION = 1774, e.ER_GNO_EXHAUSTED = 1775, e.ER_BAD_REPLICA_AUTO_POSITION = 1776, e.ER_AUTO_POSITION_REQUIRES_GTID_MODE_NOT_OFF = 1777, e.ER_CANT_DO_IMPLICIT_COMMIT_IN_TRX_WHEN_GTID_NEXT_IS_SET = 1778, e.ER_GTID_MODE_ON_REQUIRES_ENFORCE_GTID_CONSISTENCY_ON = 1779, e.ER_GTID_MODE_REQUIRES_BINLOG = 1780, e.ER_CANT_SET_GTID_NEXT_TO_GTID_WHEN_GTID_MODE_IS_OFF = 1781, e.ER_CANT_SET_GTID_NEXT_TO_ANONYMOUS_WHEN_GTID_MODE_IS_ON = 1782, e.ER_CANT_SET_GTID_NEXT_LIST_TO_NON_NULL_WHEN_GTID_MODE_IS_OFF = 1783, e.ER_FOUND_GTID_EVENT_WHEN_GTID_MODE_IS_OFF = 1784, e.ER_GTID_UNSAFE_NON_TRANSACTIONAL_TABLE = 1785, e.ER_GTID_UNSAFE_CREATE_SELECT = 1786, e.ER_GTID_UNSAFE_CREATE_DROP_TEMP_TABLE_IN_TRANSACTION = 1787, e.ER_GTID_MODE_CAN_ONLY_CHANGE_ONE_STEP_AT_A_TIME = 1788, e.ER_SOURCE_HAS_PURGED_REQUIRED_GTIDS = 1789, e.ER_CANT_SET_GTID_NEXT_WHEN_OWNING_GTID = 1790, e.ER_UNKNOWN_EXPLAIN_FORMAT = 1791, e.ER_CANT_EXECUTE_IN_READ_ONLY_TRANSACTION = 1792, e.ER_TOO_LONG_TABLE_PARTITION_COMMENT = 1793, e.ER_REPLICA_CONFIGURATION = 1794, e.ER_INNODB_FT_LIMIT = 1795, e.ER_INNODB_NO_FT_TEMP_TABLE = 1796, e.ER_INNODB_FT_WRONG_DOCID_COLUMN = 1797, e.ER_INNODB_FT_WRONG_DOCID_INDEX = 1798, e.ER_INNODB_ONLINE_LOG_TOO_BIG = 1799, e.ER_UNKNOWN_ALTER_ALGORITHM = 1800, e.ER_UNKNOWN_ALTER_LOCK = 1801, e.ER_MTA_CHANGE_SOURCE_CANT_RUN_WITH_GAPS = 1802, e.ER_MTA_RECOVERY_FAILURE = 1803, e.ER_MTA_RESET_WORKERS = 1804, e.ER_COL_COUNT_DOESNT_MATCH_CORRUPTED_V2 = 1805, e.ER_REPLICA_SILENT_RETRY_TRANSACTION = 1806, e.ER_DISCARD_FK_CHECKS_RUNNING = 1807, e.ER_TABLE_SCHEMA_MISMATCH = 1808, e.ER_TABLE_IN_SYSTEM_TABLESPACE = 1809, e.ER_IO_READ_ERROR = 1810, e.ER_IO_WRITE_ERROR = 1811, e.ER_TABLESPACE_MISSING = 1812, e.ER_TABLESPACE_EXISTS = 1813, e.ER_TABLESPACE_DISCARDED = 1814, e.ER_INTERNAL_ERROR = 1815, e.ER_INNODB_IMPORT_ERROR = 1816, e.ER_INNODB_INDEX_CORRUPT = 1817, e.ER_INVALID_YEAR_COLUMN_LENGTH = 1818, e.ER_NOT_VALID_PASSWORD = 1819, e.ER_MUST_CHANGE_PASSWORD = 1820, e.ER_FK_NO_INDEX_CHILD = 1821, e.ER_FK_NO_INDEX_PARENT = 1822, e.ER_FK_FAIL_ADD_SYSTEM = 1823, e.ER_FK_CANNOT_OPEN_PARENT = 1824, e.ER_FK_INCORRECT_OPTION = 1825, e.ER_FK_DUP_NAME = 1826, e.ER_PASSWORD_FORMAT = 1827, e.ER_FK_COLUMN_CANNOT_DROP = 1828, e.ER_FK_COLUMN_CANNOT_DROP_CHILD = 1829, e.ER_FK_COLUMN_NOT_NULL = 1830, e.ER_DUP_INDEX = 1831, e.ER_FK_COLUMN_CANNOT_CHANGE = 1832, e.ER_FK_COLUMN_CANNOT_CHANGE_CHILD = 1833, e.ER_UNUSED5 = 1834, e.ER_MALFORMED_PACKET = 1835, e.ER_READ_ONLY_MODE = 1836, e.ER_GTID_NEXT_TYPE_UNDEFINED_GTID = 1837, e.ER_VARIABLE_NOT_SETTABLE_IN_SP = 1838, e.ER_CANT_SET_GTID_PURGED_WHEN_GTID_MODE_IS_OFF = 1839, e.ER_CANT_SET_GTID_PURGED_WHEN_GTID_EXECUTED_IS_NOT_EMPTY = 1840, e.ER_CANT_SET_GTID_PURGED_WHEN_OWNED_GTIDS_IS_NOT_EMPTY = 1841, e.ER_GTID_PURGED_WAS_CHANGED = 1842, e.ER_GTID_EXECUTED_WAS_CHANGED = 1843, e.ER_BINLOG_STMT_MODE_AND_NO_REPL_TABLES = 1844, e.ER_ALTER_OPERATION_NOT_SUPPORTED = 1845, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON = 1846, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COPY = 1847, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_PARTITION = 1848, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FK_RENAME = 1849, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COLUMN_TYPE = 1850, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FK_CHECK = 1851, e.ER_UNUSED6 = 1852, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_NOPK = 1853, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_AUTOINC = 1854, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_HIDDEN_FTS = 1855, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_CHANGE_FTS = 1856, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FTS = 1857, e.ER_SQL_REPLICA_SKIP_COUNTER_NOT_SETTABLE_IN_GTID_MODE = 1858, e.ER_DUP_UNKNOWN_IN_INDEX = 1859, e.ER_IDENT_CAUSES_TOO_LONG_PATH = 1860, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_NOT_NULL = 1861, e.ER_MUST_CHANGE_PASSWORD_LOGIN = 1862, e.ER_ROW_IN_WRONG_PARTITION = 1863, e.ER_MTA_EVENT_BIGGER_PENDING_JOBS_SIZE_MAX = 1864, e.ER_INNODB_NO_FT_USES_PARSER = 1865, e.ER_BINLOG_LOGICAL_CORRUPTION = 1866, e.ER_WARN_PURGE_LOG_IN_USE = 1867, e.ER_WARN_PURGE_LOG_IS_ACTIVE = 1868, e.ER_AUTO_INCREMENT_CONFLICT = 1869, e.WARN_ON_BLOCKHOLE_IN_RBR = 1870, e.ER_REPLICA_CM_INIT_REPOSITORY = 1871, e.ER_REPLICA_AM_INIT_REPOSITORY = 1872, e.ER_ACCESS_DENIED_CHANGE_USER_ERROR = 1873, e.ER_INNODB_READ_ONLY = 1874, e.ER_STOP_REPLICA_SQL_THREAD_TIMEOUT = 1875, e.ER_STOP_REPLICA_IO_THREAD_TIMEOUT = 1876, e.ER_TABLE_CORRUPT = 1877, e.ER_TEMP_FILE_WRITE_FAILURE = 1878, e.ER_INNODB_FT_AUX_NOT_HEX_ID = 1879, e.ER_OLD_TEMPORALS_UPGRADED = 1880, e.ER_INNODB_FORCED_RECOVERY = 1881, e.ER_AES_INVALID_IV = 1882, e.ER_PLUGIN_CANNOT_BE_UNINSTALLED = 1883, e.ER_GTID_UNSAFE_BINLOG_SPLITTABLE_STATEMENT_AND_ASSIGNED_GTID = 1884, e.ER_REPLICA_HAS_MORE_GTIDS_THAN_SOURCE = 1885, e.ER_MISSING_KEY = 1886, e.WARN_NAMED_PIPE_ACCESS_EVERYONE = 1887, e.ER_FILE_CORRUPT = 3e3, e.ER_ERROR_ON_SOURCE = 3001, e.ER_INCONSISTENT_ERROR = 3002, e.ER_STORAGE_ENGINE_NOT_LOADED = 3003, e.ER_GET_STACKED_DA_WITHOUT_ACTIVE_HANDLER = 3004, e.ER_WARN_LEGACY_SYNTAX_CONVERTED = 3005, e.ER_BINLOG_UNSAFE_FULLTEXT_PLUGIN = 3006, e.ER_CANNOT_DISCARD_TEMPORARY_TABLE = 3007, e.ER_FK_DEPTH_EXCEEDED = 3008, e.ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE_V2 = 3009, e.ER_WARN_TRIGGER_DOESNT_HAVE_CREATED = 3010, e.ER_REFERENCED_TRG_DOES_NOT_EXIST = 3011, e.ER_EXPLAIN_NOT_SUPPORTED = 3012, e.ER_INVALID_FIELD_SIZE = 3013, e.ER_MISSING_HA_CREATE_OPTION = 3014, e.ER_ENGINE_OUT_OF_MEMORY = 3015, e.ER_PASSWORD_EXPIRE_ANONYMOUS_USER = 3016, e.ER_REPLICA_SQL_THREAD_MUST_STOP = 3017, e.ER_NO_FT_MATERIALIZED_SUBQUERY = 3018, e.ER_INNODB_UNDO_LOG_FULL = 3019, e.ER_INVALID_ARGUMENT_FOR_LOGARITHM = 3020, e.ER_REPLICA_CHANNEL_IO_THREAD_MUST_STOP = 3021, e.ER_WARN_OPEN_TEMP_TABLES_MUST_BE_ZERO = 3022, e.ER_WARN_ONLY_SOURCE_LOG_FILE_NO_POS = 3023, e.ER_QUERY_TIMEOUT = 3024, e.ER_NON_RO_SELECT_DISABLE_TIMER = 3025, e.ER_DUP_LIST_ENTRY = 3026, e.ER_SQL_MODE_NO_EFFECT = 3027, e.ER_AGGREGATE_ORDER_FOR_UNION = 3028, e.ER_AGGREGATE_ORDER_NON_AGG_QUERY = 3029, e.ER_REPLICA_WORKER_STOPPED_PREVIOUS_THD_ERROR = 3030, e.ER_DONT_SUPPORT_REPLICA_PRESERVE_COMMIT_ORDER = 3031, e.ER_SERVER_OFFLINE_MODE = 3032, e.ER_GIS_DIFFERENT_SRIDS = 3033, e.ER_GIS_UNSUPPORTED_ARGUMENT = 3034, e.ER_GIS_UNKNOWN_ERROR = 3035, e.ER_GIS_UNKNOWN_EXCEPTION = 3036, e.ER_GIS_INVALID_DATA = 3037, e.ER_BOOST_GEOMETRY_EMPTY_INPUT_EXCEPTION = 3038, e.ER_BOOST_GEOMETRY_CENTROID_EXCEPTION = 3039, e.ER_BOOST_GEOMETRY_OVERLAY_INVALID_INPUT_EXCEPTION = 3040, e.ER_BOOST_GEOMETRY_TURN_INFO_EXCEPTION = 3041, e.ER_BOOST_GEOMETRY_SELF_INTERSECTION_POINT_EXCEPTION = 3042, e.ER_BOOST_GEOMETRY_UNKNOWN_EXCEPTION = 3043, e.ER_STD_BAD_ALLOC_ERROR = 3044, e.ER_STD_DOMAIN_ERROR = 3045, e.ER_STD_LENGTH_ERROR = 3046, e.ER_STD_INVALID_ARGUMENT = 3047, e.ER_STD_OUT_OF_RANGE_ERROR = 3048, e.ER_STD_OVERFLOW_ERROR = 3049, e.ER_STD_RANGE_ERROR = 3050, e.ER_STD_UNDERFLOW_ERROR = 3051, e.ER_STD_LOGIC_ERROR = 3052, e.ER_STD_RUNTIME_ERROR = 3053, e.ER_STD_UNKNOWN_EXCEPTION = 3054, e.ER_GIS_DATA_WRONG_ENDIANESS = 3055, e.ER_CHANGE_SOURCE_PASSWORD_LENGTH = 3056, e.ER_USER_LOCK_WRONG_NAME = 3057, e.ER_USER_LOCK_DEADLOCK = 3058, e.ER_REPLACE_INACCESSIBLE_ROWS = 3059, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_GIS = 3060, e.ER_ILLEGAL_USER_VAR = 3061, e.ER_GTID_MODE_OFF = 3062, e.ER_UNSUPPORTED_BY_REPLICATION_THREAD = 3063, e.ER_INCORRECT_TYPE = 3064, e.ER_FIELD_IN_ORDER_NOT_SELECT = 3065, e.ER_AGGREGATE_IN_ORDER_NOT_SELECT = 3066, e.ER_INVALID_RPL_WILD_TABLE_FILTER_PATTERN = 3067, e.ER_NET_OK_PACKET_TOO_LARGE = 3068, e.ER_INVALID_JSON_DATA = 3069, e.ER_INVALID_GEOJSON_MISSING_MEMBER = 3070, e.ER_INVALID_GEOJSON_WRONG_TYPE = 3071, e.ER_INVALID_GEOJSON_UNSPECIFIED = 3072, e.ER_DIMENSION_UNSUPPORTED = 3073, e.ER_REPLICA_CHANNEL_DOES_NOT_EXIST = 3074, e.ER_SLAVE_MULTIPLE_CHANNELS_HOST_PORT = 3075, e.ER_REPLICA_CHANNEL_NAME_INVALID_OR_TOO_LONG = 3076, e.ER_REPLICA_NEW_CHANNEL_WRONG_REPOSITORY = 3077, e.ER_SLAVE_CHANNEL_DELETE = 3078, e.ER_REPLICA_MULTIPLE_CHANNELS_CMD = 3079, e.ER_REPLICA_MAX_CHANNELS_EXCEEDED = 3080, e.ER_REPLICA_CHANNEL_MUST_STOP = 3081, e.ER_REPLICA_CHANNEL_NOT_RUNNING = 3082, e.ER_REPLICA_CHANNEL_WAS_RUNNING = 3083, e.ER_REPLICA_CHANNEL_WAS_NOT_RUNNING = 3084, e.ER_REPLICA_CHANNEL_SQL_THREAD_MUST_STOP = 3085, e.ER_REPLICA_CHANNEL_SQL_SKIP_COUNTER = 3086, e.ER_WRONG_FIELD_WITH_GROUP_V2 = 3087, e.ER_MIX_OF_GROUP_FUNC_AND_FIELDS_V2 = 3088, e.ER_WARN_DEPRECATED_SYSVAR_UPDATE = 3089, e.ER_WARN_DEPRECATED_SQLMODE = 3090, e.ER_CANNOT_LOG_PARTIAL_DROP_DATABASE_WITH_GTID = 3091, e.ER_GROUP_REPLICATION_CONFIGURATION = 3092, e.ER_GROUP_REPLICATION_RUNNING = 3093, e.ER_GROUP_REPLICATION_APPLIER_INIT_ERROR = 3094, e.ER_GROUP_REPLICATION_STOP_APPLIER_THREAD_TIMEOUT = 3095, e.ER_GROUP_REPLICATION_COMMUNICATION_LAYER_SESSION_ERROR = 3096, e.ER_GROUP_REPLICATION_COMMUNICATION_LAYER_JOIN_ERROR = 3097, e.ER_BEFORE_DML_VALIDATION_ERROR = 3098, e.ER_PREVENTS_VARIABLE_WITHOUT_RBR = 3099, e.ER_RUN_HOOK_ERROR = 3100, e.ER_TRANSACTION_ROLLBACK_DURING_COMMIT = 3101, e.ER_GENERATED_COLUMN_FUNCTION_IS_NOT_ALLOWED = 3102, e.ER_UNSUPPORTED_ALTER_INPLACE_ON_VIRTUAL_COLUMN = 3103, e.ER_WRONG_FK_OPTION_FOR_GENERATED_COLUMN = 3104, e.ER_NON_DEFAULT_VALUE_FOR_GENERATED_COLUMN = 3105, e.ER_UNSUPPORTED_ACTION_ON_GENERATED_COLUMN = 3106, e.ER_GENERATED_COLUMN_NON_PRIOR = 3107, e.ER_DEPENDENT_BY_GENERATED_COLUMN = 3108, e.ER_GENERATED_COLUMN_REF_AUTO_INC = 3109, e.ER_FEATURE_NOT_AVAILABLE = 3110, e.ER_CANT_SET_GTID_MODE = 3111, e.ER_CANT_USE_AUTO_POSITION_WITH_GTID_MODE_OFF = 3112, e.ER_CANT_REPLICATE_ANONYMOUS_WITH_AUTO_POSITION = 3113, e.ER_CANT_REPLICATE_ANONYMOUS_WITH_GTID_MODE_ON = 3114, e.ER_CANT_REPLICATE_GTID_WITH_GTID_MODE_OFF = 3115, e.ER_CANT_ENFORCE_GTID_CONSISTENCY_WITH_ONGOING_GTID_VIOLATING_TX = 3116, e.ER_ENFORCE_GTID_CONSISTENCY_WARN_WITH_ONGOING_GTID_VIOLATING_TX = 3117, e.ER_ACCOUNT_HAS_BEEN_LOCKED = 3118, e.ER_WRONG_TABLESPACE_NAME = 3119, e.ER_TABLESPACE_IS_NOT_EMPTY = 3120, e.ER_WRONG_FILE_NAME = 3121, e.ER_BOOST_GEOMETRY_INCONSISTENT_TURNS_EXCEPTION = 3122, e.ER_WARN_OPTIMIZER_HINT_SYNTAX_ERROR = 3123, e.ER_WARN_BAD_MAX_EXECUTION_TIME = 3124, e.ER_WARN_UNSUPPORTED_MAX_EXECUTION_TIME = 3125, e.ER_WARN_CONFLICTING_HINT = 3126, e.ER_WARN_UNKNOWN_QB_NAME = 3127, e.ER_UNRESOLVED_HINT_NAME = 3128, e.ER_WARN_ON_MODIFYING_GTID_EXECUTED_TABLE = 3129, e.ER_PLUGGABLE_PROTOCOL_COMMAND_NOT_SUPPORTED = 3130, e.ER_LOCKING_SERVICE_WRONG_NAME = 3131, e.ER_LOCKING_SERVICE_DEADLOCK = 3132, e.ER_LOCKING_SERVICE_TIMEOUT = 3133, e.ER_GIS_MAX_POINTS_IN_GEOMETRY_OVERFLOWED = 3134, e.ER_SQL_MODE_MERGED = 3135, e.ER_VTOKEN_PLUGIN_TOKEN_MISMATCH = 3136, e.ER_VTOKEN_PLUGIN_TOKEN_NOT_FOUND = 3137, e.ER_CANT_SET_VARIABLE_WHEN_OWNING_GTID = 3138, e.ER_REPLICA_CHANNEL_OPERATION_NOT_ALLOWED = 3139, e.ER_INVALID_JSON_TEXT = 3140, e.ER_INVALID_JSON_TEXT_IN_PARAM = 3141, e.ER_INVALID_JSON_BINARY_DATA = 3142, e.ER_INVALID_JSON_PATH = 3143, e.ER_INVALID_JSON_CHARSET = 3144, e.ER_INVALID_JSON_CHARSET_IN_FUNCTION = 3145, e.ER_INVALID_TYPE_FOR_JSON = 3146, e.ER_INVALID_CAST_TO_JSON = 3147, e.ER_INVALID_JSON_PATH_CHARSET = 3148, e.ER_INVALID_JSON_PATH_WILDCARD = 3149, e.ER_JSON_VALUE_TOO_BIG = 3150, e.ER_JSON_KEY_TOO_BIG = 3151, e.ER_JSON_USED_AS_KEY = 3152, e.ER_JSON_VACUOUS_PATH = 3153, e.ER_JSON_BAD_ONE_OR_ALL_ARG = 3154, e.ER_NUMERIC_JSON_VALUE_OUT_OF_RANGE = 3155, e.ER_INVALID_JSON_VALUE_FOR_CAST = 3156, e.ER_JSON_DOCUMENT_TOO_DEEP = 3157, e.ER_JSON_DOCUMENT_NULL_KEY = 3158, e.ER_SECURE_TRANSPORT_REQUIRED = 3159, e.ER_NO_SECURE_TRANSPORTS_CONFIGURED = 3160, e.ER_DISABLED_STORAGE_ENGINE = 3161, e.ER_USER_DOES_NOT_EXIST = 3162, e.ER_USER_ALREADY_EXISTS = 3163, e.ER_AUDIT_API_ABORT = 3164, e.ER_INVALID_JSON_PATH_ARRAY_CELL = 3165, e.ER_BUFPOOL_RESIZE_INPROGRESS = 3166, e.ER_FEATURE_DISABLED_SEE_DOC = 3167, e.ER_SERVER_ISNT_AVAILABLE = 3168, e.ER_SESSION_WAS_KILLED = 3169, e.ER_CAPACITY_EXCEEDED = 3170, e.ER_CAPACITY_EXCEEDED_IN_RANGE_OPTIMIZER = 3171, e.ER_TABLE_NEEDS_UPG_PART = 3172, e.ER_CANT_WAIT_FOR_EXECUTED_GTID_SET_WHILE_OWNING_A_GTID = 3173, e.ER_CANNOT_ADD_FOREIGN_BASE_COL_VIRTUAL = 3174, e.ER_CANNOT_CREATE_VIRTUAL_INDEX_CONSTRAINT = 3175, e.ER_ERROR_ON_MODIFYING_GTID_EXECUTED_TABLE = 3176, e.ER_LOCK_REFUSED_BY_ENGINE = 3177, e.ER_UNSUPPORTED_ALTER_ONLINE_ON_VIRTUAL_COLUMN = 3178, e.ER_MASTER_KEY_ROTATION_NOT_SUPPORTED_BY_SE = 3179, e.ER_MASTER_KEY_ROTATION_ERROR_BY_SE = 3180, e.ER_MASTER_KEY_ROTATION_BINLOG_FAILED = 3181, e.ER_MASTER_KEY_ROTATION_SE_UNAVAILABLE = 3182, e.ER_TABLESPACE_CANNOT_ENCRYPT = 3183, e.ER_INVALID_ENCRYPTION_OPTION = 3184, e.ER_CANNOT_FIND_KEY_IN_KEYRING = 3185, e.ER_CAPACITY_EXCEEDED_IN_PARSER = 3186, e.ER_UNSUPPORTED_ALTER_ENCRYPTION_INPLACE = 3187, e.ER_KEYRING_UDF_KEYRING_SERVICE_ERROR = 3188, e.ER_USER_COLUMN_OLD_LENGTH = 3189, e.ER_CANT_RESET_SOURCE = 3190, e.ER_GROUP_REPLICATION_MAX_GROUP_SIZE = 3191, e.ER_CANNOT_ADD_FOREIGN_BASE_COL_STORED = 3192, e.ER_TABLE_REFERENCED = 3193, e.ER_PARTITION_ENGINE_DEPRECATED_FOR_TABLE = 3194, e.ER_WARN_USING_GEOMFROMWKB_TO_SET_SRID_ZERO = 3195, e.ER_WARN_USING_GEOMFROMWKB_TO_SET_SRID = 3196, e.ER_XA_RETRY = 3197, e.ER_KEYRING_AWS_UDF_AWS_KMS_ERROR = 3198, e.ER_BINLOG_UNSAFE_XA = 3199, e.ER_UDF_ERROR = 3200, e.ER_KEYRING_MIGRATION_FAILURE = 3201, e.ER_KEYRING_ACCESS_DENIED_ERROR = 3202, e.ER_KEYRING_MIGRATION_STATUS = 3203, e.ER_PLUGIN_FAILED_TO_OPEN_TABLES = 3204, e.ER_PLUGIN_FAILED_TO_OPEN_TABLE = 3205, e.ER_AUDIT_LOG_NO_KEYRING_PLUGIN_INSTALLED = 3206, e.ER_AUDIT_LOG_ENCRYPTION_PASSWORD_HAS_NOT_BEEN_SET = 3207, e.ER_AUDIT_LOG_COULD_NOT_CREATE_AES_KEY = 3208, e.ER_AUDIT_LOG_ENCRYPTION_PASSWORD_CANNOT_BE_FETCHED = 3209, e.ER_AUDIT_LOG_JSON_FILTERING_NOT_ENABLED = 3210, e.ER_AUDIT_LOG_UDF_INSUFFICIENT_PRIVILEGE = 3211, e.ER_AUDIT_LOG_SUPER_PRIVILEGE_REQUIRED = 3212, e.ER_COULD_NOT_REINITIALIZE_AUDIT_LOG_FILTERS = 3213, e.ER_AUDIT_LOG_UDF_INVALID_ARGUMENT_TYPE = 3214, e.ER_AUDIT_LOG_UDF_INVALID_ARGUMENT_COUNT = 3215, e.ER_AUDIT_LOG_HAS_NOT_BEEN_INSTALLED = 3216, e.ER_AUDIT_LOG_UDF_READ_INVALID_MAX_ARRAY_LENGTH_ARG_TYPE = 3217, e.ER_AUDIT_LOG_UDF_READ_INVALID_MAX_ARRAY_LENGTH_ARG_VALUE = 3218, e.ER_AUDIT_LOG_JSON_FILTER_PARSING_ERROR = 3219, e.ER_AUDIT_LOG_JSON_FILTER_NAME_CANNOT_BE_EMPTY = 3220, e.ER_AUDIT_LOG_JSON_USER_NAME_CANNOT_BE_EMPTY = 3221, e.ER_AUDIT_LOG_JSON_FILTER_DOES_NOT_EXISTS = 3222, e.ER_AUDIT_LOG_USER_FIRST_CHARACTER_MUST_BE_ALPHANUMERIC = 3223, e.ER_AUDIT_LOG_USER_NAME_INVALID_CHARACTER = 3224, e.ER_AUDIT_LOG_HOST_NAME_INVALID_CHARACTER = 3225, e.WARN_DEPRECATED_MAXDB_SQL_MODE_FOR_TIMESTAMP = 3226, e.ER_XA_REPLICATION_FILTERS = 3227, e.ER_CANT_OPEN_ERROR_LOG = 3228, e.ER_GROUPING_ON_TIMESTAMP_IN_DST = 3229, e.ER_CANT_START_SERVER_NAMED_PIPE = 3230, e.ER_WRITE_SET_EXCEEDS_LIMIT = 3231, e.ER_DEPRECATED_TLS_VERSION_SESSION_57 = 3232, e.ER_WARN_DEPRECATED_TLS_VERSION_57 = 3233, e.ER_WARN_WRONG_NATIVE_TABLE_STRUCTURE = 3234, e.ER_AES_INVALID_KDF_NAME = 3235, e.ER_AES_INVALID_KDF_ITERATIONS = 3236, e.WARN_AES_KEY_SIZE = 3237, e.ER_AES_INVALID_KDF_OPTION_SIZE = 3238, e.ER_UNSUPPORT_COMPRESSED_TEMPORARY_TABLE = 3500, e.ER_ACL_OPERATION_FAILED = 3501, e.ER_UNSUPPORTED_INDEX_ALGORITHM = 3502, e.ER_NO_SUCH_DB = 3503, e.ER_TOO_BIG_ENUM = 3504, e.ER_TOO_LONG_SET_ENUM_VALUE = 3505, e.ER_INVALID_DD_OBJECT = 3506, e.ER_UPDATING_DD_TABLE = 3507, e.ER_INVALID_DD_OBJECT_ID = 3508, e.ER_INVALID_DD_OBJECT_NAME = 3509, e.ER_TABLESPACE_MISSING_WITH_NAME = 3510, e.ER_TOO_LONG_ROUTINE_COMMENT = 3511, e.ER_SP_LOAD_FAILED = 3512, e.ER_INVALID_BITWISE_OPERANDS_SIZE = 3513, e.ER_INVALID_BITWISE_AGGREGATE_OPERANDS_SIZE = 3514, e.ER_WARN_UNSUPPORTED_HINT = 3515, e.ER_UNEXPECTED_GEOMETRY_TYPE = 3516, e.ER_SRS_PARSE_ERROR = 3517, e.ER_SRS_PROJ_PARAMETER_MISSING = 3518, e.ER_WARN_SRS_NOT_FOUND = 3519, e.ER_SRS_NOT_CARTESIAN = 3520, e.ER_SRS_NOT_CARTESIAN_UNDEFINED = 3521, e.ER_PK_INDEX_CANT_BE_INVISIBLE = 3522, e.ER_UNKNOWN_AUTHID = 3523, e.ER_FAILED_ROLE_GRANT = 3524, e.ER_OPEN_ROLE_TABLES = 3525, e.ER_FAILED_DEFAULT_ROLES = 3526, e.ER_COMPONENTS_NO_SCHEME = 3527, e.ER_COMPONENTS_NO_SCHEME_SERVICE = 3528, e.ER_COMPONENTS_CANT_LOAD = 3529, e.ER_ROLE_NOT_GRANTED = 3530, e.ER_FAILED_REVOKE_ROLE = 3531, e.ER_RENAME_ROLE = 3532, e.ER_COMPONENTS_CANT_ACQUIRE_SERVICE_IMPLEMENTATION = 3533, e.ER_COMPONENTS_CANT_SATISFY_DEPENDENCY = 3534, e.ER_COMPONENTS_LOAD_CANT_REGISTER_SERVICE_IMPLEMENTATION = 3535, e.ER_COMPONENTS_LOAD_CANT_INITIALIZE = 3536, e.ER_COMPONENTS_UNLOAD_NOT_LOADED = 3537, e.ER_COMPONENTS_UNLOAD_CANT_DEINITIALIZE = 3538, e.ER_COMPONENTS_CANT_RELEASE_SERVICE = 3539, e.ER_COMPONENTS_UNLOAD_CANT_UNREGISTER_SERVICE = 3540, e.ER_COMPONENTS_CANT_UNLOAD = 3541, e.ER_WARN_UNLOAD_THE_NOT_PERSISTED = 3542, e.ER_COMPONENT_TABLE_INCORRECT = 3543, e.ER_COMPONENT_MANIPULATE_ROW_FAILED = 3544, e.ER_COMPONENTS_UNLOAD_DUPLICATE_IN_GROUP = 3545, e.ER_CANT_SET_GTID_PURGED_DUE_SETS_CONSTRAINTS = 3546, e.ER_CANNOT_LOCK_USER_MANAGEMENT_CACHES = 3547, e.ER_SRS_NOT_FOUND = 3548, e.ER_VARIABLE_NOT_PERSISTED = 3549, e.ER_IS_QUERY_INVALID_CLAUSE = 3550, e.ER_UNABLE_TO_STORE_STATISTICS = 3551, e.ER_NO_SYSTEM_SCHEMA_ACCESS = 3552, e.ER_NO_SYSTEM_TABLESPACE_ACCESS = 3553, e.ER_NO_SYSTEM_TABLE_ACCESS = 3554, e.ER_NO_SYSTEM_TABLE_ACCESS_FOR_DICTIONARY_TABLE = 3555, e.ER_NO_SYSTEM_TABLE_ACCESS_FOR_SYSTEM_TABLE = 3556, e.ER_NO_SYSTEM_TABLE_ACCESS_FOR_TABLE = 3557, e.ER_INVALID_OPTION_KEY = 3558, e.ER_INVALID_OPTION_VALUE = 3559, e.ER_INVALID_OPTION_KEY_VALUE_PAIR = 3560, e.ER_INVALID_OPTION_START_CHARACTER = 3561, e.ER_INVALID_OPTION_END_CHARACTER = 3562, e.ER_INVALID_OPTION_CHARACTERS = 3563, e.ER_DUPLICATE_OPTION_KEY = 3564, e.ER_WARN_SRS_NOT_FOUND_AXIS_ORDER = 3565, e.ER_NO_ACCESS_TO_NATIVE_FCT = 3566, e.ER_RESET_SOURCE_TO_VALUE_OUT_OF_RANGE = 3567, e.ER_UNRESOLVED_TABLE_LOCK = 3568, e.ER_DUPLICATE_TABLE_LOCK = 3569, e.ER_BINLOG_UNSAFE_SKIP_LOCKED = 3570, e.ER_BINLOG_UNSAFE_NOWAIT = 3571, e.ER_LOCK_NOWAIT = 3572, e.ER_CTE_RECURSIVE_REQUIRES_UNION = 3573, e.ER_CTE_RECURSIVE_REQUIRES_NONRECURSIVE_FIRST = 3574, e.ER_CTE_RECURSIVE_FORBIDS_AGGREGATION = 3575, e.ER_CTE_RECURSIVE_FORBIDDEN_JOIN_ORDER = 3576, e.ER_CTE_RECURSIVE_REQUIRES_SINGLE_REFERENCE = 3577, e.ER_SWITCH_TMP_ENGINE = 3578, e.ER_WINDOW_NO_SUCH_WINDOW = 3579, e.ER_WINDOW_CIRCULARITY_IN_WINDOW_GRAPH = 3580, e.ER_WINDOW_NO_CHILD_PARTITIONING = 3581, e.ER_WINDOW_NO_INHERIT_FRAME = 3582, e.ER_WINDOW_NO_REDEFINE_ORDER_BY = 3583, e.ER_WINDOW_FRAME_START_ILLEGAL = 3584, e.ER_WINDOW_FRAME_END_ILLEGAL = 3585, e.ER_WINDOW_FRAME_ILLEGAL = 3586, e.ER_WINDOW_RANGE_FRAME_ORDER_TYPE = 3587, e.ER_WINDOW_RANGE_FRAME_TEMPORAL_TYPE = 3588, e.ER_WINDOW_RANGE_FRAME_NUMERIC_TYPE = 3589, e.ER_WINDOW_RANGE_BOUND_NOT_CONSTANT = 3590, e.ER_WINDOW_DUPLICATE_NAME = 3591, e.ER_WINDOW_ILLEGAL_ORDER_BY = 3592, e.ER_WINDOW_INVALID_WINDOW_FUNC_USE = 3593, e.ER_WINDOW_INVALID_WINDOW_FUNC_ALIAS_USE = 3594, e.ER_WINDOW_NESTED_WINDOW_FUNC_USE_IN_WINDOW_SPEC = 3595, e.ER_WINDOW_ROWS_INTERVAL_USE = 3596, e.ER_WINDOW_NO_GROUP_ORDER = 3597, e.ER_WINDOW_EXPLAIN_JSON = 3598, e.ER_WINDOW_FUNCTION_IGNORES_FRAME = 3599, e.ER_WL9236_NOW = 3600, e.ER_INVALID_NO_OF_ARGS = 3601, e.ER_FIELD_IN_GROUPING_NOT_GROUP_BY = 3602, e.ER_TOO_LONG_TABLESPACE_COMMENT = 3603, e.ER_ENGINE_CANT_DROP_TABLE = 3604, e.ER_ENGINE_CANT_DROP_MISSING_TABLE = 3605, e.ER_TABLESPACE_DUP_FILENAME = 3606, e.ER_DB_DROP_RMDIR2 = 3607, e.ER_IMP_NO_FILES_MATCHED = 3608, e.ER_IMP_SCHEMA_DOES_NOT_EXIST = 3609, e.ER_IMP_TABLE_ALREADY_EXISTS = 3610, e.ER_IMP_INCOMPATIBLE_MYSQLD_VERSION = 3611, e.ER_IMP_INCOMPATIBLE_DD_VERSION = 3612, e.ER_IMP_INCOMPATIBLE_SDI_VERSION = 3613, e.ER_WARN_INVALID_HINT = 3614, e.ER_VAR_DOES_NOT_EXIST = 3615, e.ER_LONGITUDE_OUT_OF_RANGE = 3616, e.ER_LATITUDE_OUT_OF_RANGE = 3617, e.ER_NOT_IMPLEMENTED_FOR_GEOGRAPHIC_SRS = 3618, e.ER_ILLEGAL_PRIVILEGE_LEVEL = 3619, e.ER_NO_SYSTEM_VIEW_ACCESS = 3620, e.ER_COMPONENT_FILTER_FLABBERGASTED = 3621, e.ER_PART_EXPR_TOO_LONG = 3622, e.ER_UDF_DROP_DYNAMICALLY_REGISTERED = 3623, e.ER_UNABLE_TO_STORE_COLUMN_STATISTICS = 3624, e.ER_UNABLE_TO_UPDATE_COLUMN_STATISTICS = 3625, e.ER_UNABLE_TO_DROP_COLUMN_STATISTICS = 3626, e.ER_UNABLE_TO_BUILD_HISTOGRAM = 3627, e.ER_MANDATORY_ROLE = 3628, e.ER_MISSING_TABLESPACE_FILE = 3629, e.ER_PERSIST_ONLY_ACCESS_DENIED_ERROR = 3630, e.ER_CMD_NEED_SUPER = 3631, e.ER_PATH_IN_DATADIR = 3632, e.ER_CLONE_DDL_IN_PROGRESS = 3633, e.ER_CLONE_TOO_MANY_CONCURRENT_CLONES = 3634, e.ER_APPLIER_LOG_EVENT_VALIDATION_ERROR = 3635, e.ER_CTE_MAX_RECURSION_DEPTH = 3636, e.ER_NOT_HINT_UPDATABLE_VARIABLE = 3637, e.ER_CREDENTIALS_CONTRADICT_TO_HISTORY = 3638, e.ER_WARNING_PASSWORD_HISTORY_CLAUSES_VOID = 3639, e.ER_CLIENT_DOES_NOT_SUPPORT = 3640, e.ER_I_S_SKIPPED_TABLESPACE = 3641, e.ER_TABLESPACE_ENGINE_MISMATCH = 3642, e.ER_WRONG_SRID_FOR_COLUMN = 3643, e.ER_CANNOT_ALTER_SRID_DUE_TO_INDEX = 3644, e.ER_WARN_BINLOG_PARTIAL_UPDATES_DISABLED = 3645, e.ER_WARN_BINLOG_V1_ROW_EVENTS_DISABLED = 3646, e.ER_WARN_BINLOG_PARTIAL_UPDATES_SUGGESTS_PARTIAL_IMAGES = 3647, e.ER_COULD_NOT_APPLY_JSON_DIFF = 3648, e.ER_CORRUPTED_JSON_DIFF = 3649, e.ER_RESOURCE_GROUP_EXISTS = 3650, e.ER_RESOURCE_GROUP_NOT_EXISTS = 3651, e.ER_INVALID_VCPU_ID = 3652, e.ER_INVALID_VCPU_RANGE = 3653, e.ER_INVALID_THREAD_PRIORITY = 3654, e.ER_DISALLOWED_OPERATION = 3655, e.ER_RESOURCE_GROUP_BUSY = 3656, e.ER_RESOURCE_GROUP_DISABLED = 3657, e.ER_FEATURE_UNSUPPORTED = 3658, e.ER_ATTRIBUTE_IGNORED = 3659, e.ER_INVALID_THREAD_ID = 3660, e.ER_RESOURCE_GROUP_BIND_FAILED = 3661, e.ER_INVALID_USE_OF_FORCE_OPTION = 3662, e.ER_GROUP_REPLICATION_COMMAND_FAILURE = 3663, e.ER_SDI_OPERATION_FAILED = 3664, e.ER_MISSING_JSON_TABLE_VALUE = 3665, e.ER_WRONG_JSON_TABLE_VALUE = 3666, e.ER_TF_MUST_HAVE_ALIAS = 3667, e.ER_TF_FORBIDDEN_JOIN_TYPE = 3668, e.ER_JT_VALUE_OUT_OF_RANGE = 3669, e.ER_JT_MAX_NESTED_PATH = 3670, e.ER_PASSWORD_EXPIRATION_NOT_SUPPORTED_BY_AUTH_METHOD = 3671, e.ER_INVALID_GEOJSON_CRS_NOT_TOP_LEVEL = 3672, e.ER_BAD_NULL_ERROR_NOT_IGNORED = 3673, e.WARN_USELESS_SPATIAL_INDEX = 3674, e.ER_DISK_FULL_NOWAIT = 3675, e.ER_PARSE_ERROR_IN_DIGEST_FN = 3676, e.ER_UNDISCLOSED_PARSE_ERROR_IN_DIGEST_FN = 3677, e.ER_SCHEMA_DIR_EXISTS = 3678, e.ER_SCHEMA_DIR_MISSING = 3679, e.ER_SCHEMA_DIR_CREATE_FAILED = 3680, e.ER_SCHEMA_DIR_UNKNOWN = 3681, e.ER_ONLY_IMPLEMENTED_FOR_SRID_0_AND_4326 = 3682, e.ER_BINLOG_EXPIRE_LOG_DAYS_AND_SECS_USED_TOGETHER = 3683, e.ER_REGEXP_BUFFER_OVERFLOW = 3684, e.ER_REGEXP_ILLEGAL_ARGUMENT = 3685, e.ER_REGEXP_INDEX_OUTOFBOUNDS_ERROR = 3686, e.ER_REGEXP_INTERNAL_ERROR = 3687, e.ER_REGEXP_RULE_SYNTAX = 3688, e.ER_REGEXP_BAD_ESCAPE_SEQUENCE = 3689, e.ER_REGEXP_UNIMPLEMENTED = 3690, e.ER_REGEXP_MISMATCHED_PAREN = 3691, e.ER_REGEXP_BAD_INTERVAL = 3692, e.ER_REGEXP_MAX_LT_MIN = 3693, e.ER_REGEXP_INVALID_BACK_REF = 3694, e.ER_REGEXP_LOOK_BEHIND_LIMIT = 3695, e.ER_REGEXP_MISSING_CLOSE_BRACKET = 3696, e.ER_REGEXP_INVALID_RANGE = 3697, e.ER_REGEXP_STACK_OVERFLOW = 3698, e.ER_REGEXP_TIME_OUT = 3699, e.ER_REGEXP_PATTERN_TOO_BIG = 3700, e.ER_CANT_SET_ERROR_LOG_SERVICE = 3701, e.ER_EMPTY_PIPELINE_FOR_ERROR_LOG_SERVICE = 3702, e.ER_COMPONENT_FILTER_DIAGNOSTICS = 3703, e.ER_NOT_IMPLEMENTED_FOR_CARTESIAN_SRS = 3704, e.ER_NOT_IMPLEMENTED_FOR_PROJECTED_SRS = 3705, e.ER_NONPOSITIVE_RADIUS = 3706, e.ER_RESTART_SERVER_FAILED = 3707, e.ER_SRS_MISSING_MANDATORY_ATTRIBUTE = 3708, e.ER_SRS_MULTIPLE_ATTRIBUTE_DEFINITIONS = 3709, e.ER_SRS_NAME_CANT_BE_EMPTY_OR_WHITESPACE = 3710, e.ER_SRS_ORGANIZATION_CANT_BE_EMPTY_OR_WHITESPACE = 3711, e.ER_SRS_ID_ALREADY_EXISTS = 3712, e.ER_WARN_SRS_ID_ALREADY_EXISTS = 3713, e.ER_CANT_MODIFY_SRID_0 = 3714, e.ER_WARN_RESERVED_SRID_RANGE = 3715, e.ER_CANT_MODIFY_SRS_USED_BY_COLUMN = 3716, e.ER_SRS_INVALID_CHARACTER_IN_ATTRIBUTE = 3717, e.ER_SRS_ATTRIBUTE_STRING_TOO_LONG = 3718, e.ER_DEPRECATED_UTF8_ALIAS = 3719, e.ER_DEPRECATED_NATIONAL = 3720, e.ER_INVALID_DEFAULT_UTF8MB4_COLLATION = 3721, e.ER_UNABLE_TO_COLLECT_LOG_STATUS = 3722, e.ER_RESERVED_TABLESPACE_NAME = 3723, e.ER_UNABLE_TO_SET_OPTION = 3724, e.ER_REPLICA_POSSIBLY_DIVERGED_AFTER_DDL = 3725, e.ER_SRS_NOT_GEOGRAPHIC = 3726, e.ER_POLYGON_TOO_LARGE = 3727, e.ER_SPATIAL_UNIQUE_INDEX = 3728, e.ER_INDEX_TYPE_NOT_SUPPORTED_FOR_SPATIAL_INDEX = 3729, e.ER_FK_CANNOT_DROP_PARENT = 3730, e.ER_GEOMETRY_PARAM_LONGITUDE_OUT_OF_RANGE = 3731, e.ER_GEOMETRY_PARAM_LATITUDE_OUT_OF_RANGE = 3732, e.ER_FK_CANNOT_USE_VIRTUAL_COLUMN = 3733, e.ER_FK_NO_COLUMN_PARENT = 3734, e.ER_CANT_SET_ERROR_SUPPRESSION_LIST = 3735, e.ER_SRS_GEOGCS_INVALID_AXES = 3736, e.ER_SRS_INVALID_SEMI_MAJOR_AXIS = 3737, e.ER_SRS_INVALID_INVERSE_FLATTENING = 3738, e.ER_SRS_INVALID_ANGULAR_UNIT = 3739, e.ER_SRS_INVALID_PRIME_MERIDIAN = 3740, e.ER_TRANSFORM_SOURCE_SRS_NOT_SUPPORTED = 3741, e.ER_TRANSFORM_TARGET_SRS_NOT_SUPPORTED = 3742, e.ER_TRANSFORM_SOURCE_SRS_MISSING_TOWGS84 = 3743, e.ER_TRANSFORM_TARGET_SRS_MISSING_TOWGS84 = 3744, e.ER_TEMP_TABLE_PREVENTS_SWITCH_SESSION_BINLOG_FORMAT = 3745, e.ER_TEMP_TABLE_PREVENTS_SWITCH_GLOBAL_BINLOG_FORMAT = 3746, e.ER_RUNNING_APPLIER_PREVENTS_SWITCH_GLOBAL_BINLOG_FORMAT = 3747, e.ER_CLIENT_GTID_UNSAFE_CREATE_DROP_TEMP_TABLE_IN_TRX_IN_SBR = 3748, e.ER_XA_CANT_CREATE_MDL_BACKUP = 3749, e.ER_TABLE_WITHOUT_PK = 3750, e.ER_WARN_DATA_TRUNCATED_FUNCTIONAL_INDEX = 3751, e.ER_WARN_DATA_OUT_OF_RANGE_FUNCTIONAL_INDEX = 3752, e.ER_FUNCTIONAL_INDEX_ON_JSON_OR_GEOMETRY_FUNCTION = 3753, e.ER_FUNCTIONAL_INDEX_REF_AUTO_INCREMENT = 3754, e.ER_CANNOT_DROP_COLUMN_FUNCTIONAL_INDEX = 3755, e.ER_FUNCTIONAL_INDEX_PRIMARY_KEY = 3756, e.ER_FUNCTIONAL_INDEX_ON_LOB = 3757, e.ER_FUNCTIONAL_INDEX_FUNCTION_IS_NOT_ALLOWED = 3758, e.ER_FULLTEXT_FUNCTIONAL_INDEX = 3759, e.ER_SPATIAL_FUNCTIONAL_INDEX = 3760, e.ER_WRONG_KEY_COLUMN_FUNCTIONAL_INDEX = 3761, e.ER_FUNCTIONAL_INDEX_ON_FIELD = 3762, e.ER_GENERATED_COLUMN_NAMED_FUNCTION_IS_NOT_ALLOWED = 3763, e.ER_GENERATED_COLUMN_ROW_VALUE = 3764, e.ER_GENERATED_COLUMN_VARIABLES = 3765, e.ER_DEPENDENT_BY_DEFAULT_GENERATED_VALUE = 3766, e.ER_DEFAULT_VAL_GENERATED_NON_PRIOR = 3767, e.ER_DEFAULT_VAL_GENERATED_REF_AUTO_INC = 3768, e.ER_DEFAULT_VAL_GENERATED_FUNCTION_IS_NOT_ALLOWED = 3769, e.ER_DEFAULT_VAL_GENERATED_NAMED_FUNCTION_IS_NOT_ALLOWED = 3770, e.ER_DEFAULT_VAL_GENERATED_ROW_VALUE = 3771, e.ER_DEFAULT_VAL_GENERATED_VARIABLES = 3772, e.ER_DEFAULT_AS_VAL_GENERATED = 3773, e.ER_UNSUPPORTED_ACTION_ON_DEFAULT_VAL_GENERATED = 3774, e.ER_GTID_UNSAFE_ALTER_ADD_COL_WITH_DEFAULT_EXPRESSION = 3775, e.ER_FK_CANNOT_CHANGE_ENGINE = 3776, e.ER_WARN_DEPRECATED_USER_SET_EXPR = 3777, e.ER_WARN_DEPRECATED_UTF8MB3_COLLATION = 3778, e.ER_WARN_DEPRECATED_NESTED_COMMENT_SYNTAX = 3779, e.ER_FK_INCOMPATIBLE_COLUMNS = 3780, e.ER_GR_HOLD_WAIT_TIMEOUT = 3781, e.ER_GR_HOLD_KILLED = 3782, e.ER_GR_HOLD_MEMBER_STATUS_ERROR = 3783, e.ER_RPL_ENCRYPTION_FAILED_TO_FETCH_KEY = 3784, e.ER_RPL_ENCRYPTION_KEY_NOT_FOUND = 3785, e.ER_RPL_ENCRYPTION_KEYRING_INVALID_KEY = 3786, e.ER_RPL_ENCRYPTION_HEADER_ERROR = 3787, e.ER_RPL_ENCRYPTION_FAILED_TO_ROTATE_LOGS = 3788, e.ER_RPL_ENCRYPTION_KEY_EXISTS_UNEXPECTED = 3789, e.ER_RPL_ENCRYPTION_FAILED_TO_GENERATE_KEY = 3790, e.ER_RPL_ENCRYPTION_FAILED_TO_STORE_KEY = 3791, e.ER_RPL_ENCRYPTION_FAILED_TO_REMOVE_KEY = 3792, e.ER_RPL_ENCRYPTION_UNABLE_TO_CHANGE_OPTION = 3793, e.ER_RPL_ENCRYPTION_MASTER_KEY_RECOVERY_FAILED = 3794, e.ER_SLOW_LOG_MODE_IGNORED_WHEN_NOT_LOGGING_TO_FILE = 3795, e.ER_GRP_TRX_CONSISTENCY_NOT_ALLOWED = 3796, e.ER_GRP_TRX_CONSISTENCY_BEFORE = 3797, e.ER_GRP_TRX_CONSISTENCY_AFTER_ON_TRX_BEGIN = 3798, e.ER_GRP_TRX_CONSISTENCY_BEGIN_NOT_ALLOWED = 3799, e.ER_FUNCTIONAL_INDEX_ROW_VALUE_IS_NOT_ALLOWED = 3800, e.ER_RPL_ENCRYPTION_FAILED_TO_ENCRYPT = 3801, e.ER_PAGE_TRACKING_NOT_STARTED = 3802, e.ER_PAGE_TRACKING_RANGE_NOT_TRACKED = 3803, e.ER_PAGE_TRACKING_CANNOT_PURGE = 3804, e.ER_RPL_ENCRYPTION_CANNOT_ROTATE_BINLOG_MASTER_KEY = 3805, e.ER_BINLOG_MASTER_KEY_RECOVERY_OUT_OF_COMBINATION = 3806, e.ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_OPERATE_KEY = 3807, e.ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_ROTATE_LOGS = 3808, e.ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_REENCRYPT_LOG = 3809, e.ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_CLEANUP_UNUSED_KEYS = 3810, e.ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_CLEANUP_AUX_KEY = 3811, e.ER_NON_BOOLEAN_EXPR_FOR_CHECK_CONSTRAINT = 3812, e.ER_COLUMN_CHECK_CONSTRAINT_REFERENCES_OTHER_COLUMN = 3813, e.ER_CHECK_CONSTRAINT_NAMED_FUNCTION_IS_NOT_ALLOWED = 3814, e.ER_CHECK_CONSTRAINT_FUNCTION_IS_NOT_ALLOWED = 3815, e.ER_CHECK_CONSTRAINT_VARIABLES = 3816, e.ER_CHECK_CONSTRAINT_ROW_VALUE = 3817, e.ER_CHECK_CONSTRAINT_REFERS_AUTO_INCREMENT_COLUMN = 3818, e.ER_CHECK_CONSTRAINT_VIOLATED = 3819, e.ER_CHECK_CONSTRAINT_REFERS_UNKNOWN_COLUMN = 3820, e.ER_CHECK_CONSTRAINT_NOT_FOUND = 3821, e.ER_CHECK_CONSTRAINT_DUP_NAME = 3822, e.ER_CHECK_CONSTRAINT_CLAUSE_USING_FK_REFER_ACTION_COLUMN = 3823, e.WARN_UNENCRYPTED_TABLE_IN_ENCRYPTED_DB = 3824, e.ER_INVALID_ENCRYPTION_REQUEST = 3825, e.ER_CANNOT_SET_TABLE_ENCRYPTION = 3826, e.ER_CANNOT_SET_DATABASE_ENCRYPTION = 3827, e.ER_CANNOT_SET_TABLESPACE_ENCRYPTION = 3828, e.ER_TABLESPACE_CANNOT_BE_ENCRYPTED = 3829, e.ER_TABLESPACE_CANNOT_BE_DECRYPTED = 3830, e.ER_TABLESPACE_TYPE_UNKNOWN = 3831, e.ER_TARGET_TABLESPACE_UNENCRYPTED = 3832, e.ER_CANNOT_USE_ENCRYPTION_CLAUSE = 3833, e.ER_INVALID_MULTIPLE_CLAUSES = 3834, e.ER_UNSUPPORTED_USE_OF_GRANT_AS = 3835, e.ER_UKNOWN_AUTH_ID_OR_ACCESS_DENIED_FOR_GRANT_AS = 3836, e.ER_DEPENDENT_BY_FUNCTIONAL_INDEX = 3837, e.ER_PLUGIN_NOT_EARLY = 3838, e.ER_INNODB_REDO_LOG_ARCHIVE_START_SUBDIR_PATH = 3839, e.ER_INNODB_REDO_LOG_ARCHIVE_START_TIMEOUT = 3840, e.ER_INNODB_REDO_LOG_ARCHIVE_DIRS_INVALID = 3841, e.ER_INNODB_REDO_LOG_ARCHIVE_LABEL_NOT_FOUND = 3842, e.ER_INNODB_REDO_LOG_ARCHIVE_DIR_EMPTY = 3843, e.ER_INNODB_REDO_LOG_ARCHIVE_NO_SUCH_DIR = 3844, e.ER_INNODB_REDO_LOG_ARCHIVE_DIR_CLASH = 3845, e.ER_INNODB_REDO_LOG_ARCHIVE_DIR_PERMISSIONS = 3846, e.ER_INNODB_REDO_LOG_ARCHIVE_FILE_CREATE = 3847, e.ER_INNODB_REDO_LOG_ARCHIVE_ACTIVE = 3848, e.ER_INNODB_REDO_LOG_ARCHIVE_INACTIVE = 3849, e.ER_INNODB_REDO_LOG_ARCHIVE_FAILED = 3850, e.ER_INNODB_REDO_LOG_ARCHIVE_SESSION = 3851, e.ER_STD_REGEX_ERROR = 3852, e.ER_INVALID_JSON_TYPE = 3853, e.ER_CANNOT_CONVERT_STRING = 3854, e.ER_DEPENDENT_BY_PARTITION_FUNC = 3855, e.ER_WARN_DEPRECATED_FLOAT_AUTO_INCREMENT = 3856, e.ER_RPL_CANT_STOP_REPLICA_WHILE_LOCKED_BACKUP = 3857, e.ER_WARN_DEPRECATED_FLOAT_DIGITS = 3858, e.ER_WARN_DEPRECATED_FLOAT_UNSIGNED = 3859, e.ER_WARN_DEPRECATED_INTEGER_DISPLAY_WIDTH = 3860, e.ER_WARN_DEPRECATED_ZEROFILL = 3861, e.ER_CLONE_DONOR = 3862, e.ER_CLONE_PROTOCOL = 3863, e.ER_CLONE_DONOR_VERSION = 3864, e.ER_CLONE_OS = 3865, e.ER_CLONE_PLATFORM = 3866, e.ER_CLONE_CHARSET = 3867, e.ER_CLONE_CONFIG = 3868, e.ER_CLONE_SYS_CONFIG = 3869, e.ER_CLONE_PLUGIN_MATCH = 3870, e.ER_CLONE_LOOPBACK = 3871, e.ER_CLONE_ENCRYPTION = 3872, e.ER_CLONE_DISK_SPACE = 3873, e.ER_CLONE_IN_PROGRESS = 3874, e.ER_CLONE_DISALLOWED = 3875, e.ER_CANNOT_GRANT_ROLES_TO_ANONYMOUS_USER = 3876, e.ER_SECONDARY_ENGINE_PLUGIN = 3877, e.ER_SECOND_PASSWORD_CANNOT_BE_EMPTY = 3878, e.ER_DB_ACCESS_DENIED = 3879, e.ER_DA_AUTH_ID_WITH_SYSTEM_USER_PRIV_IN_MANDATORY_ROLES = 3880, e.ER_DA_RPL_GTID_TABLE_CANNOT_OPEN = 3881, e.ER_GEOMETRY_IN_UNKNOWN_LENGTH_UNIT = 3882, e.ER_DA_PLUGIN_INSTALL_ERROR = 3883, e.ER_NO_SESSION_TEMP = 3884, e.ER_DA_UNKNOWN_ERROR_NUMBER = 3885, e.ER_COLUMN_CHANGE_SIZE = 3886, e.ER_REGEXP_INVALID_CAPTURE_GROUP_NAME = 3887, e.ER_DA_SSL_LIBRARY_ERROR = 3888, e.ER_SECONDARY_ENGINE = 3889, e.ER_SECONDARY_ENGINE_DDL = 3890, e.ER_INCORRECT_CURRENT_PASSWORD = 3891, e.ER_MISSING_CURRENT_PASSWORD = 3892, e.ER_CURRENT_PASSWORD_NOT_REQUIRED = 3893, e.ER_PASSWORD_CANNOT_BE_RETAINED_ON_PLUGIN_CHANGE = 3894, e.ER_CURRENT_PASSWORD_CANNOT_BE_RETAINED = 3895, e.ER_PARTIAL_REVOKES_EXIST = 3896, e.ER_CANNOT_GRANT_SYSTEM_PRIV_TO_MANDATORY_ROLE = 3897, e.ER_XA_REPLICATION_FILTERS = 3898, e.ER_UNSUPPORTED_SQL_MODE = 3899, e.ER_REGEXP_INVALID_FLAG = 3900, e.ER_PARTIAL_REVOKE_AND_DB_GRANT_BOTH_EXISTS = 3901, e.ER_UNIT_NOT_FOUND = 3902, e.ER_INVALID_JSON_VALUE_FOR_FUNC_INDEX = 3903, e.ER_JSON_VALUE_OUT_OF_RANGE_FOR_FUNC_INDEX = 3904, e.ER_EXCEEDED_MV_KEYS_NUM = 3905, e.ER_EXCEEDED_MV_KEYS_SPACE = 3906, e.ER_FUNCTIONAL_INDEX_DATA_IS_TOO_LONG = 3907, e.ER_WRONG_MVI_VALUE = 3908, e.ER_WARN_FUNC_INDEX_NOT_APPLICABLE = 3909, e.ER_GRP_RPL_UDF_ERROR = 3910, e.ER_UPDATE_GTID_PURGED_WITH_GR = 3911, e.ER_GROUPING_ON_TIMESTAMP_IN_DST = 3912, e.ER_TABLE_NAME_CAUSES_TOO_LONG_PATH = 3913, e.ER_AUDIT_LOG_INSUFFICIENT_PRIVILEGE = 3914, e.ER_AUDIT_LOG_PASSWORD_HAS_BEEN_COPIED = 3915, e.ER_DA_GRP_RPL_STARTED_AUTO_REJOIN = 3916, e.ER_SYSVAR_CHANGE_DURING_QUERY = 3917, e.ER_GLOBSTAT_CHANGE_DURING_QUERY = 3918, e.ER_GRP_RPL_MESSAGE_SERVICE_INIT_FAILURE = 3919, e.ER_CHANGE_SOURCE_WRONG_COMPRESSION_ALGORITHM_CLIENT = 3920, e.ER_CHANGE_SOURCE_WRONG_COMPRESSION_LEVEL_CLIENT = 3921, e.ER_WRONG_COMPRESSION_ALGORITHM_CLIENT = 3922, e.ER_WRONG_COMPRESSION_LEVEL_CLIENT = 3923, e.ER_CHANGE_SOURCE_WRONG_COMPRESSION_ALGORITHM_LIST_CLIENT = 3924, e.ER_CLIENT_PRIVILEGE_CHECKS_USER_CANNOT_BE_ANONYMOUS = 3925, e.ER_CLIENT_PRIVILEGE_CHECKS_USER_DOES_NOT_EXIST = 3926, e.ER_CLIENT_PRIVILEGE_CHECKS_USER_CORRUPT = 3927, e.ER_CLIENT_PRIVILEGE_CHECKS_USER_NEEDS_RPL_APPLIER_PRIV = 3928, e.ER_WARN_DA_PRIVILEGE_NOT_REGISTERED = 3929, e.ER_CLIENT_KEYRING_UDF_KEY_INVALID = 3930, e.ER_CLIENT_KEYRING_UDF_KEY_TYPE_INVALID = 3931, e.ER_CLIENT_KEYRING_UDF_KEY_TOO_LONG = 3932, e.ER_CLIENT_KEYRING_UDF_KEY_TYPE_TOO_LONG = 3933, e.ER_JSON_SCHEMA_VALIDATION_ERROR_WITH_DETAILED_REPORT = 3934, e.ER_DA_UDF_INVALID_CHARSET_SPECIFIED = 3935, e.ER_DA_UDF_INVALID_CHARSET = 3936, e.ER_DA_UDF_INVALID_COLLATION = 3937, e.ER_DA_UDF_INVALID_EXTENSION_ARGUMENT_TYPE = 3938, e.ER_MULTIPLE_CONSTRAINTS_WITH_SAME_NAME = 3939, e.ER_CONSTRAINT_NOT_FOUND = 3940, e.ER_ALTER_CONSTRAINT_ENFORCEMENT_NOT_SUPPORTED = 3941, e.ER_TABLE_VALUE_CONSTRUCTOR_MUST_HAVE_COLUMNS = 3942, e.ER_TABLE_VALUE_CONSTRUCTOR_CANNOT_HAVE_DEFAULT = 3943, e.ER_CLIENT_QUERY_FAILURE_INVALID_NON_ROW_FORMAT = 3944, e.ER_REQUIRE_ROW_FORMAT_INVALID_VALUE = 3945, e.ER_FAILED_TO_DETERMINE_IF_ROLE_IS_MANDATORY = 3946, e.ER_FAILED_TO_FETCH_MANDATORY_ROLE_LIST = 3947, e.ER_CLIENT_LOCAL_FILES_DISABLED = 3948, e.ER_IMP_INCOMPATIBLE_CFG_VERSION = 3949, e.ER_DA_OOM = 3950, e.ER_DA_UDF_INVALID_ARGUMENT_TO_SET_CHARSET = 3951, e.ER_DA_UDF_INVALID_RETURN_TYPE_TO_SET_CHARSET = 3952, e.ER_MULTIPLE_INTO_CLAUSES = 3953, e.ER_MISPLACED_INTO = 3954, e.ER_USER_ACCESS_DENIED_FOR_USER_ACCOUNT_BLOCKED_BY_PASSWORD_LOCK = 3955, e.ER_WARN_DEPRECATED_YEAR_UNSIGNED = 3956, e.ER_CLONE_NETWORK_PACKET = 3957, e.ER_SDI_OPERATION_FAILED_MISSING_RECORD = 3958, e.ER_DEPENDENT_BY_CHECK_CONSTRAINT = 3959, e.ER_GRP_OPERATION_NOT_ALLOWED_GR_MUST_STOP = 3960, e.ER_WARN_DEPRECATED_JSON_TABLE_ON_ERROR_ON_EMPTY = 3961, e.ER_WARN_DEPRECATED_INNER_INTO = 3962, e.ER_WARN_DEPRECATED_VALUES_FUNCTION_ALWAYS_NULL = 3963, e.ER_WARN_DEPRECATED_SQL_CALC_FOUND_ROWS = 3964, e.ER_WARN_DEPRECATED_FOUND_ROWS = 3965, e.ER_MISSING_JSON_VALUE = 3966, e.ER_MULTIPLE_JSON_VALUES = 3967, e.ER_HOSTNAME_TOO_LONG = 3968, e.ER_WARN_CLIENT_DEPRECATED_PARTITION_PREFIX_KEY = 3969, e.ER_GROUP_REPLICATION_USER_EMPTY_MSG = 3970, e.ER_GROUP_REPLICATION_USER_MANDATORY_MSG = 3971, e.ER_GROUP_REPLICATION_PASSWORD_LENGTH = 3972, e.ER_SUBQUERY_TRANSFORM_REJECTED = 3973, e.ER_DA_GRP_RPL_RECOVERY_ENDPOINT_FORMAT = 3974, e.ER_DA_GRP_RPL_RECOVERY_ENDPOINT_INVALID = 3975, e.ER_WRONG_VALUE_FOR_VAR_PLUS_ACTIONABLE_PART = 3976, e.ER_STATEMENT_NOT_ALLOWED_AFTER_START_TRANSACTION = 3977, e.ER_FOREIGN_KEY_WITH_ATOMIC_CREATE_SELECT = 3978, e.ER_NOT_ALLOWED_WITH_START_TRANSACTION = 3979, e.ER_INVALID_JSON_ATTRIBUTE = 3980, e.ER_ENGINE_ATTRIBUTE_NOT_SUPPORTED = 3981, e.ER_INVALID_USER_ATTRIBUTE_JSON = 3982, e.ER_INNODB_REDO_DISABLED = 3983, e.ER_INNODB_REDO_ARCHIVING_ENABLED = 3984, e.ER_MDL_OUT_OF_RESOURCES = 3985, e.ER_IMPLICIT_COMPARISON_FOR_JSON = 3986, e.ER_FUNCTION_DOES_NOT_SUPPORT_CHARACTER_SET = 3987, e.ER_IMPOSSIBLE_STRING_CONVERSION = 3988, e.ER_SCHEMA_READ_ONLY = 3989, e.ER_RPL_ASYNC_RECONNECT_GTID_MODE_OFF = 3990, e.ER_RPL_ASYNC_RECONNECT_AUTO_POSITION_OFF = 3991, e.ER_DISABLE_GTID_MODE_REQUIRES_ASYNC_RECONNECT_OFF = 3992, e.ER_DISABLE_AUTO_POSITION_REQUIRES_ASYNC_RECONNECT_OFF = 3993, e.ER_INVALID_PARAMETER_USE = 3994, e.ER_CHARACTER_SET_MISMATCH = 3995, e.ER_WARN_VAR_VALUE_CHANGE_NOT_SUPPORTED = 3996, e.ER_INVALID_TIME_ZONE_INTERVAL = 3997, e.ER_INVALID_CAST = 3998, e.ER_HYPERGRAPH_NOT_SUPPORTED_YET = 3999, e.ER_WARN_HYPERGRAPH_EXPERIMENTAL = 4e3, e.ER_DA_NO_ERROR_LOG_PARSER_CONFIGURED = 4001, e.ER_DA_ERROR_LOG_TABLE_DISABLED = 4002, e.ER_DA_ERROR_LOG_MULTIPLE_FILTERS = 4003, e.ER_DA_CANT_OPEN_ERROR_LOG = 4004, e.ER_USER_REFERENCED_AS_DEFINER = 4005, e.ER_CANNOT_USER_REFERENCED_AS_DEFINER = 4006, e.ER_REGEX_NUMBER_TOO_BIG = 4007, e.ER_SPVAR_NONINTEGER_TYPE = 4008, e.WARN_UNSUPPORTED_ACL_TABLES_READ = 4009, e.ER_BINLOG_UNSAFE_ACL_TABLE_READ_IN_DML_DDL = 4010, e.ER_STOP_REPLICA_MONITOR_IO_THREAD_TIMEOUT = 4011, e.ER_STARTING_REPLICA_MONITOR_IO_THREAD = 4012, e.ER_CANT_USE_ANONYMOUS_TO_GTID_WITH_GTID_MODE_NOT_ON = 4013, e.ER_CANT_COMBINE_ANONYMOUS_TO_GTID_AND_AUTOPOSITION = 4014, e.ER_ASSIGN_GTIDS_TO_ANONYMOUS_TRANSACTIONS_REQUIRES_GTID_MODE_ON = 4015, e.ER_SQL_REPLICA_SKIP_COUNTER_USED_WITH_GTID_MODE_ON = 4016, e.ER_USING_ASSIGN_GTIDS_TO_ANONYMOUS_TRANSACTIONS_AS_LOCAL_OR_UUID = 4017, e.ER_CANT_SET_ANONYMOUS_TO_GTID_AND_WAIT_UNTIL_SQL_THD_AFTER_GTIDS = 4018, e.ER_CANT_SET_SQL_AFTER_OR_BEFORE_GTIDS_WITH_ANONYMOUS_TO_GTID = 4019, e.ER_ANONYMOUS_TO_GTID_UUID_SAME_AS_GROUP_NAME = 4020, e.ER_CANT_USE_SAME_UUID_AS_GROUP_NAME = 4021, e.ER_GRP_RPL_RECOVERY_CHANNEL_STILL_RUNNING = 4022, e.ER_INNODB_INVALID_AUTOEXTEND_SIZE_VALUE = 4023, e.ER_INNODB_INCOMPATIBLE_WITH_TABLESPACE = 4024, e.ER_INNODB_AUTOEXTEND_SIZE_OUT_OF_RANGE = 4025, e.ER_CANNOT_USE_AUTOEXTEND_SIZE_CLAUSE = 4026, e.ER_ROLE_GRANTED_TO_ITSELF = 4027, e.ER_TABLE_MUST_HAVE_A_VISIBLE_COLUMN = 4028, e.ER_INNODB_COMPRESSION_FAILURE = 4029, e.ER_WARN_ASYNC_CONN_FAILOVER_NETWORK_NAMESPACE = 4030, e.ER_CLIENT_INTERACTION_TIMEOUT = 4031, e.ER_INVALID_CAST_TO_GEOMETRY = 4032, e.ER_INVALID_CAST_POLYGON_RING_DIRECTION = 4033, e.ER_GIS_DIFFERENT_SRIDS_AGGREGATION = 4034, e.ER_RELOAD_KEYRING_FAILURE = 4035, e.ER_SDI_GET_KEYS_INVALID_TABLESPACE = 4036, e.ER_CHANGE_RPL_SRC_WRONG_COMPRESSION_ALGORITHM_SIZE = 4037, e.ER_WARN_DEPRECATED_TLS_VERSION_FOR_CHANNEL_CLI = 4038, e.ER_CANT_USE_SAME_UUID_AS_VIEW_CHANGE_UUID = 4039, e.ER_ANONYMOUS_TO_GTID_UUID_SAME_AS_VIEW_CHANGE_UUID = 4040, e.ER_GRP_RPL_VIEW_CHANGE_UUID_FAIL_GET_VARIABLE = 4041, e.ER_WARN_ADUIT_LOG_MAX_SIZE_AND_PRUNE_SECONDS = 4042, e.ER_WARN_ADUIT_LOG_MAX_SIZE_CLOSE_TO_ROTATE_ON_SIZE = 4043, e.ER_KERBEROS_CREATE_USER = 4044, e.ER_INSTALL_PLUGIN_CONFLICT_CLIENT = 4045, e.ER_DA_ERROR_LOG_COMPONENT_FLUSH_FAILED = 4046, e.ER_WARN_SQL_AFTER_MTS_GAPS_GAP_NOT_CALCULATED = 4047, e.ER_INVALID_ASSIGNMENT_TARGET = 4048, e.ER_OPERATION_NOT_ALLOWED_ON_GR_SECONDARY = 4049, e.ER_GRP_RPL_FAILOVER_CHANNEL_STATUS_PROPAGATION = 4050, e.ER_WARN_AUDIT_LOG_FORMAT_UNIX_TIMESTAMP_ONLY_WHEN_JSON = 4051, e.ER_INVALID_MFA_PLUGIN_SPECIFIED = 4052, e.ER_IDENTIFIED_BY_UNSUPPORTED = 4053, e.ER_INVALID_PLUGIN_FOR_REGISTRATION = 4054, e.ER_PLUGIN_REQUIRES_REGISTRATION = 4055, e.ER_MFA_METHOD_EXISTS = 4056, e.ER_MFA_METHOD_NOT_EXISTS = 4057, e.ER_AUTHENTICATION_POLICY_MISMATCH = 4058, e.ER_PLUGIN_REGISTRATION_DONE = 4059, e.ER_INVALID_USER_FOR_REGISTRATION = 4060, e.ER_USER_REGISTRATION_FAILED = 4061, e.ER_MFA_METHODS_INVALID_ORDER = 4062, e.ER_MFA_METHODS_IDENTICAL = 4063, e.ER_INVALID_MFA_OPERATIONS_FOR_PASSWORDLESS_USER = 4064, e.ER_CHANGE_REPLICATION_SOURCE_NO_OPTIONS_FOR_GTID_ONLY = 4065, e.ER_CHANGE_REP_SOURCE_CANT_DISABLE_REQ_ROW_FORMAT_WITH_GTID_ONLY = 4066, e.ER_CHANGE_REP_SOURCE_CANT_DISABLE_AUTO_POSITION_WITH_GTID_ONLY = 4067, e.ER_CHANGE_REP_SOURCE_CANT_DISABLE_GTID_ONLY_WITHOUT_POSITIONS = 4068, e.ER_CHANGE_REP_SOURCE_CANT_DISABLE_AUTO_POS_WITHOUT_POSITIONS = 4069, e.ER_CHANGE_REP_SOURCE_GR_CHANNEL_WITH_GTID_MODE_NOT_ON = 4070, e.ER_CANT_USE_GTID_ONLY_WITH_GTID_MODE_NOT_ON = 4071, e.ER_WARN_C_DISABLE_GTID_ONLY_WITH_SOURCE_AUTO_POS_INVALID_POS = 4072, e.ER_DA_SSL_FIPS_MODE_ERROR = 4073, e.ER_VALUE_OUT_OF_RANGE = 4074, e.ER_FULLTEXT_WITH_ROLLUP = 4075, e.ER_REGEXP_MISSING_RESOURCE = 4076, e.ER_WARN_REGEXP_USING_DEFAULT = 4077, e.ER_REGEXP_MISSING_FILE = 4078, e.ER_WARN_DEPRECATED_COLLATION = 4079, e.ER_CONCURRENT_PROCEDURE_USAGE = 4080, e.ER_DA_GLOBAL_CONN_LIMIT = 4081, e.ER_DA_CONN_LIMIT = 4082, e.ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COLUMN_TYPE_INSTANT = 4083, e.ER_WARN_SF_UDF_NAME_COLLISION = 4084, e.ER_CANNOT_PURGE_BINLOG_WITH_BACKUP_LOCK = 4085, e.ER_TOO_MANY_WINDOWS = 4086, e.ER_MYSQLBACKUP_CLIENT_MSG = 4087, e.ER_COMMENT_CONTAINS_INVALID_STRING = 4088, e.ER_DEFINITION_CONTAINS_INVALID_STRING = 4089, e.ER_CANT_EXECUTE_COMMAND_WITH_ASSIGNED_GTID_NEXT = 4090, e.ER_XA_TEMP_TABLE = 4091, e.ER_INNODB_MAX_ROW_VERSION = 4092, e.ER_INNODB_INSTANT_ADD_NOT_SUPPORTED_MAX_SIZE = 4093, e.ER_OPERATION_NOT_ALLOWED_WHILE_PRIMARY_CHANGE_IS_RUNNING = 4094, e.ER_WARN_DEPRECATED_DATETIME_DELIMITER = 4095, e.ER_WARN_DEPRECATED_SUPERFLUOUS_DELIMITER = 4096, e.ER_CANNOT_PERSIST_SENSITIVE_VARIABLES = 4097, e.ER_WARN_CANNOT_SECURELY_PERSIST_SENSITIVE_VARIABLES = 4098, e.ER_WARN_TRG_ALREADY_EXISTS = 4099, e.ER_IF_NOT_EXISTS_UNSUPPORTED_TRG_EXISTS_ON_DIFFERENT_TABLE = 4100, e.ER_IF_NOT_EXISTS_UNSUPPORTED_UDF_NATIVE_FCT_NAME_COLLISION = 4101, e.ER_SET_PASSWORD_AUTH_PLUGIN_ERROR = 4102, e.ER_REDUCED_DBLWR_FILE_CORRUPTED = 4103, e.ER_REDUCED_DBLWR_PAGE_FOUND = 4104, e.ER_SRS_INVALID_LATITUDE_OF_ORIGIN = 4105, e.ER_SRS_INVALID_LONGITUDE_OF_ORIGIN = 4106, e.ER_SRS_UNUSED_PROJ_PARAMETER_PRESENT = 4107, e.ER_GIPK_COLUMN_EXISTS = 4108, e.ER_GIPK_FAILED_AUTOINC_COLUMN_EXISTS = 4109, e.ER_GIPK_COLUMN_ALTER_NOT_ALLOWED = 4110, e.ER_DROP_PK_COLUMN_TO_DROP_GIPK = 4111, e.ER_CREATE_SELECT_WITH_GIPK_DISALLOWED_IN_SBR = 4112, e.ER_DA_EXPIRE_LOGS_DAYS_IGNORED = 4113, e.ER_CTE_RECURSIVE_NOT_UNION = 4114, e.ER_COMMAND_BACKEND_FAILED_TO_FETCH_SECURITY_CTX = 4115, e.ER_COMMAND_SERVICE_BACKEND_FAILED = 4116, e.ER_CLIENT_FILE_PRIVILEGE_FOR_REPLICATION_CHECKS = 4117, e.ER_GROUP_REPLICATION_FORCE_MEMBERS_COMMAND_FAILURE = 4118, e.ER_WARN_DEPRECATED_IDENT = 4119, e.ER_INTERSECT_ALL_MAX_DUPLICATES_EXCEEDED = 4120, e.ER_TP_QUERY_THRS_PER_GRP_EXCEEDS_TXN_THR_LIMIT = 4121, e.ER_BAD_TIMESTAMP_FORMAT = 4122, e.ER_SHAPE_PRIDICTION_UDF = 4123, e.ER_SRS_INVALID_HEIGHT = 4124, e.ER_SRS_INVALID_SCALING = 4125, e.ER_SRS_INVALID_ZONE_WIDTH = 4126, e.ER_SRS_INVALID_LATITUDE_POLAR_STERE_VAR_A = 4127, e.ER_WARN_DEPRECATED_CLIENT_NO_SCHEMA_OPTION = 4128, e.ER_TABLE_NOT_EMPTY = 4129, e.ER_TABLE_NO_PRIMARY_KEY = 4130, e.ER_TABLE_IN_SHARED_TABLESPACE = 4131, e.ER_INDEX_OTHER_THAN_PK = 4132, e.ER_LOAD_BULK_DATA_UNSORTED = 4133, e.ER_BULK_EXECUTOR_ERROR = 4134, e.ER_BULK_READER_LIBCURL_INIT_FAILED = 4135, e.ER_BULK_READER_LIBCURL_ERROR = 4136, e.ER_BULK_READER_SERVER_ERROR = 4137, e.ER_BULK_READER_COMMUNICATION_ERROR = 4138, e.ER_BULK_LOAD_DATA_FAILED = 4139, e.ER_BULK_LOADER_COLUMN_TOO_BIG_FOR_LEFTOVER_BUFFER = 4140, e.ER_BULK_LOADER_COMPONENT_ERROR = 4141, e.ER_BULK_LOADER_FILE_CONTAINS_LESS_LINES_THAN_IGNORE_CLAUSE = 4142, e.ER_BULK_PARSER_MISSING_ENCLOSED_BY = 4143, e.ER_BULK_PARSER_ROW_BUFFER_MAX_TOTAL_COLS_EXCEEDED = 4144, e.ER_BULK_PARSER_COPY_BUFFER_SIZE_EXCEEDED = 4145, e.ER_BULK_PARSER_UNEXPECTED_END_OF_INPUT = 4146, e.ER_BULK_PARSER_UNEXPECTED_ROW_TERMINATOR = 4147, e.ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_ENDING_ENCLOSED_BY = 4148, e.ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_NULL_ESCAPE = 4149, e.ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_COLUMN_TERMINATOR = 4150, e.ER_BULK_PARSER_INCOMPLETE_ESCAPE_SEQUENCE = 4151, e.ER_LOAD_BULK_DATA_FAILED = 4152, e.ER_LOAD_BULK_DATA_WRONG_VALUE_FOR_FIELD = 4153, e.ER_LOAD_BULK_DATA_WARN_NULL_TO_NOTNULL = 4154, e.ER_REQUIRE_TABLE_PRIMARY_KEY_CHECK_GENERATE_WITH_GR = 4155, e.ER_CANT_CHANGE_SYS_VAR_IN_READ_ONLY_MODE = 4156, e.ER_INNODB_INSTANT_ADD_DROP_NOT_SUPPORTED_MAX_SIZE = 4157, e.ER_INNODB_INSTANT_ADD_NOT_SUPPORTED_MAX_FIELDS = 4158, e.ER_CANT_SET_PERSISTED = 4159, e.ER_INSTALL_COMPONENT_SET_NULL_VALUE = 4160, e.ER_INSTALL_COMPONENT_SET_UNUSED_VALUE = 4161, e.ER_WARN_DEPRECATED_USER_DEFINED_COLLATIONS = 4162, e[1] = "EE_CANTCREATEFILE", e[2] = "EE_READ", e[3] = "EE_WRITE", e[4] = "EE_BADCLOSE", e[5] = "EE_OUTOFMEMORY", e[6] = "EE_DELETE", e[7] = "EE_LINK", e[9] = "EE_EOFERR", e[10] = "EE_CANTLOCK", e[11] = "EE_CANTUNLOCK", e[12] = "EE_DIR", e[13] = "EE_STAT", e[14] = "EE_CANT_CHSIZE", e[15] = "EE_CANT_OPEN_STREAM", e[16] = "EE_GETWD", e[17] = "EE_SETWD", e[18] = "EE_LINK_WARNING", e[19] = "EE_OPEN_WARNING", e[20] = "EE_DISK_FULL", e[21] = "EE_CANT_MKDIR", e[22] = "EE_UNKNOWN_CHARSET", e[23] = "EE_OUT_OF_FILERESOURCES", e[24] = "EE_CANT_READLINK", e[25] = "EE_CANT_SYMLINK", e[26] = "EE_REALPATH", e[27] = "EE_SYNC", e[28] = "EE_UNKNOWN_COLLATION", e[29] = "EE_FILENOTFOUND", e[30] = "EE_FILE_NOT_CLOSED", e[31] = "EE_CHANGE_OWNERSHIP", e[32] = "EE_CHANGE_PERMISSIONS", e[33] = "EE_CANT_SEEK", e[34] = "EE_CAPACITY_EXCEEDED", e[35] = "EE_DISK_FULL_WITH_RETRY_MSG", e[36] = "EE_FAILED_TO_CREATE_TIMER", e[37] = "EE_FAILED_TO_DELETE_TIMER", e[38] = "EE_FAILED_TO_CREATE_TIMER_QUEUE", e[39] = "EE_FAILED_TO_START_TIMER_NOTIFY_THREAD", e[40] = "EE_FAILED_TO_CREATE_TIMER_NOTIFY_THREAD_INTERRUPT_EVENT", e[41] = "EE_EXITING_TIMER_NOTIFY_THREAD", e[42] = "EE_WIN_LIBRARY_LOAD_FAILED", e[43] = "EE_WIN_RUN_TIME_ERROR_CHECK", e[44] = "EE_FAILED_TO_DETERMINE_LARGE_PAGE_SIZE", e[45] = "EE_FAILED_TO_KILL_ALL_THREADS", e[46] = "EE_FAILED_TO_CREATE_IO_COMPLETION_PORT", e[47] = "EE_FAILED_TO_OPEN_DEFAULTS_FILE", e[48] = "EE_FAILED_TO_HANDLE_DEFAULTS_FILE", e[49] = "EE_WRONG_DIRECTIVE_IN_CONFIG_FILE", e[50] = "EE_SKIPPING_DIRECTIVE_DUE_TO_MAX_INCLUDE_RECURSION", e[51] = "EE_INCORRECT_GRP_DEFINITION_IN_CONFIG_FILE", e[52] = "EE_OPTION_WITHOUT_GRP_IN_CONFIG_FILE", e[53] = "EE_CONFIG_FILE_PERMISSION_ERROR", e[54] = "EE_IGNORE_WORLD_WRITABLE_CONFIG_FILE", e[55] = "EE_USING_DISABLED_OPTION", e[56] = "EE_USING_DISABLED_SHORT_OPTION", e[57] = "EE_USING_PASSWORD_ON_CLI_IS_INSECURE", e[58] = "EE_UNKNOWN_SUFFIX_FOR_VARIABLE", e[59] = "EE_SSL_ERROR_FROM_FILE", e[60] = "EE_SSL_ERROR", e[61] = "EE_NET_SEND_ERROR_IN_BOOTSTRAP", e[62] = "EE_PACKETS_OUT_OF_ORDER", e[63] = "EE_UNKNOWN_PROTOCOL_OPTION", e[64] = "EE_FAILED_TO_LOCATE_SERVER_PUBLIC_KEY", e[65] = "EE_PUBLIC_KEY_NOT_IN_PEM_FORMAT", e[66] = "EE_DEBUG_INFO", e[67] = "EE_UNKNOWN_VARIABLE", e[68] = "EE_UNKNOWN_OPTION", e[69] = "EE_UNKNOWN_SHORT_OPTION", e[70] = "EE_OPTION_WITHOUT_ARGUMENT", e[71] = "EE_OPTION_REQUIRES_ARGUMENT", e[72] = "EE_SHORT_OPTION_REQUIRES_ARGUMENT", e[73] = "EE_OPTION_IGNORED_DUE_TO_INVALID_VALUE", e[74] = "EE_OPTION_WITH_EMPTY_VALUE", e[75] = "EE_FAILED_TO_ASSIGN_MAX_VALUE_TO_OPTION", e[76] = "EE_INCORRECT_BOOLEAN_VALUE_FOR_OPTION", e[77] = "EE_FAILED_TO_SET_OPTION_VALUE", e[78] = "EE_INCORRECT_INT_VALUE_FOR_OPTION", e[79] = "EE_INCORRECT_UINT_VALUE_FOR_OPTION", e[80] = "EE_ADJUSTED_SIGNED_VALUE_FOR_OPTION", e[81] = "EE_ADJUSTED_UNSIGNED_VALUE_FOR_OPTION", e[82] = "EE_ADJUSTED_ULONGLONG_VALUE_FOR_OPTION", e[83] = "EE_ADJUSTED_DOUBLE_VALUE_FOR_OPTION", e[84] = "EE_INVALID_DECIMAL_VALUE_FOR_OPTION", e[85] = "EE_COLLATION_PARSER_ERROR", e[86] = "EE_FAILED_TO_RESET_BEFORE_PRIMARY_IGNORABLE_CHAR", e[87] = "EE_FAILED_TO_RESET_BEFORE_TERTIARY_IGNORABLE_CHAR", e[88] = "EE_SHIFT_CHAR_OUT_OF_RANGE", e[89] = "EE_RESET_CHAR_OUT_OF_RANGE", e[90] = "EE_UNKNOWN_LDML_TAG", e[91] = "EE_FAILED_TO_RESET_BEFORE_SECONDARY_IGNORABLE_CHAR", e[92] = "EE_FAILED_PROCESSING_DIRECTIVE", e[93] = "EE_PTHREAD_KILL_FAILED", e[120] = "HA_ERR_KEY_NOT_FOUND", e[121] = "HA_ERR_FOUND_DUPP_KEY", e[122] = "HA_ERR_INTERNAL_ERROR", e[123] = "HA_ERR_RECORD_CHANGED", e[124] = "HA_ERR_WRONG_INDEX", e[125] = "HA_ERR_ROLLED_BACK", e[126] = "HA_ERR_CRASHED", e[127] = "HA_ERR_WRONG_IN_RECORD", e[128] = "HA_ERR_OUT_OF_MEM", e[130] = "HA_ERR_NOT_A_TABLE", e[131] = "HA_ERR_WRONG_COMMAND", e[132] = "HA_ERR_OLD_FILE", e[133] = "HA_ERR_NO_ACTIVE_RECORD", e[134] = "HA_ERR_RECORD_DELETED", e[135] = "HA_ERR_RECORD_FILE_FULL", e[136] = "HA_ERR_INDEX_FILE_FULL", e[137] = "HA_ERR_END_OF_FILE", e[138] = "HA_ERR_UNSUPPORTED", e[139] = "HA_ERR_TOO_BIG_ROW", e[140] = "HA_WRONG_CREATE_OPTION", e[141] = "HA_ERR_FOUND_DUPP_UNIQUE", e[142] = "HA_ERR_UNKNOWN_CHARSET", e[143] = "HA_ERR_WRONG_MRG_TABLE_DEF", e[144] = "HA_ERR_CRASHED_ON_REPAIR", e[145] = "HA_ERR_CRASHED_ON_USAGE", e[146] = "HA_ERR_LOCK_WAIT_TIMEOUT", e[147] = "HA_ERR_LOCK_TABLE_FULL", e[148] = "HA_ERR_READ_ONLY_TRANSACTION", e[149] = "HA_ERR_LOCK_DEADLOCK", e[150] = "HA_ERR_CANNOT_ADD_FOREIGN", e[151] = "HA_ERR_NO_REFERENCED_ROW", e[152] = "HA_ERR_ROW_IS_REFERENCED", e[153] = "HA_ERR_NO_SAVEPOINT", e[154] = "HA_ERR_NON_UNIQUE_BLOCK_SIZE", e[155] = "HA_ERR_NO_SUCH_TABLE", e[156] = "HA_ERR_TABLE_EXIST", e[157] = "HA_ERR_NO_CONNECTION", e[158] = "HA_ERR_NULL_IN_SPATIAL", e[159] = "HA_ERR_TABLE_DEF_CHANGED", e[160] = "HA_ERR_NO_PARTITION_FOUND", e[161] = "HA_ERR_RBR_LOGGING_FAILED", e[162] = "HA_ERR_DROP_INDEX_FK", e[163] = "HA_ERR_FOREIGN_DUPLICATE_KEY", e[164] = "HA_ERR_TABLE_NEEDS_UPGRADE", e[165] = "HA_ERR_TABLE_READONLY", e[166] = "HA_ERR_AUTOINC_READ_FAILED", e[167] = "HA_ERR_AUTOINC_ERANGE", e[168] = "HA_ERR_GENERIC", e[169] = "HA_ERR_RECORD_IS_THE_SAME", e[170] = "HA_ERR_LOGGING_IMPOSSIBLE", e[171] = "HA_ERR_CORRUPT_EVENT", e[172] = "HA_ERR_NEW_FILE", e[173] = "HA_ERR_ROWS_EVENT_APPLY", e[174] = "HA_ERR_INITIALIZATION", e[175] = "HA_ERR_FILE_TOO_SHORT", e[176] = "HA_ERR_WRONG_CRC", e[177] = "HA_ERR_TOO_MANY_CONCURRENT_TRXS", e[178] = "HA_ERR_NOT_IN_LOCK_PARTITIONS", e[179] = "HA_ERR_INDEX_COL_TOO_LONG", e[180] = "HA_ERR_INDEX_CORRUPT", e[181] = "HA_ERR_UNDO_REC_TOO_BIG", e[182] = "HA_FTS_INVALID_DOCID", e[183] = "HA_ERR_TABLE_IN_FK_CHECK", e[184] = "HA_ERR_TABLESPACE_EXISTS", e[185] = "HA_ERR_TOO_MANY_FIELDS", e[186] = "HA_ERR_ROW_IN_WRONG_PARTITION", e[187] = "HA_ERR_INNODB_READ_ONLY", e[188] = "HA_ERR_FTS_EXCEED_RESULT_CACHE_LIMIT", e[189] = "HA_ERR_TEMP_FILE_WRITE_FAILURE", e[190] = "HA_ERR_INNODB_FORCED_RECOVERY", e[191] = "HA_ERR_FTS_TOO_MANY_WORDS_IN_PHRASE", e[192] = "HA_ERR_FK_DEPTH_EXCEEDED", e[193] = "HA_MISSING_CREATE_OPTION", e[194] = "HA_ERR_SE_OUT_OF_MEMORY", e[195] = "HA_ERR_TABLE_CORRUPT", e[196] = "HA_ERR_QUERY_INTERRUPTED", e[197] = "HA_ERR_TABLESPACE_MISSING", e[198] = "HA_ERR_TABLESPACE_IS_NOT_EMPTY", e[199] = "HA_ERR_WRONG_FILE_NAME", e[200] = "HA_ERR_NOT_ALLOWED_COMMAND", e[201] = "HA_ERR_COMPUTE_FAILED", e[202] = "HA_ERR_ROW_FORMAT_CHANGED", e[203] = "HA_ERR_NO_WAIT_LOCK", e[204] = "HA_ERR_DISK_FULL_NOWAIT", e[205] = "HA_ERR_NO_SESSION_TEMP", e[206] = "HA_ERR_WRONG_TABLE_NAME", e[207] = "HA_ERR_TOO_LONG_PATH", e[208] = "HA_ERR_SAMPLING_INIT_FAILED", e[209] = "HA_ERR_FTS_TOO_MANY_NESTED_EXP", e[1e3] = "ER_HASHCHK", e[1001] = "ER_NISAMCHK", e[1002] = "ER_NO", e[1003] = "ER_YES", e[1004] = "ER_CANT_CREATE_FILE", e[1005] = "ER_CANT_CREATE_TABLE", e[1006] = "ER_CANT_CREATE_DB", e[1007] = "ER_DB_CREATE_EXISTS", e[1008] = "ER_DB_DROP_EXISTS", e[1009] = "ER_DB_DROP_DELETE", e[1010] = "ER_DB_DROP_RMDIR", e[1011] = "ER_CANT_DELETE_FILE", e[1012] = "ER_CANT_FIND_SYSTEM_REC", e[1013] = "ER_CANT_GET_STAT", e[1014] = "ER_CANT_GET_WD", e[1015] = "ER_CANT_LOCK", e[1016] = "ER_CANT_OPEN_FILE", e[1017] = "ER_FILE_NOT_FOUND", e[1018] = "ER_CANT_READ_DIR", e[1019] = "ER_CANT_SET_WD", e[1020] = "ER_CHECKREAD", e[1021] = "ER_DISK_FULL", e[1022] = "ER_DUP_KEY", e[1023] = "ER_ERROR_ON_CLOSE", e[1024] = "ER_ERROR_ON_READ", e[1025] = "ER_ERROR_ON_RENAME", e[1026] = "ER_ERROR_ON_WRITE", e[1027] = "ER_FILE_USED", e[1028] = "ER_FILSORT_ABORT", e[1029] = "ER_FORM_NOT_FOUND", e[1030] = "ER_GET_ERRNO", e[1031] = "ER_ILLEGAL_HA", e[1032] = "ER_KEY_NOT_FOUND", e[1033] = "ER_NOT_FORM_FILE", e[1034] = "ER_NOT_KEYFILE", e[1035] = "ER_OLD_KEYFILE", e[1036] = "ER_OPEN_AS_READONLY", e[1037] = "ER_OUTOFMEMORY", e[1038] = "ER_OUT_OF_SORTMEMORY", e[1039] = "ER_UNEXPECTED_EOF", e[1040] = "ER_CON_COUNT_ERROR", e[1041] = "ER_OUT_OF_RESOURCES", e[1042] = "ER_BAD_HOST_ERROR", e[1043] = "ER_HANDSHAKE_ERROR", e[1044] = "ER_DBACCESS_DENIED_ERROR", e[1045] = "ER_ACCESS_DENIED_ERROR", e[1046] = "ER_NO_DB_ERROR", e[1047] = "ER_UNKNOWN_COM_ERROR", e[1048] = "ER_BAD_NULL_ERROR", e[1049] = "ER_BAD_DB_ERROR", e[1050] = "ER_TABLE_EXISTS_ERROR", e[1051] = "ER_BAD_TABLE_ERROR", e[1052] = "ER_NON_UNIQ_ERROR", e[1053] = "ER_SERVER_SHUTDOWN", e[1054] = "ER_BAD_FIELD_ERROR", e[1055] = "ER_WRONG_FIELD_WITH_GROUP", e[1056] = "ER_WRONG_GROUP_FIELD", e[1057] = "ER_WRONG_SUM_SELECT", e[1058] = "ER_WRONG_VALUE_COUNT", e[1059] = "ER_TOO_LONG_IDENT", e[1060] = "ER_DUP_FIELDNAME", e[1061] = "ER_DUP_KEYNAME", e[1062] = "ER_DUP_ENTRY", e[1063] = "ER_WRONG_FIELD_SPEC", e[1064] = "ER_PARSE_ERROR", e[1065] = "ER_EMPTY_QUERY", e[1066] = "ER_NONUNIQ_TABLE", e[1067] = "ER_INVALID_DEFAULT", e[1068] = "ER_MULTIPLE_PRI_KEY", e[1069] = "ER_TOO_MANY_KEYS", e[1070] = "ER_TOO_MANY_KEY_PARTS", e[1071] = "ER_TOO_LONG_KEY", e[1072] = "ER_KEY_COLUMN_DOES_NOT_EXITS", e[1073] = "ER_BLOB_USED_AS_KEY", e[1074] = "ER_TOO_BIG_FIELDLENGTH", e[1075] = "ER_WRONG_AUTO_KEY", e[1076] = "ER_READY", e[1077] = "ER_NORMAL_SHUTDOWN", e[1078] = "ER_GOT_SIGNAL", e[1079] = "ER_SHUTDOWN_COMPLETE", e[1080] = "ER_FORCING_CLOSE", e[1081] = "ER_IPSOCK_ERROR", e[1082] = "ER_NO_SUCH_INDEX", e[1083] = "ER_WRONG_FIELD_TERMINATORS", e[1084] = "ER_BLOBS_AND_NO_TERMINATED", e[1085] = "ER_TEXTFILE_NOT_READABLE", e[1086] = "ER_FILE_EXISTS_ERROR", e[1087] = "ER_LOAD_INFO", e[1088] = "ER_ALTER_INFO", e[1089] = "ER_WRONG_SUB_KEY", e[1090] = "ER_CANT_REMOVE_ALL_FIELDS", e[1091] = "ER_CANT_DROP_FIELD_OR_KEY", e[1092] = "ER_INSERT_INFO", e[1093] = "ER_UPDATE_TABLE_USED", e[1094] = "ER_NO_SUCH_THREAD", e[1095] = "ER_KILL_DENIED_ERROR", e[1096] = "ER_NO_TABLES_USED", e[1097] = "ER_TOO_BIG_SET", e[1098] = "ER_NO_UNIQUE_LOGFILE", e[1099] = "ER_TABLE_NOT_LOCKED_FOR_WRITE", e[1100] = "ER_TABLE_NOT_LOCKED", e[1101] = "ER_BLOB_CANT_HAVE_DEFAULT", e[1102] = "ER_WRONG_DB_NAME", e[1103] = "ER_WRONG_TABLE_NAME", e[1104] = "ER_TOO_BIG_SELECT", e[1105] = "ER_UNKNOWN_ERROR", e[1106] = "ER_UNKNOWN_PROCEDURE", e[1107] = "ER_WRONG_PARAMCOUNT_TO_PROCEDURE", e[1108] = "ER_WRONG_PARAMETERS_TO_PROCEDURE", e[1109] = "ER_UNKNOWN_TABLE", e[1110] = "ER_FIELD_SPECIFIED_TWICE", e[1111] = "ER_INVALID_GROUP_FUNC_USE", e[1112] = "ER_UNSUPPORTED_EXTENSION", e[1113] = "ER_TABLE_MUST_HAVE_COLUMNS", e[1114] = "ER_RECORD_FILE_FULL", e[1115] = "ER_UNKNOWN_CHARACTER_SET", e[1116] = "ER_TOO_MANY_TABLES", e[1117] = "ER_TOO_MANY_FIELDS", e[1118] = "ER_TOO_BIG_ROWSIZE", e[1119] = "ER_STACK_OVERRUN", e[1120] = "ER_WRONG_OUTER_JOIN", e[1121] = "ER_NULL_COLUMN_IN_INDEX", e[1122] = "ER_CANT_FIND_UDF", e[1123] = "ER_CANT_INITIALIZE_UDF", e[1124] = "ER_UDF_NO_PATHS", e[1125] = "ER_UDF_EXISTS", e[1126] = "ER_CANT_OPEN_LIBRARY", e[1127] = "ER_CANT_FIND_DL_ENTRY", e[1128] = "ER_FUNCTION_NOT_DEFINED", e[1129] = "ER_HOST_IS_BLOCKED", e[1130] = "ER_HOST_NOT_PRIVILEGED", e[1131] = "ER_PASSWORD_ANONYMOUS_USER", e[1132] = "ER_PASSWORD_NOT_ALLOWED", e[1133] = "ER_PASSWORD_NO_MATCH", e[1134] = "ER_UPDATE_INFO", e[1135] = "ER_CANT_CREATE_THREAD", e[1136] = "ER_WRONG_VALUE_COUNT_ON_ROW", e[1137] = "ER_CANT_REOPEN_TABLE", e[1138] = "ER_INVALID_USE_OF_NULL", e[1139] = "ER_REGEXP_ERROR", e[1140] = "ER_MIX_OF_GROUP_FUNC_AND_FIELDS", e[1141] = "ER_NONEXISTING_GRANT", e[1142] = "ER_TABLEACCESS_DENIED_ERROR", e[1143] = "ER_COLUMNACCESS_DENIED_ERROR", e[1144] = "ER_ILLEGAL_GRANT_FOR_TABLE", e[1145] = "ER_GRANT_WRONG_HOST_OR_USER", e[1146] = "ER_NO_SUCH_TABLE", e[1147] = "ER_NONEXISTING_TABLE_GRANT", e[1148] = "ER_NOT_ALLOWED_COMMAND", e[1149] = "ER_SYNTAX_ERROR", e[1150] = "ER_UNUSED1", e[1151] = "ER_UNUSED2", e[1152] = "ER_ABORTING_CONNECTION", e[1153] = "ER_NET_PACKET_TOO_LARGE", e[1154] = "ER_NET_READ_ERROR_FROM_PIPE", e[1155] = "ER_NET_FCNTL_ERROR", e[1156] = "ER_NET_PACKETS_OUT_OF_ORDER", e[1157] = "ER_NET_UNCOMPRESS_ERROR", e[1158] = "ER_NET_READ_ERROR", e[1159] = "ER_NET_READ_INTERRUPTED", e[1160] = "ER_NET_ERROR_ON_WRITE", e[1161] = "ER_NET_WRITE_INTERRUPTED", e[1162] = "ER_TOO_LONG_STRING", e[1163] = "ER_TABLE_CANT_HANDLE_BLOB", e[1164] = "ER_TABLE_CANT_HANDLE_AUTO_INCREMENT", e[1165] = "ER_UNUSED3", e[1166] = "ER_WRONG_COLUMN_NAME", e[1167] = "ER_WRONG_KEY_COLUMN", e[1168] = "ER_WRONG_MRG_TABLE", e[1169] = "ER_DUP_UNIQUE", e[1170] = "ER_BLOB_KEY_WITHOUT_LENGTH", e[1171] = "ER_PRIMARY_CANT_HAVE_NULL", e[1172] = "ER_TOO_MANY_ROWS", e[1173] = "ER_REQUIRES_PRIMARY_KEY", e[1174] = "ER_NO_RAID_COMPILED", e[1175] = "ER_UPDATE_WITHOUT_KEY_IN_SAFE_MODE", e[1176] = "ER_KEY_DOES_NOT_EXITS", e[1177] = "ER_CHECK_NO_SUCH_TABLE", e[1178] = "ER_CHECK_NOT_IMPLEMENTED", e[1179] = "ER_CANT_DO_THIS_DURING_AN_TRANSACTION", e[1180] = "ER_ERROR_DURING_COMMIT", e[1181] = "ER_ERROR_DURING_ROLLBACK", e[1182] = "ER_ERROR_DURING_FLUSH_LOGS", e[1183] = "ER_ERROR_DURING_CHECKPOINT", e[1184] = "ER_NEW_ABORTING_CONNECTION", e[1185] = "ER_DUMP_NOT_IMPLEMENTED", e[1186] = "ER_FLUSH_MASTER_BINLOG_CLOSED", e[1187] = "ER_INDEX_REBUILD", e[1188] = "ER_SOURCE", e[1189] = "ER_SOURCE_NET_READ", e[1190] = "ER_SOURCE_NET_WRITE", e[1191] = "ER_FT_MATCHING_KEY_NOT_FOUND", e[1192] = "ER_LOCK_OR_ACTIVE_TRANSACTION", e[1193] = "ER_UNKNOWN_SYSTEM_VARIABLE", e[1194] = "ER_CRASHED_ON_USAGE", e[1195] = "ER_CRASHED_ON_REPAIR", e[1196] = "ER_WARNING_NOT_COMPLETE_ROLLBACK", e[1197] = "ER_TRANS_CACHE_FULL", e[1198] = "ER_SLAVE_MUST_STOP", e[1199] = "ER_REPLICA_NOT_RUNNING", e[1200] = "ER_BAD_REPLICA", e[1201] = "ER_CONNECTION_METADATA", e[1202] = "ER_REPLICA_THREAD", e[1203] = "ER_TOO_MANY_USER_CONNECTIONS", e[1204] = "ER_SET_CONSTANTS_ONLY", e[1205] = "ER_LOCK_WAIT_TIMEOUT", e[1206] = "ER_LOCK_TABLE_FULL", e[1207] = "ER_READ_ONLY_TRANSACTION", e[1208] = "ER_DROP_DB_WITH_READ_LOCK", e[1209] = "ER_CREATE_DB_WITH_READ_LOCK", e[1210] = "ER_WRONG_ARGUMENTS", e[1211] = "ER_NO_PERMISSION_TO_CREATE_USER", e[1212] = "ER_UNION_TABLES_IN_DIFFERENT_DIR", e[1213] = "ER_LOCK_DEADLOCK", e[1214] = "ER_TABLE_CANT_HANDLE_FT", e[1215] = "ER_CANNOT_ADD_FOREIGN", e[1216] = "ER_NO_REFERENCED_ROW", e[1217] = "ER_ROW_IS_REFERENCED", e[1218] = "ER_CONNECT_TO_SOURCE", e[1219] = "ER_QUERY_ON_MASTER", e[1220] = "ER_ERROR_WHEN_EXECUTING_COMMAND", e[1221] = "ER_WRONG_USAGE", e[1222] = "ER_WRONG_NUMBER_OF_COLUMNS_IN_SELECT", e[1223] = "ER_CANT_UPDATE_WITH_READLOCK", e[1224] = "ER_MIXING_NOT_ALLOWED", e[1225] = "ER_DUP_ARGUMENT", e[1226] = "ER_USER_LIMIT_REACHED", e[1227] = "ER_SPECIFIC_ACCESS_DENIED_ERROR", e[1228] = "ER_LOCAL_VARIABLE", e[1229] = "ER_GLOBAL_VARIABLE", e[1230] = "ER_NO_DEFAULT", e[1231] = "ER_WRONG_VALUE_FOR_VAR", e[1232] = "ER_WRONG_TYPE_FOR_VAR", e[1233] = "ER_VAR_CANT_BE_READ", e[1234] = "ER_CANT_USE_OPTION_HERE", e[1235] = "ER_NOT_SUPPORTED_YET", e[1236] = "ER_SOURCE_FATAL_ERROR_READING_BINLOG", e[1237] = "ER_REPLICA_IGNORED_TABLE", e[1238] = "ER_INCORRECT_GLOBAL_LOCAL_VAR", e[1239] = "ER_WRONG_FK_DEF", e[1240] = "ER_KEY_REF_DO_NOT_MATCH_TABLE_REF", e[1241] = "ER_OPERAND_COLUMNS", e[1242] = "ER_SUBQUERY_NO_1_ROW", e[1243] = "ER_UNKNOWN_STMT_HANDLER", e[1244] = "ER_CORRUPT_HELP_DB", e[1245] = "ER_CYCLIC_REFERENCE", e[1246] = "ER_AUTO_CONVERT", e[1247] = "ER_ILLEGAL_REFERENCE", e[1248] = "ER_DERIVED_MUST_HAVE_ALIAS", e[1249] = "ER_SELECT_REDUCED", e[1250] = "ER_TABLENAME_NOT_ALLOWED_HERE", e[1251] = "ER_NOT_SUPPORTED_AUTH_MODE", e[1252] = "ER_SPATIAL_CANT_HAVE_NULL", e[1253] = "ER_COLLATION_CHARSET_MISMATCH", e[1254] = "ER_SLAVE_WAS_RUNNING", e[1255] = "ER_SLAVE_WAS_NOT_RUNNING", e[1256] = "ER_TOO_BIG_FOR_UNCOMPRESS", e[1257] = "ER_ZLIB_Z_MEM_ERROR", e[1258] = "ER_ZLIB_Z_BUF_ERROR", e[1259] = "ER_ZLIB_Z_DATA_ERROR", e[1260] = "ER_CUT_VALUE_GROUP_CONCAT", e[1261] = "ER_WARN_TOO_FEW_RECORDS", e[1262] = "ER_WARN_TOO_MANY_RECORDS", e[1263] = "ER_WARN_NULL_TO_NOTNULL", e[1264] = "ER_WARN_DATA_OUT_OF_RANGE", e[1265] = "WARN_DATA_TRUNCATED", e[1266] = "ER_WARN_USING_OTHER_HANDLER", e[1267] = "ER_CANT_AGGREGATE_2COLLATIONS", e[1268] = "ER_DROP_USER", e[1269] = "ER_REVOKE_GRANTS", e[1270] = "ER_CANT_AGGREGATE_3COLLATIONS", e[1271] = "ER_CANT_AGGREGATE_NCOLLATIONS", e[1272] = "ER_VARIABLE_IS_NOT_STRUCT", e[1273] = "ER_UNKNOWN_COLLATION", e[1274] = "ER_REPLICA_IGNORED_SSL_PARAMS", e[1275] = "ER_SERVER_IS_IN_SECURE_AUTH_MODE", e[1276] = "ER_WARN_FIELD_RESOLVED", e[1277] = "ER_BAD_REPLICA_UNTIL_COND", e[1278] = "ER_MISSING_SKIP_REPLICA", e[1279] = "ER_UNTIL_COND_IGNORED", e[1280] = "ER_WRONG_NAME_FOR_INDEX", e[1281] = "ER_WRONG_NAME_FOR_CATALOG", e[1282] = "ER_WARN_QC_RESIZE", e[1283] = "ER_BAD_FT_COLUMN", e[1284] = "ER_UNKNOWN_KEY_CACHE", e[1285] = "ER_WARN_HOSTNAME_WONT_WORK", e[1286] = "ER_UNKNOWN_STORAGE_ENGINE", e[1287] = "ER_WARN_DEPRECATED_SYNTAX", e[1288] = "ER_NON_UPDATABLE_TABLE", e[1289] = "ER_FEATURE_DISABLED", e[1290] = "ER_OPTION_PREVENTS_STATEMENT", e[1291] = "ER_DUPLICATED_VALUE_IN_TYPE", e[1292] = "ER_TRUNCATED_WRONG_VALUE", e[1293] = "ER_TOO_MUCH_AUTO_TIMESTAMP_COLS", e[1294] = "ER_INVALID_ON_UPDATE", e[1295] = "ER_UNSUPPORTED_PS", e[1296] = "ER_GET_ERRMSG", e[1297] = "ER_GET_TEMPORARY_ERRMSG", e[1298] = "ER_UNKNOWN_TIME_ZONE", e[1299] = "ER_WARN_INVALID_TIMESTAMP", e[1300] = "ER_INVALID_CHARACTER_STRING", e[1301] = "ER_WARN_ALLOWED_PACKET_OVERFLOWED", e[1302] = "ER_CONFLICTING_DECLARATIONS", e[1303] = "ER_SP_NO_RECURSIVE_CREATE", e[1304] = "ER_SP_ALREADY_EXISTS", e[1305] = "ER_SP_DOES_NOT_EXIST", e[1306] = "ER_SP_DROP_FAILED", e[1307] = "ER_SP_STORE_FAILED", e[1308] = "ER_SP_LILABEL_MISMATCH", e[1309] = "ER_SP_LABEL_REDEFINE", e[1310] = "ER_SP_LABEL_MISMATCH", e[1311] = "ER_SP_UNINIT_VAR", e[1312] = "ER_SP_BADSELECT", e[1313] = "ER_SP_BADRETURN", e[1314] = "ER_SP_BADSTATEMENT", e[1315] = "ER_UPDATE_LOG_DEPRECATED_IGNORED", e[1316] = "ER_UPDATE_LOG_DEPRECATED_TRANSLATED", e[1317] = "ER_QUERY_INTERRUPTED", e[1318] = "ER_SP_WRONG_NO_OF_ARGS", e[1319] = "ER_SP_COND_MISMATCH", e[1320] = "ER_SP_NORETURN", e[1321] = "ER_SP_NORETURNEND", e[1322] = "ER_SP_BAD_CURSOR_QUERY", e[1323] = "ER_SP_BAD_CURSOR_SELECT", e[1324] = "ER_SP_CURSOR_MISMATCH", e[1325] = "ER_SP_CURSOR_ALREADY_OPEN", e[1326] = "ER_SP_CURSOR_NOT_OPEN", e[1327] = "ER_SP_UNDECLARED_VAR", e[1328] = "ER_SP_WRONG_NO_OF_FETCH_ARGS", e[1329] = "ER_SP_FETCH_NO_DATA", e[1330] = "ER_SP_DUP_PARAM", e[1331] = "ER_SP_DUP_VAR", e[1332] = "ER_SP_DUP_COND", e[1333] = "ER_SP_DUP_CURS", e[1334] = "ER_SP_CANT_ALTER", e[1335] = "ER_SP_SUBSELECT_NYI", e[1336] = "ER_STMT_NOT_ALLOWED_IN_SF_OR_TRG", e[1337] = "ER_SP_VARCOND_AFTER_CURSHNDLR", e[1338] = "ER_SP_CURSOR_AFTER_HANDLER", e[1339] = "ER_SP_CASE_NOT_FOUND", e[1340] = "ER_FPARSER_TOO_BIG_FILE", e[1341] = "ER_FPARSER_BAD_HEADER", e[1342] = "ER_FPARSER_EOF_IN_COMMENT", e[1343] = "ER_FPARSER_ERROR_IN_PARAMETER", e[1344] = "ER_FPARSER_EOF_IN_UNKNOWN_PARAMETER", e[1345] = "ER_VIEW_NO_EXPLAIN", e[1346] = "ER_FRM_UNKNOWN_TYPE", e[1347] = "ER_WRONG_OBJECT", e[1348] = "ER_NONUPDATEABLE_COLUMN", e[1349] = "ER_VIEW_SELECT_DERIVED", e[1350] = "ER_VIEW_SELECT_CLAUSE", e[1351] = "ER_VIEW_SELECT_VARIABLE", e[1352] = "ER_VIEW_SELECT_TMPTABLE", e[1353] = "ER_VIEW_WRONG_LIST", e[1354] = "ER_WARN_VIEW_MERGE", e[1355] = "ER_WARN_VIEW_WITHOUT_KEY", e[1356] = "ER_VIEW_INVALID", e[1357] = "ER_SP_NO_DROP_SP", e[1358] = "ER_SP_GOTO_IN_HNDLR", e[1359] = "ER_TRG_ALREADY_EXISTS", e[1360] = "ER_TRG_DOES_NOT_EXIST", e[1361] = "ER_TRG_ON_VIEW_OR_TEMP_TABLE", e[1362] = "ER_TRG_CANT_CHANGE_ROW", e[1363] = "ER_TRG_NO_SUCH_ROW_IN_TRG", e[1364] = "ER_NO_DEFAULT_FOR_FIELD", e[1365] = "ER_DIVISION_BY_ZERO", e[1366] = "ER_TRUNCATED_WRONG_VALUE_FOR_FIELD", e[1367] = "ER_ILLEGAL_VALUE_FOR_TYPE", e[1368] = "ER_VIEW_NONUPD_CHECK", e[1369] = "ER_VIEW_CHECK_FAILED", e[1370] = "ER_PROCACCESS_DENIED_ERROR", e[1371] = "ER_RELAY_LOG_FAIL", e[1372] = "ER_PASSWD_LENGTH", e[1373] = "ER_UNKNOWN_TARGET_BINLOG", e[1374] = "ER_IO_ERR_LOG_INDEX_READ", e[1375] = "ER_BINLOG_PURGE_PROHIBITED", e[1376] = "ER_FSEEK_FAIL", e[1377] = "ER_BINLOG_PURGE_FATAL_ERR", e[1378] = "ER_LOG_IN_USE", e[1379] = "ER_LOG_PURGE_UNKNOWN_ERR", e[1380] = "ER_RELAY_LOG_INIT", e[1381] = "ER_NO_BINARY_LOGGING", e[1382] = "ER_RESERVED_SYNTAX", e[1383] = "ER_WSAS_FAILED", e[1384] = "ER_DIFF_GROUPS_PROC", e[1385] = "ER_NO_GROUP_FOR_PROC", e[1386] = "ER_ORDER_WITH_PROC", e[1387] = "ER_LOGGING_PROHIBIT_CHANGING_OF", e[1388] = "ER_NO_FILE_MAPPING", e[1389] = "ER_WRONG_MAGIC", e[1390] = "ER_PS_MANY_PARAM", e[1391] = "ER_KEY_PART_0", e[1392] = "ER_VIEW_CHECKSUM", e[1393] = "ER_VIEW_MULTIUPDATE", e[1394] = "ER_VIEW_NO_INSERT_FIELD_LIST", e[1395] = "ER_VIEW_DELETE_MERGE_VIEW", e[1396] = "ER_CANNOT_USER", e[1397] = "ER_XAER_NOTA", e[1398] = "ER_XAER_INVAL", e[1399] = "ER_XAER_RMFAIL", e[1400] = "ER_XAER_OUTSIDE", e[1401] = "ER_XAER_RMERR", e[1402] = "ER_XA_RBROLLBACK", e[1403] = "ER_NONEXISTING_PROC_GRANT", e[1404] = "ER_PROC_AUTO_GRANT_FAIL", e[1405] = "ER_PROC_AUTO_REVOKE_FAIL", e[1406] = "ER_DATA_TOO_LONG", e[1407] = "ER_SP_BAD_SQLSTATE", e[1408] = "ER_STARTUP", e[1409] = "ER_LOAD_FROM_FIXED_SIZE_ROWS_TO_VAR", e[1410] = "ER_CANT_CREATE_USER_WITH_GRANT", e[1411] = "ER_WRONG_VALUE_FOR_TYPE", e[1412] = "ER_TABLE_DEF_CHANGED", e[1413] = "ER_SP_DUP_HANDLER", e[1414] = "ER_SP_NOT_VAR_ARG", e[1415] = "ER_SP_NO_RETSET", e[1416] = "ER_CANT_CREATE_GEOMETRY_OBJECT", e[1417] = "ER_FAILED_ROUTINE_BREAK_BINLOG", e[1418] = "ER_BINLOG_UNSAFE_ROUTINE", e[1419] = "ER_BINLOG_CREATE_ROUTINE_NEED_SUPER", e[1420] = "ER_EXEC_STMT_WITH_OPEN_CURSOR", e[1421] = "ER_STMT_HAS_NO_OPEN_CURSOR", e[1422] = "ER_COMMIT_NOT_ALLOWED_IN_SF_OR_TRG", e[1423] = "ER_NO_DEFAULT_FOR_VIEW_FIELD", e[1424] = "ER_SP_NO_RECURSION", e[1425] = "ER_TOO_BIG_SCALE", e[1426] = "ER_TOO_BIG_PRECISION", e[1427] = "ER_M_BIGGER_THAN_D", e[1428] = "ER_WRONG_LOCK_OF_SYSTEM_TABLE", e[1429] = "ER_CONNECT_TO_FOREIGN_DATA_SOURCE", e[1430] = "ER_QUERY_ON_FOREIGN_DATA_SOURCE", e[1431] = "ER_FOREIGN_DATA_SOURCE_DOESNT_EXIST", e[1432] = "ER_FOREIGN_DATA_STRING_INVALID_CANT_CREATE", e[1433] = "ER_FOREIGN_DATA_STRING_INVALID", e[1434] = "ER_CANT_CREATE_FEDERATED_TABLE", e[1435] = "ER_TRG_IN_WRONG_SCHEMA", e[1436] = "ER_STACK_OVERRUN_NEED_MORE", e[1437] = "ER_TOO_LONG_BODY", e[1438] = "ER_WARN_CANT_DROP_DEFAULT_KEYCACHE", e[1439] = "ER_TOO_BIG_DISPLAYWIDTH", e[1440] = "ER_XAER_DUPID", e[1441] = "ER_DATETIME_FUNCTION_OVERFLOW", e[1442] = "ER_CANT_UPDATE_USED_TABLE_IN_SF_OR_TRG", e[1443] = "ER_VIEW_PREVENT_UPDATE", e[1444] = "ER_PS_NO_RECURSION", e[1445] = "ER_SP_CANT_SET_AUTOCOMMIT", e[1446] = "ER_MALFORMED_DEFINER", e[1447] = "ER_VIEW_FRM_NO_USER", e[1448] = "ER_VIEW_OTHER_USER", e[1449] = "ER_NO_SUCH_USER", e[1450] = "ER_FORBID_SCHEMA_CHANGE", e[1451] = "ER_ROW_IS_REFERENCED_2", e[1452] = "ER_NO_REFERENCED_ROW_2", e[1453] = "ER_SP_BAD_VAR_SHADOW", e[1454] = "ER_TRG_NO_DEFINER", e[1455] = "ER_OLD_FILE_FORMAT", e[1456] = "ER_SP_RECURSION_LIMIT", e[1457] = "ER_SP_PROC_TABLE_CORRUPT", e[1458] = "ER_SP_WRONG_NAME", e[1459] = "ER_TABLE_NEEDS_UPGRADE", e[1460] = "ER_SP_NO_AGGREGATE", e[1461] = "ER_MAX_PREPARED_STMT_COUNT_REACHED", e[1462] = "ER_VIEW_RECURSIVE", e[1463] = "ER_NON_GROUPING_FIELD_USED", e[1464] = "ER_TABLE_CANT_HANDLE_SPKEYS", e[1465] = "ER_NO_TRIGGERS_ON_SYSTEM_SCHEMA", e[1466] = "ER_REMOVED_SPACES", e[1467] = "ER_AUTOINC_READ_FAILED", e[1468] = "ER_USERNAME", e[1469] = "ER_HOSTNAME", e[1470] = "ER_WRONG_STRING_LENGTH", e[1471] = "ER_NON_INSERTABLE_TABLE", e[1472] = "ER_ADMIN_WRONG_MRG_TABLE", e[1473] = "ER_TOO_HIGH_LEVEL_OF_NESTING_FOR_SELECT", e[1474] = "ER_NAME_BECOMES_EMPTY", e[1475] = "ER_AMBIGUOUS_FIELD_TERM", e[1476] = "ER_FOREIGN_SERVER_EXISTS", e[1477] = "ER_FOREIGN_SERVER_DOESNT_EXIST", e[1478] = "ER_ILLEGAL_HA_CREATE_OPTION", e[1479] = "ER_PARTITION_REQUIRES_VALUES_ERROR", e[1480] = "ER_PARTITION_WRONG_VALUES_ERROR", e[1481] = "ER_PARTITION_MAXVALUE_ERROR", e[1482] = "ER_PARTITION_SUBPARTITION_ERROR", e[1483] = "ER_PARTITION_SUBPART_MIX_ERROR", e[1484] = "ER_PARTITION_WRONG_NO_PART_ERROR", e[1485] = "ER_PARTITION_WRONG_NO_SUBPART_ERROR", e[1486] = "ER_WRONG_EXPR_IN_PARTITION_FUNC_ERROR", e[1487] = "ER_NO_CONST_EXPR_IN_RANGE_OR_LIST_ERROR", e[1488] = "ER_FIELD_NOT_FOUND_PART_ERROR", e[1489] = "ER_LIST_OF_FIELDS_ONLY_IN_HASH_ERROR", e[1490] = "ER_INCONSISTENT_PARTITION_INFO_ERROR", e[1491] = "ER_PARTITION_FUNC_NOT_ALLOWED_ERROR", e[1492] = "ER_PARTITIONS_MUST_BE_DEFINED_ERROR", e[1493] = "ER_RANGE_NOT_INCREASING_ERROR", e[1494] = "ER_INCONSISTENT_TYPE_OF_FUNCTIONS_ERROR", e[1495] = "ER_MULTIPLE_DEF_CONST_IN_LIST_PART_ERROR", e[1496] = "ER_PARTITION_ENTRY_ERROR", e[1497] = "ER_MIX_HANDLER_ERROR", e[1498] = "ER_PARTITION_NOT_DEFINED_ERROR", e[1499] = "ER_TOO_MANY_PARTITIONS_ERROR", e[1500] = "ER_SUBPARTITION_ERROR", e[1501] = "ER_CANT_CREATE_HANDLER_FILE", e[1502] = "ER_BLOB_FIELD_IN_PART_FUNC_ERROR", e[1503] = "ER_UNIQUE_KEY_NEED_ALL_FIELDS_IN_PF", e[1504] = "ER_NO_PARTS_ERROR", e[1505] = "ER_PARTITION_MGMT_ON_NONPARTITIONED", e[1506] = "ER_FOREIGN_KEY_ON_PARTITIONED", e[1507] = "ER_DROP_PARTITION_NON_EXISTENT", e[1508] = "ER_DROP_LAST_PARTITION", e[1509] = "ER_COALESCE_ONLY_ON_HASH_PARTITION", e[1510] = "ER_REORG_HASH_ONLY_ON_SAME_NO", e[1511] = "ER_REORG_NO_PARAM_ERROR", e[1512] = "ER_ONLY_ON_RANGE_LIST_PARTITION", e[1513] = "ER_ADD_PARTITION_SUBPART_ERROR", e[1514] = "ER_ADD_PARTITION_NO_NEW_PARTITION", e[1515] = "ER_COALESCE_PARTITION_NO_PARTITION", e[1516] = "ER_REORG_PARTITION_NOT_EXIST", e[1517] = "ER_SAME_NAME_PARTITION", e[1518] = "ER_NO_BINLOG_ERROR", e[1519] = "ER_CONSECUTIVE_REORG_PARTITIONS", e[1520] = "ER_REORG_OUTSIDE_RANGE", e[1521] = "ER_PARTITION_FUNCTION_FAILURE", e[1522] = "ER_PART_STATE_ERROR", e[1523] = "ER_LIMITED_PART_RANGE", e[1524] = "ER_PLUGIN_IS_NOT_LOADED", e[1525] = "ER_WRONG_VALUE", e[1526] = "ER_NO_PARTITION_FOR_GIVEN_VALUE", e[1527] = "ER_FILEGROUP_OPTION_ONLY_ONCE", e[1528] = "ER_CREATE_FILEGROUP_FAILED", e[1529] = "ER_DROP_FILEGROUP_FAILED", e[1530] = "ER_TABLESPACE_AUTO_EXTEND_ERROR", e[1531] = "ER_WRONG_SIZE_NUMBER", e[1532] = "ER_SIZE_OVERFLOW_ERROR", e[1533] = "ER_ALTER_FILEGROUP_FAILED", e[1534] = "ER_BINLOG_ROW_LOGGING_FAILED", e[1535] = "ER_BINLOG_ROW_WRONG_TABLE_DEF", e[1536] = "ER_BINLOG_ROW_RBR_TO_SBR", e[1537] = "ER_EVENT_ALREADY_EXISTS", e[1538] = "ER_EVENT_STORE_FAILED", e[1539] = "ER_EVENT_DOES_NOT_EXIST", e[1540] = "ER_EVENT_CANT_ALTER", e[1541] = "ER_EVENT_DROP_FAILED", e[1542] = "ER_EVENT_INTERVAL_NOT_POSITIVE_OR_TOO_BIG", e[1543] = "ER_EVENT_ENDS_BEFORE_STARTS", e[1544] = "ER_EVENT_EXEC_TIME_IN_THE_PAST", e[1545] = "ER_EVENT_OPEN_TABLE_FAILED", e[1546] = "ER_EVENT_NEITHER_M_EXPR_NOR_M_AT", e[1547] = "ER_COL_COUNT_DOESNT_MATCH_CORRUPTED", e[1548] = "ER_CANNOT_LOAD_FROM_TABLE", e[1549] = "ER_EVENT_CANNOT_DELETE", e[1550] = "ER_EVENT_COMPILE_ERROR", e[1551] = "ER_EVENT_SAME_NAME", e[1552] = "ER_EVENT_DATA_TOO_LONG", e[1553] = "ER_DROP_INDEX_FK", e[1554] = "ER_WARN_DEPRECATED_SYNTAX_WITH_VER", e[1555] = "ER_CANT_WRITE_LOCK_LOG_TABLE", e[1556] = "ER_CANT_LOCK_LOG_TABLE", e[1557] = "ER_FOREIGN_DUPLICATE_KEY", e[1558] = "ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE", e[1559] = "ER_TEMP_TABLE_PREVENTS_SWITCH_OUT_OF_RBR", e[1560] = "ER_STORED_FUNCTION_PREVENTS_SWITCH_BINLOG_FORMAT", e[1561] = "ER_NDB_CANT_SWITCH_BINLOG_FORMAT", e[1562] = "ER_PARTITION_NO_TEMPORARY", e[1563] = "ER_PARTITION_CONST_DOMAIN_ERROR", e[1564] = "ER_PARTITION_FUNCTION_IS_NOT_ALLOWED", e[1565] = "ER_DDL_LOG_ERROR", e[1566] = "ER_NULL_IN_VALUES_LESS_THAN", e[1567] = "ER_WRONG_PARTITION_NAME", e[1568] = "ER_CANT_CHANGE_TX_CHARACTERISTICS", e[1569] = "ER_DUP_ENTRY_AUTOINCREMENT_CASE", e[1570] = "ER_EVENT_MODIFY_QUEUE_ERROR", e[1571] = "ER_EVENT_SET_VAR_ERROR", e[1572] = "ER_PARTITION_MERGE_ERROR", e[1573] = "ER_CANT_ACTIVATE_LOG", e[1574] = "ER_RBR_NOT_AVAILABLE", e[1575] = "ER_BASE64_DECODE_ERROR", e[1576] = "ER_EVENT_RECURSION_FORBIDDEN", e[1577] = "ER_EVENTS_DB_ERROR", e[1578] = "ER_ONLY_INTEGERS_ALLOWED", e[1579] = "ER_UNSUPORTED_LOG_ENGINE", e[1580] = "ER_BAD_LOG_STATEMENT", e[1581] = "ER_CANT_RENAME_LOG_TABLE", e[1582] = "ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT", e[1583] = "ER_WRONG_PARAMETERS_TO_NATIVE_FCT", e[1584] = "ER_WRONG_PARAMETERS_TO_STORED_FCT", e[1585] = "ER_NATIVE_FCT_NAME_COLLISION", e[1586] = "ER_DUP_ENTRY_WITH_KEY_NAME", e[1587] = "ER_BINLOG_PURGE_EMFILE", e[1588] = "ER_EVENT_CANNOT_CREATE_IN_THE_PAST", e[1589] = "ER_EVENT_CANNOT_ALTER_IN_THE_PAST", e[1590] = "ER_SLAVE_INCIDENT", e[1591] = "ER_NO_PARTITION_FOR_GIVEN_VALUE_SILENT", e[1592] = "ER_BINLOG_UNSAFE_STATEMENT", e[1593] = "ER_BINLOG_FATAL_ERROR", e[1594] = "ER_SLAVE_RELAY_LOG_READ_FAILURE", e[1595] = "ER_SLAVE_RELAY_LOG_WRITE_FAILURE", e[1596] = "ER_SLAVE_CREATE_EVENT_FAILURE", e[1597] = "ER_SLAVE_MASTER_COM_FAILURE", e[1598] = "ER_BINLOG_LOGGING_IMPOSSIBLE", e[1599] = "ER_VIEW_NO_CREATION_CTX", e[1600] = "ER_VIEW_INVALID_CREATION_CTX", e[1601] = "ER_SR_INVALID_CREATION_CTX", e[1602] = "ER_TRG_CORRUPTED_FILE", e[1603] = "ER_TRG_NO_CREATION_CTX", e[1604] = "ER_TRG_INVALID_CREATION_CTX", e[1605] = "ER_EVENT_INVALID_CREATION_CTX", e[1606] = "ER_TRG_CANT_OPEN_TABLE", e[1607] = "ER_CANT_CREATE_SROUTINE", e[1608] = "ER_NEVER_USED", e[1609] = "ER_NO_FORMAT_DESCRIPTION_EVENT_BEFORE_BINLOG_STATEMENT", e[1610] = "ER_REPLICA_CORRUPT_EVENT", e[1611] = "ER_LOAD_DATA_INVALID_COLUMN", e[1612] = "ER_LOG_PURGE_NO_FILE", e[1613] = "ER_XA_RBTIMEOUT", e[1614] = "ER_XA_RBDEADLOCK", e[1615] = "ER_NEED_REPREPARE", e[1616] = "ER_DELAYED_NOT_SUPPORTED", e[1617] = "WARN_NO_CONNECTION_METADATA", e[1618] = "WARN_OPTION_IGNORED", e[1619] = "ER_PLUGIN_DELETE_BUILTIN", e[1620] = "WARN_PLUGIN_BUSY", e[1621] = "ER_VARIABLE_IS_READONLY", e[1622] = "ER_WARN_ENGINE_TRANSACTION_ROLLBACK", e[1623] = "ER_SLAVE_HEARTBEAT_FAILURE", e[1624] = "ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE", e[1625] = "ER_NDB_REPLICATION_SCHEMA_ERROR", e[1626] = "ER_CONFLICT_FN_PARSE_ERROR", e[1627] = "ER_EXCEPTIONS_WRITE_ERROR", e[1628] = "ER_TOO_LONG_TABLE_COMMENT", e[1629] = "ER_TOO_LONG_FIELD_COMMENT", e[1630] = "ER_FUNC_INEXISTENT_NAME_COLLISION", e[1631] = "ER_DATABASE_NAME", e[1632] = "ER_TABLE_NAME", e[1633] = "ER_PARTITION_NAME", e[1634] = "ER_SUBPARTITION_NAME", e[1635] = "ER_TEMPORARY_NAME", e[1636] = "ER_RENAMED_NAME", e[1637] = "ER_TOO_MANY_CONCURRENT_TRXS", e[1638] = "WARN_NON_ASCII_SEPARATOR_NOT_IMPLEMENTED", e[1639] = "ER_DEBUG_SYNC_TIMEOUT", e[1640] = "ER_DEBUG_SYNC_HIT_LIMIT", e[1641] = "ER_DUP_SIGNAL_SET", e[1642] = "ER_SIGNAL_WARN", e[1643] = "ER_SIGNAL_NOT_FOUND", e[1644] = "ER_SIGNAL_EXCEPTION", e[1645] = "ER_RESIGNAL_WITHOUT_ACTIVE_HANDLER", e[1646] = "ER_SIGNAL_BAD_CONDITION_TYPE", e[1647] = "WARN_COND_ITEM_TRUNCATED", e[1648] = "ER_COND_ITEM_TOO_LONG", e[1649] = "ER_UNKNOWN_LOCALE", e[1650] = "ER_REPLICA_IGNORE_SERVER_IDS", e[1651] = "ER_QUERY_CACHE_DISABLED", e[1652] = "ER_SAME_NAME_PARTITION_FIELD", e[1653] = "ER_PARTITION_COLUMN_LIST_ERROR", e[1654] = "ER_WRONG_TYPE_COLUMN_VALUE_ERROR", e[1655] = "ER_TOO_MANY_PARTITION_FUNC_FIELDS_ERROR", e[1656] = "ER_MAXVALUE_IN_VALUES_IN", e[1657] = "ER_TOO_MANY_VALUES_ERROR", e[1658] = "ER_ROW_SINGLE_PARTITION_FIELD_ERROR", e[1659] = "ER_FIELD_TYPE_NOT_ALLOWED_AS_PARTITION_FIELD", e[1660] = "ER_PARTITION_FIELDS_TOO_LONG", e[1661] = "ER_BINLOG_ROW_ENGINE_AND_STMT_ENGINE", e[1662] = "ER_BINLOG_ROW_MODE_AND_STMT_ENGINE", e[1663] = "ER_BINLOG_UNSAFE_AND_STMT_ENGINE", e[1664] = "ER_BINLOG_ROW_INJECTION_AND_STMT_ENGINE", e[1665] = "ER_BINLOG_STMT_MODE_AND_ROW_ENGINE", e[1666] = "ER_BINLOG_ROW_INJECTION_AND_STMT_MODE", e[1667] = "ER_BINLOG_MULTIPLE_ENGINES_AND_SELF_LOGGING_ENGINE", e[1668] = "ER_BINLOG_UNSAFE_LIMIT", e[1669] = "ER_UNUSED4", e[1670] = "ER_BINLOG_UNSAFE_SYSTEM_TABLE", e[1671] = "ER_BINLOG_UNSAFE_AUTOINC_COLUMNS", e[1672] = "ER_BINLOG_UNSAFE_UDF", e[1673] = "ER_BINLOG_UNSAFE_SYSTEM_VARIABLE", e[1674] = "ER_BINLOG_UNSAFE_SYSTEM_FUNCTION", e[1675] = "ER_BINLOG_UNSAFE_NONTRANS_AFTER_TRANS", e[1676] = "ER_MESSAGE_AND_STATEMENT", e[1677] = "ER_SLAVE_CONVERSION_FAILED", e[1678] = "ER_REPLICA_CANT_CREATE_CONVERSION", e[1679] = "ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_BINLOG_FORMAT", e[1680] = "ER_PATH_LENGTH", e[1681] = "ER_WARN_DEPRECATED_SYNTAX_NO_REPLACEMENT", e[1682] = "ER_WRONG_NATIVE_TABLE_STRUCTURE", e[1683] = "ER_WRONG_PERFSCHEMA_USAGE", e[1684] = "ER_WARN_I_S_SKIPPED_TABLE", e[1685] = "ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_BINLOG_DIRECT", e[1686] = "ER_STORED_FUNCTION_PREVENTS_SWITCH_BINLOG_DIRECT", e[1687] = "ER_SPATIAL_MUST_HAVE_GEOM_COL", e[1688] = "ER_TOO_LONG_INDEX_COMMENT", e[1689] = "ER_LOCK_ABORTED", e[1690] = "ER_DATA_OUT_OF_RANGE", e[1691] = "ER_WRONG_SPVAR_TYPE_IN_LIMIT", e[1692] = "ER_BINLOG_UNSAFE_MULTIPLE_ENGINES_AND_SELF_LOGGING_ENGINE", e[1693] = "ER_BINLOG_UNSAFE_MIXED_STATEMENT", e[1694] = "ER_INSIDE_TRANSACTION_PREVENTS_SWITCH_SQL_LOG_BIN", e[1695] = "ER_STORED_FUNCTION_PREVENTS_SWITCH_SQL_LOG_BIN", e[1696] = "ER_FAILED_READ_FROM_PAR_FILE", e[1697] = "ER_VALUES_IS_NOT_INT_TYPE_ERROR", e[1698] = "ER_ACCESS_DENIED_NO_PASSWORD_ERROR", e[1699] = "ER_SET_PASSWORD_AUTH_PLUGIN", e[1700] = "ER_GRANT_PLUGIN_USER_EXISTS", e[1701] = "ER_TRUNCATE_ILLEGAL_FK", e[1702] = "ER_PLUGIN_IS_PERMANENT", e[1703] = "ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE_MIN", e[1704] = "ER_REPLICA_HEARTBEAT_VALUE_OUT_OF_RANGE_MAX", e[1705] = "ER_STMT_CACHE_FULL", e[1706] = "ER_MULTI_UPDATE_KEY_CONFLICT", e[1707] = "ER_TABLE_NEEDS_REBUILD", e[1708] = "WARN_OPTION_BELOW_LIMIT", e[1709] = "ER_INDEX_COLUMN_TOO_LONG", e[1710] = "ER_ERROR_IN_TRIGGER_BODY", e[1711] = "ER_ERROR_IN_UNKNOWN_TRIGGER_BODY", e[1712] = "ER_INDEX_CORRUPT", e[1713] = "ER_UNDO_RECORD_TOO_BIG", e[1714] = "ER_BINLOG_UNSAFE_INSERT_IGNORE_SELECT", e[1715] = "ER_BINLOG_UNSAFE_INSERT_SELECT_UPDATE", e[1716] = "ER_BINLOG_UNSAFE_REPLACE_SELECT", e[1717] = "ER_BINLOG_UNSAFE_CREATE_IGNORE_SELECT", e[1718] = "ER_BINLOG_UNSAFE_CREATE_REPLACE_SELECT", e[1719] = "ER_BINLOG_UNSAFE_UPDATE_IGNORE", e[1720] = "ER_PLUGIN_NO_UNINSTALL", e[1721] = "ER_PLUGIN_NO_INSTALL", e[1722] = "ER_BINLOG_UNSAFE_WRITE_AUTOINC_SELECT", e[1723] = "ER_BINLOG_UNSAFE_CREATE_SELECT_AUTOINC", e[1724] = "ER_BINLOG_UNSAFE_INSERT_TWO_KEYS", e[1725] = "ER_TABLE_IN_FK_CHECK", e[1726] = "ER_UNSUPPORTED_ENGINE", e[1727] = "ER_BINLOG_UNSAFE_AUTOINC_NOT_FIRST", e[1728] = "ER_CANNOT_LOAD_FROM_TABLE_V2", e[1729] = "ER_SOURCE_DELAY_VALUE_OUT_OF_RANGE", e[1730] = "ER_ONLY_FD_AND_RBR_EVENTS_ALLOWED_IN_BINLOG_STATEMENT", e[1731] = "ER_PARTITION_EXCHANGE_DIFFERENT_OPTION", e[1732] = "ER_PARTITION_EXCHANGE_PART_TABLE", e[1733] = "ER_PARTITION_EXCHANGE_TEMP_TABLE", e[1734] = "ER_PARTITION_INSTEAD_OF_SUBPARTITION", e[1735] = "ER_UNKNOWN_PARTITION", e[1736] = "ER_TABLES_DIFFERENT_METADATA", e[1737] = "ER_ROW_DOES_NOT_MATCH_PARTITION", e[1738] = "ER_BINLOG_CACHE_SIZE_GREATER_THAN_MAX", e[1739] = "ER_WARN_INDEX_NOT_APPLICABLE", e[1740] = "ER_PARTITION_EXCHANGE_FOREIGN_KEY", e[1741] = "ER_NO_SUCH_KEY_VALUE", e[1742] = "ER_RPL_INFO_DATA_TOO_LONG", e[1743] = "ER_NETWORK_READ_EVENT_CHECKSUM_FAILURE", e[1744] = "ER_BINLOG_READ_EVENT_CHECKSUM_FAILURE", e[1745] = "ER_BINLOG_STMT_CACHE_SIZE_GREATER_THAN_MAX", e[1746] = "ER_CANT_UPDATE_TABLE_IN_CREATE_TABLE_SELECT", e[1747] = "ER_PARTITION_CLAUSE_ON_NONPARTITIONED", e[1748] = "ER_ROW_DOES_NOT_MATCH_GIVEN_PARTITION_SET", e[1749] = "ER_NO_SUCH_PARTITION", e[1750] = "ER_CHANGE_RPL_INFO_REPOSITORY_FAILURE", e[1751] = "ER_WARNING_NOT_COMPLETE_ROLLBACK_WITH_CREATED_TEMP_TABLE", e[1752] = "ER_WARNING_NOT_COMPLETE_ROLLBACK_WITH_DROPPED_TEMP_TABLE", e[1753] = "ER_MTA_FEATURE_IS_NOT_SUPPORTED", e[1754] = "ER_MTA_UPDATED_DBS_GREATER_MAX", e[1755] = "ER_MTA_CANT_PARALLEL", e[1756] = "ER_MTA_INCONSISTENT_DATA", e[1757] = "ER_FULLTEXT_NOT_SUPPORTED_WITH_PARTITIONING", e[1758] = "ER_DA_INVALID_CONDITION_NUMBER", e[1759] = "ER_INSECURE_PLAIN_TEXT", e[1760] = "ER_INSECURE_CHANGE_SOURCE", e[1761] = "ER_FOREIGN_DUPLICATE_KEY_WITH_CHILD_INFO", e[1762] = "ER_FOREIGN_DUPLICATE_KEY_WITHOUT_CHILD_INFO", e[1763] = "ER_SQLTHREAD_WITH_SECURE_REPLICA", e[1764] = "ER_TABLE_HAS_NO_FT", e[1765] = "ER_VARIABLE_NOT_SETTABLE_IN_SF_OR_TRIGGER", e[1766] = "ER_VARIABLE_NOT_SETTABLE_IN_TRANSACTION", e[1767] = "ER_GTID_NEXT_IS_NOT_IN_GTID_NEXT_LIST", e[1768] = "ER_CANT_CHANGE_GTID_NEXT_IN_TRANSACTION", e[1769] = "ER_SET_STATEMENT_CANNOT_INVOKE_FUNCTION", e[1770] = "ER_GTID_NEXT_CANT_BE_AUTOMATIC_IF_GTID_NEXT_LIST_IS_NON_NULL", e[1771] = "ER_SKIPPING_LOGGED_TRANSACTION", e[1772] = "ER_MALFORMED_GTID_SET_SPECIFICATION", e[1773] = "ER_MALFORMED_GTID_SET_ENCODING", e[1774] = "ER_MALFORMED_GTID_SPECIFICATION", e[1775] = "ER_GNO_EXHAUSTED", e[1776] = "ER_BAD_REPLICA_AUTO_POSITION", e[1777] = "ER_AUTO_POSITION_REQUIRES_GTID_MODE_NOT_OFF", e[1778] = "ER_CANT_DO_IMPLICIT_COMMIT_IN_TRX_WHEN_GTID_NEXT_IS_SET", e[1779] = "ER_GTID_MODE_ON_REQUIRES_ENFORCE_GTID_CONSISTENCY_ON", e[1780] = "ER_GTID_MODE_REQUIRES_BINLOG", e[1781] = "ER_CANT_SET_GTID_NEXT_TO_GTID_WHEN_GTID_MODE_IS_OFF", e[1782] = "ER_CANT_SET_GTID_NEXT_TO_ANONYMOUS_WHEN_GTID_MODE_IS_ON", e[1783] = "ER_CANT_SET_GTID_NEXT_LIST_TO_NON_NULL_WHEN_GTID_MODE_IS_OFF", e[1784] = "ER_FOUND_GTID_EVENT_WHEN_GTID_MODE_IS_OFF", e[1785] = "ER_GTID_UNSAFE_NON_TRANSACTIONAL_TABLE", e[1786] = "ER_GTID_UNSAFE_CREATE_SELECT", e[1787] = "ER_GTID_UNSAFE_CREATE_DROP_TEMP_TABLE_IN_TRANSACTION", e[1788] = "ER_GTID_MODE_CAN_ONLY_CHANGE_ONE_STEP_AT_A_TIME", e[1789] = "ER_SOURCE_HAS_PURGED_REQUIRED_GTIDS", e[1790] = "ER_CANT_SET_GTID_NEXT_WHEN_OWNING_GTID", e[1791] = "ER_UNKNOWN_EXPLAIN_FORMAT", e[1792] = "ER_CANT_EXECUTE_IN_READ_ONLY_TRANSACTION", e[1793] = "ER_TOO_LONG_TABLE_PARTITION_COMMENT", e[1794] = "ER_REPLICA_CONFIGURATION", e[1795] = "ER_INNODB_FT_LIMIT", e[1796] = "ER_INNODB_NO_FT_TEMP_TABLE", e[1797] = "ER_INNODB_FT_WRONG_DOCID_COLUMN", e[1798] = "ER_INNODB_FT_WRONG_DOCID_INDEX", e[1799] = "ER_INNODB_ONLINE_LOG_TOO_BIG", e[1800] = "ER_UNKNOWN_ALTER_ALGORITHM", e[1801] = "ER_UNKNOWN_ALTER_LOCK", e[1802] = "ER_MTA_CHANGE_SOURCE_CANT_RUN_WITH_GAPS", e[1803] = "ER_MTA_RECOVERY_FAILURE", e[1804] = "ER_MTA_RESET_WORKERS", e[1805] = "ER_COL_COUNT_DOESNT_MATCH_CORRUPTED_V2", e[1806] = "ER_REPLICA_SILENT_RETRY_TRANSACTION", e[1807] = "ER_DISCARD_FK_CHECKS_RUNNING", e[1808] = "ER_TABLE_SCHEMA_MISMATCH", e[1809] = "ER_TABLE_IN_SYSTEM_TABLESPACE", e[1810] = "ER_IO_READ_ERROR", e[1811] = "ER_IO_WRITE_ERROR", e[1812] = "ER_TABLESPACE_MISSING", e[1813] = "ER_TABLESPACE_EXISTS", e[1814] = "ER_TABLESPACE_DISCARDED", e[1815] = "ER_INTERNAL_ERROR", e[1816] = "ER_INNODB_IMPORT_ERROR", e[1817] = "ER_INNODB_INDEX_CORRUPT", e[1818] = "ER_INVALID_YEAR_COLUMN_LENGTH", e[1819] = "ER_NOT_VALID_PASSWORD", e[1820] = "ER_MUST_CHANGE_PASSWORD", e[1821] = "ER_FK_NO_INDEX_CHILD", e[1822] = "ER_FK_NO_INDEX_PARENT", e[1823] = "ER_FK_FAIL_ADD_SYSTEM", e[1824] = "ER_FK_CANNOT_OPEN_PARENT", e[1825] = "ER_FK_INCORRECT_OPTION", e[1826] = "ER_FK_DUP_NAME", e[1827] = "ER_PASSWORD_FORMAT", e[1828] = "ER_FK_COLUMN_CANNOT_DROP", e[1829] = "ER_FK_COLUMN_CANNOT_DROP_CHILD", e[1830] = "ER_FK_COLUMN_NOT_NULL", e[1831] = "ER_DUP_INDEX", e[1832] = "ER_FK_COLUMN_CANNOT_CHANGE", e[1833] = "ER_FK_COLUMN_CANNOT_CHANGE_CHILD", e[1834] = "ER_UNUSED5", e[1835] = "ER_MALFORMED_PACKET", e[1836] = "ER_READ_ONLY_MODE", e[1837] = "ER_GTID_NEXT_TYPE_UNDEFINED_GTID", e[1838] = "ER_VARIABLE_NOT_SETTABLE_IN_SP", e[1839] = "ER_CANT_SET_GTID_PURGED_WHEN_GTID_MODE_IS_OFF", e[1840] = "ER_CANT_SET_GTID_PURGED_WHEN_GTID_EXECUTED_IS_NOT_EMPTY", e[1841] = "ER_CANT_SET_GTID_PURGED_WHEN_OWNED_GTIDS_IS_NOT_EMPTY", e[1842] = "ER_GTID_PURGED_WAS_CHANGED", e[1843] = "ER_GTID_EXECUTED_WAS_CHANGED", e[1844] = "ER_BINLOG_STMT_MODE_AND_NO_REPL_TABLES", e[1845] = "ER_ALTER_OPERATION_NOT_SUPPORTED", e[1846] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON", e[1847] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COPY", e[1848] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_PARTITION", e[1849] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FK_RENAME", e[1850] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COLUMN_TYPE", e[1851] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FK_CHECK", e[1852] = "ER_UNUSED6", e[1853] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_NOPK", e[1854] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_AUTOINC", e[1855] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_HIDDEN_FTS", e[1856] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_CHANGE_FTS", e[1857] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_FTS", e[1858] = "ER_SQL_REPLICA_SKIP_COUNTER_NOT_SETTABLE_IN_GTID_MODE", e[1859] = "ER_DUP_UNKNOWN_IN_INDEX", e[1860] = "ER_IDENT_CAUSES_TOO_LONG_PATH", e[1861] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_NOT_NULL", e[1862] = "ER_MUST_CHANGE_PASSWORD_LOGIN", e[1863] = "ER_ROW_IN_WRONG_PARTITION", e[1864] = "ER_MTA_EVENT_BIGGER_PENDING_JOBS_SIZE_MAX", e[1865] = "ER_INNODB_NO_FT_USES_PARSER", e[1866] = "ER_BINLOG_LOGICAL_CORRUPTION", e[1867] = "ER_WARN_PURGE_LOG_IN_USE", e[1868] = "ER_WARN_PURGE_LOG_IS_ACTIVE", e[1869] = "ER_AUTO_INCREMENT_CONFLICT", e[1870] = "WARN_ON_BLOCKHOLE_IN_RBR", e[1871] = "ER_REPLICA_CM_INIT_REPOSITORY", e[1872] = "ER_REPLICA_AM_INIT_REPOSITORY", e[1873] = "ER_ACCESS_DENIED_CHANGE_USER_ERROR", e[1874] = "ER_INNODB_READ_ONLY", e[1875] = "ER_STOP_REPLICA_SQL_THREAD_TIMEOUT", e[1876] = "ER_STOP_REPLICA_IO_THREAD_TIMEOUT", e[1877] = "ER_TABLE_CORRUPT", e[1878] = "ER_TEMP_FILE_WRITE_FAILURE", e[1879] = "ER_INNODB_FT_AUX_NOT_HEX_ID", e[1880] = "ER_OLD_TEMPORALS_UPGRADED", e[1881] = "ER_INNODB_FORCED_RECOVERY", e[1882] = "ER_AES_INVALID_IV", e[1883] = "ER_PLUGIN_CANNOT_BE_UNINSTALLED", e[1884] = "ER_GTID_UNSAFE_BINLOG_SPLITTABLE_STATEMENT_AND_ASSIGNED_GTID", e[1885] = "ER_REPLICA_HAS_MORE_GTIDS_THAN_SOURCE", e[1886] = "ER_MISSING_KEY", e[1887] = "WARN_NAMED_PIPE_ACCESS_EVERYONE", e[3e3] = "ER_FILE_CORRUPT", e[3001] = "ER_ERROR_ON_SOURCE", e[3002] = "ER_INCONSISTENT_ERROR", e[3003] = "ER_STORAGE_ENGINE_NOT_LOADED", e[3004] = "ER_GET_STACKED_DA_WITHOUT_ACTIVE_HANDLER", e[3005] = "ER_WARN_LEGACY_SYNTAX_CONVERTED", e[3006] = "ER_BINLOG_UNSAFE_FULLTEXT_PLUGIN", e[3007] = "ER_CANNOT_DISCARD_TEMPORARY_TABLE", e[3008] = "ER_FK_DEPTH_EXCEEDED", e[3009] = "ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE_V2", e[3010] = "ER_WARN_TRIGGER_DOESNT_HAVE_CREATED", e[3011] = "ER_REFERENCED_TRG_DOES_NOT_EXIST", e[3012] = "ER_EXPLAIN_NOT_SUPPORTED", e[3013] = "ER_INVALID_FIELD_SIZE", e[3014] = "ER_MISSING_HA_CREATE_OPTION", e[3015] = "ER_ENGINE_OUT_OF_MEMORY", e[3016] = "ER_PASSWORD_EXPIRE_ANONYMOUS_USER", e[3017] = "ER_REPLICA_SQL_THREAD_MUST_STOP", e[3018] = "ER_NO_FT_MATERIALIZED_SUBQUERY", e[3019] = "ER_INNODB_UNDO_LOG_FULL", e[3020] = "ER_INVALID_ARGUMENT_FOR_LOGARITHM", e[3021] = "ER_REPLICA_CHANNEL_IO_THREAD_MUST_STOP", e[3022] = "ER_WARN_OPEN_TEMP_TABLES_MUST_BE_ZERO", e[3023] = "ER_WARN_ONLY_SOURCE_LOG_FILE_NO_POS", e[3024] = "ER_QUERY_TIMEOUT", e[3025] = "ER_NON_RO_SELECT_DISABLE_TIMER", e[3026] = "ER_DUP_LIST_ENTRY", e[3027] = "ER_SQL_MODE_NO_EFFECT", e[3028] = "ER_AGGREGATE_ORDER_FOR_UNION", e[3029] = "ER_AGGREGATE_ORDER_NON_AGG_QUERY", e[3030] = "ER_REPLICA_WORKER_STOPPED_PREVIOUS_THD_ERROR", e[3031] = "ER_DONT_SUPPORT_REPLICA_PRESERVE_COMMIT_ORDER", e[3032] = "ER_SERVER_OFFLINE_MODE", e[3033] = "ER_GIS_DIFFERENT_SRIDS", e[3034] = "ER_GIS_UNSUPPORTED_ARGUMENT", e[3035] = "ER_GIS_UNKNOWN_ERROR", e[3036] = "ER_GIS_UNKNOWN_EXCEPTION", e[3037] = "ER_GIS_INVALID_DATA", e[3038] = "ER_BOOST_GEOMETRY_EMPTY_INPUT_EXCEPTION", e[3039] = "ER_BOOST_GEOMETRY_CENTROID_EXCEPTION", e[3040] = "ER_BOOST_GEOMETRY_OVERLAY_INVALID_INPUT_EXCEPTION", e[3041] = "ER_BOOST_GEOMETRY_TURN_INFO_EXCEPTION", e[3042] = "ER_BOOST_GEOMETRY_SELF_INTERSECTION_POINT_EXCEPTION", e[3043] = "ER_BOOST_GEOMETRY_UNKNOWN_EXCEPTION", e[3044] = "ER_STD_BAD_ALLOC_ERROR", e[3045] = "ER_STD_DOMAIN_ERROR", e[3046] = "ER_STD_LENGTH_ERROR", e[3047] = "ER_STD_INVALID_ARGUMENT", e[3048] = "ER_STD_OUT_OF_RANGE_ERROR", e[3049] = "ER_STD_OVERFLOW_ERROR", e[3050] = "ER_STD_RANGE_ERROR", e[3051] = "ER_STD_UNDERFLOW_ERROR", e[3052] = "ER_STD_LOGIC_ERROR", e[3053] = "ER_STD_RUNTIME_ERROR", e[3054] = "ER_STD_UNKNOWN_EXCEPTION", e[3055] = "ER_GIS_DATA_WRONG_ENDIANESS", e[3056] = "ER_CHANGE_SOURCE_PASSWORD_LENGTH", e[3057] = "ER_USER_LOCK_WRONG_NAME", e[3058] = "ER_USER_LOCK_DEADLOCK", e[3059] = "ER_REPLACE_INACCESSIBLE_ROWS", e[3060] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_GIS", e[3061] = "ER_ILLEGAL_USER_VAR", e[3062] = "ER_GTID_MODE_OFF", e[3063] = "ER_UNSUPPORTED_BY_REPLICATION_THREAD", e[3064] = "ER_INCORRECT_TYPE", e[3065] = "ER_FIELD_IN_ORDER_NOT_SELECT", e[3066] = "ER_AGGREGATE_IN_ORDER_NOT_SELECT", e[3067] = "ER_INVALID_RPL_WILD_TABLE_FILTER_PATTERN", e[3068] = "ER_NET_OK_PACKET_TOO_LARGE", e[3069] = "ER_INVALID_JSON_DATA", e[3070] = "ER_INVALID_GEOJSON_MISSING_MEMBER", e[3071] = "ER_INVALID_GEOJSON_WRONG_TYPE", e[3072] = "ER_INVALID_GEOJSON_UNSPECIFIED", e[3073] = "ER_DIMENSION_UNSUPPORTED", e[3074] = "ER_REPLICA_CHANNEL_DOES_NOT_EXIST", e[3075] = "ER_SLAVE_MULTIPLE_CHANNELS_HOST_PORT", e[3076] = "ER_REPLICA_CHANNEL_NAME_INVALID_OR_TOO_LONG", e[3077] = "ER_REPLICA_NEW_CHANNEL_WRONG_REPOSITORY", e[3078] = "ER_SLAVE_CHANNEL_DELETE", e[3079] = "ER_REPLICA_MULTIPLE_CHANNELS_CMD", e[3080] = "ER_REPLICA_MAX_CHANNELS_EXCEEDED", e[3081] = "ER_REPLICA_CHANNEL_MUST_STOP", e[3082] = "ER_REPLICA_CHANNEL_NOT_RUNNING", e[3083] = "ER_REPLICA_CHANNEL_WAS_RUNNING", e[3084] = "ER_REPLICA_CHANNEL_WAS_NOT_RUNNING", e[3085] = "ER_REPLICA_CHANNEL_SQL_THREAD_MUST_STOP", e[3086] = "ER_REPLICA_CHANNEL_SQL_SKIP_COUNTER", e[3087] = "ER_WRONG_FIELD_WITH_GROUP_V2", e[3088] = "ER_MIX_OF_GROUP_FUNC_AND_FIELDS_V2", e[3089] = "ER_WARN_DEPRECATED_SYSVAR_UPDATE", e[3090] = "ER_WARN_DEPRECATED_SQLMODE", e[3091] = "ER_CANNOT_LOG_PARTIAL_DROP_DATABASE_WITH_GTID", e[3092] = "ER_GROUP_REPLICATION_CONFIGURATION", e[3093] = "ER_GROUP_REPLICATION_RUNNING", e[3094] = "ER_GROUP_REPLICATION_APPLIER_INIT_ERROR", e[3095] = "ER_GROUP_REPLICATION_STOP_APPLIER_THREAD_TIMEOUT", e[3096] = "ER_GROUP_REPLICATION_COMMUNICATION_LAYER_SESSION_ERROR", e[3097] = "ER_GROUP_REPLICATION_COMMUNICATION_LAYER_JOIN_ERROR", e[3098] = "ER_BEFORE_DML_VALIDATION_ERROR", e[3099] = "ER_PREVENTS_VARIABLE_WITHOUT_RBR", e[3100] = "ER_RUN_HOOK_ERROR", e[3101] = "ER_TRANSACTION_ROLLBACK_DURING_COMMIT", e[3102] = "ER_GENERATED_COLUMN_FUNCTION_IS_NOT_ALLOWED", e[3103] = "ER_UNSUPPORTED_ALTER_INPLACE_ON_VIRTUAL_COLUMN", e[3104] = "ER_WRONG_FK_OPTION_FOR_GENERATED_COLUMN", e[3105] = "ER_NON_DEFAULT_VALUE_FOR_GENERATED_COLUMN", e[3106] = "ER_UNSUPPORTED_ACTION_ON_GENERATED_COLUMN", e[3107] = "ER_GENERATED_COLUMN_NON_PRIOR", e[3108] = "ER_DEPENDENT_BY_GENERATED_COLUMN", e[3109] = "ER_GENERATED_COLUMN_REF_AUTO_INC", e[3110] = "ER_FEATURE_NOT_AVAILABLE", e[3111] = "ER_CANT_SET_GTID_MODE", e[3112] = "ER_CANT_USE_AUTO_POSITION_WITH_GTID_MODE_OFF", e[3113] = "ER_CANT_REPLICATE_ANONYMOUS_WITH_AUTO_POSITION", e[3114] = "ER_CANT_REPLICATE_ANONYMOUS_WITH_GTID_MODE_ON", e[3115] = "ER_CANT_REPLICATE_GTID_WITH_GTID_MODE_OFF", e[3116] = "ER_CANT_ENFORCE_GTID_CONSISTENCY_WITH_ONGOING_GTID_VIOLATING_TX", e[3117] = "ER_ENFORCE_GTID_CONSISTENCY_WARN_WITH_ONGOING_GTID_VIOLATING_TX", e[3118] = "ER_ACCOUNT_HAS_BEEN_LOCKED", e[3119] = "ER_WRONG_TABLESPACE_NAME", e[3120] = "ER_TABLESPACE_IS_NOT_EMPTY", e[3121] = "ER_WRONG_FILE_NAME", e[3122] = "ER_BOOST_GEOMETRY_INCONSISTENT_TURNS_EXCEPTION", e[3123] = "ER_WARN_OPTIMIZER_HINT_SYNTAX_ERROR", e[3124] = "ER_WARN_BAD_MAX_EXECUTION_TIME", e[3125] = "ER_WARN_UNSUPPORTED_MAX_EXECUTION_TIME", e[3126] = "ER_WARN_CONFLICTING_HINT", e[3127] = "ER_WARN_UNKNOWN_QB_NAME", e[3128] = "ER_UNRESOLVED_HINT_NAME", e[3129] = "ER_WARN_ON_MODIFYING_GTID_EXECUTED_TABLE", e[3130] = "ER_PLUGGABLE_PROTOCOL_COMMAND_NOT_SUPPORTED", e[3131] = "ER_LOCKING_SERVICE_WRONG_NAME", e[3132] = "ER_LOCKING_SERVICE_DEADLOCK", e[3133] = "ER_LOCKING_SERVICE_TIMEOUT", e[3134] = "ER_GIS_MAX_POINTS_IN_GEOMETRY_OVERFLOWED", e[3135] = "ER_SQL_MODE_MERGED", e[3136] = "ER_VTOKEN_PLUGIN_TOKEN_MISMATCH", e[3137] = "ER_VTOKEN_PLUGIN_TOKEN_NOT_FOUND", e[3138] = "ER_CANT_SET_VARIABLE_WHEN_OWNING_GTID", e[3139] = "ER_REPLICA_CHANNEL_OPERATION_NOT_ALLOWED", e[3140] = "ER_INVALID_JSON_TEXT", e[3141] = "ER_INVALID_JSON_TEXT_IN_PARAM", e[3142] = "ER_INVALID_JSON_BINARY_DATA", e[3143] = "ER_INVALID_JSON_PATH", e[3144] = "ER_INVALID_JSON_CHARSET", e[3145] = "ER_INVALID_JSON_CHARSET_IN_FUNCTION", e[3146] = "ER_INVALID_TYPE_FOR_JSON", e[3147] = "ER_INVALID_CAST_TO_JSON", e[3148] = "ER_INVALID_JSON_PATH_CHARSET", e[3149] = "ER_INVALID_JSON_PATH_WILDCARD", e[3150] = "ER_JSON_VALUE_TOO_BIG", e[3151] = "ER_JSON_KEY_TOO_BIG", e[3152] = "ER_JSON_USED_AS_KEY", e[3153] = "ER_JSON_VACUOUS_PATH", e[3154] = "ER_JSON_BAD_ONE_OR_ALL_ARG", e[3155] = "ER_NUMERIC_JSON_VALUE_OUT_OF_RANGE", e[3156] = "ER_INVALID_JSON_VALUE_FOR_CAST", e[3157] = "ER_JSON_DOCUMENT_TOO_DEEP", e[3158] = "ER_JSON_DOCUMENT_NULL_KEY", e[3159] = "ER_SECURE_TRANSPORT_REQUIRED", e[3160] = "ER_NO_SECURE_TRANSPORTS_CONFIGURED", e[3161] = "ER_DISABLED_STORAGE_ENGINE", e[3162] = "ER_USER_DOES_NOT_EXIST", e[3163] = "ER_USER_ALREADY_EXISTS", e[3164] = "ER_AUDIT_API_ABORT", e[3165] = "ER_INVALID_JSON_PATH_ARRAY_CELL", e[3166] = "ER_BUFPOOL_RESIZE_INPROGRESS", e[3167] = "ER_FEATURE_DISABLED_SEE_DOC", e[3168] = "ER_SERVER_ISNT_AVAILABLE", e[3169] = "ER_SESSION_WAS_KILLED", e[3170] = "ER_CAPACITY_EXCEEDED", e[3171] = "ER_CAPACITY_EXCEEDED_IN_RANGE_OPTIMIZER", e[3172] = "ER_TABLE_NEEDS_UPG_PART", e[3173] = "ER_CANT_WAIT_FOR_EXECUTED_GTID_SET_WHILE_OWNING_A_GTID", e[3174] = "ER_CANNOT_ADD_FOREIGN_BASE_COL_VIRTUAL", e[3175] = "ER_CANNOT_CREATE_VIRTUAL_INDEX_CONSTRAINT", e[3176] = "ER_ERROR_ON_MODIFYING_GTID_EXECUTED_TABLE", e[3177] = "ER_LOCK_REFUSED_BY_ENGINE", e[3178] = "ER_UNSUPPORTED_ALTER_ONLINE_ON_VIRTUAL_COLUMN", e[3179] = "ER_MASTER_KEY_ROTATION_NOT_SUPPORTED_BY_SE", e[3180] = "ER_MASTER_KEY_ROTATION_ERROR_BY_SE", e[3181] = "ER_MASTER_KEY_ROTATION_BINLOG_FAILED", e[3182] = "ER_MASTER_KEY_ROTATION_SE_UNAVAILABLE", e[3183] = "ER_TABLESPACE_CANNOT_ENCRYPT", e[3184] = "ER_INVALID_ENCRYPTION_OPTION", e[3185] = "ER_CANNOT_FIND_KEY_IN_KEYRING", e[3186] = "ER_CAPACITY_EXCEEDED_IN_PARSER", e[3187] = "ER_UNSUPPORTED_ALTER_ENCRYPTION_INPLACE", e[3188] = "ER_KEYRING_UDF_KEYRING_SERVICE_ERROR", e[3189] = "ER_USER_COLUMN_OLD_LENGTH", e[3190] = "ER_CANT_RESET_SOURCE", e[3191] = "ER_GROUP_REPLICATION_MAX_GROUP_SIZE", e[3192] = "ER_CANNOT_ADD_FOREIGN_BASE_COL_STORED", e[3193] = "ER_TABLE_REFERENCED", e[3194] = "ER_PARTITION_ENGINE_DEPRECATED_FOR_TABLE", e[3195] = "ER_WARN_USING_GEOMFROMWKB_TO_SET_SRID_ZERO", e[3196] = "ER_WARN_USING_GEOMFROMWKB_TO_SET_SRID", e[3197] = "ER_XA_RETRY", e[3198] = "ER_KEYRING_AWS_UDF_AWS_KMS_ERROR", e[3199] = "ER_BINLOG_UNSAFE_XA", e[3200] = "ER_UDF_ERROR", e[3201] = "ER_KEYRING_MIGRATION_FAILURE", e[3202] = "ER_KEYRING_ACCESS_DENIED_ERROR", e[3203] = "ER_KEYRING_MIGRATION_STATUS", e[3204] = "ER_PLUGIN_FAILED_TO_OPEN_TABLES", e[3205] = "ER_PLUGIN_FAILED_TO_OPEN_TABLE", e[3206] = "ER_AUDIT_LOG_NO_KEYRING_PLUGIN_INSTALLED", e[3207] = "ER_AUDIT_LOG_ENCRYPTION_PASSWORD_HAS_NOT_BEEN_SET", e[3208] = "ER_AUDIT_LOG_COULD_NOT_CREATE_AES_KEY", e[3209] = "ER_AUDIT_LOG_ENCRYPTION_PASSWORD_CANNOT_BE_FETCHED", e[3210] = "ER_AUDIT_LOG_JSON_FILTERING_NOT_ENABLED", e[3211] = "ER_AUDIT_LOG_UDF_INSUFFICIENT_PRIVILEGE", e[3212] = "ER_AUDIT_LOG_SUPER_PRIVILEGE_REQUIRED", e[3213] = "ER_COULD_NOT_REINITIALIZE_AUDIT_LOG_FILTERS", e[3214] = "ER_AUDIT_LOG_UDF_INVALID_ARGUMENT_TYPE", e[3215] = "ER_AUDIT_LOG_UDF_INVALID_ARGUMENT_COUNT", e[3216] = "ER_AUDIT_LOG_HAS_NOT_BEEN_INSTALLED", e[3217] = "ER_AUDIT_LOG_UDF_READ_INVALID_MAX_ARRAY_LENGTH_ARG_TYPE", e[3218] = "ER_AUDIT_LOG_UDF_READ_INVALID_MAX_ARRAY_LENGTH_ARG_VALUE", e[3219] = "ER_AUDIT_LOG_JSON_FILTER_PARSING_ERROR", e[3220] = "ER_AUDIT_LOG_JSON_FILTER_NAME_CANNOT_BE_EMPTY", e[3221] = "ER_AUDIT_LOG_JSON_USER_NAME_CANNOT_BE_EMPTY", e[3222] = "ER_AUDIT_LOG_JSON_FILTER_DOES_NOT_EXISTS", e[3223] = "ER_AUDIT_LOG_USER_FIRST_CHARACTER_MUST_BE_ALPHANUMERIC", e[3224] = "ER_AUDIT_LOG_USER_NAME_INVALID_CHARACTER", e[3225] = "ER_AUDIT_LOG_HOST_NAME_INVALID_CHARACTER", e[3226] = "WARN_DEPRECATED_MAXDB_SQL_MODE_FOR_TIMESTAMP", e[3227] = "ER_XA_REPLICATION_FILTERS", e[3228] = "ER_CANT_OPEN_ERROR_LOG", e[3229] = "ER_GROUPING_ON_TIMESTAMP_IN_DST", e[3230] = "ER_CANT_START_SERVER_NAMED_PIPE", e[3231] = "ER_WRITE_SET_EXCEEDS_LIMIT", e[3232] = "ER_DEPRECATED_TLS_VERSION_SESSION_57", e[3233] = "ER_WARN_DEPRECATED_TLS_VERSION_57", e[3234] = "ER_WARN_WRONG_NATIVE_TABLE_STRUCTURE", e[3235] = "ER_AES_INVALID_KDF_NAME", e[3236] = "ER_AES_INVALID_KDF_ITERATIONS", e[3237] = "WARN_AES_KEY_SIZE", e[3238] = "ER_AES_INVALID_KDF_OPTION_SIZE", e[3500] = "ER_UNSUPPORT_COMPRESSED_TEMPORARY_TABLE", e[3501] = "ER_ACL_OPERATION_FAILED", e[3502] = "ER_UNSUPPORTED_INDEX_ALGORITHM", e[3503] = "ER_NO_SUCH_DB", e[3504] = "ER_TOO_BIG_ENUM", e[3505] = "ER_TOO_LONG_SET_ENUM_VALUE", e[3506] = "ER_INVALID_DD_OBJECT", e[3507] = "ER_UPDATING_DD_TABLE", e[3508] = "ER_INVALID_DD_OBJECT_ID", e[3509] = "ER_INVALID_DD_OBJECT_NAME", e[3510] = "ER_TABLESPACE_MISSING_WITH_NAME", e[3511] = "ER_TOO_LONG_ROUTINE_COMMENT", e[3512] = "ER_SP_LOAD_FAILED", e[3513] = "ER_INVALID_BITWISE_OPERANDS_SIZE", e[3514] = "ER_INVALID_BITWISE_AGGREGATE_OPERANDS_SIZE", e[3515] = "ER_WARN_UNSUPPORTED_HINT", e[3516] = "ER_UNEXPECTED_GEOMETRY_TYPE", e[3517] = "ER_SRS_PARSE_ERROR", e[3518] = "ER_SRS_PROJ_PARAMETER_MISSING", e[3519] = "ER_WARN_SRS_NOT_FOUND", e[3520] = "ER_SRS_NOT_CARTESIAN", e[3521] = "ER_SRS_NOT_CARTESIAN_UNDEFINED", e[3522] = "ER_PK_INDEX_CANT_BE_INVISIBLE", e[3523] = "ER_UNKNOWN_AUTHID", e[3524] = "ER_FAILED_ROLE_GRANT", e[3525] = "ER_OPEN_ROLE_TABLES", e[3526] = "ER_FAILED_DEFAULT_ROLES", e[3527] = "ER_COMPONENTS_NO_SCHEME", e[3528] = "ER_COMPONENTS_NO_SCHEME_SERVICE", e[3529] = "ER_COMPONENTS_CANT_LOAD", e[3530] = "ER_ROLE_NOT_GRANTED", e[3531] = "ER_FAILED_REVOKE_ROLE", e[3532] = "ER_RENAME_ROLE", e[3533] = "ER_COMPONENTS_CANT_ACQUIRE_SERVICE_IMPLEMENTATION", e[3534] = "ER_COMPONENTS_CANT_SATISFY_DEPENDENCY", e[3535] = "ER_COMPONENTS_LOAD_CANT_REGISTER_SERVICE_IMPLEMENTATION", e[3536] = "ER_COMPONENTS_LOAD_CANT_INITIALIZE", e[3537] = "ER_COMPONENTS_UNLOAD_NOT_LOADED", e[3538] = "ER_COMPONENTS_UNLOAD_CANT_DEINITIALIZE", e[3539] = "ER_COMPONENTS_CANT_RELEASE_SERVICE", e[3540] = "ER_COMPONENTS_UNLOAD_CANT_UNREGISTER_SERVICE", e[3541] = "ER_COMPONENTS_CANT_UNLOAD", e[3542] = "ER_WARN_UNLOAD_THE_NOT_PERSISTED", e[3543] = "ER_COMPONENT_TABLE_INCORRECT", e[3544] = "ER_COMPONENT_MANIPULATE_ROW_FAILED", e[3545] = "ER_COMPONENTS_UNLOAD_DUPLICATE_IN_GROUP", e[3546] = "ER_CANT_SET_GTID_PURGED_DUE_SETS_CONSTRAINTS", e[3547] = "ER_CANNOT_LOCK_USER_MANAGEMENT_CACHES", e[3548] = "ER_SRS_NOT_FOUND", e[3549] = "ER_VARIABLE_NOT_PERSISTED", e[3550] = "ER_IS_QUERY_INVALID_CLAUSE", e[3551] = "ER_UNABLE_TO_STORE_STATISTICS", e[3552] = "ER_NO_SYSTEM_SCHEMA_ACCESS", e[3553] = "ER_NO_SYSTEM_TABLESPACE_ACCESS", e[3554] = "ER_NO_SYSTEM_TABLE_ACCESS", e[3555] = "ER_NO_SYSTEM_TABLE_ACCESS_FOR_DICTIONARY_TABLE", e[3556] = "ER_NO_SYSTEM_TABLE_ACCESS_FOR_SYSTEM_TABLE", e[3557] = "ER_NO_SYSTEM_TABLE_ACCESS_FOR_TABLE", e[3558] = "ER_INVALID_OPTION_KEY", e[3559] = "ER_INVALID_OPTION_VALUE", e[3560] = "ER_INVALID_OPTION_KEY_VALUE_PAIR", e[3561] = "ER_INVALID_OPTION_START_CHARACTER", e[3562] = "ER_INVALID_OPTION_END_CHARACTER", e[3563] = "ER_INVALID_OPTION_CHARACTERS", e[3564] = "ER_DUPLICATE_OPTION_KEY", e[3565] = "ER_WARN_SRS_NOT_FOUND_AXIS_ORDER", e[3566] = "ER_NO_ACCESS_TO_NATIVE_FCT", e[3567] = "ER_RESET_SOURCE_TO_VALUE_OUT_OF_RANGE", e[3568] = "ER_UNRESOLVED_TABLE_LOCK", e[3569] = "ER_DUPLICATE_TABLE_LOCK", e[3570] = "ER_BINLOG_UNSAFE_SKIP_LOCKED", e[3571] = "ER_BINLOG_UNSAFE_NOWAIT", e[3572] = "ER_LOCK_NOWAIT", e[3573] = "ER_CTE_RECURSIVE_REQUIRES_UNION", e[3574] = "ER_CTE_RECURSIVE_REQUIRES_NONRECURSIVE_FIRST", e[3575] = "ER_CTE_RECURSIVE_FORBIDS_AGGREGATION", e[3576] = "ER_CTE_RECURSIVE_FORBIDDEN_JOIN_ORDER", e[3577] = "ER_CTE_RECURSIVE_REQUIRES_SINGLE_REFERENCE", e[3578] = "ER_SWITCH_TMP_ENGINE", e[3579] = "ER_WINDOW_NO_SUCH_WINDOW", e[3580] = "ER_WINDOW_CIRCULARITY_IN_WINDOW_GRAPH", e[3581] = "ER_WINDOW_NO_CHILD_PARTITIONING", e[3582] = "ER_WINDOW_NO_INHERIT_FRAME", e[3583] = "ER_WINDOW_NO_REDEFINE_ORDER_BY", e[3584] = "ER_WINDOW_FRAME_START_ILLEGAL", e[3585] = "ER_WINDOW_FRAME_END_ILLEGAL", e[3586] = "ER_WINDOW_FRAME_ILLEGAL", e[3587] = "ER_WINDOW_RANGE_FRAME_ORDER_TYPE", e[3588] = "ER_WINDOW_RANGE_FRAME_TEMPORAL_TYPE", e[3589] = "ER_WINDOW_RANGE_FRAME_NUMERIC_TYPE", e[3590] = "ER_WINDOW_RANGE_BOUND_NOT_CONSTANT", e[3591] = "ER_WINDOW_DUPLICATE_NAME", e[3592] = "ER_WINDOW_ILLEGAL_ORDER_BY", e[3593] = "ER_WINDOW_INVALID_WINDOW_FUNC_USE", e[3594] = "ER_WINDOW_INVALID_WINDOW_FUNC_ALIAS_USE", e[3595] = "ER_WINDOW_NESTED_WINDOW_FUNC_USE_IN_WINDOW_SPEC", e[3596] = "ER_WINDOW_ROWS_INTERVAL_USE", e[3597] = "ER_WINDOW_NO_GROUP_ORDER", e[3598] = "ER_WINDOW_EXPLAIN_JSON", e[3599] = "ER_WINDOW_FUNCTION_IGNORES_FRAME", e[3600] = "ER_WL9236_NOW", e[3601] = "ER_INVALID_NO_OF_ARGS", e[3602] = "ER_FIELD_IN_GROUPING_NOT_GROUP_BY", e[3603] = "ER_TOO_LONG_TABLESPACE_COMMENT", e[3604] = "ER_ENGINE_CANT_DROP_TABLE", e[3605] = "ER_ENGINE_CANT_DROP_MISSING_TABLE", e[3606] = "ER_TABLESPACE_DUP_FILENAME", e[3607] = "ER_DB_DROP_RMDIR2", e[3608] = "ER_IMP_NO_FILES_MATCHED", e[3609] = "ER_IMP_SCHEMA_DOES_NOT_EXIST", e[3610] = "ER_IMP_TABLE_ALREADY_EXISTS", e[3611] = "ER_IMP_INCOMPATIBLE_MYSQLD_VERSION", e[3612] = "ER_IMP_INCOMPATIBLE_DD_VERSION", e[3613] = "ER_IMP_INCOMPATIBLE_SDI_VERSION", e[3614] = "ER_WARN_INVALID_HINT", e[3615] = "ER_VAR_DOES_NOT_EXIST", e[3616] = "ER_LONGITUDE_OUT_OF_RANGE", e[3617] = "ER_LATITUDE_OUT_OF_RANGE", e[3618] = "ER_NOT_IMPLEMENTED_FOR_GEOGRAPHIC_SRS", e[3619] = "ER_ILLEGAL_PRIVILEGE_LEVEL", e[3620] = "ER_NO_SYSTEM_VIEW_ACCESS", e[3621] = "ER_COMPONENT_FILTER_FLABBERGASTED", e[3622] = "ER_PART_EXPR_TOO_LONG", e[3623] = "ER_UDF_DROP_DYNAMICALLY_REGISTERED", e[3624] = "ER_UNABLE_TO_STORE_COLUMN_STATISTICS", e[3625] = "ER_UNABLE_TO_UPDATE_COLUMN_STATISTICS", e[3626] = "ER_UNABLE_TO_DROP_COLUMN_STATISTICS", e[3627] = "ER_UNABLE_TO_BUILD_HISTOGRAM", e[3628] = "ER_MANDATORY_ROLE", e[3629] = "ER_MISSING_TABLESPACE_FILE", e[3630] = "ER_PERSIST_ONLY_ACCESS_DENIED_ERROR", e[3631] = "ER_CMD_NEED_SUPER", e[3632] = "ER_PATH_IN_DATADIR", e[3633] = "ER_CLONE_DDL_IN_PROGRESS", e[3634] = "ER_CLONE_TOO_MANY_CONCURRENT_CLONES", e[3635] = "ER_APPLIER_LOG_EVENT_VALIDATION_ERROR", e[3636] = "ER_CTE_MAX_RECURSION_DEPTH", e[3637] = "ER_NOT_HINT_UPDATABLE_VARIABLE", e[3638] = "ER_CREDENTIALS_CONTRADICT_TO_HISTORY", e[3639] = "ER_WARNING_PASSWORD_HISTORY_CLAUSES_VOID", e[3640] = "ER_CLIENT_DOES_NOT_SUPPORT", e[3641] = "ER_I_S_SKIPPED_TABLESPACE", e[3642] = "ER_TABLESPACE_ENGINE_MISMATCH", e[3643] = "ER_WRONG_SRID_FOR_COLUMN", e[3644] = "ER_CANNOT_ALTER_SRID_DUE_TO_INDEX", e[3645] = "ER_WARN_BINLOG_PARTIAL_UPDATES_DISABLED", e[3646] = "ER_WARN_BINLOG_V1_ROW_EVENTS_DISABLED", e[3647] = "ER_WARN_BINLOG_PARTIAL_UPDATES_SUGGESTS_PARTIAL_IMAGES", e[3648] = "ER_COULD_NOT_APPLY_JSON_DIFF", e[3649] = "ER_CORRUPTED_JSON_DIFF", e[3650] = "ER_RESOURCE_GROUP_EXISTS", e[3651] = "ER_RESOURCE_GROUP_NOT_EXISTS", e[3652] = "ER_INVALID_VCPU_ID", e[3653] = "ER_INVALID_VCPU_RANGE", e[3654] = "ER_INVALID_THREAD_PRIORITY", e[3655] = "ER_DISALLOWED_OPERATION", e[3656] = "ER_RESOURCE_GROUP_BUSY", e[3657] = "ER_RESOURCE_GROUP_DISABLED", e[3658] = "ER_FEATURE_UNSUPPORTED", e[3659] = "ER_ATTRIBUTE_IGNORED", e[3660] = "ER_INVALID_THREAD_ID", e[3661] = "ER_RESOURCE_GROUP_BIND_FAILED", e[3662] = "ER_INVALID_USE_OF_FORCE_OPTION", e[3663] = "ER_GROUP_REPLICATION_COMMAND_FAILURE", e[3664] = "ER_SDI_OPERATION_FAILED", e[3665] = "ER_MISSING_JSON_TABLE_VALUE", e[3666] = "ER_WRONG_JSON_TABLE_VALUE", e[3667] = "ER_TF_MUST_HAVE_ALIAS", e[3668] = "ER_TF_FORBIDDEN_JOIN_TYPE", e[3669] = "ER_JT_VALUE_OUT_OF_RANGE", e[3670] = "ER_JT_MAX_NESTED_PATH", e[3671] = "ER_PASSWORD_EXPIRATION_NOT_SUPPORTED_BY_AUTH_METHOD", e[3672] = "ER_INVALID_GEOJSON_CRS_NOT_TOP_LEVEL", e[3673] = "ER_BAD_NULL_ERROR_NOT_IGNORED", e[3674] = "WARN_USELESS_SPATIAL_INDEX", e[3675] = "ER_DISK_FULL_NOWAIT", e[3676] = "ER_PARSE_ERROR_IN_DIGEST_FN", e[3677] = "ER_UNDISCLOSED_PARSE_ERROR_IN_DIGEST_FN", e[3678] = "ER_SCHEMA_DIR_EXISTS", e[3679] = "ER_SCHEMA_DIR_MISSING", e[3680] = "ER_SCHEMA_DIR_CREATE_FAILED", e[3681] = "ER_SCHEMA_DIR_UNKNOWN", e[3682] = "ER_ONLY_IMPLEMENTED_FOR_SRID_0_AND_4326", e[3683] = "ER_BINLOG_EXPIRE_LOG_DAYS_AND_SECS_USED_TOGETHER", e[3684] = "ER_REGEXP_BUFFER_OVERFLOW", e[3685] = "ER_REGEXP_ILLEGAL_ARGUMENT", e[3686] = "ER_REGEXP_INDEX_OUTOFBOUNDS_ERROR", e[3687] = "ER_REGEXP_INTERNAL_ERROR", e[3688] = "ER_REGEXP_RULE_SYNTAX", e[3689] = "ER_REGEXP_BAD_ESCAPE_SEQUENCE", e[3690] = "ER_REGEXP_UNIMPLEMENTED", e[3691] = "ER_REGEXP_MISMATCHED_PAREN", e[3692] = "ER_REGEXP_BAD_INTERVAL", e[3693] = "ER_REGEXP_MAX_LT_MIN", e[3694] = "ER_REGEXP_INVALID_BACK_REF", e[3695] = "ER_REGEXP_LOOK_BEHIND_LIMIT", e[3696] = "ER_REGEXP_MISSING_CLOSE_BRACKET", e[3697] = "ER_REGEXP_INVALID_RANGE", e[3698] = "ER_REGEXP_STACK_OVERFLOW", e[3699] = "ER_REGEXP_TIME_OUT", e[3700] = "ER_REGEXP_PATTERN_TOO_BIG", e[3701] = "ER_CANT_SET_ERROR_LOG_SERVICE", e[3702] = "ER_EMPTY_PIPELINE_FOR_ERROR_LOG_SERVICE", e[3703] = "ER_COMPONENT_FILTER_DIAGNOSTICS", e[3704] = "ER_NOT_IMPLEMENTED_FOR_CARTESIAN_SRS", e[3705] = "ER_NOT_IMPLEMENTED_FOR_PROJECTED_SRS", e[3706] = "ER_NONPOSITIVE_RADIUS", e[3707] = "ER_RESTART_SERVER_FAILED", e[3708] = "ER_SRS_MISSING_MANDATORY_ATTRIBUTE", e[3709] = "ER_SRS_MULTIPLE_ATTRIBUTE_DEFINITIONS", e[3710] = "ER_SRS_NAME_CANT_BE_EMPTY_OR_WHITESPACE", e[3711] = "ER_SRS_ORGANIZATION_CANT_BE_EMPTY_OR_WHITESPACE", e[3712] = "ER_SRS_ID_ALREADY_EXISTS", e[3713] = "ER_WARN_SRS_ID_ALREADY_EXISTS", e[3714] = "ER_CANT_MODIFY_SRID_0", e[3715] = "ER_WARN_RESERVED_SRID_RANGE", e[3716] = "ER_CANT_MODIFY_SRS_USED_BY_COLUMN", e[3717] = "ER_SRS_INVALID_CHARACTER_IN_ATTRIBUTE", e[3718] = "ER_SRS_ATTRIBUTE_STRING_TOO_LONG", e[3719] = "ER_DEPRECATED_UTF8_ALIAS", e[3720] = "ER_DEPRECATED_NATIONAL", e[3721] = "ER_INVALID_DEFAULT_UTF8MB4_COLLATION", e[3722] = "ER_UNABLE_TO_COLLECT_LOG_STATUS", e[3723] = "ER_RESERVED_TABLESPACE_NAME", e[3724] = "ER_UNABLE_TO_SET_OPTION", e[3725] = "ER_REPLICA_POSSIBLY_DIVERGED_AFTER_DDL", e[3726] = "ER_SRS_NOT_GEOGRAPHIC", e[3727] = "ER_POLYGON_TOO_LARGE", e[3728] = "ER_SPATIAL_UNIQUE_INDEX", e[3729] = "ER_INDEX_TYPE_NOT_SUPPORTED_FOR_SPATIAL_INDEX", e[3730] = "ER_FK_CANNOT_DROP_PARENT", e[3731] = "ER_GEOMETRY_PARAM_LONGITUDE_OUT_OF_RANGE", e[3732] = "ER_GEOMETRY_PARAM_LATITUDE_OUT_OF_RANGE", e[3733] = "ER_FK_CANNOT_USE_VIRTUAL_COLUMN", e[3734] = "ER_FK_NO_COLUMN_PARENT", e[3735] = "ER_CANT_SET_ERROR_SUPPRESSION_LIST", e[3736] = "ER_SRS_GEOGCS_INVALID_AXES", e[3737] = "ER_SRS_INVALID_SEMI_MAJOR_AXIS", e[3738] = "ER_SRS_INVALID_INVERSE_FLATTENING", e[3739] = "ER_SRS_INVALID_ANGULAR_UNIT", e[3740] = "ER_SRS_INVALID_PRIME_MERIDIAN", e[3741] = "ER_TRANSFORM_SOURCE_SRS_NOT_SUPPORTED", e[3742] = "ER_TRANSFORM_TARGET_SRS_NOT_SUPPORTED", e[3743] = "ER_TRANSFORM_SOURCE_SRS_MISSING_TOWGS84", e[3744] = "ER_TRANSFORM_TARGET_SRS_MISSING_TOWGS84", e[3745] = "ER_TEMP_TABLE_PREVENTS_SWITCH_SESSION_BINLOG_FORMAT", e[3746] = "ER_TEMP_TABLE_PREVENTS_SWITCH_GLOBAL_BINLOG_FORMAT", e[3747] = "ER_RUNNING_APPLIER_PREVENTS_SWITCH_GLOBAL_BINLOG_FORMAT", e[3748] = "ER_CLIENT_GTID_UNSAFE_CREATE_DROP_TEMP_TABLE_IN_TRX_IN_SBR", e[3749] = "ER_XA_CANT_CREATE_MDL_BACKUP", e[3750] = "ER_TABLE_WITHOUT_PK", e[3751] = "ER_WARN_DATA_TRUNCATED_FUNCTIONAL_INDEX", e[3752] = "ER_WARN_DATA_OUT_OF_RANGE_FUNCTIONAL_INDEX", e[3753] = "ER_FUNCTIONAL_INDEX_ON_JSON_OR_GEOMETRY_FUNCTION", e[3754] = "ER_FUNCTIONAL_INDEX_REF_AUTO_INCREMENT", e[3755] = "ER_CANNOT_DROP_COLUMN_FUNCTIONAL_INDEX", e[3756] = "ER_FUNCTIONAL_INDEX_PRIMARY_KEY", e[3757] = "ER_FUNCTIONAL_INDEX_ON_LOB", e[3758] = "ER_FUNCTIONAL_INDEX_FUNCTION_IS_NOT_ALLOWED", e[3759] = "ER_FULLTEXT_FUNCTIONAL_INDEX", e[3760] = "ER_SPATIAL_FUNCTIONAL_INDEX", e[3761] = "ER_WRONG_KEY_COLUMN_FUNCTIONAL_INDEX", e[3762] = "ER_FUNCTIONAL_INDEX_ON_FIELD", e[3763] = "ER_GENERATED_COLUMN_NAMED_FUNCTION_IS_NOT_ALLOWED", e[3764] = "ER_GENERATED_COLUMN_ROW_VALUE", e[3765] = "ER_GENERATED_COLUMN_VARIABLES", e[3766] = "ER_DEPENDENT_BY_DEFAULT_GENERATED_VALUE", e[3767] = "ER_DEFAULT_VAL_GENERATED_NON_PRIOR", e[3768] = "ER_DEFAULT_VAL_GENERATED_REF_AUTO_INC", e[3769] = "ER_DEFAULT_VAL_GENERATED_FUNCTION_IS_NOT_ALLOWED", e[3770] = "ER_DEFAULT_VAL_GENERATED_NAMED_FUNCTION_IS_NOT_ALLOWED", e[3771] = "ER_DEFAULT_VAL_GENERATED_ROW_VALUE", e[3772] = "ER_DEFAULT_VAL_GENERATED_VARIABLES", e[3773] = "ER_DEFAULT_AS_VAL_GENERATED", e[3774] = "ER_UNSUPPORTED_ACTION_ON_DEFAULT_VAL_GENERATED", e[3775] = "ER_GTID_UNSAFE_ALTER_ADD_COL_WITH_DEFAULT_EXPRESSION", e[3776] = "ER_FK_CANNOT_CHANGE_ENGINE", e[3777] = "ER_WARN_DEPRECATED_USER_SET_EXPR", e[3778] = "ER_WARN_DEPRECATED_UTF8MB3_COLLATION", e[3779] = "ER_WARN_DEPRECATED_NESTED_COMMENT_SYNTAX", e[3780] = "ER_FK_INCOMPATIBLE_COLUMNS", e[3781] = "ER_GR_HOLD_WAIT_TIMEOUT", e[3782] = "ER_GR_HOLD_KILLED", e[3783] = "ER_GR_HOLD_MEMBER_STATUS_ERROR", e[3784] = "ER_RPL_ENCRYPTION_FAILED_TO_FETCH_KEY", e[3785] = "ER_RPL_ENCRYPTION_KEY_NOT_FOUND", e[3786] = "ER_RPL_ENCRYPTION_KEYRING_INVALID_KEY", e[3787] = "ER_RPL_ENCRYPTION_HEADER_ERROR", e[3788] = "ER_RPL_ENCRYPTION_FAILED_TO_ROTATE_LOGS", e[3789] = "ER_RPL_ENCRYPTION_KEY_EXISTS_UNEXPECTED", e[3790] = "ER_RPL_ENCRYPTION_FAILED_TO_GENERATE_KEY", e[3791] = "ER_RPL_ENCRYPTION_FAILED_TO_STORE_KEY", e[3792] = "ER_RPL_ENCRYPTION_FAILED_TO_REMOVE_KEY", e[3793] = "ER_RPL_ENCRYPTION_UNABLE_TO_CHANGE_OPTION", e[3794] = "ER_RPL_ENCRYPTION_MASTER_KEY_RECOVERY_FAILED", e[3795] = "ER_SLOW_LOG_MODE_IGNORED_WHEN_NOT_LOGGING_TO_FILE", e[3796] = "ER_GRP_TRX_CONSISTENCY_NOT_ALLOWED", e[3797] = "ER_GRP_TRX_CONSISTENCY_BEFORE", e[3798] = "ER_GRP_TRX_CONSISTENCY_AFTER_ON_TRX_BEGIN", e[3799] = "ER_GRP_TRX_CONSISTENCY_BEGIN_NOT_ALLOWED", e[3800] = "ER_FUNCTIONAL_INDEX_ROW_VALUE_IS_NOT_ALLOWED", e[3801] = "ER_RPL_ENCRYPTION_FAILED_TO_ENCRYPT", e[3802] = "ER_PAGE_TRACKING_NOT_STARTED", e[3803] = "ER_PAGE_TRACKING_RANGE_NOT_TRACKED", e[3804] = "ER_PAGE_TRACKING_CANNOT_PURGE", e[3805] = "ER_RPL_ENCRYPTION_CANNOT_ROTATE_BINLOG_MASTER_KEY", e[3806] = "ER_BINLOG_MASTER_KEY_RECOVERY_OUT_OF_COMBINATION", e[3807] = "ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_OPERATE_KEY", e[3808] = "ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_ROTATE_LOGS", e[3809] = "ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_REENCRYPT_LOG", e[3810] = "ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_CLEANUP_UNUSED_KEYS", e[3811] = "ER_BINLOG_MASTER_KEY_ROTATION_FAIL_TO_CLEANUP_AUX_KEY", e[3812] = "ER_NON_BOOLEAN_EXPR_FOR_CHECK_CONSTRAINT", e[3813] = "ER_COLUMN_CHECK_CONSTRAINT_REFERENCES_OTHER_COLUMN", e[3814] = "ER_CHECK_CONSTRAINT_NAMED_FUNCTION_IS_NOT_ALLOWED", e[3815] = "ER_CHECK_CONSTRAINT_FUNCTION_IS_NOT_ALLOWED", e[3816] = "ER_CHECK_CONSTRAINT_VARIABLES", e[3817] = "ER_CHECK_CONSTRAINT_ROW_VALUE", e[3818] = "ER_CHECK_CONSTRAINT_REFERS_AUTO_INCREMENT_COLUMN", e[3819] = "ER_CHECK_CONSTRAINT_VIOLATED", e[3820] = "ER_CHECK_CONSTRAINT_REFERS_UNKNOWN_COLUMN", e[3821] = "ER_CHECK_CONSTRAINT_NOT_FOUND", e[3822] = "ER_CHECK_CONSTRAINT_DUP_NAME", e[3823] = "ER_CHECK_CONSTRAINT_CLAUSE_USING_FK_REFER_ACTION_COLUMN", e[3824] = "WARN_UNENCRYPTED_TABLE_IN_ENCRYPTED_DB", e[3825] = "ER_INVALID_ENCRYPTION_REQUEST", e[3826] = "ER_CANNOT_SET_TABLE_ENCRYPTION", e[3827] = "ER_CANNOT_SET_DATABASE_ENCRYPTION", e[3828] = "ER_CANNOT_SET_TABLESPACE_ENCRYPTION", e[3829] = "ER_TABLESPACE_CANNOT_BE_ENCRYPTED", e[3830] = "ER_TABLESPACE_CANNOT_BE_DECRYPTED", e[3831] = "ER_TABLESPACE_TYPE_UNKNOWN", e[3832] = "ER_TARGET_TABLESPACE_UNENCRYPTED", e[3833] = "ER_CANNOT_USE_ENCRYPTION_CLAUSE", e[3834] = "ER_INVALID_MULTIPLE_CLAUSES", e[3835] = "ER_UNSUPPORTED_USE_OF_GRANT_AS", e[3836] = "ER_UKNOWN_AUTH_ID_OR_ACCESS_DENIED_FOR_GRANT_AS", e[3837] = "ER_DEPENDENT_BY_FUNCTIONAL_INDEX", e[3838] = "ER_PLUGIN_NOT_EARLY", e[3839] = "ER_INNODB_REDO_LOG_ARCHIVE_START_SUBDIR_PATH", e[3840] = "ER_INNODB_REDO_LOG_ARCHIVE_START_TIMEOUT", e[3841] = "ER_INNODB_REDO_LOG_ARCHIVE_DIRS_INVALID", e[3842] = "ER_INNODB_REDO_LOG_ARCHIVE_LABEL_NOT_FOUND", e[3843] = "ER_INNODB_REDO_LOG_ARCHIVE_DIR_EMPTY", e[3844] = "ER_INNODB_REDO_LOG_ARCHIVE_NO_SUCH_DIR", e[3845] = "ER_INNODB_REDO_LOG_ARCHIVE_DIR_CLASH", e[3846] = "ER_INNODB_REDO_LOG_ARCHIVE_DIR_PERMISSIONS", e[3847] = "ER_INNODB_REDO_LOG_ARCHIVE_FILE_CREATE", e[3848] = "ER_INNODB_REDO_LOG_ARCHIVE_ACTIVE", e[3849] = "ER_INNODB_REDO_LOG_ARCHIVE_INACTIVE", e[3850] = "ER_INNODB_REDO_LOG_ARCHIVE_FAILED", e[3851] = "ER_INNODB_REDO_LOG_ARCHIVE_SESSION", e[3852] = "ER_STD_REGEX_ERROR", e[3853] = "ER_INVALID_JSON_TYPE", e[3854] = "ER_CANNOT_CONVERT_STRING", e[3855] = "ER_DEPENDENT_BY_PARTITION_FUNC", e[3856] = "ER_WARN_DEPRECATED_FLOAT_AUTO_INCREMENT", e[3857] = "ER_RPL_CANT_STOP_REPLICA_WHILE_LOCKED_BACKUP", e[3858] = "ER_WARN_DEPRECATED_FLOAT_DIGITS", e[3859] = "ER_WARN_DEPRECATED_FLOAT_UNSIGNED", e[3860] = "ER_WARN_DEPRECATED_INTEGER_DISPLAY_WIDTH", e[3861] = "ER_WARN_DEPRECATED_ZEROFILL", e[3862] = "ER_CLONE_DONOR", e[3863] = "ER_CLONE_PROTOCOL", e[3864] = "ER_CLONE_DONOR_VERSION", e[3865] = "ER_CLONE_OS", e[3866] = "ER_CLONE_PLATFORM", e[3867] = "ER_CLONE_CHARSET", e[3868] = "ER_CLONE_CONFIG", e[3869] = "ER_CLONE_SYS_CONFIG", e[3870] = "ER_CLONE_PLUGIN_MATCH", e[3871] = "ER_CLONE_LOOPBACK", e[3872] = "ER_CLONE_ENCRYPTION", e[3873] = "ER_CLONE_DISK_SPACE", e[3874] = "ER_CLONE_IN_PROGRESS", e[3875] = "ER_CLONE_DISALLOWED", e[3876] = "ER_CANNOT_GRANT_ROLES_TO_ANONYMOUS_USER", e[3877] = "ER_SECONDARY_ENGINE_PLUGIN", e[3878] = "ER_SECOND_PASSWORD_CANNOT_BE_EMPTY", e[3879] = "ER_DB_ACCESS_DENIED", e[3880] = "ER_DA_AUTH_ID_WITH_SYSTEM_USER_PRIV_IN_MANDATORY_ROLES", e[3881] = "ER_DA_RPL_GTID_TABLE_CANNOT_OPEN", e[3882] = "ER_GEOMETRY_IN_UNKNOWN_LENGTH_UNIT", e[3883] = "ER_DA_PLUGIN_INSTALL_ERROR", e[3884] = "ER_NO_SESSION_TEMP", e[3885] = "ER_DA_UNKNOWN_ERROR_NUMBER", e[3886] = "ER_COLUMN_CHANGE_SIZE", e[3887] = "ER_REGEXP_INVALID_CAPTURE_GROUP_NAME", e[3888] = "ER_DA_SSL_LIBRARY_ERROR", e[3889] = "ER_SECONDARY_ENGINE", e[3890] = "ER_SECONDARY_ENGINE_DDL", e[3891] = "ER_INCORRECT_CURRENT_PASSWORD", e[3892] = "ER_MISSING_CURRENT_PASSWORD", e[3893] = "ER_CURRENT_PASSWORD_NOT_REQUIRED", e[3894] = "ER_PASSWORD_CANNOT_BE_RETAINED_ON_PLUGIN_CHANGE", e[3895] = "ER_CURRENT_PASSWORD_CANNOT_BE_RETAINED", e[3896] = "ER_PARTIAL_REVOKES_EXIST", e[3897] = "ER_CANNOT_GRANT_SYSTEM_PRIV_TO_MANDATORY_ROLE", e[3898] = "ER_XA_REPLICATION_FILTERS", e[3899] = "ER_UNSUPPORTED_SQL_MODE", e[3900] = "ER_REGEXP_INVALID_FLAG", e[3901] = "ER_PARTIAL_REVOKE_AND_DB_GRANT_BOTH_EXISTS", e[3902] = "ER_UNIT_NOT_FOUND", e[3903] = "ER_INVALID_JSON_VALUE_FOR_FUNC_INDEX", e[3904] = "ER_JSON_VALUE_OUT_OF_RANGE_FOR_FUNC_INDEX", e[3905] = "ER_EXCEEDED_MV_KEYS_NUM", e[3906] = "ER_EXCEEDED_MV_KEYS_SPACE", e[3907] = "ER_FUNCTIONAL_INDEX_DATA_IS_TOO_LONG", e[3908] = "ER_WRONG_MVI_VALUE", e[3909] = "ER_WARN_FUNC_INDEX_NOT_APPLICABLE", e[3910] = "ER_GRP_RPL_UDF_ERROR", e[3911] = "ER_UPDATE_GTID_PURGED_WITH_GR", e[3912] = "ER_GROUPING_ON_TIMESTAMP_IN_DST", e[3913] = "ER_TABLE_NAME_CAUSES_TOO_LONG_PATH", e[3914] = "ER_AUDIT_LOG_INSUFFICIENT_PRIVILEGE", e[3915] = "ER_AUDIT_LOG_PASSWORD_HAS_BEEN_COPIED", e[3916] = "ER_DA_GRP_RPL_STARTED_AUTO_REJOIN", e[3917] = "ER_SYSVAR_CHANGE_DURING_QUERY", e[3918] = "ER_GLOBSTAT_CHANGE_DURING_QUERY", e[3919] = "ER_GRP_RPL_MESSAGE_SERVICE_INIT_FAILURE", e[3920] = "ER_CHANGE_SOURCE_WRONG_COMPRESSION_ALGORITHM_CLIENT", e[3921] = "ER_CHANGE_SOURCE_WRONG_COMPRESSION_LEVEL_CLIENT", e[3922] = "ER_WRONG_COMPRESSION_ALGORITHM_CLIENT", e[3923] = "ER_WRONG_COMPRESSION_LEVEL_CLIENT", e[3924] = "ER_CHANGE_SOURCE_WRONG_COMPRESSION_ALGORITHM_LIST_CLIENT", e[3925] = "ER_CLIENT_PRIVILEGE_CHECKS_USER_CANNOT_BE_ANONYMOUS", e[3926] = "ER_CLIENT_PRIVILEGE_CHECKS_USER_DOES_NOT_EXIST", e[3927] = "ER_CLIENT_PRIVILEGE_CHECKS_USER_CORRUPT", e[3928] = "ER_CLIENT_PRIVILEGE_CHECKS_USER_NEEDS_RPL_APPLIER_PRIV", e[3929] = "ER_WARN_DA_PRIVILEGE_NOT_REGISTERED", e[3930] = "ER_CLIENT_KEYRING_UDF_KEY_INVALID", e[3931] = "ER_CLIENT_KEYRING_UDF_KEY_TYPE_INVALID", e[3932] = "ER_CLIENT_KEYRING_UDF_KEY_TOO_LONG", e[3933] = "ER_CLIENT_KEYRING_UDF_KEY_TYPE_TOO_LONG", e[3934] = "ER_JSON_SCHEMA_VALIDATION_ERROR_WITH_DETAILED_REPORT", e[3935] = "ER_DA_UDF_INVALID_CHARSET_SPECIFIED", e[3936] = "ER_DA_UDF_INVALID_CHARSET", e[3937] = "ER_DA_UDF_INVALID_COLLATION", e[3938] = "ER_DA_UDF_INVALID_EXTENSION_ARGUMENT_TYPE", e[3939] = "ER_MULTIPLE_CONSTRAINTS_WITH_SAME_NAME", e[3940] = "ER_CONSTRAINT_NOT_FOUND", e[3941] = "ER_ALTER_CONSTRAINT_ENFORCEMENT_NOT_SUPPORTED", e[3942] = "ER_TABLE_VALUE_CONSTRUCTOR_MUST_HAVE_COLUMNS", e[3943] = "ER_TABLE_VALUE_CONSTRUCTOR_CANNOT_HAVE_DEFAULT", e[3944] = "ER_CLIENT_QUERY_FAILURE_INVALID_NON_ROW_FORMAT", e[3945] = "ER_REQUIRE_ROW_FORMAT_INVALID_VALUE", e[3946] = "ER_FAILED_TO_DETERMINE_IF_ROLE_IS_MANDATORY", e[3947] = "ER_FAILED_TO_FETCH_MANDATORY_ROLE_LIST", e[3948] = "ER_CLIENT_LOCAL_FILES_DISABLED", e[3949] = "ER_IMP_INCOMPATIBLE_CFG_VERSION", e[3950] = "ER_DA_OOM", e[3951] = "ER_DA_UDF_INVALID_ARGUMENT_TO_SET_CHARSET", e[3952] = "ER_DA_UDF_INVALID_RETURN_TYPE_TO_SET_CHARSET", e[3953] = "ER_MULTIPLE_INTO_CLAUSES", e[3954] = "ER_MISPLACED_INTO", e[3955] = "ER_USER_ACCESS_DENIED_FOR_USER_ACCOUNT_BLOCKED_BY_PASSWORD_LOCK", e[3956] = "ER_WARN_DEPRECATED_YEAR_UNSIGNED", e[3957] = "ER_CLONE_NETWORK_PACKET", e[3958] = "ER_SDI_OPERATION_FAILED_MISSING_RECORD", e[3959] = "ER_DEPENDENT_BY_CHECK_CONSTRAINT", e[3960] = "ER_GRP_OPERATION_NOT_ALLOWED_GR_MUST_STOP", e[3961] = "ER_WARN_DEPRECATED_JSON_TABLE_ON_ERROR_ON_EMPTY", e[3962] = "ER_WARN_DEPRECATED_INNER_INTO", e[3963] = "ER_WARN_DEPRECATED_VALUES_FUNCTION_ALWAYS_NULL", e[3964] = "ER_WARN_DEPRECATED_SQL_CALC_FOUND_ROWS", e[3965] = "ER_WARN_DEPRECATED_FOUND_ROWS", e[3966] = "ER_MISSING_JSON_VALUE", e[3967] = "ER_MULTIPLE_JSON_VALUES", e[3968] = "ER_HOSTNAME_TOO_LONG", e[3969] = "ER_WARN_CLIENT_DEPRECATED_PARTITION_PREFIX_KEY", e[3970] = "ER_GROUP_REPLICATION_USER_EMPTY_MSG", e[3971] = "ER_GROUP_REPLICATION_USER_MANDATORY_MSG", e[3972] = "ER_GROUP_REPLICATION_PASSWORD_LENGTH", e[3973] = "ER_SUBQUERY_TRANSFORM_REJECTED", e[3974] = "ER_DA_GRP_RPL_RECOVERY_ENDPOINT_FORMAT", e[3975] = "ER_DA_GRP_RPL_RECOVERY_ENDPOINT_INVALID", e[3976] = "ER_WRONG_VALUE_FOR_VAR_PLUS_ACTIONABLE_PART", e[3977] = "ER_STATEMENT_NOT_ALLOWED_AFTER_START_TRANSACTION", e[3978] = "ER_FOREIGN_KEY_WITH_ATOMIC_CREATE_SELECT", e[3979] = "ER_NOT_ALLOWED_WITH_START_TRANSACTION", e[3980] = "ER_INVALID_JSON_ATTRIBUTE", e[3981] = "ER_ENGINE_ATTRIBUTE_NOT_SUPPORTED", e[3982] = "ER_INVALID_USER_ATTRIBUTE_JSON", e[3983] = "ER_INNODB_REDO_DISABLED", e[3984] = "ER_INNODB_REDO_ARCHIVING_ENABLED", e[3985] = "ER_MDL_OUT_OF_RESOURCES", e[3986] = "ER_IMPLICIT_COMPARISON_FOR_JSON", e[3987] = "ER_FUNCTION_DOES_NOT_SUPPORT_CHARACTER_SET", e[3988] = "ER_IMPOSSIBLE_STRING_CONVERSION", e[3989] = "ER_SCHEMA_READ_ONLY", e[3990] = "ER_RPL_ASYNC_RECONNECT_GTID_MODE_OFF", e[3991] = "ER_RPL_ASYNC_RECONNECT_AUTO_POSITION_OFF", e[3992] = "ER_DISABLE_GTID_MODE_REQUIRES_ASYNC_RECONNECT_OFF", e[3993] = "ER_DISABLE_AUTO_POSITION_REQUIRES_ASYNC_RECONNECT_OFF", e[3994] = "ER_INVALID_PARAMETER_USE", e[3995] = "ER_CHARACTER_SET_MISMATCH", e[3996] = "ER_WARN_VAR_VALUE_CHANGE_NOT_SUPPORTED", e[3997] = "ER_INVALID_TIME_ZONE_INTERVAL", e[3998] = "ER_INVALID_CAST", e[3999] = "ER_HYPERGRAPH_NOT_SUPPORTED_YET", e[4e3] = "ER_WARN_HYPERGRAPH_EXPERIMENTAL", e[4001] = "ER_DA_NO_ERROR_LOG_PARSER_CONFIGURED", e[4002] = "ER_DA_ERROR_LOG_TABLE_DISABLED", e[4003] = "ER_DA_ERROR_LOG_MULTIPLE_FILTERS", e[4004] = "ER_DA_CANT_OPEN_ERROR_LOG", e[4005] = "ER_USER_REFERENCED_AS_DEFINER", e[4006] = "ER_CANNOT_USER_REFERENCED_AS_DEFINER", e[4007] = "ER_REGEX_NUMBER_TOO_BIG", e[4008] = "ER_SPVAR_NONINTEGER_TYPE", e[4009] = "WARN_UNSUPPORTED_ACL_TABLES_READ", e[4010] = "ER_BINLOG_UNSAFE_ACL_TABLE_READ_IN_DML_DDL", e[4011] = "ER_STOP_REPLICA_MONITOR_IO_THREAD_TIMEOUT", e[4012] = "ER_STARTING_REPLICA_MONITOR_IO_THREAD", e[4013] = "ER_CANT_USE_ANONYMOUS_TO_GTID_WITH_GTID_MODE_NOT_ON", e[4014] = "ER_CANT_COMBINE_ANONYMOUS_TO_GTID_AND_AUTOPOSITION", e[4015] = "ER_ASSIGN_GTIDS_TO_ANONYMOUS_TRANSACTIONS_REQUIRES_GTID_MODE_ON", e[4016] = "ER_SQL_REPLICA_SKIP_COUNTER_USED_WITH_GTID_MODE_ON", e[4017] = "ER_USING_ASSIGN_GTIDS_TO_ANONYMOUS_TRANSACTIONS_AS_LOCAL_OR_UUID", e[4018] = "ER_CANT_SET_ANONYMOUS_TO_GTID_AND_WAIT_UNTIL_SQL_THD_AFTER_GTIDS", e[4019] = "ER_CANT_SET_SQL_AFTER_OR_BEFORE_GTIDS_WITH_ANONYMOUS_TO_GTID", e[4020] = "ER_ANONYMOUS_TO_GTID_UUID_SAME_AS_GROUP_NAME", e[4021] = "ER_CANT_USE_SAME_UUID_AS_GROUP_NAME", e[4022] = "ER_GRP_RPL_RECOVERY_CHANNEL_STILL_RUNNING", e[4023] = "ER_INNODB_INVALID_AUTOEXTEND_SIZE_VALUE", e[4024] = "ER_INNODB_INCOMPATIBLE_WITH_TABLESPACE", e[4025] = "ER_INNODB_AUTOEXTEND_SIZE_OUT_OF_RANGE", e[4026] = "ER_CANNOT_USE_AUTOEXTEND_SIZE_CLAUSE", e[4027] = "ER_ROLE_GRANTED_TO_ITSELF", e[4028] = "ER_TABLE_MUST_HAVE_A_VISIBLE_COLUMN", e[4029] = "ER_INNODB_COMPRESSION_FAILURE", e[4030] = "ER_WARN_ASYNC_CONN_FAILOVER_NETWORK_NAMESPACE", e[4031] = "ER_CLIENT_INTERACTION_TIMEOUT", e[4032] = "ER_INVALID_CAST_TO_GEOMETRY", e[4033] = "ER_INVALID_CAST_POLYGON_RING_DIRECTION", e[4034] = "ER_GIS_DIFFERENT_SRIDS_AGGREGATION", e[4035] = "ER_RELOAD_KEYRING_FAILURE", e[4036] = "ER_SDI_GET_KEYS_INVALID_TABLESPACE", e[4037] = "ER_CHANGE_RPL_SRC_WRONG_COMPRESSION_ALGORITHM_SIZE", e[4038] = "ER_WARN_DEPRECATED_TLS_VERSION_FOR_CHANNEL_CLI", e[4039] = "ER_CANT_USE_SAME_UUID_AS_VIEW_CHANGE_UUID", e[4040] = "ER_ANONYMOUS_TO_GTID_UUID_SAME_AS_VIEW_CHANGE_UUID", e[4041] = "ER_GRP_RPL_VIEW_CHANGE_UUID_FAIL_GET_VARIABLE", e[4042] = "ER_WARN_ADUIT_LOG_MAX_SIZE_AND_PRUNE_SECONDS", e[4043] = "ER_WARN_ADUIT_LOG_MAX_SIZE_CLOSE_TO_ROTATE_ON_SIZE", e[4044] = "ER_KERBEROS_CREATE_USER", e[4045] = "ER_INSTALL_PLUGIN_CONFLICT_CLIENT", e[4046] = "ER_DA_ERROR_LOG_COMPONENT_FLUSH_FAILED", e[4047] = "ER_WARN_SQL_AFTER_MTS_GAPS_GAP_NOT_CALCULATED", e[4048] = "ER_INVALID_ASSIGNMENT_TARGET", e[4049] = "ER_OPERATION_NOT_ALLOWED_ON_GR_SECONDARY", e[4050] = "ER_GRP_RPL_FAILOVER_CHANNEL_STATUS_PROPAGATION", e[4051] = "ER_WARN_AUDIT_LOG_FORMAT_UNIX_TIMESTAMP_ONLY_WHEN_JSON", e[4052] = "ER_INVALID_MFA_PLUGIN_SPECIFIED", e[4053] = "ER_IDENTIFIED_BY_UNSUPPORTED", e[4054] = "ER_INVALID_PLUGIN_FOR_REGISTRATION", e[4055] = "ER_PLUGIN_REQUIRES_REGISTRATION", e[4056] = "ER_MFA_METHOD_EXISTS", e[4057] = "ER_MFA_METHOD_NOT_EXISTS", e[4058] = "ER_AUTHENTICATION_POLICY_MISMATCH", e[4059] = "ER_PLUGIN_REGISTRATION_DONE", e[4060] = "ER_INVALID_USER_FOR_REGISTRATION", e[4061] = "ER_USER_REGISTRATION_FAILED", e[4062] = "ER_MFA_METHODS_INVALID_ORDER", e[4063] = "ER_MFA_METHODS_IDENTICAL", e[4064] = "ER_INVALID_MFA_OPERATIONS_FOR_PASSWORDLESS_USER", e[4065] = "ER_CHANGE_REPLICATION_SOURCE_NO_OPTIONS_FOR_GTID_ONLY", e[4066] = "ER_CHANGE_REP_SOURCE_CANT_DISABLE_REQ_ROW_FORMAT_WITH_GTID_ONLY", e[4067] = "ER_CHANGE_REP_SOURCE_CANT_DISABLE_AUTO_POSITION_WITH_GTID_ONLY", e[4068] = "ER_CHANGE_REP_SOURCE_CANT_DISABLE_GTID_ONLY_WITHOUT_POSITIONS", e[4069] = "ER_CHANGE_REP_SOURCE_CANT_DISABLE_AUTO_POS_WITHOUT_POSITIONS", e[4070] = "ER_CHANGE_REP_SOURCE_GR_CHANNEL_WITH_GTID_MODE_NOT_ON", e[4071] = "ER_CANT_USE_GTID_ONLY_WITH_GTID_MODE_NOT_ON", e[4072] = "ER_WARN_C_DISABLE_GTID_ONLY_WITH_SOURCE_AUTO_POS_INVALID_POS", e[4073] = "ER_DA_SSL_FIPS_MODE_ERROR", e[4074] = "ER_VALUE_OUT_OF_RANGE", e[4075] = "ER_FULLTEXT_WITH_ROLLUP", e[4076] = "ER_REGEXP_MISSING_RESOURCE", e[4077] = "ER_WARN_REGEXP_USING_DEFAULT", e[4078] = "ER_REGEXP_MISSING_FILE", e[4079] = "ER_WARN_DEPRECATED_COLLATION", e[4080] = "ER_CONCURRENT_PROCEDURE_USAGE", e[4081] = "ER_DA_GLOBAL_CONN_LIMIT", e[4082] = "ER_DA_CONN_LIMIT", e[4083] = "ER_ALTER_OPERATION_NOT_SUPPORTED_REASON_COLUMN_TYPE_INSTANT", e[4084] = "ER_WARN_SF_UDF_NAME_COLLISION", e[4085] = "ER_CANNOT_PURGE_BINLOG_WITH_BACKUP_LOCK", e[4086] = "ER_TOO_MANY_WINDOWS", e[4087] = "ER_MYSQLBACKUP_CLIENT_MSG", e[4088] = "ER_COMMENT_CONTAINS_INVALID_STRING", e[4089] = "ER_DEFINITION_CONTAINS_INVALID_STRING", e[4090] = "ER_CANT_EXECUTE_COMMAND_WITH_ASSIGNED_GTID_NEXT", e[4091] = "ER_XA_TEMP_TABLE", e[4092] = "ER_INNODB_MAX_ROW_VERSION", e[4093] = "ER_INNODB_INSTANT_ADD_NOT_SUPPORTED_MAX_SIZE", e[4094] = "ER_OPERATION_NOT_ALLOWED_WHILE_PRIMARY_CHANGE_IS_RUNNING", e[4095] = "ER_WARN_DEPRECATED_DATETIME_DELIMITER", e[4096] = "ER_WARN_DEPRECATED_SUPERFLUOUS_DELIMITER", e[4097] = "ER_CANNOT_PERSIST_SENSITIVE_VARIABLES", e[4098] = "ER_WARN_CANNOT_SECURELY_PERSIST_SENSITIVE_VARIABLES", e[4099] = "ER_WARN_TRG_ALREADY_EXISTS", e[4100] = "ER_IF_NOT_EXISTS_UNSUPPORTED_TRG_EXISTS_ON_DIFFERENT_TABLE", e[4101] = "ER_IF_NOT_EXISTS_UNSUPPORTED_UDF_NATIVE_FCT_NAME_COLLISION", e[4102] = "ER_SET_PASSWORD_AUTH_PLUGIN_ERROR", e[4103] = "ER_REDUCED_DBLWR_FILE_CORRUPTED", e[4104] = "ER_REDUCED_DBLWR_PAGE_FOUND", e[4105] = "ER_SRS_INVALID_LATITUDE_OF_ORIGIN", e[4106] = "ER_SRS_INVALID_LONGITUDE_OF_ORIGIN", e[4107] = "ER_SRS_UNUSED_PROJ_PARAMETER_PRESENT", e[4108] = "ER_GIPK_COLUMN_EXISTS", e[4109] = "ER_GIPK_FAILED_AUTOINC_COLUMN_EXISTS", e[4110] = "ER_GIPK_COLUMN_ALTER_NOT_ALLOWED", e[4111] = "ER_DROP_PK_COLUMN_TO_DROP_GIPK", e[4112] = "ER_CREATE_SELECT_WITH_GIPK_DISALLOWED_IN_SBR", e[4113] = "ER_DA_EXPIRE_LOGS_DAYS_IGNORED", e[4114] = "ER_CTE_RECURSIVE_NOT_UNION", e[4115] = "ER_COMMAND_BACKEND_FAILED_TO_FETCH_SECURITY_CTX", e[4116] = "ER_COMMAND_SERVICE_BACKEND_FAILED", e[4117] = "ER_CLIENT_FILE_PRIVILEGE_FOR_REPLICATION_CHECKS", e[4118] = "ER_GROUP_REPLICATION_FORCE_MEMBERS_COMMAND_FAILURE", e[4119] = "ER_WARN_DEPRECATED_IDENT", e[4120] = "ER_INTERSECT_ALL_MAX_DUPLICATES_EXCEEDED", e[4121] = "ER_TP_QUERY_THRS_PER_GRP_EXCEEDS_TXN_THR_LIMIT", e[4122] = "ER_BAD_TIMESTAMP_FORMAT", e[4123] = "ER_SHAPE_PRIDICTION_UDF", e[4124] = "ER_SRS_INVALID_HEIGHT", e[4125] = "ER_SRS_INVALID_SCALING", e[4126] = "ER_SRS_INVALID_ZONE_WIDTH", e[4127] = "ER_SRS_INVALID_LATITUDE_POLAR_STERE_VAR_A", e[4128] = "ER_WARN_DEPRECATED_CLIENT_NO_SCHEMA_OPTION", e[4129] = "ER_TABLE_NOT_EMPTY", e[4130] = "ER_TABLE_NO_PRIMARY_KEY", e[4131] = "ER_TABLE_IN_SHARED_TABLESPACE", e[4132] = "ER_INDEX_OTHER_THAN_PK", e[4133] = "ER_LOAD_BULK_DATA_UNSORTED", e[4134] = "ER_BULK_EXECUTOR_ERROR", e[4135] = "ER_BULK_READER_LIBCURL_INIT_FAILED", e[4136] = "ER_BULK_READER_LIBCURL_ERROR", e[4137] = "ER_BULK_READER_SERVER_ERROR", e[4138] = "ER_BULK_READER_COMMUNICATION_ERROR", e[4139] = "ER_BULK_LOAD_DATA_FAILED", e[4140] = "ER_BULK_LOADER_COLUMN_TOO_BIG_FOR_LEFTOVER_BUFFER", e[4141] = "ER_BULK_LOADER_COMPONENT_ERROR", e[4142] = "ER_BULK_LOADER_FILE_CONTAINS_LESS_LINES_THAN_IGNORE_CLAUSE", e[4143] = "ER_BULK_PARSER_MISSING_ENCLOSED_BY", e[4144] = "ER_BULK_PARSER_ROW_BUFFER_MAX_TOTAL_COLS_EXCEEDED", e[4145] = "ER_BULK_PARSER_COPY_BUFFER_SIZE_EXCEEDED", e[4146] = "ER_BULK_PARSER_UNEXPECTED_END_OF_INPUT", e[4147] = "ER_BULK_PARSER_UNEXPECTED_ROW_TERMINATOR", e[4148] = "ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_ENDING_ENCLOSED_BY", e[4149] = "ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_NULL_ESCAPE", e[4150] = "ER_BULK_PARSER_UNEXPECTED_CHAR_AFTER_COLUMN_TERMINATOR", e[4151] = "ER_BULK_PARSER_INCOMPLETE_ESCAPE_SEQUENCE", e[4152] = "ER_LOAD_BULK_DATA_FAILED", e[4153] = "ER_LOAD_BULK_DATA_WRONG_VALUE_FOR_FIELD", e[4154] = "ER_LOAD_BULK_DATA_WARN_NULL_TO_NOTNULL", e[4155] = "ER_REQUIRE_TABLE_PRIMARY_KEY_CHECK_GENERATE_WITH_GR", e[4156] = "ER_CANT_CHANGE_SYS_VAR_IN_READ_ONLY_MODE", e[4157] = "ER_INNODB_INSTANT_ADD_DROP_NOT_SUPPORTED_MAX_SIZE", e[4158] = "ER_INNODB_INSTANT_ADD_NOT_SUPPORTED_MAX_FIELDS", e[4159] = "ER_CANT_SET_PERSISTED", e[4160] = "ER_INSTALL_COMPONENT_SET_NULL_VALUE", e[4161] = "ER_INSTALL_COMPONENT_SET_UNUSED_VALUE", e[4162] = "ER_WARN_DEPRECATED_USER_DEFINED_COLLATIONS";
   })(Va)), Va;
 }
-var rr = { exports: {} }, vh = rr.exports, KA;
-function Qh() {
-  return KA || (KA = 1, (function(e, c) {
+var rr = { exports: {} }, Vh = rr.exports, JA;
+function Yh() {
+  return JA || (JA = 1, (function(e, c) {
     (function(o, i) {
       function s(u) {
         return u.default || u;
       }
       i(c), e.exports = s(c);
     })(
-      typeof globalThis < "u" ? globalThis : typeof self < "u" ? self : vh,
+      typeof globalThis < "u" ? globalThis : typeof self < "u" ? self : Vh,
       function(o) {
         Object.defineProperty(o, "__esModule", {
           value: !0
@@ -12781,10 +12781,10 @@ function Qh() {
           if (isNaN(w)) return D ? g : C;
           if (D) {
             if (w < 0) return g;
-            if (w >= f) return Q;
+            if (w >= f) return y;
           } else {
             if (w <= -d) return G;
-            if (w + 1 >= d) return y;
+            if (w + 1 >= d) return Q;
           }
           return w < 0 ? a(-w, D).neg() : _(
             w % T | 0,
@@ -12836,10 +12836,10 @@ function Qh() {
         s.UONE = B;
         var S = t(-1);
         s.NEG_ONE = S;
-        var y = _(-1, 2147483647, !1);
-        s.MAX_VALUE = y;
-        var Q = _(-1, -1, !0);
-        s.MAX_UNSIGNED_VALUE = Q;
+        var Q = _(-1, 2147483647, !1);
+        s.MAX_VALUE = Q;
+        var y = _(-1, -1, !0);
+        s.MAX_UNSIGNED_VALUE = y;
         var G = _(0, -2147483648, !1);
         s.MIN_VALUE = G;
         var F = s.prototype;
@@ -13127,11 +13127,11 @@ function Qh() {
     );
   })(rr, rr.exports)), rr.exports;
 }
-var mr = {}, Qr = { exports: {} }, Ya, zA;
+var mr = {}, yr = { exports: {} }, Ya, ZA;
 function pn() {
-  if (zA) return Ya;
-  zA = 1;
-  var e = oI, c = e.Buffer, o = {}, i;
+  if (ZA) return Ya;
+  ZA = 1;
+  var e = AI, c = e.Buffer, o = {}, i;
   for (i in e)
     e.hasOwnProperty(i) && (i === "SlowBuffer" || i === "Buffer" || (o[i] = e[i]));
   var s = o.Buffer = {};
@@ -13159,10 +13159,10 @@ function pn() {
     MAX_LENGTH: o.kMaxLength
   }, o.kStringMaxLength && (o.constants.MAX_STRING_LENGTH = o.kStringMaxLength)), Ya = o, Ya;
 }
-var Fr = {}, JA;
-function yh() {
-  if (JA) return Fr;
-  JA = 1;
+var Fr = {}, xA;
+function Hh() {
+  if (xA) return Fr;
+  xA = 1;
   var e = "\uFEFF";
   Fr.PrependBOM = c;
   function c(i, s) {
@@ -13183,10 +13183,10 @@ function yh() {
     return this.decoder.end();
   }, Fr;
 }
-var Ha, ZA;
-function tT() {
-  if (ZA) return Ha;
-  ZA = 1;
+var Ha, $A;
+function iT() {
+  if ($A) return Ha;
+  $A = 1;
   var e = typeof Object.hasOwn > "u" ? Function.call.bind(Object.prototype.hasOwnProperty) : Object.hasOwn;
   function c(o, i) {
     for (var s in i)
@@ -13194,10 +13194,10 @@ function tT() {
   }
   return Ha = c, Ha;
 }
-var Wa = {}, pa, xA;
-function Vh() {
-  if (xA) return pa;
-  xA = 1;
+var Wa = {}, pa, eR;
+function Wh() {
+  if (eR) return pa;
+  eR = 1;
   var e = pn().Buffer;
   pa = {
     // Encodings
@@ -13216,7 +13216,7 @@ function Vh() {
     this.enc = t.encodingName, this.bomAware = t.bomAware, this.enc === "base64" ? this.encoder = u : this.enc === "utf8" ? this.encoder = r : this.enc === "cesu8" && (this.enc = "utf8", this.encoder = E, e.from("eda0bdedb2a9", "hex").toString() !== "💩" && (this.decoder = n, this.defaultCharUnicode = a.defaultCharUnicode));
   }
   c.prototype.encoder = s, c.prototype.decoder = i;
-  var o = FN.StringDecoder;
+  var o = bN.StringDecoder;
   function i(t, a) {
     this.decoder = new o(a.enc);
   }
@@ -13281,10 +13281,10 @@ function Vh() {
     }
   }, pa;
 }
-var Un = {}, $A;
-function Yh() {
-  if ($A) return Un;
-  $A = 1;
+var Un = {}, nR;
+function ph() {
+  if (nR) return Un;
+  nR = 1;
   var e = pn().Buffer;
   Un._utf32 = c;
   function c(t, a) {
@@ -13400,10 +13400,10 @@ function Yh() {
   }
   return Un;
 }
-var Pr = {}, eR;
-function Hh() {
-  if (eR) return Pr;
-  eR = 1;
+var Pr = {}, tR;
+function kh() {
+  if (tR) return Pr;
+  tR = 1;
   var e = pn().Buffer;
   Pr.utf16be = c;
   function c() {
@@ -13486,10 +13486,10 @@ function Hh() {
   }
   return Pr;
 }
-var $t = {}, nR;
-function Wh() {
-  if (nR) return $t;
-  nR = 1;
+var $t = {}, rR;
+function Xh() {
+  if (rR) return $t;
+  rR = 1;
   var e = pn().Buffer;
   $t.utf7 = c, $t.unicode11utf7 = "utf7";
   function c(I, l) {
@@ -13582,10 +13582,10 @@ function Wh() {
     return this.inBase64 && this.base64Accum.length > 0 && (I = this.iconv.decode(e.from(this.base64Accum, "base64"), "utf16-be")), this.inBase64 = !1, this.base64Accum = "", I;
   }, $t;
 }
-var ka = {}, tR;
-function ph() {
-  if (tR) return ka;
-  tR = 1;
+var ka = {}, iR;
+function jh() {
+  if (iR) return ka;
+  iR = 1;
   var e = pn().Buffer;
   ka._sbcs = c;
   function c(s, u) {
@@ -13623,9 +13623,9 @@ function ph() {
   }, i.prototype.end = function() {
   }, ka;
 }
-var Xa, rR;
-function kh() {
-  return rR || (rR = 1, Xa = {
+var Xa, ER;
+function qh() {
+  return ER || (ER = 1, Xa = {
     // Not supported by iconv, not sure why.
     10029: "maccenteuro",
     maccenteuro: {
@@ -13772,9 +13772,9 @@ function kh() {
     csmacintosh: "macintosh"
   }), Xa;
 }
-var ja, iR;
-function Xh() {
-  return iR || (iR = 1, ja = {
+var ja, aR;
+function Kh() {
+  return aR || (aR = 1, ja = {
     437: "cp437",
     737: "cp737",
     775: "cp775",
@@ -14228,10 +14228,10 @@ function Xh() {
     }
   }), ja;
 }
-var qa = {}, ER;
-function jh() {
-  if (ER) return qa;
-  ER = 1;
+var qa = {}, _R;
+function zh() {
+  if (_R) return qa;
+  _R = 1;
   var e = pn().Buffer;
   qa._dbcs = r;
   for (var c = -1, o = -2, i = -10, s = -1e3, u = new Array(256), E = -1, n = 0; n < 256; n++)
@@ -14275,16 +14275,16 @@ function jh() {
     var S = {};
     if (A.encodeSkipVals)
       for (var I = 0; I < A.encodeSkipVals.length; I++) {
-        var y = A.encodeSkipVals[I];
-        if (typeof y == "number")
-          S[y] = !0;
+        var Q = A.encodeSkipVals[I];
+        if (typeof Q == "number")
+          S[Q] = !0;
         else
-          for (var O = y.from; O <= y.to; O++)
+          for (var O = Q.from; O <= Q.to; O++)
             S[O] = !0;
       }
     if (this._fillEncodeTable(0, 0, S), A.encodeAdd)
-      for (var Q in A.encodeAdd)
-        Object.prototype.hasOwnProperty.call(A.encodeAdd, Q) && this._setEncodeChar(Q.charCodeAt(0), A.encodeAdd[Q]);
+      for (var y in A.encodeAdd)
+        Object.prototype.hasOwnProperty.call(A.encodeAdd, y) && this._setEncodeChar(y.charCodeAt(0), A.encodeAdd[y]);
     this.defCharSB = this.encodeTable[0][R.defaultCharSingleByte.charCodeAt(0)], this.defCharSB === c && (this.defCharSB = this.encodeTable[0]["?"]), this.defCharSB === c && (this.defCharSB = 63);
   }
   r.prototype.encoder = t, r.prototype.decoder = a, r.prototype._getDecodeTrieNode = function(A) {
@@ -14444,8 +14444,8 @@ function jh() {
         throw new Error("iconv-lite internal error: invalid decoding table value " + f + " at " + N + "/" + C);
       if (f >= 65536) {
         f -= 65536;
-        var y = 55296 | f >> 10;
-        R[O++] = y & 255, R[O++] = y >> 8, f = 56320 | f & 1023;
+        var Q = 55296 | f >> 10;
+        R[O++] = Q & 255, R[O++] = Q >> 8, f = 56320 | f & 1023;
       }
       R[O++] = f & 255, R[O++] = f >> 8, N = 0, T = d + 1;
     }
@@ -14469,7 +14469,7 @@ function jh() {
   }
   return qa;
 }
-const qh = [
+const Jh = [
   [
     "0",
     "\0",
@@ -15014,7 +15014,7 @@ const qh = [
     "fc40",
     "髜魵魲鮏鮱鮻鰀鵰鵫鶴鸙黑"
   ]
-], Kh = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["8ea1","｡",62],["a1a1","　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈",9,"＋－±×÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄￠￡％＃＆＊＠§☆★○●◎◇"],["a2a1","◆□■△▲▽▼※〒→←↑↓〓"],["a2ba","∈∋⊆⊇⊂⊃∪∩"],["a2ca","∧∨￢⇒⇔∀∃"],["a2dc","∠⊥⌒∂∇≡≒≪≫√∽∝∵∫∬"],["a2f2","Å‰♯♭♪†‡¶"],["a2fe","◯"],["a3b0","０",9],["a3c1","Ａ",25],["a3e1","ａ",25],["a4a1","ぁ",82],["a5a1","ァ",85],["a6a1","Α",16,"Σ",6],["a6c1","α",16,"σ",6],["a7a1","А",5,"ЁЖ",25],["a7d1","а",5,"ёж",25],["a8a1","─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂"],["ada1","①",19,"Ⅰ",9],["adc0","㍉㌔㌢㍍㌘㌧㌃㌶㍑㍗㌍㌦㌣㌫㍊㌻㎜㎝㎞㎎㎏㏄㎡"],["addf","㍻〝〟№㏍℡㊤",4,"㈱㈲㈹㍾㍽㍼≒≡∫∮∑√⊥∠∟⊿∵∩∪"],["b0a1","亜唖娃阿哀愛挨姶逢葵茜穐悪握渥旭葦芦鯵梓圧斡扱宛姐虻飴絢綾鮎或粟袷安庵按暗案闇鞍杏以伊位依偉囲夷委威尉惟意慰易椅為畏異移維緯胃萎衣謂違遺医井亥域育郁磯一壱溢逸稲茨芋鰯允印咽員因姻引飲淫胤蔭"],["b1a1","院陰隠韻吋右宇烏羽迂雨卯鵜窺丑碓臼渦嘘唄欝蔚鰻姥厩浦瓜閏噂云運雲荏餌叡営嬰影映曳栄永泳洩瑛盈穎頴英衛詠鋭液疫益駅悦謁越閲榎厭円園堰奄宴延怨掩援沿演炎焔煙燕猿縁艶苑薗遠鉛鴛塩於汚甥凹央奥往応"],["b2a1","押旺横欧殴王翁襖鴬鴎黄岡沖荻億屋憶臆桶牡乙俺卸恩温穏音下化仮何伽価佳加可嘉夏嫁家寡科暇果架歌河火珂禍禾稼箇花苛茄荷華菓蝦課嘩貨迦過霞蚊俄峨我牙画臥芽蛾賀雅餓駕介会解回塊壊廻快怪悔恢懐戒拐改"],["b3a1","魁晦械海灰界皆絵芥蟹開階貝凱劾外咳害崖慨概涯碍蓋街該鎧骸浬馨蛙垣柿蛎鈎劃嚇各廓拡撹格核殻獲確穫覚角赫較郭閣隔革学岳楽額顎掛笠樫橿梶鰍潟割喝恰括活渇滑葛褐轄且鰹叶椛樺鞄株兜竃蒲釜鎌噛鴨栢茅萱"],["b4a1","粥刈苅瓦乾侃冠寒刊勘勧巻喚堪姦完官寛干幹患感慣憾換敢柑桓棺款歓汗漢澗潅環甘監看竿管簡緩缶翰肝艦莞観諌貫還鑑間閑関陥韓館舘丸含岸巌玩癌眼岩翫贋雁頑顔願企伎危喜器基奇嬉寄岐希幾忌揮机旗既期棋棄"],["b5a1","機帰毅気汽畿祈季稀紀徽規記貴起軌輝飢騎鬼亀偽儀妓宜戯技擬欺犠疑祇義蟻誼議掬菊鞠吉吃喫桔橘詰砧杵黍却客脚虐逆丘久仇休及吸宮弓急救朽求汲泣灸球究窮笈級糾給旧牛去居巨拒拠挙渠虚許距鋸漁禦魚亨享京"],["b6a1","供侠僑兇競共凶協匡卿叫喬境峡強彊怯恐恭挟教橋況狂狭矯胸脅興蕎郷鏡響饗驚仰凝尭暁業局曲極玉桐粁僅勤均巾錦斤欣欽琴禁禽筋緊芹菌衿襟謹近金吟銀九倶句区狗玖矩苦躯駆駈駒具愚虞喰空偶寓遇隅串櫛釧屑屈"],["b7a1","掘窟沓靴轡窪熊隈粂栗繰桑鍬勲君薫訓群軍郡卦袈祁係傾刑兄啓圭珪型契形径恵慶慧憩掲携敬景桂渓畦稽系経継繋罫茎荊蛍計詣警軽頚鶏芸迎鯨劇戟撃激隙桁傑欠決潔穴結血訣月件倹倦健兼券剣喧圏堅嫌建憲懸拳捲"],["b8a1","検権牽犬献研硯絹県肩見謙賢軒遣鍵険顕験鹸元原厳幻弦減源玄現絃舷言諺限乎個古呼固姑孤己庫弧戸故枯湖狐糊袴股胡菰虎誇跨鈷雇顧鼓五互伍午呉吾娯後御悟梧檎瑚碁語誤護醐乞鯉交佼侯候倖光公功効勾厚口向"],["b9a1","后喉坑垢好孔孝宏工巧巷幸広庚康弘恒慌抗拘控攻昂晃更杭校梗構江洪浩港溝甲皇硬稿糠紅紘絞綱耕考肯肱腔膏航荒行衡講貢購郊酵鉱砿鋼閤降項香高鴻剛劫号合壕拷濠豪轟麹克刻告国穀酷鵠黒獄漉腰甑忽惚骨狛込"],["baa1","此頃今困坤墾婚恨懇昏昆根梱混痕紺艮魂些佐叉唆嵯左差査沙瑳砂詐鎖裟坐座挫債催再最哉塞妻宰彩才採栽歳済災采犀砕砦祭斎細菜裁載際剤在材罪財冴坂阪堺榊肴咲崎埼碕鷺作削咋搾昨朔柵窄策索錯桜鮭笹匙冊刷"],["bba1","察拶撮擦札殺薩雑皐鯖捌錆鮫皿晒三傘参山惨撒散桟燦珊産算纂蚕讃賛酸餐斬暫残仕仔伺使刺司史嗣四士始姉姿子屍市師志思指支孜斯施旨枝止死氏獅祉私糸紙紫肢脂至視詞詩試誌諮資賜雌飼歯事似侍児字寺慈持時"],["bca1","次滋治爾璽痔磁示而耳自蒔辞汐鹿式識鴫竺軸宍雫七叱執失嫉室悉湿漆疾質実蔀篠偲柴芝屡蕊縞舎写射捨赦斜煮社紗者謝車遮蛇邪借勺尺杓灼爵酌釈錫若寂弱惹主取守手朱殊狩珠種腫趣酒首儒受呪寿授樹綬需囚収周"],["bda1","宗就州修愁拾洲秀秋終繍習臭舟蒐衆襲讐蹴輯週酋酬集醜什住充十従戎柔汁渋獣縦重銃叔夙宿淑祝縮粛塾熟出術述俊峻春瞬竣舜駿准循旬楯殉淳準潤盾純巡遵醇順処初所暑曙渚庶緒署書薯藷諸助叙女序徐恕鋤除傷償"],["bea1","勝匠升召哨商唱嘗奨妾娼宵将小少尚庄床廠彰承抄招掌捷昇昌昭晶松梢樟樵沼消渉湘焼焦照症省硝礁祥称章笑粧紹肖菖蒋蕉衝裳訟証詔詳象賞醤鉦鍾鐘障鞘上丈丞乗冗剰城場壌嬢常情擾条杖浄状畳穣蒸譲醸錠嘱埴飾"],["bfa1","拭植殖燭織職色触食蝕辱尻伸信侵唇娠寝審心慎振新晋森榛浸深申疹真神秦紳臣芯薪親診身辛進針震人仁刃塵壬尋甚尽腎訊迅陣靭笥諏須酢図厨逗吹垂帥推水炊睡粋翠衰遂酔錐錘随瑞髄崇嵩数枢趨雛据杉椙菅頗雀裾"],["c0a1","澄摺寸世瀬畝是凄制勢姓征性成政整星晴棲栖正清牲生盛精聖声製西誠誓請逝醒青静斉税脆隻席惜戚斥昔析石積籍績脊責赤跡蹟碩切拙接摂折設窃節説雪絶舌蝉仙先千占宣専尖川戦扇撰栓栴泉浅洗染潜煎煽旋穿箭線"],["c1a1","繊羨腺舛船薦詮賎践選遷銭銑閃鮮前善漸然全禅繕膳糎噌塑岨措曾曽楚狙疏疎礎祖租粗素組蘇訴阻遡鼠僧創双叢倉喪壮奏爽宋層匝惣想捜掃挿掻操早曹巣槍槽漕燥争痩相窓糟総綜聡草荘葬蒼藻装走送遭鎗霜騒像増憎"],["c2a1","臓蔵贈造促側則即息捉束測足速俗属賊族続卒袖其揃存孫尊損村遜他多太汰詑唾堕妥惰打柁舵楕陀駄騨体堆対耐岱帯待怠態戴替泰滞胎腿苔袋貸退逮隊黛鯛代台大第醍題鷹滝瀧卓啄宅托択拓沢濯琢託鐸濁諾茸凧蛸只"],["c3a1","叩但達辰奪脱巽竪辿棚谷狸鱈樽誰丹単嘆坦担探旦歎淡湛炭短端箪綻耽胆蛋誕鍛団壇弾断暖檀段男談値知地弛恥智池痴稚置致蜘遅馳築畜竹筑蓄逐秩窒茶嫡着中仲宙忠抽昼柱注虫衷註酎鋳駐樗瀦猪苧著貯丁兆凋喋寵"],["c4a1","帖帳庁弔張彫徴懲挑暢朝潮牒町眺聴脹腸蝶調諜超跳銚長頂鳥勅捗直朕沈珍賃鎮陳津墜椎槌追鎚痛通塚栂掴槻佃漬柘辻蔦綴鍔椿潰坪壷嬬紬爪吊釣鶴亭低停偵剃貞呈堤定帝底庭廷弟悌抵挺提梯汀碇禎程締艇訂諦蹄逓"],["c5a1","邸鄭釘鼎泥摘擢敵滴的笛適鏑溺哲徹撤轍迭鉄典填天展店添纏甜貼転顛点伝殿澱田電兎吐堵塗妬屠徒斗杜渡登菟賭途都鍍砥砺努度土奴怒倒党冬凍刀唐塔塘套宕島嶋悼投搭東桃梼棟盗淘湯涛灯燈当痘祷等答筒糖統到"],["c6a1","董蕩藤討謄豆踏逃透鐙陶頭騰闘働動同堂導憧撞洞瞳童胴萄道銅峠鴇匿得徳涜特督禿篤毒独読栃橡凸突椴届鳶苫寅酉瀞噸屯惇敦沌豚遁頓呑曇鈍奈那内乍凪薙謎灘捺鍋楢馴縄畷南楠軟難汝二尼弐迩匂賑肉虹廿日乳入"],["c7a1","如尿韮任妊忍認濡禰祢寧葱猫熱年念捻撚燃粘乃廼之埜嚢悩濃納能脳膿農覗蚤巴把播覇杷波派琶破婆罵芭馬俳廃拝排敗杯盃牌背肺輩配倍培媒梅楳煤狽買売賠陪這蝿秤矧萩伯剥博拍柏泊白箔粕舶薄迫曝漠爆縛莫駁麦"],["c8a1","函箱硲箸肇筈櫨幡肌畑畠八鉢溌発醗髪伐罰抜筏閥鳩噺塙蛤隼伴判半反叛帆搬斑板氾汎版犯班畔繁般藩販範釆煩頒飯挽晩番盤磐蕃蛮匪卑否妃庇彼悲扉批披斐比泌疲皮碑秘緋罷肥被誹費避非飛樋簸備尾微枇毘琵眉美"],["c9a1","鼻柊稗匹疋髭彦膝菱肘弼必畢筆逼桧姫媛紐百謬俵彪標氷漂瓢票表評豹廟描病秒苗錨鋲蒜蛭鰭品彬斌浜瀕貧賓頻敏瓶不付埠夫婦富冨布府怖扶敷斧普浮父符腐膚芙譜負賦赴阜附侮撫武舞葡蕪部封楓風葺蕗伏副復幅服"],["caa1","福腹複覆淵弗払沸仏物鮒分吻噴墳憤扮焚奮粉糞紛雰文聞丙併兵塀幣平弊柄並蔽閉陛米頁僻壁癖碧別瞥蔑箆偏変片篇編辺返遍便勉娩弁鞭保舗鋪圃捕歩甫補輔穂募墓慕戊暮母簿菩倣俸包呆報奉宝峰峯崩庖抱捧放方朋"],["cba1","法泡烹砲縫胞芳萌蓬蜂褒訪豊邦鋒飽鳳鵬乏亡傍剖坊妨帽忘忙房暴望某棒冒紡肪膨謀貌貿鉾防吠頬北僕卜墨撲朴牧睦穆釦勃没殆堀幌奔本翻凡盆摩磨魔麻埋妹昧枚毎哩槙幕膜枕鮪柾鱒桝亦俣又抹末沫迄侭繭麿万慢満"],["cca1","漫蔓味未魅巳箕岬密蜜湊蓑稔脈妙粍民眠務夢無牟矛霧鵡椋婿娘冥名命明盟迷銘鳴姪牝滅免棉綿緬面麺摸模茂妄孟毛猛盲網耗蒙儲木黙目杢勿餅尤戻籾貰問悶紋門匁也冶夜爺耶野弥矢厄役約薬訳躍靖柳薮鑓愉愈油癒"],["cda1","諭輸唯佑優勇友宥幽悠憂揖有柚湧涌猶猷由祐裕誘遊邑郵雄融夕予余与誉輿預傭幼妖容庸揚揺擁曜楊様洋溶熔用窯羊耀葉蓉要謡踊遥陽養慾抑欲沃浴翌翼淀羅螺裸来莱頼雷洛絡落酪乱卵嵐欄濫藍蘭覧利吏履李梨理璃"],["cea1","痢裏裡里離陸律率立葎掠略劉流溜琉留硫粒隆竜龍侶慮旅虜了亮僚両凌寮料梁涼猟療瞭稜糧良諒遼量陵領力緑倫厘林淋燐琳臨輪隣鱗麟瑠塁涙累類令伶例冷励嶺怜玲礼苓鈴隷零霊麗齢暦歴列劣烈裂廉恋憐漣煉簾練聯"],["cfa1","蓮連錬呂魯櫓炉賂路露労婁廊弄朗楼榔浪漏牢狼篭老聾蝋郎六麓禄肋録論倭和話歪賄脇惑枠鷲亙亘鰐詫藁蕨椀湾碗腕"],["d0a1","弌丐丕个丱丶丼丿乂乖乘亂亅豫亊舒弍于亞亟亠亢亰亳亶从仍仄仆仂仗仞仭仟价伉佚估佛佝佗佇佶侈侏侘佻佩佰侑佯來侖儘俔俟俎俘俛俑俚俐俤俥倚倨倔倪倥倅伜俶倡倩倬俾俯們倆偃假會偕偐偈做偖偬偸傀傚傅傴傲"],["d1a1","僉僊傳僂僖僞僥僭僣僮價僵儉儁儂儖儕儔儚儡儺儷儼儻儿兀兒兌兔兢竸兩兪兮冀冂囘册冉冏冑冓冕冖冤冦冢冩冪冫决冱冲冰况冽凅凉凛几處凩凭凰凵凾刄刋刔刎刧刪刮刳刹剏剄剋剌剞剔剪剴剩剳剿剽劍劔劒剱劈劑辨"],["d2a1","辧劬劭劼劵勁勍勗勞勣勦飭勠勳勵勸勹匆匈甸匍匐匏匕匚匣匯匱匳匸區卆卅丗卉卍凖卞卩卮夘卻卷厂厖厠厦厥厮厰厶參簒雙叟曼燮叮叨叭叺吁吽呀听吭吼吮吶吩吝呎咏呵咎呟呱呷呰咒呻咀呶咄咐咆哇咢咸咥咬哄哈咨"],["d3a1","咫哂咤咾咼哘哥哦唏唔哽哮哭哺哢唹啀啣啌售啜啅啖啗唸唳啝喙喀咯喊喟啻啾喘喞單啼喃喩喇喨嗚嗅嗟嗄嗜嗤嗔嘔嗷嘖嗾嗽嘛嗹噎噐營嘴嘶嘲嘸噫噤嘯噬噪嚆嚀嚊嚠嚔嚏嚥嚮嚶嚴囂嚼囁囃囀囈囎囑囓囗囮囹圀囿圄圉"],["d4a1","圈國圍圓團圖嗇圜圦圷圸坎圻址坏坩埀垈坡坿垉垓垠垳垤垪垰埃埆埔埒埓堊埖埣堋堙堝塲堡塢塋塰毀塒堽塹墅墹墟墫墺壞墻墸墮壅壓壑壗壙壘壥壜壤壟壯壺壹壻壼壽夂夊夐夛梦夥夬夭夲夸夾竒奕奐奎奚奘奢奠奧奬奩"],["d5a1","奸妁妝佞侫妣妲姆姨姜妍姙姚娥娟娑娜娉娚婀婬婉娵娶婢婪媚媼媾嫋嫂媽嫣嫗嫦嫩嫖嫺嫻嬌嬋嬖嬲嫐嬪嬶嬾孃孅孀孑孕孚孛孥孩孰孳孵學斈孺宀它宦宸寃寇寉寔寐寤實寢寞寥寫寰寶寳尅將專對尓尠尢尨尸尹屁屆屎屓"],["d6a1","屐屏孱屬屮乢屶屹岌岑岔妛岫岻岶岼岷峅岾峇峙峩峽峺峭嶌峪崋崕崗嵜崟崛崑崔崢崚崙崘嵌嵒嵎嵋嵬嵳嵶嶇嶄嶂嶢嶝嶬嶮嶽嶐嶷嶼巉巍巓巒巖巛巫已巵帋帚帙帑帛帶帷幄幃幀幎幗幔幟幢幤幇幵并幺麼广庠廁廂廈廐廏"],["d7a1","廖廣廝廚廛廢廡廨廩廬廱廳廰廴廸廾弃弉彝彜弋弑弖弩弭弸彁彈彌彎弯彑彖彗彙彡彭彳彷徃徂彿徊很徑徇從徙徘徠徨徭徼忖忻忤忸忱忝悳忿怡恠怙怐怩怎怱怛怕怫怦怏怺恚恁恪恷恟恊恆恍恣恃恤恂恬恫恙悁悍惧悃悚"],["d8a1","悄悛悖悗悒悧悋惡悸惠惓悴忰悽惆悵惘慍愕愆惶惷愀惴惺愃愡惻惱愍愎慇愾愨愧慊愿愼愬愴愽慂慄慳慷慘慙慚慫慴慯慥慱慟慝慓慵憙憖憇憬憔憚憊憑憫憮懌懊應懷懈懃懆憺懋罹懍懦懣懶懺懴懿懽懼懾戀戈戉戍戌戔戛"],["d9a1","戞戡截戮戰戲戳扁扎扞扣扛扠扨扼抂抉找抒抓抖拔抃抔拗拑抻拏拿拆擔拈拜拌拊拂拇抛拉挌拮拱挧挂挈拯拵捐挾捍搜捏掖掎掀掫捶掣掏掉掟掵捫捩掾揩揀揆揣揉插揶揄搖搴搆搓搦搶攝搗搨搏摧摯摶摎攪撕撓撥撩撈撼"],["daa1","據擒擅擇撻擘擂擱擧舉擠擡抬擣擯攬擶擴擲擺攀擽攘攜攅攤攣攫攴攵攷收攸畋效敖敕敍敘敞敝敲數斂斃變斛斟斫斷旃旆旁旄旌旒旛旙无旡旱杲昊昃旻杳昵昶昴昜晏晄晉晁晞晝晤晧晨晟晢晰暃暈暎暉暄暘暝曁暹曉暾暼"],["dba1","曄暸曖曚曠昿曦曩曰曵曷朏朖朞朦朧霸朮朿朶杁朸朷杆杞杠杙杣杤枉杰枩杼杪枌枋枦枡枅枷柯枴柬枳柩枸柤柞柝柢柮枹柎柆柧檜栞框栩桀桍栲桎梳栫桙档桷桿梟梏梭梔條梛梃檮梹桴梵梠梺椏梍桾椁棊椈棘椢椦棡椌棍"],["dca1","棔棧棕椶椒椄棗棣椥棹棠棯椨椪椚椣椡棆楹楷楜楸楫楔楾楮椹楴椽楙椰楡楞楝榁楪榲榮槐榿槁槓榾槎寨槊槝榻槃榧樮榑榠榜榕榴槞槨樂樛槿權槹槲槧樅榱樞槭樔槫樊樒櫁樣樓橄樌橲樶橸橇橢橙橦橈樸樢檐檍檠檄檢檣"],["dda1","檗蘗檻櫃櫂檸檳檬櫞櫑櫟檪櫚櫪櫻欅蘖櫺欒欖鬱欟欸欷盜欹飮歇歃歉歐歙歔歛歟歡歸歹歿殀殄殃殍殘殕殞殤殪殫殯殲殱殳殷殼毆毋毓毟毬毫毳毯麾氈氓气氛氤氣汞汕汢汪沂沍沚沁沛汾汨汳沒沐泄泱泓沽泗泅泝沮沱沾"],["dea1","沺泛泯泙泪洟衍洶洫洽洸洙洵洳洒洌浣涓浤浚浹浙涎涕濤涅淹渕渊涵淇淦涸淆淬淞淌淨淒淅淺淙淤淕淪淮渭湮渮渙湲湟渾渣湫渫湶湍渟湃渺湎渤滿渝游溂溪溘滉溷滓溽溯滄溲滔滕溏溥滂溟潁漑灌滬滸滾漿滲漱滯漲滌"],["dfa1","漾漓滷澆潺潸澁澀潯潛濳潭澂潼潘澎澑濂潦澳澣澡澤澹濆澪濟濕濬濔濘濱濮濛瀉瀋濺瀑瀁瀏濾瀛瀚潴瀝瀘瀟瀰瀾瀲灑灣炙炒炯烱炬炸炳炮烟烋烝烙焉烽焜焙煥煕熈煦煢煌煖煬熏燻熄熕熨熬燗熹熾燒燉燔燎燠燬燧燵燼"],["e0a1","燹燿爍爐爛爨爭爬爰爲爻爼爿牀牆牋牘牴牾犂犁犇犒犖犢犧犹犲狃狆狄狎狒狢狠狡狹狷倏猗猊猜猖猝猴猯猩猥猾獎獏默獗獪獨獰獸獵獻獺珈玳珎玻珀珥珮珞璢琅瑯琥珸琲琺瑕琿瑟瑙瑁瑜瑩瑰瑣瑪瑶瑾璋璞璧瓊瓏瓔珱"],["e1a1","瓠瓣瓧瓩瓮瓲瓰瓱瓸瓷甄甃甅甌甎甍甕甓甞甦甬甼畄畍畊畉畛畆畚畩畤畧畫畭畸當疆疇畴疊疉疂疔疚疝疥疣痂疳痃疵疽疸疼疱痍痊痒痙痣痞痾痿痼瘁痰痺痲痳瘋瘍瘉瘟瘧瘠瘡瘢瘤瘴瘰瘻癇癈癆癜癘癡癢癨癩癪癧癬癰"],["e2a1","癲癶癸發皀皃皈皋皎皖皓皙皚皰皴皸皹皺盂盍盖盒盞盡盥盧盪蘯盻眈眇眄眩眤眞眥眦眛眷眸睇睚睨睫睛睥睿睾睹瞎瞋瞑瞠瞞瞰瞶瞹瞿瞼瞽瞻矇矍矗矚矜矣矮矼砌砒礦砠礪硅碎硴碆硼碚碌碣碵碪碯磑磆磋磔碾碼磅磊磬"],["e3a1","磧磚磽磴礇礒礑礙礬礫祀祠祗祟祚祕祓祺祿禊禝禧齋禪禮禳禹禺秉秕秧秬秡秣稈稍稘稙稠稟禀稱稻稾稷穃穗穉穡穢穩龝穰穹穽窈窗窕窘窖窩竈窰窶竅竄窿邃竇竊竍竏竕竓站竚竝竡竢竦竭竰笂笏笊笆笳笘笙笞笵笨笶筐"],["e4a1","筺笄筍笋筌筅筵筥筴筧筰筱筬筮箝箘箟箍箜箚箋箒箏筝箙篋篁篌篏箴篆篝篩簑簔篦篥籠簀簇簓篳篷簗簍篶簣簧簪簟簷簫簽籌籃籔籏籀籐籘籟籤籖籥籬籵粃粐粤粭粢粫粡粨粳粲粱粮粹粽糀糅糂糘糒糜糢鬻糯糲糴糶糺紆"],["e5a1","紂紜紕紊絅絋紮紲紿紵絆絳絖絎絲絨絮絏絣經綉絛綏絽綛綺綮綣綵緇綽綫總綢綯緜綸綟綰緘緝緤緞緻緲緡縅縊縣縡縒縱縟縉縋縢繆繦縻縵縹繃縷縲縺繧繝繖繞繙繚繹繪繩繼繻纃緕繽辮繿纈纉續纒纐纓纔纖纎纛纜缸缺"],["e6a1","罅罌罍罎罐网罕罔罘罟罠罨罩罧罸羂羆羃羈羇羌羔羞羝羚羣羯羲羹羮羶羸譱翅翆翊翕翔翡翦翩翳翹飜耆耄耋耒耘耙耜耡耨耿耻聊聆聒聘聚聟聢聨聳聲聰聶聹聽聿肄肆肅肛肓肚肭冐肬胛胥胙胝胄胚胖脉胯胱脛脩脣脯腋"],["e7a1","隋腆脾腓腑胼腱腮腥腦腴膃膈膊膀膂膠膕膤膣腟膓膩膰膵膾膸膽臀臂膺臉臍臑臙臘臈臚臟臠臧臺臻臾舁舂舅與舊舍舐舖舩舫舸舳艀艙艘艝艚艟艤艢艨艪艫舮艱艷艸艾芍芒芫芟芻芬苡苣苟苒苴苳苺莓范苻苹苞茆苜茉苙"],["e8a1","茵茴茖茲茱荀茹荐荅茯茫茗茘莅莚莪莟莢莖茣莎莇莊荼莵荳荵莠莉莨菴萓菫菎菽萃菘萋菁菷萇菠菲萍萢萠莽萸蔆菻葭萪萼蕚蒄葷葫蒭葮蒂葩葆萬葯葹萵蓊葢蒹蒿蒟蓙蓍蒻蓚蓐蓁蓆蓖蒡蔡蓿蓴蔗蔘蔬蔟蔕蔔蓼蕀蕣蕘蕈"],["e9a1","蕁蘂蕋蕕薀薤薈薑薊薨蕭薔薛藪薇薜蕷蕾薐藉薺藏薹藐藕藝藥藜藹蘊蘓蘋藾藺蘆蘢蘚蘰蘿虍乕虔號虧虱蚓蚣蚩蚪蚋蚌蚶蚯蛄蛆蚰蛉蠣蚫蛔蛞蛩蛬蛟蛛蛯蜒蜆蜈蜀蜃蛻蜑蜉蜍蛹蜊蜴蜿蜷蜻蜥蜩蜚蝠蝟蝸蝌蝎蝴蝗蝨蝮蝙"],["eaa1","蝓蝣蝪蠅螢螟螂螯蟋螽蟀蟐雖螫蟄螳蟇蟆螻蟯蟲蟠蠏蠍蟾蟶蟷蠎蟒蠑蠖蠕蠢蠡蠱蠶蠹蠧蠻衄衂衒衙衞衢衫袁衾袞衵衽袵衲袂袗袒袮袙袢袍袤袰袿袱裃裄裔裘裙裝裹褂裼裴裨裲褄褌褊褓襃褞褥褪褫襁襄褻褶褸襌褝襠襞"],["eba1","襦襤襭襪襯襴襷襾覃覈覊覓覘覡覩覦覬覯覲覺覽覿觀觚觜觝觧觴觸訃訖訐訌訛訝訥訶詁詛詒詆詈詼詭詬詢誅誂誄誨誡誑誥誦誚誣諄諍諂諚諫諳諧諤諱謔諠諢諷諞諛謌謇謚諡謖謐謗謠謳鞫謦謫謾謨譁譌譏譎證譖譛譚譫"],["eca1","譟譬譯譴譽讀讌讎讒讓讖讙讚谺豁谿豈豌豎豐豕豢豬豸豺貂貉貅貊貍貎貔豼貘戝貭貪貽貲貳貮貶賈賁賤賣賚賽賺賻贄贅贊贇贏贍贐齎贓賍贔贖赧赭赱赳趁趙跂趾趺跏跚跖跌跛跋跪跫跟跣跼踈踉跿踝踞踐踟蹂踵踰踴蹊"],["eda1","蹇蹉蹌蹐蹈蹙蹤蹠踪蹣蹕蹶蹲蹼躁躇躅躄躋躊躓躑躔躙躪躡躬躰軆躱躾軅軈軋軛軣軼軻軫軾輊輅輕輒輙輓輜輟輛輌輦輳輻輹轅轂輾轌轉轆轎轗轜轢轣轤辜辟辣辭辯辷迚迥迢迪迯邇迴逅迹迺逑逕逡逍逞逖逋逧逶逵逹迸"],["eea1","遏遐遑遒逎遉逾遖遘遞遨遯遶隨遲邂遽邁邀邊邉邏邨邯邱邵郢郤扈郛鄂鄒鄙鄲鄰酊酖酘酣酥酩酳酲醋醉醂醢醫醯醪醵醴醺釀釁釉釋釐釖釟釡釛釼釵釶鈞釿鈔鈬鈕鈑鉞鉗鉅鉉鉤鉈銕鈿鉋鉐銜銖銓銛鉚鋏銹銷鋩錏鋺鍄錮"],["efa1","錙錢錚錣錺錵錻鍜鍠鍼鍮鍖鎰鎬鎭鎔鎹鏖鏗鏨鏥鏘鏃鏝鏐鏈鏤鐚鐔鐓鐃鐇鐐鐶鐫鐵鐡鐺鑁鑒鑄鑛鑠鑢鑞鑪鈩鑰鑵鑷鑽鑚鑼鑾钁鑿閂閇閊閔閖閘閙閠閨閧閭閼閻閹閾闊濶闃闍闌闕闔闖關闡闥闢阡阨阮阯陂陌陏陋陷陜陞"],["f0a1","陝陟陦陲陬隍隘隕隗險隧隱隲隰隴隶隸隹雎雋雉雍襍雜霍雕雹霄霆霈霓霎霑霏霖霙霤霪霰霹霽霾靄靆靈靂靉靜靠靤靦靨勒靫靱靹鞅靼鞁靺鞆鞋鞏鞐鞜鞨鞦鞣鞳鞴韃韆韈韋韜韭齏韲竟韶韵頏頌頸頤頡頷頽顆顏顋顫顯顰"],["f1a1","顱顴顳颪颯颱颶飄飃飆飩飫餃餉餒餔餘餡餝餞餤餠餬餮餽餾饂饉饅饐饋饑饒饌饕馗馘馥馭馮馼駟駛駝駘駑駭駮駱駲駻駸騁騏騅駢騙騫騷驅驂驀驃騾驕驍驛驗驟驢驥驤驩驫驪骭骰骼髀髏髑髓體髞髟髢髣髦髯髫髮髴髱髷"],["f2a1","髻鬆鬘鬚鬟鬢鬣鬥鬧鬨鬩鬪鬮鬯鬲魄魃魏魍魎魑魘魴鮓鮃鮑鮖鮗鮟鮠鮨鮴鯀鯊鮹鯆鯏鯑鯒鯣鯢鯤鯔鯡鰺鯲鯱鯰鰕鰔鰉鰓鰌鰆鰈鰒鰊鰄鰮鰛鰥鰤鰡鰰鱇鰲鱆鰾鱚鱠鱧鱶鱸鳧鳬鳰鴉鴈鳫鴃鴆鴪鴦鶯鴣鴟鵄鴕鴒鵁鴿鴾鵆鵈"],["f3a1","鵝鵞鵤鵑鵐鵙鵲鶉鶇鶫鵯鵺鶚鶤鶩鶲鷄鷁鶻鶸鶺鷆鷏鷂鷙鷓鷸鷦鷭鷯鷽鸚鸛鸞鹵鹹鹽麁麈麋麌麒麕麑麝麥麩麸麪麭靡黌黎黏黐黔黜點黝黠黥黨黯黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠"],["f4a1","堯槇遙瑤凜熙"],["f9a1","纊褜鍈銈蓜俉炻昱棈鋹曻彅丨仡仼伀伃伹佖侒侊侚侔俍偀倢俿倞偆偰偂傔僴僘兊兤冝冾凬刕劜劦勀勛匀匇匤卲厓厲叝﨎咜咊咩哿喆坙坥垬埈埇﨏塚增墲夋奓奛奝奣妤妺孖寀甯寘寬尞岦岺峵崧嵓﨑嵂嵭嶸嶹巐弡弴彧德"],["faa1","忞恝悅悊惞惕愠惲愑愷愰憘戓抦揵摠撝擎敎昀昕昻昉昮昞昤晥晗晙晴晳暙暠暲暿曺朎朗杦枻桒柀栁桄棏﨓楨﨔榘槢樰橫橆橳橾櫢櫤毖氿汜沆汯泚洄涇浯涖涬淏淸淲淼渹湜渧渼溿澈澵濵瀅瀇瀨炅炫焏焄煜煆煇凞燁燾犱"],["fba1","犾猤猪獷玽珉珖珣珒琇珵琦琪琩琮瑢璉璟甁畯皂皜皞皛皦益睆劯砡硎硤硺礰礼神祥禔福禛竑竧靖竫箞精絈絜綷綠緖繒罇羡羽茁荢荿菇菶葈蒴蕓蕙蕫﨟薰蘒﨡蠇裵訒訷詹誧誾諟諸諶譓譿賰賴贒赶﨣軏﨤逸遧郞都鄕鄧釚"],["fca1","釗釞釭釮釤釥鈆鈐鈊鈺鉀鈼鉎鉙鉑鈹鉧銧鉷鉸鋧鋗鋙鋐﨧鋕鋠鋓錥錡鋻﨨錞鋿錝錂鍰鍗鎤鏆鏞鏸鐱鑅鑈閒隆﨩隝隯霳霻靃靍靏靑靕顗顥飯飼餧館馞驎髙髜魵魲鮏鮱鮻鰀鵰鵫鶴鸙黑"],["fcf1","ⅰ",9,"￢￤＇＂"],["8fa2af","˘ˇ¸˙˝¯˛˚～΄΅"],["8fa2c2","¡¦¿"],["8fa2eb","ºª©®™¤№"],["8fa6e1","ΆΈΉΊΪ"],["8fa6e7","Ό"],["8fa6e9","ΎΫ"],["8fa6ec","Ώ"],["8fa6f1","άέήίϊΐόςύϋΰώ"],["8fa7c2","Ђ",10,"ЎЏ"],["8fa7f2","ђ",10,"ўџ"],["8fa9a1","ÆĐ"],["8fa9a4","Ħ"],["8fa9a6","Ĳ"],["8fa9a8","ŁĿ"],["8fa9ab","ŊØŒ"],["8fa9af","ŦÞ"],["8fa9c1","æđðħıĳĸłŀŉŋøœßŧþ"],["8faaa1","ÁÀÄÂĂǍĀĄÅÃĆĈČÇĊĎÉÈËÊĚĖĒĘ"],["8faaba","ĜĞĢĠĤÍÌÏÎǏİĪĮĨĴĶĹĽĻŃŇŅÑÓÒÖÔǑŐŌÕŔŘŖŚŜŠŞŤŢÚÙÜÛŬǓŰŪŲŮŨǗǛǙǕŴÝŸŶŹŽŻ"],["8faba1","áàäâăǎāąåãćĉčçċďéèëêěėēęǵĝğ"],["8fabbd","ġĥíìïîǐ"],["8fabc5","īįĩĵķĺľļńňņñóòöôǒőōõŕřŗśŝšşťţúùüûŭǔűūųůũǘǜǚǖŵýÿŷźžż"],["8fb0a1","丂丄丅丌丒丟丣两丨丫丮丯丰丵乀乁乄乇乑乚乜乣乨乩乴乵乹乿亍亖亗亝亯亹仃仐仚仛仠仡仢仨仯仱仳仵份仾仿伀伂伃伈伋伌伒伕伖众伙伮伱你伳伵伷伹伻伾佀佂佈佉佋佌佒佔佖佘佟佣佪佬佮佱佷佸佹佺佽佾侁侂侄"],["8fb1a1","侅侉侊侌侎侐侒侓侔侗侙侚侞侟侲侷侹侻侼侽侾俀俁俅俆俈俉俋俌俍俏俒俜俠俢俰俲俼俽俿倀倁倄倇倊倌倎倐倓倗倘倛倜倝倞倢倧倮倰倲倳倵偀偁偂偅偆偊偌偎偑偒偓偗偙偟偠偢偣偦偧偪偭偰偱倻傁傃傄傆傊傎傏傐"],["8fb2a1","傒傓傔傖傛傜傞",4,"傪傯傰傹傺傽僀僃僄僇僌僎僐僓僔僘僜僝僟僢僤僦僨僩僯僱僶僺僾儃儆儇儈儋儌儍儎僲儐儗儙儛儜儝儞儣儧儨儬儭儯儱儳儴儵儸儹兂兊兏兓兕兗兘兟兤兦兾冃冄冋冎冘冝冡冣冭冸冺冼冾冿凂"],["8fb3a1","凈减凑凒凓凕凘凞凢凥凮凲凳凴凷刁刂刅划刓刕刖刘刢刨刱刲刵刼剅剉剕剗剘剚剜剟剠剡剦剮剷剸剹劀劂劅劊劌劓劕劖劗劘劚劜劤劥劦劧劯劰劶劷劸劺劻劽勀勄勆勈勌勏勑勔勖勛勜勡勥勨勩勪勬勰勱勴勶勷匀匃匊匋"],["8fb4a1","匌匑匓匘匛匜匞匟匥匧匨匩匫匬匭匰匲匵匼匽匾卂卌卋卙卛卡卣卥卬卭卲卹卾厃厇厈厎厓厔厙厝厡厤厪厫厯厲厴厵厷厸厺厽叀叅叏叒叓叕叚叝叞叠另叧叵吂吓吚吡吧吨吪启吱吴吵呃呄呇呍呏呞呢呤呦呧呩呫呭呮呴呿"],["8fb5a1","咁咃咅咈咉咍咑咕咖咜咟咡咦咧咩咪咭咮咱咷咹咺咻咿哆哊响哎哠哪哬哯哶哼哾哿唀唁唅唈唉唌唍唎唕唪唫唲唵唶唻唼唽啁啇啉啊啍啐啑啘啚啛啞啠啡啤啦啿喁喂喆喈喎喏喑喒喓喔喗喣喤喭喲喿嗁嗃嗆嗉嗋嗌嗎嗑嗒"],["8fb6a1","嗓嗗嗘嗛嗞嗢嗩嗶嗿嘅嘈嘊嘍",5,"嘙嘬嘰嘳嘵嘷嘹嘻嘼嘽嘿噀噁噃噄噆噉噋噍噏噔噞噠噡噢噣噦噩噭噯噱噲噵嚄嚅嚈嚋嚌嚕嚙嚚嚝嚞嚟嚦嚧嚨嚩嚫嚬嚭嚱嚳嚷嚾囅囉囊囋囏囐囌囍囙囜囝囟囡囤",4,"囱囫园"],["8fb7a1","囶囷圁圂圇圊圌圑圕圚圛圝圠圢圣圤圥圩圪圬圮圯圳圴圽圾圿坅坆坌坍坒坢坥坧坨坫坭",4,"坳坴坵坷坹坺坻坼坾垁垃垌垔垗垙垚垜垝垞垟垡垕垧垨垩垬垸垽埇埈埌埏埕埝埞埤埦埧埩埭埰埵埶埸埽埾埿堃堄堈堉埡"],["8fb8a1","堌堍堛堞堟堠堦堧堭堲堹堿塉塌塍塏塐塕塟塡塤塧塨塸塼塿墀墁墇墈墉墊墌墍墏墐墔墖墝墠墡墢墦墩墱墲壄墼壂壈壍壎壐壒壔壖壚壝壡壢壩壳夅夆夋夌夒夓夔虁夝夡夣夤夨夯夰夳夵夶夿奃奆奒奓奙奛奝奞奟奡奣奫奭"],["8fb9a1","奯奲奵奶她奻奼妋妌妎妒妕妗妟妤妧妭妮妯妰妳妷妺妼姁姃姄姈姊姍姒姝姞姟姣姤姧姮姯姱姲姴姷娀娄娌娍娎娒娓娞娣娤娧娨娪娭娰婄婅婇婈婌婐婕婞婣婥婧婭婷婺婻婾媋媐媓媖媙媜媞媟媠媢媧媬媱媲媳媵媸媺媻媿"],["8fbaa1","嫄嫆嫈嫏嫚嫜嫠嫥嫪嫮嫵嫶嫽嬀嬁嬈嬗嬴嬙嬛嬝嬡嬥嬭嬸孁孋孌孒孖孞孨孮孯孼孽孾孿宁宄宆宊宎宐宑宓宔宖宨宩宬宭宯宱宲宷宺宼寀寁寍寏寖",4,"寠寯寱寴寽尌尗尞尟尣尦尩尫尬尮尰尲尵尶屙屚屜屢屣屧屨屩"],["8fbba1","屭屰屴屵屺屻屼屽岇岈岊岏岒岝岟岠岢岣岦岪岲岴岵岺峉峋峒峝峗峮峱峲峴崁崆崍崒崫崣崤崦崧崱崴崹崽崿嵂嵃嵆嵈嵕嵑嵙嵊嵟嵠嵡嵢嵤嵪嵭嵰嵹嵺嵾嵿嶁嶃嶈嶊嶒嶓嶔嶕嶙嶛嶟嶠嶧嶫嶰嶴嶸嶹巃巇巋巐巎巘巙巠巤"],["8fbca1","巩巸巹帀帇帍帒帔帕帘帟帠帮帨帲帵帾幋幐幉幑幖幘幛幜幞幨幪",4,"幰庀庋庎庢庤庥庨庪庬庱庳庽庾庿廆廌廋廎廑廒廔廕廜廞廥廫异弆弇弈弎弙弜弝弡弢弣弤弨弫弬弮弰弴弶弻弽弿彀彄彅彇彍彐彔彘彛彠彣彤彧"],["8fbda1","彯彲彴彵彸彺彽彾徉徍徏徖徜徝徢徧徫徤徬徯徰徱徸忄忇忈忉忋忐",4,"忞忡忢忨忩忪忬忭忮忯忲忳忶忺忼怇怊怍怓怔怗怘怚怟怤怭怳怵恀恇恈恉恌恑恔恖恗恝恡恧恱恾恿悂悆悈悊悎悑悓悕悘悝悞悢悤悥您悰悱悷"],["8fbea1","悻悾惂惄惈惉惊惋惎惏惔惕惙惛惝惞惢惥惲惵惸惼惽愂愇愊愌愐",4,"愖愗愙愜愞愢愪愫愰愱愵愶愷愹慁慅慆慉慞慠慬慲慸慻慼慿憀憁憃憄憋憍憒憓憗憘憜憝憟憠憥憨憪憭憸憹憼懀懁懂懎懏懕懜懝懞懟懡懢懧懩懥"],["8fbfa1","懬懭懯戁戃戄戇戓戕戜戠戢戣戧戩戫戹戽扂扃扄扆扌扐扑扒扔扖扚扜扤扭扯扳扺扽抍抎抏抐抦抨抳抶抷抺抾抿拄拎拕拖拚拪拲拴拼拽挃挄挊挋挍挐挓挖挘挩挪挭挵挶挹挼捁捂捃捄捆捊捋捎捒捓捔捘捛捥捦捬捭捱捴捵"],["8fc0a1","捸捼捽捿掂掄掇掊掐掔掕掙掚掞掤掦掭掮掯掽揁揅揈揎揑揓揔揕揜揠揥揪揬揲揳揵揸揹搉搊搐搒搔搘搞搠搢搤搥搩搪搯搰搵搽搿摋摏摑摒摓摔摚摛摜摝摟摠摡摣摭摳摴摻摽撅撇撏撐撑撘撙撛撝撟撡撣撦撨撬撳撽撾撿"],["8fc1a1","擄擉擊擋擌擎擐擑擕擗擤擥擩擪擭擰擵擷擻擿攁攄攈攉攊攏攓攔攖攙攛攞攟攢攦攩攮攱攺攼攽敃敇敉敐敒敔敟敠敧敫敺敽斁斅斊斒斕斘斝斠斣斦斮斲斳斴斿旂旈旉旎旐旔旖旘旟旰旲旴旵旹旾旿昀昄昈昉昍昑昒昕昖昝"],["8fc2a1","昞昡昢昣昤昦昩昪昫昬昮昰昱昳昹昷晀晅晆晊晌晑晎晗晘晙晛晜晠晡曻晪晫晬晾晳晵晿晷晸晹晻暀晼暋暌暍暐暒暙暚暛暜暟暠暤暭暱暲暵暻暿曀曂曃曈曌曎曏曔曛曟曨曫曬曮曺朅朇朎朓朙朜朠朢朳朾杅杇杈杌杔杕杝"],["8fc3a1","杦杬杮杴杶杻极构枎枏枑枓枖枘枙枛枰枱枲枵枻枼枽柹柀柂柃柅柈柉柒柗柙柜柡柦柰柲柶柷桒栔栙栝栟栨栧栬栭栯栰栱栳栻栿桄桅桊桌桕桗桘桛桫桮",4,"桵桹桺桻桼梂梄梆梈梖梘梚梜梡梣梥梩梪梮梲梻棅棈棌棏"],["8fc4a1","棐棑棓棖棙棜棝棥棨棪棫棬棭棰棱棵棶棻棼棽椆椉椊椐椑椓椖椗椱椳椵椸椻楂楅楉楎楗楛楣楤楥楦楨楩楬楰楱楲楺楻楿榀榍榒榖榘榡榥榦榨榫榭榯榷榸榺榼槅槈槑槖槗槢槥槮槯槱槳槵槾樀樁樃樏樑樕樚樝樠樤樨樰樲"],["8fc5a1","樴樷樻樾樿橅橆橉橊橎橐橑橒橕橖橛橤橧橪橱橳橾檁檃檆檇檉檋檑檛檝檞檟檥檫檯檰檱檴檽檾檿櫆櫉櫈櫌櫐櫔櫕櫖櫜櫝櫤櫧櫬櫰櫱櫲櫼櫽欂欃欆欇欉欏欐欑欗欛欞欤欨欫欬欯欵欶欻欿歆歊歍歒歖歘歝歠歧歫歮歰歵歽"],["8fc6a1","歾殂殅殗殛殟殠殢殣殨殩殬殭殮殰殸殹殽殾毃毄毉毌毖毚毡毣毦毧毮毱毷毹毿氂氄氅氉氍氎氐氒氙氟氦氧氨氬氮氳氵氶氺氻氿汊汋汍汏汒汔汙汛汜汫汭汯汴汶汸汹汻沅沆沇沉沔沕沗沘沜沟沰沲沴泂泆泍泏泐泑泒泔泖"],["8fc7a1","泚泜泠泧泩泫泬泮泲泴洄洇洊洎洏洑洓洚洦洧洨汧洮洯洱洹洼洿浗浞浟浡浥浧浯浰浼涂涇涑涒涔涖涗涘涪涬涴涷涹涽涿淄淈淊淎淏淖淛淝淟淠淢淥淩淯淰淴淶淼渀渄渞渢渧渲渶渹渻渼湄湅湈湉湋湏湑湒湓湔湗湜湝湞"],["8fc8a1","湢湣湨湳湻湽溍溓溙溠溧溭溮溱溳溻溿滀滁滃滇滈滊滍滎滏滫滭滮滹滻滽漄漈漊漌漍漖漘漚漛漦漩漪漯漰漳漶漻漼漭潏潑潒潓潗潙潚潝潞潡潢潨潬潽潾澃澇澈澋澌澍澐澒澓澔澖澚澟澠澥澦澧澨澮澯澰澵澶澼濅濇濈濊"],["8fc9a1","濚濞濨濩濰濵濹濼濽瀀瀅瀆瀇瀍瀗瀠瀣瀯瀴瀷瀹瀼灃灄灈灉灊灋灔灕灝灞灎灤灥灬灮灵灶灾炁炅炆炔",4,"炛炤炫炰炱炴炷烊烑烓烔烕烖烘烜烤烺焃",4,"焋焌焏焞焠焫焭焯焰焱焸煁煅煆煇煊煋煐煒煗煚煜煞煠"],["8fcaa1","煨煹熀熅熇熌熒熚熛熠熢熯熰熲熳熺熿燀燁燄燋燌燓燖燙燚燜燸燾爀爇爈爉爓爗爚爝爟爤爫爯爴爸爹牁牂牃牅牎牏牐牓牕牖牚牜牞牠牣牨牫牮牯牱牷牸牻牼牿犄犉犍犎犓犛犨犭犮犱犴犾狁狇狉狌狕狖狘狟狥狳狴狺狻"],["8fcba1","狾猂猄猅猇猋猍猒猓猘猙猞猢猤猧猨猬猱猲猵猺猻猽獃獍獐獒獖獘獝獞獟獠獦獧獩獫獬獮獯獱獷獹獼玀玁玃玅玆玎玐玓玕玗玘玜玞玟玠玢玥玦玪玫玭玵玷玹玼玽玿珅珆珉珋珌珏珒珓珖珙珝珡珣珦珧珩珴珵珷珹珺珻珽"],["8fcca1","珿琀琁琄琇琊琑琚琛琤琦琨",9,"琹瑀瑃瑄瑆瑇瑋瑍瑑瑒瑗瑝瑢瑦瑧瑨瑫瑭瑮瑱瑲璀璁璅璆璇璉璏璐璑璒璘璙璚璜璟璠璡璣璦璨璩璪璫璮璯璱璲璵璹璻璿瓈瓉瓌瓐瓓瓘瓚瓛瓞瓟瓤瓨瓪瓫瓯瓴瓺瓻瓼瓿甆"],["8fcda1","甒甖甗甠甡甤甧甩甪甯甶甹甽甾甿畀畃畇畈畎畐畒畗畞畟畡畯畱畹",5,"疁疅疐疒疓疕疙疜疢疤疴疺疿痀痁痄痆痌痎痏痗痜痟痠痡痤痧痬痮痯痱痹瘀瘂瘃瘄瘇瘈瘊瘌瘏瘒瘓瘕瘖瘙瘛瘜瘝瘞瘣瘥瘦瘩瘭瘲瘳瘵瘸瘹"],["8fcea1","瘺瘼癊癀癁癃癄癅癉癋癕癙癟癤癥癭癮癯癱癴皁皅皌皍皕皛皜皝皟皠皢",6,"皪皭皽盁盅盉盋盌盎盔盙盠盦盨盬盰盱盶盹盼眀眆眊眎眒眔眕眗眙眚眜眢眨眭眮眯眴眵眶眹眽眾睂睅睆睊睍睎睏睒睖睗睜睞睟睠睢"],["8fcfa1","睤睧睪睬睰睲睳睴睺睽瞀瞄瞌瞍瞔瞕瞖瞚瞟瞢瞧瞪瞮瞯瞱瞵瞾矃矉矑矒矕矙矞矟矠矤矦矪矬矰矱矴矸矻砅砆砉砍砎砑砝砡砢砣砭砮砰砵砷硃硄硇硈硌硎硒硜硞硠硡硣硤硨硪确硺硾碊碏碔碘碡碝碞碟碤碨碬碭碰碱碲碳"],["8fd0a1","碻碽碿磇磈磉磌磎磒磓磕磖磤磛磟磠磡磦磪磲磳礀磶磷磺磻磿礆礌礐礚礜礞礟礠礥礧礩礭礱礴礵礻礽礿祄祅祆祊祋祏祑祔祘祛祜祧祩祫祲祹祻祼祾禋禌禑禓禔禕禖禘禛禜禡禨禩禫禯禱禴禸离秂秄秇秈秊秏秔秖秚秝秞"],["8fd1a1","秠秢秥秪秫秭秱秸秼稂稃稇稉稊稌稑稕稛稞稡稧稫稭稯稰稴稵稸稹稺穄穅穇穈穌穕穖穙穜穝穟穠穥穧穪穭穵穸穾窀窂窅窆窊窋窐窑窔窞窠窣窬窳窵窹窻窼竆竉竌竎竑竛竨竩竫竬竱竴竻竽竾笇笔笟笣笧笩笪笫笭笮笯笰"],["8fd2a1","笱笴笽笿筀筁筇筎筕筠筤筦筩筪筭筯筲筳筷箄箉箎箐箑箖箛箞箠箥箬箯箰箲箵箶箺箻箼箽篂篅篈篊篔篖篗篙篚篛篨篪篲篴篵篸篹篺篼篾簁簂簃簄簆簉簋簌簎簏簙簛簠簥簦簨簬簱簳簴簶簹簺籆籊籕籑籒籓籙",5],["8fd3a1","籡籣籧籩籭籮籰籲籹籼籽粆粇粏粔粞粠粦粰粶粷粺粻粼粿糄糇糈糉糍糏糓糔糕糗糙糚糝糦糩糫糵紃紇紈紉紏紑紒紓紖紝紞紣紦紪紭紱紼紽紾絀絁絇絈絍絑絓絗絙絚絜絝絥絧絪絰絸絺絻絿綁綂綃綅綆綈綋綌綍綑綖綗綝"],["8fd4a1","綞綦綧綪綳綶綷綹緂",4,"緌緍緎緗緙縀緢緥緦緪緫緭緱緵緶緹緺縈縐縑縕縗縜縝縠縧縨縬縭縯縳縶縿繄繅繇繎繐繒繘繟繡繢繥繫繮繯繳繸繾纁纆纇纊纍纑纕纘纚纝纞缼缻缽缾缿罃罄罇罏罒罓罛罜罝罡罣罤罥罦罭"],["8fd5a1","罱罽罾罿羀羋羍羏羐羑羖羗羜羡羢羦羪羭羴羼羿翀翃翈翎翏翛翟翣翥翨翬翮翯翲翺翽翾翿耇耈耊耍耎耏耑耓耔耖耝耞耟耠耤耦耬耮耰耴耵耷耹耺耼耾聀聄聠聤聦聭聱聵肁肈肎肜肞肦肧肫肸肹胈胍胏胒胔胕胗胘胠胭胮"],["8fd6a1","胰胲胳胶胹胺胾脃脋脖脗脘脜脞脠脤脧脬脰脵脺脼腅腇腊腌腒腗腠腡腧腨腩腭腯腷膁膐膄膅膆膋膎膖膘膛膞膢膮膲膴膻臋臃臅臊臎臏臕臗臛臝臞臡臤臫臬臰臱臲臵臶臸臹臽臿舀舃舏舓舔舙舚舝舡舢舨舲舴舺艃艄艅艆"],["8fd7a1","艋艎艏艑艖艜艠艣艧艭艴艻艽艿芀芁芃芄芇芉芊芎芑芔芖芘芚芛芠芡芣芤芧芨芩芪芮芰芲芴芷芺芼芾芿苆苐苕苚苠苢苤苨苪苭苯苶苷苽苾茀茁茇茈茊茋荔茛茝茞茟茡茢茬茭茮茰茳茷茺茼茽荂荃荄荇荍荎荑荕荖荗荰荸"],["8fd8a1","荽荿莀莂莄莆莍莒莔莕莘莙莛莜莝莦莧莩莬莾莿菀菇菉菏菐菑菔菝荓菨菪菶菸菹菼萁萆萊萏萑萕萙莭萯萹葅葇葈葊葍葏葑葒葖葘葙葚葜葠葤葥葧葪葰葳葴葶葸葼葽蒁蒅蒒蒓蒕蒞蒦蒨蒩蒪蒯蒱蒴蒺蒽蒾蓀蓂蓇蓈蓌蓏蓓"],["8fd9a1","蓜蓧蓪蓯蓰蓱蓲蓷蔲蓺蓻蓽蔂蔃蔇蔌蔎蔐蔜蔞蔢蔣蔤蔥蔧蔪蔫蔯蔳蔴蔶蔿蕆蕏",4,"蕖蕙蕜",6,"蕤蕫蕯蕹蕺蕻蕽蕿薁薅薆薉薋薌薏薓薘薝薟薠薢薥薧薴薶薷薸薼薽薾薿藂藇藊藋藎薭藘藚藟藠藦藨藭藳藶藼"],["8fdaa1","藿蘀蘄蘅蘍蘎蘐蘑蘒蘘蘙蘛蘞蘡蘧蘩蘶蘸蘺蘼蘽虀虂虆虒虓虖虗虘虙虝虠",4,"虩虬虯虵虶虷虺蚍蚑蚖蚘蚚蚜蚡蚦蚧蚨蚭蚱蚳蚴蚵蚷蚸蚹蚿蛀蛁蛃蛅蛑蛒蛕蛗蛚蛜蛠蛣蛥蛧蚈蛺蛼蛽蜄蜅蜇蜋蜎蜏蜐蜓蜔蜙蜞蜟蜡蜣"],["8fdba1","蜨蜮蜯蜱蜲蜹蜺蜼蜽蜾蝀蝃蝅蝍蝘蝝蝡蝤蝥蝯蝱蝲蝻螃",6,"螋螌螐螓螕螗螘螙螞螠螣螧螬螭螮螱螵螾螿蟁蟈蟉蟊蟎蟕蟖蟙蟚蟜蟟蟢蟣蟤蟪蟫蟭蟱蟳蟸蟺蟿蠁蠃蠆蠉蠊蠋蠐蠙蠒蠓蠔蠘蠚蠛蠜蠞蠟蠨蠭蠮蠰蠲蠵"],["8fdca1","蠺蠼衁衃衅衈衉衊衋衎衑衕衖衘衚衜衟衠衤衩衱衹衻袀袘袚袛袜袟袠袨袪袺袽袾裀裊",4,"裑裒裓裛裞裧裯裰裱裵裷褁褆褍褎褏褕褖褘褙褚褜褠褦褧褨褰褱褲褵褹褺褾襀襂襅襆襉襏襒襗襚襛襜襡襢襣襫襮襰襳襵襺"],["8fdda1","襻襼襽覉覍覐覔覕覛覜覟覠覥覰覴覵覶覷覼觔",4,"觥觩觫觭觱觳觶觹觽觿訄訅訇訏訑訒訔訕訞訠訢訤訦訫訬訯訵訷訽訾詀詃詅詇詉詍詎詓詖詗詘詜詝詡詥詧詵詶詷詹詺詻詾詿誀誃誆誋誏誐誒誖誗誙誟誧誩誮誯誳"],["8fdea1","誶誷誻誾諃諆諈諉諊諑諓諔諕諗諝諟諬諰諴諵諶諼諿謅謆謋謑謜謞謟謊謭謰謷謼譂",4,"譈譒譓譔譙譍譞譣譭譶譸譹譼譾讁讄讅讋讍讏讔讕讜讞讟谸谹谽谾豅豇豉豋豏豑豓豔豗豘豛豝豙豣豤豦豨豩豭豳豵豶豻豾貆"],["8fdfa1","貇貋貐貒貓貙貛貜貤貹貺賅賆賉賋賏賖賕賙賝賡賨賬賯賰賲賵賷賸賾賿贁贃贉贒贗贛赥赩赬赮赿趂趄趈趍趐趑趕趞趟趠趦趫趬趯趲趵趷趹趻跀跅跆跇跈跊跎跑跔跕跗跙跤跥跧跬跰趼跱跲跴跽踁踄踅踆踋踑踔踖踠踡踢"],["8fe0a1","踣踦踧踱踳踶踷踸踹踽蹀蹁蹋蹍蹎蹏蹔蹛蹜蹝蹞蹡蹢蹩蹬蹭蹯蹰蹱蹹蹺蹻躂躃躉躐躒躕躚躛躝躞躢躧躩躭躮躳躵躺躻軀軁軃軄軇軏軑軔軜軨軮軰軱軷軹軺軭輀輂輇輈輏輐輖輗輘輞輠輡輣輥輧輨輬輭輮輴輵輶輷輺轀轁"],["8fe1a1","轃轇轏轑",4,"轘轝轞轥辝辠辡辤辥辦辵辶辸达迀迁迆迊迋迍运迒迓迕迠迣迤迨迮迱迵迶迻迾适逄逈逌逘逛逨逩逯逪逬逭逳逴逷逿遃遄遌遛遝遢遦遧遬遰遴遹邅邈邋邌邎邐邕邗邘邙邛邠邡邢邥邰邲邳邴邶邽郌邾郃"],["8fe2a1","郄郅郇郈郕郗郘郙郜郝郟郥郒郶郫郯郰郴郾郿鄀鄄鄅鄆鄈鄍鄐鄔鄖鄗鄘鄚鄜鄞鄠鄥鄢鄣鄧鄩鄮鄯鄱鄴鄶鄷鄹鄺鄼鄽酃酇酈酏酓酗酙酚酛酡酤酧酭酴酹酺酻醁醃醅醆醊醎醑醓醔醕醘醞醡醦醨醬醭醮醰醱醲醳醶醻醼醽醿"],["8fe3a1","釂釃釅釓釔釗釙釚釞釤釥釩釪釬",5,"釷釹釻釽鈀鈁鈄鈅鈆鈇鈉鈊鈌鈐鈒鈓鈖鈘鈜鈝鈣鈤鈥鈦鈨鈮鈯鈰鈳鈵鈶鈸鈹鈺鈼鈾鉀鉂鉃鉆鉇鉊鉍鉎鉏鉑鉘鉙鉜鉝鉠鉡鉥鉧鉨鉩鉮鉯鉰鉵",4,"鉻鉼鉽鉿銈銉銊銍銎銒銗"],["8fe4a1","銙銟銠銤銥銧銨銫銯銲銶銸銺銻銼銽銿",4,"鋅鋆鋇鋈鋋鋌鋍鋎鋐鋓鋕鋗鋘鋙鋜鋝鋟鋠鋡鋣鋥鋧鋨鋬鋮鋰鋹鋻鋿錀錂錈錍錑錔錕錜錝錞錟錡錤錥錧錩錪錳錴錶錷鍇鍈鍉鍐鍑鍒鍕鍗鍘鍚鍞鍤鍥鍧鍩鍪鍭鍯鍰鍱鍳鍴鍶"],["8fe5a1","鍺鍽鍿鎀鎁鎂鎈鎊鎋鎍鎏鎒鎕鎘鎛鎞鎡鎣鎤鎦鎨鎫鎴鎵鎶鎺鎩鏁鏄鏅鏆鏇鏉",4,"鏓鏙鏜鏞鏟鏢鏦鏧鏹鏷鏸鏺鏻鏽鐁鐂鐄鐈鐉鐍鐎鐏鐕鐖鐗鐟鐮鐯鐱鐲鐳鐴鐻鐿鐽鑃鑅鑈鑊鑌鑕鑙鑜鑟鑡鑣鑨鑫鑭鑮鑯鑱鑲钄钃镸镹"],["8fe6a1","镾閄閈閌閍閎閝閞閟閡閦閩閫閬閴閶閺閽閿闆闈闉闋闐闑闒闓闙闚闝闞闟闠闤闦阝阞阢阤阥阦阬阱阳阷阸阹阺阼阽陁陒陔陖陗陘陡陮陴陻陼陾陿隁隂隃隄隉隑隖隚隝隟隤隥隦隩隮隯隳隺雊雒嶲雘雚雝雞雟雩雯雱雺霂"],["8fe7a1","霃霅霉霚霛霝霡霢霣霨霱霳靁靃靊靎靏靕靗靘靚靛靣靧靪靮靳靶靷靸靻靽靿鞀鞉鞕鞖鞗鞙鞚鞞鞟鞢鞬鞮鞱鞲鞵鞶鞸鞹鞺鞼鞾鞿韁韄韅韇韉韊韌韍韎韐韑韔韗韘韙韝韞韠韛韡韤韯韱韴韷韸韺頇頊頙頍頎頔頖頜頞頠頣頦"],["8fe8a1","頫頮頯頰頲頳頵頥頾顄顇顊顑顒顓顖顗顙顚顢顣顥顦顪顬颫颭颮颰颴颷颸颺颻颿飂飅飈飌飡飣飥飦飧飪飳飶餂餇餈餑餕餖餗餚餛餜餟餢餦餧餫餱",4,"餹餺餻餼饀饁饆饇饈饍饎饔饘饙饛饜饞饟饠馛馝馟馦馰馱馲馵"],["8fe9a1","馹馺馽馿駃駉駓駔駙駚駜駞駧駪駫駬駰駴駵駹駽駾騂騃騄騋騌騐騑騖騞騠騢騣騤騧騭騮騳騵騶騸驇驁驄驊驋驌驎驑驔驖驝骪骬骮骯骲骴骵骶骹骻骾骿髁髃髆髈髎髐髒髕髖髗髛髜髠髤髥髧髩髬髲髳髵髹髺髽髿",4],["8feaa1","鬄鬅鬈鬉鬋鬌鬍鬎鬐鬒鬖鬙鬛鬜鬠鬦鬫鬭鬳鬴鬵鬷鬹鬺鬽魈魋魌魕魖魗魛魞魡魣魥魦魨魪",4,"魳魵魷魸魹魿鮀鮄鮅鮆鮇鮉鮊鮋鮍鮏鮐鮔鮚鮝鮞鮦鮧鮩鮬鮰鮱鮲鮷鮸鮻鮼鮾鮿鯁鯇鯈鯎鯐鯗鯘鯝鯟鯥鯧鯪鯫鯯鯳鯷鯸"],["8feba1","鯹鯺鯽鯿鰀鰂鰋鰏鰑鰖鰘鰙鰚鰜鰞鰢鰣鰦",4,"鰱鰵鰶鰷鰽鱁鱃鱄鱅鱉鱊鱎鱏鱐鱓鱔鱖鱘鱛鱝鱞鱟鱣鱩鱪鱜鱫鱨鱮鱰鱲鱵鱷鱻鳦鳲鳷鳹鴋鴂鴑鴗鴘鴜鴝鴞鴯鴰鴲鴳鴴鴺鴼鵅鴽鵂鵃鵇鵊鵓鵔鵟鵣鵢鵥鵩鵪鵫鵰鵶鵷鵻"],["8feca1","鵼鵾鶃鶄鶆鶊鶍鶎鶒鶓鶕鶖鶗鶘鶡鶪鶬鶮鶱鶵鶹鶼鶿鷃鷇鷉鷊鷔鷕鷖鷗鷚鷞鷟鷠鷥鷧鷩鷫鷮鷰鷳鷴鷾鸊鸂鸇鸎鸐鸑鸒鸕鸖鸙鸜鸝鹺鹻鹼麀麂麃麄麅麇麎麏麖麘麛麞麤麨麬麮麯麰麳麴麵黆黈黋黕黟黤黧黬黭黮黰黱黲黵"],["8feda1","黸黿鼂鼃鼉鼏鼐鼑鼒鼔鼖鼗鼙鼚鼛鼟鼢鼦鼪鼫鼯鼱鼲鼴鼷鼹鼺鼼鼽鼿齁齃",4,"齓齕齖齗齘齚齝齞齨齩齭",4,"齳齵齺齽龏龐龑龒龔龖龗龞龡龢龣龥"]]'), Ka = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127,"€"],["8140","丂丄丅丆丏丒丗丟丠両丣並丩丮丯丱丳丵丷丼乀乁乂乄乆乊乑乕乗乚乛乢乣乤乥乧乨乪",5,"乲乴",9,"乿",6,"亇亊"],["8180","亐亖亗亙亜亝亞亣亪亯亰亱亴亶亷亸亹亼亽亾仈仌仏仐仒仚仛仜仠仢仦仧仩仭仮仯仱仴仸仹仺仼仾伀伂",6,"伋伌伒",4,"伜伝伡伣伨伩伬伭伮伱伳伵伷伹伻伾",4,"佄佅佇",5,"佒佔佖佡佢佦佨佪佫佭佮佱佲併佷佸佹佺佽侀侁侂侅來侇侊侌侎侐侒侓侕侖侘侙侚侜侞侟価侢"],["8240","侤侫侭侰",4,"侶",8,"俀俁係俆俇俈俉俋俌俍俒",4,"俙俛俠俢俤俥俧俫俬俰俲俴俵俶俷俹俻俼俽俿",11],["8280","個倎倐們倓倕倖倗倛倝倞倠倢倣値倧倫倯",10,"倻倽倿偀偁偂偄偅偆偉偊偋偍偐",4,"偖偗偘偙偛偝",7,"偦",5,"偭",8,"偸偹偺偼偽傁傂傃傄傆傇傉傊傋傌傎",20,"傤傦傪傫傭",4,"傳",6,"傼"],["8340","傽",17,"僐",5,"僗僘僙僛",10,"僨僩僪僫僯僰僱僲僴僶",4,"僼",9,"儈"],["8380","儉儊儌",5,"儓",13,"儢",28,"兂兇兊兌兎兏児兒兓兗兘兙兛兝",4,"兣兤兦內兩兪兯兲兺兾兿冃冄円冇冊冋冎冏冐冑冓冔冘冚冝冞冟冡冣冦",4,"冭冮冴冸冹冺冾冿凁凂凃凅凈凊凍凎凐凒",5],["8440","凘凙凚凜凞凟凢凣凥",5,"凬凮凱凲凴凷凾刄刅刉刋刌刏刐刓刔刕刜刞刟刡刢刣別刦刧刪刬刯刱刲刴刵刼刾剄",5,"剋剎剏剒剓剕剗剘"],["8480","剙剚剛剝剟剠剢剣剤剦剨剫剬剭剮剰剱剳",9,"剾劀劃",4,"劉",6,"劑劒劔",6,"劜劤劥劦劧劮劯劰労",9,"勀勁勂勄勅勆勈勊勌勍勎勏勑勓勔動勗務",5,"勠勡勢勣勥",10,"勱",7,"勻勼勽匁匂匃匄匇匉匊匋匌匎"],["8540","匑匒匓匔匘匛匜匞匟匢匤匥匧匨匩匫匬匭匯",9,"匼匽區卂卄卆卋卌卍卐協単卙卛卝卥卨卪卬卭卲卶卹卻卼卽卾厀厁厃厇厈厊厎厏"],["8580","厐",4,"厖厗厙厛厜厞厠厡厤厧厪厫厬厭厯",6,"厷厸厹厺厼厽厾叀參",4,"収叏叐叒叓叕叚叜叝叞叡叢叧叴叺叾叿吀吂吅吇吋吔吘吙吚吜吢吤吥吪吰吳吶吷吺吽吿呁呂呄呅呇呉呌呍呎呏呑呚呝",4,"呣呥呧呩",7,"呴呹呺呾呿咁咃咅咇咈咉咊咍咑咓咗咘咜咞咟咠咡"],["8640","咢咥咮咰咲咵咶咷咹咺咼咾哃哅哊哋哖哘哛哠",4,"哫哬哯哰哱哴",5,"哻哾唀唂唃唄唅唈唊",4,"唒唓唕",5,"唜唝唞唟唡唥唦"],["8680","唨唩唫唭唲唴唵唶唸唹唺唻唽啀啂啅啇啈啋",4,"啑啒啓啔啗",4,"啝啞啟啠啢啣啨啩啫啯",5,"啹啺啽啿喅喆喌喍喎喐喒喓喕喖喗喚喛喞喠",6,"喨",8,"喲喴営喸喺喼喿",4,"嗆嗇嗈嗊嗋嗎嗏嗐嗕嗗",4,"嗞嗠嗢嗧嗩嗭嗮嗰嗱嗴嗶嗸",4,"嗿嘂嘃嘄嘅"],["8740","嘆嘇嘊嘋嘍嘐",7,"嘙嘚嘜嘝嘠嘡嘢嘥嘦嘨嘩嘪嘫嘮嘯嘰嘳嘵嘷嘸嘺嘼嘽嘾噀",11,"噏",4,"噕噖噚噛噝",4],["8780","噣噥噦噧噭噮噯噰噲噳噴噵噷噸噹噺噽",7,"嚇",6,"嚐嚑嚒嚔",14,"嚤",10,"嚰",6,"嚸嚹嚺嚻嚽",12,"囋",8,"囕囖囘囙囜団囥",5,"囬囮囯囲図囶囷囸囻囼圀圁圂圅圇國",6],["8840","園",9,"圝圞圠圡圢圤圥圦圧圫圱圲圴",4,"圼圽圿坁坃坄坅坆坈坉坋坒",4,"坘坙坢坣坥坧坬坮坰坱坲坴坵坸坹坺坽坾坿垀"],["8880","垁垇垈垉垊垍",4,"垔",6,"垜垝垞垟垥垨垪垬垯垰垱垳垵垶垷垹",8,"埄",6,"埌埍埐埑埓埖埗埛埜埞埡埢埣埥",7,"埮埰埱埲埳埵埶執埻埼埾埿堁堃堄堅堈堉堊堌堎堏堐堒堓堔堖堗堘堚堛堜堝堟堢堣堥",4,"堫",4,"報堲堳場堶",7],["8940","堾",5,"塅",6,"塎塏塐塒塓塕塖塗塙",4,"塟",5,"塦",4,"塭",16,"塿墂墄墆墇墈墊墋墌"],["8980","墍",4,"墔",4,"墛墜墝墠",7,"墪",17,"墽墾墿壀壂壃壄壆",10,"壒壓壔壖",13,"壥",5,"壭壯壱売壴壵壷壸壺",7,"夃夅夆夈",4,"夎夐夑夒夓夗夘夛夝夞夠夡夢夣夦夨夬夰夲夳夵夶夻"],["8a40","夽夾夿奀奃奅奆奊奌奍奐奒奓奙奛",4,"奡奣奤奦",12,"奵奷奺奻奼奾奿妀妅妉妋妌妎妏妐妑妔妕妘妚妛妜妝妟妠妡妢妦"],["8a80","妧妬妭妰妱妳",5,"妺妼妽妿",6,"姇姈姉姌姍姎姏姕姖姙姛姞",4,"姤姦姧姩姪姫姭",11,"姺姼姽姾娀娂娊娋娍娎娏娐娒娔娕娖娗娙娚娛娝娞娡娢娤娦娧娨娪",6,"娳娵娷",4,"娽娾娿婁",4,"婇婈婋",9,"婖婗婘婙婛",5],["8b40","婡婣婤婥婦婨婩婫",8,"婸婹婻婼婽婾媀",17,"媓",6,"媜",13,"媫媬"],["8b80","媭",4,"媴媶媷媹",4,"媿嫀嫃",5,"嫊嫋嫍",4,"嫓嫕嫗嫙嫚嫛嫝嫞嫟嫢嫤嫥嫧嫨嫪嫬",4,"嫲",22,"嬊",11,"嬘",25,"嬳嬵嬶嬸",7,"孁",6],["8c40","孈",7,"孒孖孞孠孡孧孨孫孭孮孯孲孴孶孷學孹孻孼孾孿宂宆宊宍宎宐宑宒宔宖実宧宨宩宬宭宮宯宱宲宷宺宻宼寀寁寃寈寉寊寋寍寎寏"],["8c80","寑寔",8,"寠寢寣實寧審",4,"寯寱",6,"寽対尀専尃尅將專尋尌對導尐尒尓尗尙尛尞尟尠尡尣尦尨尩尪尫尭尮尯尰尲尳尵尶尷屃屄屆屇屌屍屒屓屔屖屗屘屚屛屜屝屟屢層屧",6,"屰屲",6,"屻屼屽屾岀岃",4,"岉岊岋岎岏岒岓岕岝",4,"岤",4],["8d40","岪岮岯岰岲岴岶岹岺岻岼岾峀峂峃峅",5,"峌",5,"峓",5,"峚",6,"峢峣峧峩峫峬峮峯峱",9,"峼",4],["8d80","崁崄崅崈",5,"崏",4,"崕崗崘崙崚崜崝崟",4,"崥崨崪崫崬崯",4,"崵",7,"崿",7,"嵈嵉嵍",10,"嵙嵚嵜嵞",10,"嵪嵭嵮嵰嵱嵲嵳嵵",12,"嶃",21,"嶚嶛嶜嶞嶟嶠"],["8e40","嶡",21,"嶸",12,"巆",6,"巎",12,"巜巟巠巣巤巪巬巭"],["8e80","巰巵巶巸",4,"巿帀帄帇帉帊帋帍帎帒帓帗帞",7,"帨",4,"帯帰帲",4,"帹帺帾帿幀幁幃幆",5,"幍",6,"幖",4,"幜幝幟幠幣",14,"幵幷幹幾庁庂広庅庈庉庌庍庎庒庘庛庝庡庢庣庤庨",4,"庮",4,"庴庺庻庼庽庿",6],["8f40","廆廇廈廋",5,"廔廕廗廘廙廚廜",11,"廩廫",8,"廵廸廹廻廼廽弅弆弇弉弌弍弎弐弒弔弖弙弚弜弝弞弡弢弣弤"],["8f80","弨弫弬弮弰弲",6,"弻弽弾弿彁",14,"彑彔彙彚彛彜彞彟彠彣彥彧彨彫彮彯彲彴彵彶彸彺彽彾彿徃徆徍徎徏徑従徔徖徚徛徝從徟徠徢",5,"復徫徬徯",5,"徶徸徹徺徻徾",4,"忇忈忊忋忎忓忔忕忚忛応忞忟忢忣忥忦忨忩忬忯忰忲忳忴忶忷忹忺忼怇"],["9040","怈怉怋怌怐怑怓怗怘怚怞怟怢怣怤怬怭怮怰",4,"怶",4,"怽怾恀恄",6,"恌恎恏恑恓恔恖恗恘恛恜恞恟恠恡恥恦恮恱恲恴恵恷恾悀"],["9080","悁悂悅悆悇悈悊悋悎悏悐悑悓悕悗悘悙悜悞悡悢悤悥悧悩悪悮悰悳悵悶悷悹悺悽",7,"惇惈惉惌",4,"惒惓惔惖惗惙惛惞惡",4,"惪惱惲惵惷惸惻",4,"愂愃愄愅愇愊愋愌愐",4,"愖愗愘愙愛愜愝愞愡愢愥愨愩愪愬",18,"慀",6],["9140","慇慉態慍慏慐慒慓慔慖",6,"慞慟慠慡慣慤慥慦慩",6,"慱慲慳慴慶慸",18,"憌憍憏",4,"憕"],["9180","憖",6,"憞",8,"憪憫憭",9,"憸",5,"憿懀懁懃",4,"應懌",4,"懓懕",16,"懧",13,"懶",8,"戀",5,"戇戉戓戔戙戜戝戞戠戣戦戧戨戩戫戭戯戰戱戲戵戶戸",4,"扂扄扅扆扊"],["9240","扏扐払扖扗扙扚扜",6,"扤扥扨扱扲扴扵扷扸扺扻扽抁抂抃抅抆抇抈抋",5,"抔抙抜抝択抣抦抧抩抪抭抮抯抰抲抳抴抶抷抸抺抾拀拁"],["9280","拃拋拏拑拕拝拞拠拡拤拪拫拰拲拵拸拹拺拻挀挃挄挅挆挊挋挌挍挏挐挒挓挔挕挗挘挙挜挦挧挩挬挭挮挰挱挳",5,"挻挼挾挿捀捁捄捇捈捊捑捒捓捔捖",7,"捠捤捥捦捨捪捫捬捯捰捲捳捴捵捸捹捼捽捾捿掁掃掄掅掆掋掍掑掓掔掕掗掙",6,"採掤掦掫掯掱掲掵掶掹掻掽掿揀"],["9340","揁揂揃揅揇揈揊揋揌揑揓揔揕揗",6,"揟揢揤",4,"揫揬揮揯揰揱揳揵揷揹揺揻揼揾搃搄搆",4,"損搎搑搒搕",5,"搝搟搢搣搤"],["9380","搥搧搨搩搫搮",5,"搵",4,"搻搼搾摀摂摃摉摋",6,"摓摕摖摗摙",4,"摟",7,"摨摪摫摬摮",9,"摻",6,"撃撆撈",8,"撓撔撗撘撚撛撜撝撟",4,"撥撦撧撨撪撫撯撱撲撳撴撶撹撻撽撾撿擁擃擄擆",6,"擏擑擓擔擕擖擙據"],["9440","擛擜擝擟擠擡擣擥擧",24,"攁",7,"攊",7,"攓",4,"攙",8],["9480","攢攣攤攦",4,"攬攭攰攱攲攳攷攺攼攽敀",4,"敆敇敊敋敍敎敐敒敓敔敗敘敚敜敟敠敡敤敥敧敨敩敪敭敮敯敱敳敵敶數",14,"斈斉斊斍斎斏斒斔斕斖斘斚斝斞斠斢斣斦斨斪斬斮斱",7,"斺斻斾斿旀旂旇旈旉旊旍旐旑旓旔旕旘",7,"旡旣旤旪旫"],["9540","旲旳旴旵旸旹旻",4,"昁昄昅昇昈昉昋昍昐昑昒昖昗昘昚昛昜昞昡昢昣昤昦昩昪昫昬昮昰昲昳昷",4,"昽昿晀時晄",6,"晍晎晐晑晘"],["9580","晙晛晜晝晞晠晢晣晥晧晩",4,"晱晲晳晵晸晹晻晼晽晿暀暁暃暅暆暈暉暊暋暍暎暏暐暒暓暔暕暘",4,"暞",8,"暩",4,"暯",4,"暵暶暷暸暺暻暼暽暿",25,"曚曞",7,"曧曨曪",5,"曱曵曶書曺曻曽朁朂會"],["9640","朄朅朆朇朌朎朏朑朒朓朖朘朙朚朜朞朠",5,"朧朩朮朰朲朳朶朷朸朹朻朼朾朿杁杄杅杇杊杋杍杒杔杕杗",4,"杝杢杣杤杦杧杫杬杮東杴杶"],["9680","杸杹杺杻杽枀枂枃枅枆枈枊枌枍枎枏枑枒枓枔枖枙枛枟枠枡枤枦枩枬枮枱枲枴枹",7,"柂柅",9,"柕柖柗柛柟柡柣柤柦柧柨柪柫柭柮柲柵",7,"柾栁栂栃栄栆栍栐栒栔栕栘",4,"栞栟栠栢",6,"栫",6,"栴栵栶栺栻栿桇桋桍桏桒桖",5],["9740","桜桝桞桟桪桬",7,"桵桸",8,"梂梄梇",7,"梐梑梒梔梕梖梘",9,"梣梤梥梩梪梫梬梮梱梲梴梶梷梸"],["9780","梹",6,"棁棃",5,"棊棌棎棏棐棑棓棔棖棗棙棛",4,"棡棢棤",9,"棯棲棳棴棶棷棸棻棽棾棿椀椂椃椄椆",4,"椌椏椑椓",11,"椡椢椣椥",7,"椮椯椱椲椳椵椶椷椸椺椻椼椾楀楁楃",16,"楕楖楘楙楛楜楟"],["9840","楡楢楤楥楧楨楩楪楬業楯楰楲",4,"楺楻楽楾楿榁榃榅榊榋榌榎",5,"榖榗榙榚榝",9,"榩榪榬榮榯榰榲榳榵榶榸榹榺榼榽"],["9880","榾榿槀槂",7,"構槍槏槑槒槓槕",5,"槜槝槞槡",11,"槮槯槰槱槳",9,"槾樀",9,"樋",11,"標",5,"樠樢",5,"権樫樬樭樮樰樲樳樴樶",6,"樿",4,"橅橆橈",7,"橑",6,"橚"],["9940","橜",4,"橢橣橤橦",10,"橲",6,"橺橻橽橾橿檁檂檃檅",8,"檏檒",4,"檘",7,"檡",5],["9980","檧檨檪檭",114,"欥欦欨",6],["9a40","欯欰欱欳欴欵欶欸欻欼欽欿歀歁歂歄歅歈歊歋歍",11,"歚",7,"歨歩歫",13,"歺歽歾歿殀殅殈"],["9a80","殌殎殏殐殑殔殕殗殘殙殜",4,"殢",7,"殫",7,"殶殸",6,"毀毃毄毆",4,"毌毎毐毑毘毚毜",4,"毢",7,"毬毭毮毰毱毲毴毶毷毸毺毻毼毾",6,"氈",4,"氎氒気氜氝氞氠氣氥氫氬氭氱氳氶氷氹氺氻氼氾氿汃汄汅汈汋",4,"汑汒汓汖汘"],["9b40","汙汚汢汣汥汦汧汫",4,"汱汳汵汷汸決汻汼汿沀沄沇沊沋沍沎沑沒沕沖沗沘沚沜沝沞沠沢沨沬沯沰沴沵沶沷沺泀況泂泃泆泇泈泋泍泎泏泑泒泘"],["9b80","泙泚泜泝泟泤泦泧泩泬泭泲泴泹泿洀洂洃洅洆洈洉洊洍洏洐洑洓洔洕洖洘洜洝洟",5,"洦洨洩洬洭洯洰洴洶洷洸洺洿浀浂浄浉浌浐浕浖浗浘浛浝浟浡浢浤浥浧浨浫浬浭浰浱浲浳浵浶浹浺浻浽",4,"涃涄涆涇涊涋涍涏涐涒涖",4,"涜涢涥涬涭涰涱涳涴涶涷涹",5,"淁淂淃淈淉淊"],["9c40","淍淎淏淐淒淓淔淕淗淚淛淜淟淢淣淥淧淨淩淪淭淯淰淲淴淵淶淸淺淽",7,"渆渇済渉渋渏渒渓渕渘渙減渜渞渟渢渦渧渨渪測渮渰渱渳渵"],["9c80","渶渷渹渻",7,"湅",7,"湏湐湑湒湕湗湙湚湜湝湞湠",10,"湬湭湯",14,"満溁溂溄溇溈溊",4,"溑",6,"溙溚溛溝溞溠溡溣溤溦溨溩溫溬溭溮溰溳溵溸溹溼溾溿滀滃滄滅滆滈滉滊滌滍滎滐滒滖滘滙滛滜滝滣滧滪",5],["9d40","滰滱滲滳滵滶滷滸滺",7,"漃漄漅漇漈漊",4,"漐漑漒漖",9,"漡漢漣漥漦漧漨漬漮漰漲漴漵漷",6,"漿潀潁潂"],["9d80","潃潄潅潈潉潊潌潎",9,"潙潚潛潝潟潠潡潣潤潥潧",5,"潯潰潱潳潵潶潷潹潻潽",6,"澅澆澇澊澋澏",12,"澝澞澟澠澢",4,"澨",10,"澴澵澷澸澺",5,"濁濃",5,"濊",6,"濓",10,"濟濢濣濤濥"],["9e40","濦",7,"濰",32,"瀒",7,"瀜",6,"瀤",6],["9e80","瀫",9,"瀶瀷瀸瀺",17,"灍灎灐",13,"灟",11,"灮灱灲灳灴灷灹灺灻災炁炂炃炄炆炇炈炋炌炍炏炐炑炓炗炘炚炛炞",12,"炰炲炴炵炶為炾炿烄烅烆烇烉烋",12,"烚"],["9f40","烜烝烞烠烡烢烣烥烪烮烰",6,"烸烺烻烼烾",10,"焋",4,"焑焒焔焗焛",10,"焧",7,"焲焳焴"],["9f80","焵焷",13,"煆煇煈煉煋煍煏",12,"煝煟",4,"煥煩",4,"煯煰煱煴煵煶煷煹煻煼煾",5,"熅",4,"熋熌熍熎熐熑熒熓熕熖熗熚",4,"熡",6,"熩熪熫熭",5,"熴熶熷熸熺",8,"燄",9,"燏",4],["a040","燖",9,"燡燢燣燤燦燨",5,"燯",9,"燺",11,"爇",19],["a080","爛爜爞",9,"爩爫爭爮爯爲爳爴爺爼爾牀",6,"牉牊牋牎牏牐牑牓牔牕牗牘牚牜牞牠牣牤牥牨牪牫牬牭牰牱牳牴牶牷牸牻牼牽犂犃犅",4,"犌犎犐犑犓",11,"犠",11,"犮犱犲犳犵犺",6,"狅狆狇狉狊狋狌狏狑狓狔狕狖狘狚狛"],["a1a1","　、。·ˉˇ¨〃々—～‖…‘’“”〔〕〈",7,"〖〗【】±×÷∶∧∨∑∏∪∩∈∷√⊥∥∠⌒⊙∫∮≡≌≈∽∝≠≮≯≤≥∞∵∴♂♀°′″℃＄¤￠￡‰§№☆★○●◎◇◆□■△▲※→←↑↓〓"],["a2a1","ⅰ",9],["a2b1","⒈",19,"⑴",19,"①",9],["a2e5","㈠",9],["a2f1","Ⅰ",11],["a3a1","！＂＃￥％",88,"￣"],["a4a1","ぁ",82],["a5a1","ァ",85],["a6a1","Α",16,"Σ",6],["a6c1","α",16,"σ",6],["a6e0","︵︶︹︺︿﹀︽︾﹁﹂﹃﹄"],["a6ee","︻︼︷︸︱"],["a6f4","︳︴"],["a7a1","А",5,"ЁЖ",25],["a7d1","а",5,"ёж",25],["a840","ˊˋ˙–―‥‵℅℉↖↗↘↙∕∟∣≒≦≧⊿═",35,"▁",6],["a880","█",7,"▓▔▕▼▽◢◣◤◥☉⊕〒〝〞"],["a8a1","āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüêɑ"],["a8bd","ńň"],["a8c0","ɡ"],["a8c5","ㄅ",36],["a940","〡",8,"㊣㎎㎏㎜㎝㎞㎡㏄㏎㏑㏒㏕︰￢￤"],["a959","℡㈱"],["a95c","‐"],["a960","ー゛゜ヽヾ〆ゝゞ﹉",9,"﹔﹕﹖﹗﹙",8],["a980","﹢",4,"﹨﹩﹪﹫"],["a996","〇"],["a9a4","─",75],["aa40","狜狝狟狢",5,"狪狫狵狶狹狽狾狿猀猂猄",5,"猋猌猍猏猐猑猒猔猘猙猚猟猠猣猤猦猧猨猭猯猰猲猳猵猶猺猻猼猽獀",8],["aa80","獉獊獋獌獎獏獑獓獔獕獖獘",7,"獡",10,"獮獰獱"],["ab40","獲",11,"獿",4,"玅玆玈玊玌玍玏玐玒玓玔玕玗玘玙玚玜玝玞玠玡玣",5,"玪玬玭玱玴玵玶玸玹玼玽玾玿珁珃",4],["ab80","珋珌珎珒",6,"珚珛珜珝珟珡珢珣珤珦珨珪珫珬珮珯珰珱珳",4],["ac40","珸",10,"琄琇琈琋琌琍琎琑",8,"琜",5,"琣琤琧琩琫琭琯琱琲琷",4,"琽琾琿瑀瑂",11],["ac80","瑎",6,"瑖瑘瑝瑠",12,"瑮瑯瑱",4,"瑸瑹瑺"],["ad40","瑻瑼瑽瑿璂璄璅璆璈璉璊璌璍璏璑",10,"璝璟",7,"璪",15,"璻",12],["ad80","瓈",9,"瓓",8,"瓝瓟瓡瓥瓧",6,"瓰瓱瓲"],["ae40","瓳瓵瓸",6,"甀甁甂甃甅",7,"甎甐甒甔甕甖甗甛甝甞甠",4,"甦甧甪甮甴甶甹甼甽甿畁畂畃畄畆畇畉畊畍畐畑畒畓畕畖畗畘"],["ae80","畝",7,"畧畨畩畫",6,"畳畵當畷畺",4,"疀疁疂疄疅疇"],["af40","疈疉疊疌疍疎疐疓疕疘疛疜疞疢疦",4,"疭疶疷疺疻疿痀痁痆痋痌痎痏痐痑痓痗痙痚痜痝痟痠痡痥痩痬痭痮痯痲痳痵痶痷痸痺痻痽痾瘂瘄瘆瘇"],["af80","瘈瘉瘋瘍瘎瘏瘑瘒瘓瘔瘖瘚瘜瘝瘞瘡瘣瘧瘨瘬瘮瘯瘱瘲瘶瘷瘹瘺瘻瘽癁療癄"],["b040","癅",6,"癎",5,"癕癗",4,"癝癟癠癡癢癤",6,"癬癭癮癰",7,"癹発發癿皀皁皃皅皉皊皌皍皏皐皒皔皕皗皘皚皛"],["b080","皜",7,"皥",8,"皯皰皳皵",9,"盀盁盃啊阿埃挨哎唉哀皑癌蔼矮艾碍爱隘鞍氨安俺按暗岸胺案肮昂盎凹敖熬翱袄傲奥懊澳芭捌扒叭吧笆八疤巴拔跋靶把耙坝霸罢爸白柏百摆佰败拜稗斑班搬扳般颁板版扮拌伴瓣半办绊邦帮梆榜膀绑棒磅蚌镑傍谤苞胞包褒剥"],["b140","盄盇盉盋盌盓盕盙盚盜盝盞盠",4,"盦",7,"盰盳盵盶盷盺盻盽盿眀眂眃眅眆眊県眎",10,"眛眜眝眞眡眣眤眥眧眪眫"],["b180","眬眮眰",4,"眹眻眽眾眿睂睄睅睆睈",7,"睒",7,"睜薄雹保堡饱宝抱报暴豹鲍爆杯碑悲卑北辈背贝钡倍狈备惫焙被奔苯本笨崩绷甭泵蹦迸逼鼻比鄙笔彼碧蓖蔽毕毙毖币庇痹闭敝弊必辟壁臂避陛鞭边编贬扁便变卞辨辩辫遍标彪膘表鳖憋别瘪彬斌濒滨宾摈兵冰柄丙秉饼炳"],["b240","睝睞睟睠睤睧睩睪睭",11,"睺睻睼瞁瞂瞃瞆",5,"瞏瞐瞓",11,"瞡瞣瞤瞦瞨瞫瞭瞮瞯瞱瞲瞴瞶",4],["b280","瞼瞾矀",12,"矎",8,"矘矙矚矝",4,"矤病并玻菠播拨钵波博勃搏铂箔伯帛舶脖膊渤泊驳捕卜哺补埠不布步簿部怖擦猜裁材才财睬踩采彩菜蔡餐参蚕残惭惨灿苍舱仓沧藏操糙槽曹草厕策侧册测层蹭插叉茬茶查碴搽察岔差诧拆柴豺搀掺蝉馋谗缠铲产阐颤昌猖"],["b340","矦矨矪矯矰矱矲矴矵矷矹矺矻矼砃",5,"砊砋砎砏砐砓砕砙砛砞砠砡砢砤砨砪砫砮砯砱砲砳砵砶砽砿硁硂硃硄硆硈硉硊硋硍硏硑硓硔硘硙硚"],["b380","硛硜硞",11,"硯",7,"硸硹硺硻硽",6,"场尝常长偿肠厂敞畅唱倡超抄钞朝嘲潮巢吵炒车扯撤掣彻澈郴臣辰尘晨忱沉陈趁衬撑称城橙成呈乘程惩澄诚承逞骋秤吃痴持匙池迟弛驰耻齿侈尺赤翅斥炽充冲虫崇宠抽酬畴踌稠愁筹仇绸瞅丑臭初出橱厨躇锄雏滁除楚"],["b440","碄碅碆碈碊碋碏碐碒碔碕碖碙碝碞碠碢碤碦碨",7,"碵碶碷碸確碻碼碽碿磀磂磃磄磆磇磈磌磍磎磏磑磒磓磖磗磘磚",9],["b480","磤磥磦磧磩磪磫磭",4,"磳磵磶磸磹磻",5,"礂礃礄礆",6,"础储矗搐触处揣川穿椽传船喘串疮窗幢床闯创吹炊捶锤垂春椿醇唇淳纯蠢戳绰疵茨磁雌辞慈瓷词此刺赐次聪葱囱匆从丛凑粗醋簇促蹿篡窜摧崔催脆瘁粹淬翠村存寸磋撮搓措挫错搭达答瘩打大呆歹傣戴带殆代贷袋待逮"],["b540","礍",5,"礔",9,"礟",4,"礥",14,"礵",4,"礽礿祂祃祄祅祇祊",8,"祔祕祘祙祡祣"],["b580","祤祦祩祪祫祬祮祰",6,"祹祻",4,"禂禃禆禇禈禉禋禌禍禎禐禑禒怠耽担丹单郸掸胆旦氮但惮淡诞弹蛋当挡党荡档刀捣蹈倒岛祷导到稻悼道盗德得的蹬灯登等瞪凳邓堤低滴迪敌笛狄涤翟嫡抵底地蒂第帝弟递缔颠掂滇碘点典靛垫电佃甸店惦奠淀殿碉叼雕凋刁掉吊钓调跌爹碟蝶迭谍叠"],["b640","禓",6,"禛",11,"禨",10,"禴",4,"禼禿秂秄秅秇秈秊秌秎秏秐秓秔秖秗秙",5,"秠秡秢秥秨秪"],["b680","秬秮秱",6,"秹秺秼秾秿稁稄稅稇稈稉稊稌稏",4,"稕稖稘稙稛稜丁盯叮钉顶鼎锭定订丢东冬董懂动栋侗恫冻洞兜抖斗陡豆逗痘都督毒犊独读堵睹赌杜镀肚度渡妒端短锻段断缎堆兑队对墩吨蹲敦顿囤钝盾遁掇哆多夺垛躲朵跺舵剁惰堕蛾峨鹅俄额讹娥恶厄扼遏鄂饿恩而儿耳尔饵洱二"],["b740","稝稟稡稢稤",14,"稴稵稶稸稺稾穀",5,"穇",9,"穒",4,"穘",16],["b780","穩",6,"穱穲穳穵穻穼穽穾窂窅窇窉窊窋窌窎窏窐窓窔窙窚窛窞窡窢贰发罚筏伐乏阀法珐藩帆番翻樊矾钒繁凡烦反返范贩犯饭泛坊芳方肪房防妨仿访纺放菲非啡飞肥匪诽吠肺废沸费芬酚吩氛分纷坟焚汾粉奋份忿愤粪丰封枫蜂峰锋风疯烽逢冯缝讽奉凤佛否夫敷肤孵扶拂辐幅氟符伏俘服"],["b840","窣窤窧窩窪窫窮",4,"窴",10,"竀",10,"竌",9,"竗竘竚竛竜竝竡竢竤竧",5,"竮竰竱竲竳"],["b880","竴",4,"竻竼竾笀笁笂笅笇笉笌笍笎笐笒笓笖笗笘笚笜笝笟笡笢笣笧笩笭浮涪福袱弗甫抚辅俯釜斧脯腑府腐赴副覆赋复傅付阜父腹负富讣附妇缚咐噶嘎该改概钙盖溉干甘杆柑竿肝赶感秆敢赣冈刚钢缸肛纲岗港杠篙皋高膏羔糕搞镐稿告哥歌搁戈鸽胳疙割革葛格蛤阁隔铬个各给根跟耕更庚羹"],["b940","笯笰笲笴笵笶笷笹笻笽笿",5,"筆筈筊筍筎筓筕筗筙筜筞筟筡筣",10,"筯筰筳筴筶筸筺筼筽筿箁箂箃箄箆",6,"箎箏"],["b980","箑箒箓箖箘箙箚箛箞箟箠箣箤箥箮箯箰箲箳箵箶箷箹",7,"篂篃範埂耿梗工攻功恭龚供躬公宫弓巩汞拱贡共钩勾沟苟狗垢构购够辜菇咕箍估沽孤姑鼓古蛊骨谷股故顾固雇刮瓜剐寡挂褂乖拐怪棺关官冠观管馆罐惯灌贯光广逛瑰规圭硅归龟闺轨鬼诡癸桂柜跪贵刽辊滚棍锅郭国果裹过哈"],["ba40","篅篈築篊篋篍篎篏篐篒篔",4,"篛篜篞篟篠篢篣篤篧篨篩篫篬篭篯篰篲",4,"篸篹篺篻篽篿",7,"簈簉簊簍簎簐",5,"簗簘簙"],["ba80","簚",4,"簠",5,"簨簩簫",12,"簹",5,"籂骸孩海氦亥害骇酣憨邯韩含涵寒函喊罕翰撼捍旱憾悍焊汗汉夯杭航壕嚎豪毫郝好耗号浩呵喝荷菏核禾和何合盒貉阂河涸赫褐鹤贺嘿黑痕很狠恨哼亨横衡恒轰哄烘虹鸿洪宏弘红喉侯猴吼厚候后呼乎忽瑚壶葫胡蝴狐糊湖"],["bb40","籃",9,"籎",36,"籵",5,"籾",9],["bb80","粈粊",6,"粓粔粖粙粚粛粠粡粣粦粧粨粩粫粬粭粯粰粴",4,"粺粻弧虎唬护互沪户花哗华猾滑画划化话槐徊怀淮坏欢环桓还缓换患唤痪豢焕涣宦幻荒慌黄磺蝗簧皇凰惶煌晃幌恍谎灰挥辉徽恢蛔回毁悔慧卉惠晦贿秽会烩汇讳诲绘荤昏婚魂浑混豁活伙火获或惑霍货祸击圾基机畸稽积箕"],["bc40","粿糀糂糃糄糆糉糋糎",6,"糘糚糛糝糞糡",6,"糩",5,"糰",7,"糹糺糼",13,"紋",5],["bc80","紑",14,"紡紣紤紥紦紨紩紪紬紭紮細",6,"肌饥迹激讥鸡姬绩缉吉极棘辑籍集及急疾汲即嫉级挤几脊己蓟技冀季伎祭剂悸济寄寂计记既忌际妓继纪嘉枷夹佳家加荚颊贾甲钾假稼价架驾嫁歼监坚尖笺间煎兼肩艰奸缄茧检柬碱硷拣捡简俭剪减荐槛鉴践贱见键箭件"],["bd40","紷",54,"絯",7],["bd80","絸",32,"健舰剑饯渐溅涧建僵姜将浆江疆蒋桨奖讲匠酱降蕉椒礁焦胶交郊浇骄娇嚼搅铰矫侥脚狡角饺缴绞剿教酵轿较叫窖揭接皆秸街阶截劫节桔杰捷睫竭洁结解姐戒藉芥界借介疥诫届巾筋斤金今津襟紧锦仅谨进靳晋禁近烬浸"],["be40","継",12,"綧",6,"綯",42],["be80","線",32,"尽劲荆兢茎睛晶鲸京惊精粳经井警景颈静境敬镜径痉靖竟竞净炯窘揪究纠玖韭久灸九酒厩救旧臼舅咎就疚鞠拘狙疽居驹菊局咀矩举沮聚拒据巨具距踞锯俱句惧炬剧捐鹃娟倦眷卷绢撅攫抉掘倔爵觉决诀绝均菌钧军君峻"],["bf40","緻",62],["bf80","縺縼",4,"繂",4,"繈",21,"俊竣浚郡骏喀咖卡咯开揩楷凯慨刊堪勘坎砍看康慷糠扛抗亢炕考拷烤靠坷苛柯棵磕颗科壳咳可渴克刻客课肯啃垦恳坑吭空恐孔控抠口扣寇枯哭窟苦酷库裤夸垮挎跨胯块筷侩快宽款匡筐狂框矿眶旷况亏盔岿窥葵奎魁傀"],["c040","繞",35,"纃",23,"纜纝纞"],["c080","纮纴纻纼绖绤绬绹缊缐缞缷缹缻",6,"罃罆",9,"罒罓馈愧溃坤昆捆困括扩廓阔垃拉喇蜡腊辣啦莱来赖蓝婪栏拦篮阑兰澜谰揽览懒缆烂滥琅榔狼廊郎朗浪捞劳牢老佬姥酪烙涝勒乐雷镭蕾磊累儡垒擂肋类泪棱楞冷厘梨犁黎篱狸离漓理李里鲤礼莉荔吏栗丽厉励砾历利傈例俐"],["c140","罖罙罛罜罝罞罠罣",4,"罫罬罭罯罰罳罵罶罷罸罺罻罼罽罿羀羂",7,"羋羍羏",4,"羕",4,"羛羜羠羢羣羥羦羨",6,"羱"],["c180","羳",4,"羺羻羾翀翂翃翄翆翇翈翉翋翍翏",4,"翖翗翙",5,"翢翣痢立粒沥隶力璃哩俩联莲连镰廉怜涟帘敛脸链恋炼练粮凉梁粱良两辆量晾亮谅撩聊僚疗燎寥辽潦了撂镣廖料列裂烈劣猎琳林磷霖临邻鳞淋凛赁吝拎玲菱零龄铃伶羚凌灵陵岭领另令溜琉榴硫馏留刘瘤流柳六龙聋咙笼窿"],["c240","翤翧翨翪翫翬翭翯翲翴",6,"翽翾翿耂耇耈耉耊耎耏耑耓耚耛耝耞耟耡耣耤耫",5,"耲耴耹耺耼耾聀聁聄聅聇聈聉聎聏聐聑聓聕聖聗"],["c280","聙聛",13,"聫",5,"聲",11,"隆垄拢陇楼娄搂篓漏陋芦卢颅庐炉掳卤虏鲁麓碌露路赂鹿潞禄录陆戮驴吕铝侣旅履屡缕虑氯律率滤绿峦挛孪滦卵乱掠略抡轮伦仑沦纶论萝螺罗逻锣箩骡裸落洛骆络妈麻玛码蚂马骂嘛吗埋买麦卖迈脉瞒馒蛮满蔓曼慢漫"],["c340","聾肁肂肅肈肊肍",5,"肔肕肗肙肞肣肦肧肨肬肰肳肵肶肸肹肻胅胇",4,"胏",6,"胘胟胠胢胣胦胮胵胷胹胻胾胿脀脁脃脄脅脇脈脋"],["c380","脌脕脗脙脛脜脝脟",12,"脭脮脰脳脴脵脷脹",4,"脿谩芒茫盲氓忙莽猫茅锚毛矛铆卯茂冒帽貌贸么玫枚梅酶霉煤没眉媒镁每美昧寐妹媚门闷们萌蒙檬盟锰猛梦孟眯醚靡糜迷谜弥米秘觅泌蜜密幂棉眠绵冕免勉娩缅面苗描瞄藐秒渺庙妙蔑灭民抿皿敏悯闽明螟鸣铭名命谬摸"],["c440","腀",5,"腇腉腍腎腏腒腖腗腘腛",4,"腡腢腣腤腦腨腪腫腬腯腲腳腵腶腷腸膁膃",4,"膉膋膌膍膎膐膒",5,"膙膚膞",4,"膤膥"],["c480","膧膩膫",7,"膴",5,"膼膽膾膿臄臅臇臈臉臋臍",6,"摹蘑模膜磨摩魔抹末莫墨默沫漠寞陌谋牟某拇牡亩姆母墓暮幕募慕木目睦牧穆拿哪呐钠那娜纳氖乃奶耐奈南男难囊挠脑恼闹淖呢馁内嫩能妮霓倪泥尼拟你匿腻逆溺蔫拈年碾撵捻念娘酿鸟尿捏聂孽啮镊镍涅您柠狞凝宁"],["c540","臔",14,"臤臥臦臨臩臫臮",4,"臵",5,"臽臿舃與",4,"舎舏舑舓舕",5,"舝舠舤舥舦舧舩舮舲舺舼舽舿"],["c580","艀艁艂艃艅艆艈艊艌艍艎艐",7,"艙艛艜艝艞艠",7,"艩拧泞牛扭钮纽脓浓农弄奴努怒女暖虐疟挪懦糯诺哦欧鸥殴藕呕偶沤啪趴爬帕怕琶拍排牌徘湃派攀潘盘磐盼畔判叛乓庞旁耪胖抛咆刨炮袍跑泡呸胚培裴赔陪配佩沛喷盆砰抨烹澎彭蓬棚硼篷膨朋鹏捧碰坯砒霹批披劈琵毗"],["c640","艪艫艬艭艱艵艶艷艸艻艼芀芁芃芅芆芇芉芌芐芓芔芕芖芚芛芞芠芢芣芧芲芵芶芺芻芼芿苀苂苃苅苆苉苐苖苙苚苝苢苧苨苩苪苬苭苮苰苲苳苵苶苸"],["c680","苺苼",4,"茊茋茍茐茒茓茖茘茙茝",9,"茩茪茮茰茲茷茻茽啤脾疲皮匹痞僻屁譬篇偏片骗飘漂瓢票撇瞥拼频贫品聘乒坪苹萍平凭瓶评屏坡泼颇婆破魄迫粕剖扑铺仆莆葡菩蒲埔朴圃普浦谱曝瀑期欺栖戚妻七凄漆柒沏其棋奇歧畦崎脐齐旗祈祁骑起岂乞企启契砌器气迄弃汽泣讫掐"],["c740","茾茿荁荂荄荅荈荊",4,"荓荕",4,"荝荢荰",6,"荹荺荾",6,"莇莈莊莋莌莍莏莐莑莔莕莖莗莙莚莝莟莡",6,"莬莭莮"],["c780","莯莵莻莾莿菂菃菄菆菈菉菋菍菎菐菑菒菓菕菗菙菚菛菞菢菣菤菦菧菨菫菬菭恰洽牵扦钎铅千迁签仟谦乾黔钱钳前潜遣浅谴堑嵌欠歉枪呛腔羌墙蔷强抢橇锹敲悄桥瞧乔侨巧鞘撬翘峭俏窍切茄且怯窃钦侵亲秦琴勤芹擒禽寝沁青轻氢倾卿清擎晴氰情顷请庆琼穷秋丘邱球求囚酋泅趋区蛆曲躯屈驱渠"],["c840","菮華菳",4,"菺菻菼菾菿萀萂萅萇萈萉萊萐萒",5,"萙萚萛萞",5,"萩",7,"萲",5,"萹萺萻萾",7,"葇葈葉"],["c880","葊",6,"葒",4,"葘葝葞葟葠葢葤",4,"葪葮葯葰葲葴葷葹葻葼取娶龋趣去圈颧权醛泉全痊拳犬券劝缺炔瘸却鹊榷确雀裙群然燃冉染瓤壤攘嚷让饶扰绕惹热壬仁人忍韧任认刃妊纫扔仍日戎茸蓉荣融熔溶容绒冗揉柔肉茹蠕儒孺如辱乳汝入褥软阮蕊瑞锐闰润若弱撒洒萨腮鳃塞赛三叁"],["c940","葽",4,"蒃蒄蒅蒆蒊蒍蒏",7,"蒘蒚蒛蒝蒞蒟蒠蒢",12,"蒰蒱蒳蒵蒶蒷蒻蒼蒾蓀蓂蓃蓅蓆蓇蓈蓋蓌蓎蓏蓒蓔蓕蓗"],["c980","蓘",4,"蓞蓡蓢蓤蓧",4,"蓭蓮蓯蓱",10,"蓽蓾蔀蔁蔂伞散桑嗓丧搔骚扫嫂瑟色涩森僧莎砂杀刹沙纱傻啥煞筛晒珊苫杉山删煽衫闪陕擅赡膳善汕扇缮墒伤商赏晌上尚裳梢捎稍烧芍勺韶少哨邵绍奢赊蛇舌舍赦摄射慑涉社设砷申呻伸身深娠绅神沈审婶甚肾慎渗声生甥牲升绳"],["ca40","蔃",8,"蔍蔎蔏蔐蔒蔔蔕蔖蔘蔙蔛蔜蔝蔞蔠蔢",8,"蔭",9,"蔾",4,"蕄蕅蕆蕇蕋",10],["ca80","蕗蕘蕚蕛蕜蕝蕟",4,"蕥蕦蕧蕩",8,"蕳蕵蕶蕷蕸蕼蕽蕿薀薁省盛剩胜圣师失狮施湿诗尸虱十石拾时什食蚀实识史矢使屎驶始式示士世柿事拭誓逝势是嗜噬适仕侍释饰氏市恃室视试收手首守寿授售受瘦兽蔬枢梳殊抒输叔舒淑疏书赎孰熟薯暑曙署蜀黍鼠属术述树束戍竖墅庶数漱"],["cb40","薂薃薆薈",6,"薐",10,"薝",6,"薥薦薧薩薫薬薭薱",5,"薸薺",6,"藂",6,"藊",4,"藑藒"],["cb80","藔藖",5,"藝",6,"藥藦藧藨藪",14,"恕刷耍摔衰甩帅栓拴霜双爽谁水睡税吮瞬顺舜说硕朔烁斯撕嘶思私司丝死肆寺嗣四伺似饲巳松耸怂颂送宋讼诵搜艘擞嗽苏酥俗素速粟僳塑溯宿诉肃酸蒜算虽隋随绥髓碎岁穗遂隧祟孙损笋蓑梭唆缩琐索锁所塌他它她塔"],["cc40","藹藺藼藽藾蘀",4,"蘆",10,"蘒蘓蘔蘕蘗",15,"蘨蘪",13,"蘹蘺蘻蘽蘾蘿虀"],["cc80","虁",11,"虒虓處",4,"虛虜虝號虠虡虣",7,"獭挞蹋踏胎苔抬台泰酞太态汰坍摊贪瘫滩坛檀痰潭谭谈坦毯袒碳探叹炭汤塘搪堂棠膛唐糖倘躺淌趟烫掏涛滔绦萄桃逃淘陶讨套特藤腾疼誊梯剔踢锑提题蹄啼体替嚏惕涕剃屉天添填田甜恬舔腆挑条迢眺跳贴铁帖厅听烃"],["cd40","虭虯虰虲",6,"蚃",6,"蚎",4,"蚔蚖",5,"蚞",4,"蚥蚦蚫蚭蚮蚲蚳蚷蚸蚹蚻",4,"蛁蛂蛃蛅蛈蛌蛍蛒蛓蛕蛖蛗蛚蛜"],["cd80","蛝蛠蛡蛢蛣蛥蛦蛧蛨蛪蛫蛬蛯蛵蛶蛷蛺蛻蛼蛽蛿蜁蜄蜅蜆蜋蜌蜎蜏蜐蜑蜔蜖汀廷停亭庭挺艇通桐酮瞳同铜彤童桶捅筒统痛偷投头透凸秃突图徒途涂屠土吐兔湍团推颓腿蜕褪退吞屯臀拖托脱鸵陀驮驼椭妥拓唾挖哇蛙洼娃瓦袜歪外豌弯湾玩顽丸烷完碗挽晚皖惋宛婉万腕汪王亡枉网往旺望忘妄威"],["ce40","蜙蜛蜝蜟蜠蜤蜦蜧蜨蜪蜫蜬蜭蜯蜰蜲蜳蜵蜶蜸蜹蜺蜼蜽蝀",6,"蝊蝋蝍蝏蝐蝑蝒蝔蝕蝖蝘蝚",5,"蝡蝢蝦",7,"蝯蝱蝲蝳蝵"],["ce80","蝷蝸蝹蝺蝿螀螁螄螆螇螉螊螌螎",4,"螔螕螖螘",6,"螠",4,"巍微危韦违桅围唯惟为潍维苇萎委伟伪尾纬未蔚味畏胃喂魏位渭谓尉慰卫瘟温蚊文闻纹吻稳紊问嗡翁瓮挝蜗涡窝我斡卧握沃巫呜钨乌污诬屋无芜梧吾吴毋武五捂午舞伍侮坞戊雾晤物勿务悟误昔熙析西硒矽晰嘻吸锡牺"],["cf40","螥螦螧螩螪螮螰螱螲螴螶螷螸螹螻螼螾螿蟁",4,"蟇蟈蟉蟌",4,"蟔",6,"蟜蟝蟞蟟蟡蟢蟣蟤蟦蟧蟨蟩蟫蟬蟭蟯",9],["cf80","蟺蟻蟼蟽蟿蠀蠁蠂蠄",5,"蠋",7,"蠔蠗蠘蠙蠚蠜",4,"蠣稀息希悉膝夕惜熄烯溪汐犀檄袭席习媳喜铣洗系隙戏细瞎虾匣霞辖暇峡侠狭下厦夏吓掀锨先仙鲜纤咸贤衔舷闲涎弦嫌显险现献县腺馅羡宪陷限线相厢镶香箱襄湘乡翔祥详想响享项巷橡像向象萧硝霄削哮嚣销消宵淆晓"],["d040","蠤",13,"蠳",5,"蠺蠻蠽蠾蠿衁衂衃衆",5,"衎",5,"衕衖衘衚",6,"衦衧衪衭衯衱衳衴衵衶衸衹衺"],["d080","衻衼袀袃袆袇袉袊袌袎袏袐袑袓袔袕袗",4,"袝",4,"袣袥",5,"小孝校肖啸笑效楔些歇蝎鞋协挟携邪斜胁谐写械卸蟹懈泄泻谢屑薪芯锌欣辛新忻心信衅星腥猩惺兴刑型形邢行醒幸杏性姓兄凶胸匈汹雄熊休修羞朽嗅锈秀袖绣墟戌需虚嘘须徐许蓄酗叙旭序畜恤絮婿绪续轩喧宣悬旋玄"],["d140","袬袮袯袰袲",4,"袸袹袺袻袽袾袿裀裃裄裇裈裊裋裌裍裏裐裑裓裖裗裚",4,"裠裡裦裧裩",6,"裲裵裶裷裺裻製裿褀褁褃",5],["d180","褉褋",4,"褑褔",4,"褜",4,"褢褣褤褦褧褨褩褬褭褮褯褱褲褳褵褷选癣眩绚靴薛学穴雪血勋熏循旬询寻驯巡殉汛训讯逊迅压押鸦鸭呀丫芽牙蚜崖衙涯雅哑亚讶焉咽阉烟淹盐严研蜒岩延言颜阎炎沿奄掩眼衍演艳堰燕厌砚雁唁彦焰宴谚验殃央鸯秧杨扬佯疡羊洋阳氧仰痒养样漾邀腰妖瑶"],["d240","褸",8,"襂襃襅",24,"襠",5,"襧",19,"襼"],["d280","襽襾覀覂覄覅覇",26,"摇尧遥窑谣姚咬舀药要耀椰噎耶爷野冶也页掖业叶曳腋夜液一壹医揖铱依伊衣颐夷遗移仪胰疑沂宜姨彝椅蚁倚已乙矣以艺抑易邑屹亿役臆逸肄疫亦裔意毅忆义益溢诣议谊译异翼翌绎茵荫因殷音阴姻吟银淫寅饮尹引隐"],["d340","覢",30,"觃觍觓觔觕觗觘觙觛觝觟觠觡觢觤觧觨觩觪觬觭觮觰觱觲觴",6],["d380","觻",4,"訁",5,"計",21,"印英樱婴鹰应缨莹萤营荧蝇迎赢盈影颖硬映哟拥佣臃痈庸雍踊蛹咏泳涌永恿勇用幽优悠忧尤由邮铀犹油游酉有友右佑釉诱又幼迂淤于盂榆虞愚舆余俞逾鱼愉渝渔隅予娱雨与屿禹宇语羽玉域芋郁吁遇喻峪御愈欲狱育誉"],["d440","訞",31,"訿",8,"詉",21],["d480","詟",25,"詺",6,"浴寓裕预豫驭鸳渊冤元垣袁原援辕园员圆猿源缘远苑愿怨院曰约越跃钥岳粤月悦阅耘云郧匀陨允运蕴酝晕韵孕匝砸杂栽哉灾宰载再在咱攒暂赞赃脏葬遭糟凿藻枣早澡蚤躁噪造皂灶燥责择则泽贼怎增憎曾赠扎喳渣札轧"],["d540","誁",7,"誋",7,"誔",46],["d580","諃",32,"铡闸眨栅榨咋乍炸诈摘斋宅窄债寨瞻毡詹粘沾盏斩辗崭展蘸栈占战站湛绽樟章彰漳张掌涨杖丈帐账仗胀瘴障招昭找沼赵照罩兆肇召遮折哲蛰辙者锗蔗这浙珍斟真甄砧臻贞针侦枕疹诊震振镇阵蒸挣睁征狰争怔整拯正政"],["d640","諤",34,"謈",27],["d680","謤謥謧",30,"帧症郑证芝枝支吱蜘知肢脂汁之织职直植殖执值侄址指止趾只旨纸志挚掷至致置帜峙制智秩稚质炙痔滞治窒中盅忠钟衷终种肿重仲众舟周州洲诌粥轴肘帚咒皱宙昼骤珠株蛛朱猪诸诛逐竹烛煮拄瞩嘱主著柱助蛀贮铸筑"],["d740","譆",31,"譧",4,"譭",25],["d780","讇",24,"讬讱讻诇诐诪谉谞住注祝驻抓爪拽专砖转撰赚篆桩庄装妆撞壮状椎锥追赘坠缀谆准捉拙卓桌琢茁酌啄着灼浊兹咨资姿滋淄孜紫仔籽滓子自渍字鬃棕踪宗综总纵邹走奏揍租足卒族祖诅阻组钻纂嘴醉最罪尊遵昨左佐柞做作坐座"],["d840","谸",8,"豂豃豄豅豈豊豋豍",7,"豖豗豘豙豛",5,"豣",6,"豬",6,"豴豵豶豷豻",6,"貃貄貆貇"],["d880","貈貋貍",6,"貕貖貗貙",20,"亍丌兀丐廿卅丕亘丞鬲孬噩丨禺丿匕乇夭爻卮氐囟胤馗毓睾鼗丶亟鼐乜乩亓芈孛啬嘏仄厍厝厣厥厮靥赝匚叵匦匮匾赜卦卣刂刈刎刭刳刿剀剌剞剡剜蒯剽劂劁劐劓冂罔亻仃仉仂仨仡仫仞伛仳伢佤仵伥伧伉伫佞佧攸佚佝"],["d940","貮",62],["d980","賭",32,"佟佗伲伽佶佴侑侉侃侏佾佻侪佼侬侔俦俨俪俅俚俣俜俑俟俸倩偌俳倬倏倮倭俾倜倌倥倨偾偃偕偈偎偬偻傥傧傩傺僖儆僭僬僦僮儇儋仝氽佘佥俎龠汆籴兮巽黉馘冁夔勹匍訇匐凫夙兕亠兖亳衮袤亵脔裒禀嬴蠃羸冫冱冽冼"],["da40","贎",14,"贠赑赒赗赟赥赨赩赪赬赮赯赱赲赸",8,"趂趃趆趇趈趉趌",4,"趒趓趕",9,"趠趡"],["da80","趢趤",12,"趲趶趷趹趻趽跀跁跂跅跇跈跉跊跍跐跒跓跔凇冖冢冥讠讦讧讪讴讵讷诂诃诋诏诎诒诓诔诖诘诙诜诟诠诤诨诩诮诰诳诶诹诼诿谀谂谄谇谌谏谑谒谔谕谖谙谛谘谝谟谠谡谥谧谪谫谮谯谲谳谵谶卩卺阝阢阡阱阪阽阼陂陉陔陟陧陬陲陴隈隍隗隰邗邛邝邙邬邡邴邳邶邺"],["db40","跕跘跙跜跠跡跢跥跦跧跩跭跮跰跱跲跴跶跼跾",6,"踆踇踈踋踍踎踐踑踒踓踕",7,"踠踡踤",4,"踫踭踰踲踳踴踶踷踸踻踼踾"],["db80","踿蹃蹅蹆蹌",4,"蹓",5,"蹚",11,"蹧蹨蹪蹫蹮蹱邸邰郏郅邾郐郄郇郓郦郢郜郗郛郫郯郾鄄鄢鄞鄣鄱鄯鄹酃酆刍奂劢劬劭劾哿勐勖勰叟燮矍廴凵凼鬯厶弁畚巯坌垩垡塾墼壅壑圩圬圪圳圹圮圯坜圻坂坩垅坫垆坼坻坨坭坶坳垭垤垌垲埏垧垴垓垠埕埘埚埙埒垸埴埯埸埤埝"],["dc40","蹳蹵蹷",4,"蹽蹾躀躂躃躄躆躈",6,"躑躒躓躕",6,"躝躟",11,"躭躮躰躱躳",6,"躻",7],["dc80","軃",10,"軏",21,"堋堍埽埭堀堞堙塄堠塥塬墁墉墚墀馨鼙懿艹艽艿芏芊芨芄芎芑芗芙芫芸芾芰苈苊苣芘芷芮苋苌苁芩芴芡芪芟苄苎芤苡茉苷苤茏茇苜苴苒苘茌苻苓茑茚茆茔茕苠苕茜荑荛荜茈莒茼茴茱莛荞茯荏荇荃荟荀茗荠茭茺茳荦荥"],["dd40","軥",62],["dd80","輤",32,"荨茛荩荬荪荭荮莰荸莳莴莠莪莓莜莅荼莶莩荽莸荻莘莞莨莺莼菁萁菥菘堇萘萋菝菽菖萜萸萑萆菔菟萏萃菸菹菪菅菀萦菰菡葜葑葚葙葳蒇蒈葺蒉葸萼葆葩葶蒌蒎萱葭蓁蓍蓐蓦蒽蓓蓊蒿蒺蓠蒡蒹蒴蒗蓥蓣蔌甍蔸蓰蔹蔟蔺"],["de40","轅",32,"轪辀辌辒辝辠辡辢辤辥辦辧辪辬辭辮辯農辳辴辵辷辸辺辻込辿迀迃迆"],["de80","迉",4,"迏迒迖迗迚迠迡迣迧迬迯迱迲迴迵迶迺迻迼迾迿逇逈逌逎逓逕逘蕖蔻蓿蓼蕙蕈蕨蕤蕞蕺瞢蕃蕲蕻薤薨薇薏蕹薮薜薅薹薷薰藓藁藜藿蘧蘅蘩蘖蘼廾弈夼奁耷奕奚奘匏尢尥尬尴扌扪抟抻拊拚拗拮挢拶挹捋捃掭揶捱捺掎掴捭掬掊捩掮掼揲揸揠揿揄揞揎摒揆掾摅摁搋搛搠搌搦搡摞撄摭撖"],["df40","這逜連逤逥逧",5,"逰",4,"逷逹逺逽逿遀遃遅遆遈",4,"過達違遖遙遚遜",5,"遤遦遧適遪遫遬遯",4,"遶",6,"遾邁"],["df80","還邅邆邇邉邊邌",4,"邒邔邖邘邚邜邞邟邠邤邥邧邨邩邫邭邲邷邼邽邿郀摺撷撸撙撺擀擐擗擤擢攉攥攮弋忒甙弑卟叱叽叩叨叻吒吖吆呋呒呓呔呖呃吡呗呙吣吲咂咔呷呱呤咚咛咄呶呦咝哐咭哂咴哒咧咦哓哔呲咣哕咻咿哌哙哚哜咩咪咤哝哏哞唛哧唠哽唔哳唢唣唏唑唧唪啧喏喵啉啭啁啕唿啐唼"],["e040","郂郃郆郈郉郋郌郍郒郔郕郖郘郙郚郞郟郠郣郤郥郩郪郬郮郰郱郲郳郵郶郷郹郺郻郼郿鄀鄁鄃鄅",19,"鄚鄛鄜"],["e080","鄝鄟鄠鄡鄤",10,"鄰鄲",6,"鄺",8,"酄唷啖啵啶啷唳唰啜喋嗒喃喱喹喈喁喟啾嗖喑啻嗟喽喾喔喙嗪嗷嗉嘟嗑嗫嗬嗔嗦嗝嗄嗯嗥嗲嗳嗌嗍嗨嗵嗤辔嘞嘈嘌嘁嘤嘣嗾嘀嘧嘭噘嘹噗嘬噍噢噙噜噌噔嚆噤噱噫噻噼嚅嚓嚯囔囗囝囡囵囫囹囿圄圊圉圜帏帙帔帑帱帻帼"],["e140","酅酇酈酑酓酔酕酖酘酙酛酜酟酠酦酧酨酫酭酳酺酻酼醀",4,"醆醈醊醎醏醓",6,"醜",5,"醤",5,"醫醬醰醱醲醳醶醷醸醹醻"],["e180","醼",10,"釈釋釐釒",9,"針",8,"帷幄幔幛幞幡岌屺岍岐岖岈岘岙岑岚岜岵岢岽岬岫岱岣峁岷峄峒峤峋峥崂崃崧崦崮崤崞崆崛嵘崾崴崽嵬嵛嵯嵝嵫嵋嵊嵩嵴嶂嶙嶝豳嶷巅彳彷徂徇徉後徕徙徜徨徭徵徼衢彡犭犰犴犷犸狃狁狎狍狒狨狯狩狲狴狷猁狳猃狺"],["e240","釦",62],["e280","鈥",32,"狻猗猓猡猊猞猝猕猢猹猥猬猸猱獐獍獗獠獬獯獾舛夥飧夤夂饣饧",5,"饴饷饽馀馄馇馊馍馐馑馓馔馕庀庑庋庖庥庠庹庵庾庳赓廒廑廛廨廪膺忄忉忖忏怃忮怄忡忤忾怅怆忪忭忸怙怵怦怛怏怍怩怫怊怿怡恸恹恻恺恂"],["e340","鉆",45,"鉵",16],["e380","銆",7,"銏",24,"恪恽悖悚悭悝悃悒悌悛惬悻悱惝惘惆惚悴愠愦愕愣惴愀愎愫慊慵憬憔憧憷懔懵忝隳闩闫闱闳闵闶闼闾阃阄阆阈阊阋阌阍阏阒阕阖阗阙阚丬爿戕氵汔汜汊沣沅沐沔沌汨汩汴汶沆沩泐泔沭泷泸泱泗沲泠泖泺泫泮沱泓泯泾"],["e440","銨",5,"銯",24,"鋉",31],["e480","鋩",32,"洹洧洌浃浈洇洄洙洎洫浍洮洵洚浏浒浔洳涑浯涞涠浞涓涔浜浠浼浣渚淇淅淞渎涿淠渑淦淝淙渖涫渌涮渫湮湎湫溲湟溆湓湔渲渥湄滟溱溘滠漭滢溥溧溽溻溷滗溴滏溏滂溟潢潆潇漤漕滹漯漶潋潴漪漉漩澉澍澌潸潲潼潺濑"],["e540","錊",51,"錿",10],["e580","鍊",31,"鍫濉澧澹澶濂濡濮濞濠濯瀚瀣瀛瀹瀵灏灞宀宄宕宓宥宸甯骞搴寤寮褰寰蹇謇辶迓迕迥迮迤迩迦迳迨逅逄逋逦逑逍逖逡逵逶逭逯遄遑遒遐遨遘遢遛暹遴遽邂邈邃邋彐彗彖彘尻咫屐屙孱屣屦羼弪弩弭艴弼鬻屮妁妃妍妩妪妣"],["e640","鍬",34,"鎐",27],["e680","鎬",29,"鏋鏌鏍妗姊妫妞妤姒妲妯姗妾娅娆姝娈姣姘姹娌娉娲娴娑娣娓婀婧婊婕娼婢婵胬媪媛婷婺媾嫫媲嫒嫔媸嫠嫣嫱嫖嫦嫘嫜嬉嬗嬖嬲嬷孀尕尜孚孥孳孑孓孢驵驷驸驺驿驽骀骁骅骈骊骐骒骓骖骘骛骜骝骟骠骢骣骥骧纟纡纣纥纨纩"],["e740","鏎",7,"鏗",54],["e780","鐎",32,"纭纰纾绀绁绂绉绋绌绐绔绗绛绠绡绨绫绮绯绱绲缍绶绺绻绾缁缂缃缇缈缋缌缏缑缒缗缙缜缛缟缡",6,"缪缫缬缭缯",4,"缵幺畿巛甾邕玎玑玮玢玟珏珂珑玷玳珀珉珈珥珙顼琊珩珧珞玺珲琏琪瑛琦琥琨琰琮琬"],["e840","鐯",14,"鐿",43,"鑬鑭鑮鑯"],["e880","鑰",20,"钑钖钘铇铏铓铔铚铦铻锜锠琛琚瑁瑜瑗瑕瑙瑷瑭瑾璜璎璀璁璇璋璞璨璩璐璧瓒璺韪韫韬杌杓杞杈杩枥枇杪杳枘枧杵枨枞枭枋杷杼柰栉柘栊柩枰栌柙枵柚枳柝栀柃枸柢栎柁柽栲栳桠桡桎桢桄桤梃栝桕桦桁桧桀栾桊桉栩梵梏桴桷梓桫棂楮棼椟椠棹"],["e940","锧锳锽镃镈镋镕镚镠镮镴镵長",7,"門",42],["e980","閫",32,"椤棰椋椁楗棣椐楱椹楠楂楝榄楫榀榘楸椴槌榇榈槎榉楦楣楹榛榧榻榫榭槔榱槁槊槟榕槠榍槿樯槭樗樘橥槲橄樾檠橐橛樵檎橹樽樨橘橼檑檐檩檗檫猷獒殁殂殇殄殒殓殍殚殛殡殪轫轭轱轲轳轵轶轸轷轹轺轼轾辁辂辄辇辋"],["ea40","闌",27,"闬闿阇阓阘阛阞阠阣",6,"阫阬阭阯阰阷阸阹阺阾陁陃陊陎陏陑陒陓陖陗"],["ea80","陘陙陚陜陝陞陠陣陥陦陫陭",4,"陳陸",12,"隇隉隊辍辎辏辘辚軎戋戗戛戟戢戡戥戤戬臧瓯瓴瓿甏甑甓攴旮旯旰昊昙杲昃昕昀炅曷昝昴昱昶昵耆晟晔晁晏晖晡晗晷暄暌暧暝暾曛曜曦曩贲贳贶贻贽赀赅赆赈赉赇赍赕赙觇觊觋觌觎觏觐觑牮犟牝牦牯牾牿犄犋犍犏犒挈挲掰"],["eb40","隌階隑隒隓隕隖隚際隝",9,"隨",7,"隱隲隴隵隷隸隺隻隿雂雃雈雊雋雐雑雓雔雖",9,"雡",6,"雫"],["eb80","雬雭雮雰雱雲雴雵雸雺電雼雽雿霂霃霅霊霋霌霐霑霒霔霕霗",4,"霝霟霠搿擘耄毪毳毽毵毹氅氇氆氍氕氘氙氚氡氩氤氪氲攵敕敫牍牒牖爰虢刖肟肜肓肼朊肽肱肫肭肴肷胧胨胩胪胛胂胄胙胍胗朐胝胫胱胴胭脍脎胲胼朕脒豚脶脞脬脘脲腈腌腓腴腙腚腱腠腩腼腽腭腧塍媵膈膂膑滕膣膪臌朦臊膻"],["ec40","霡",8,"霫霬霮霯霱霳",4,"霺霻霼霽霿",18,"靔靕靗靘靚靜靝靟靣靤靦靧靨靪",7],["ec80","靲靵靷",4,"靽",7,"鞆",4,"鞌鞎鞏鞐鞓鞕鞖鞗鞙",4,"臁膦欤欷欹歃歆歙飑飒飓飕飙飚殳彀毂觳斐齑斓於旆旄旃旌旎旒旖炀炜炖炝炻烀炷炫炱烨烊焐焓焖焯焱煳煜煨煅煲煊煸煺熘熳熵熨熠燠燔燧燹爝爨灬焘煦熹戾戽扃扈扉礻祀祆祉祛祜祓祚祢祗祠祯祧祺禅禊禚禧禳忑忐"],["ed40","鞞鞟鞡鞢鞤",6,"鞬鞮鞰鞱鞳鞵",46],["ed80","韤韥韨韮",4,"韴韷",23,"怼恝恚恧恁恙恣悫愆愍慝憩憝懋懑戆肀聿沓泶淼矶矸砀砉砗砘砑斫砭砜砝砹砺砻砟砼砥砬砣砩硎硭硖硗砦硐硇硌硪碛碓碚碇碜碡碣碲碹碥磔磙磉磬磲礅磴礓礤礞礴龛黹黻黼盱眄眍盹眇眈眚眢眙眭眦眵眸睐睑睇睃睚睨"],["ee40","頏",62],["ee80","顎",32,"睢睥睿瞍睽瞀瞌瞑瞟瞠瞰瞵瞽町畀畎畋畈畛畲畹疃罘罡罟詈罨罴罱罹羁罾盍盥蠲钅钆钇钋钊钌钍钏钐钔钗钕钚钛钜钣钤钫钪钭钬钯钰钲钴钶",4,"钼钽钿铄铈",6,"铐铑铒铕铖铗铙铘铛铞铟铠铢铤铥铧铨铪"],["ef40","顯",5,"颋颎颒颕颙颣風",37,"飏飐飔飖飗飛飜飝飠",4],["ef80","飥飦飩",30,"铩铫铮铯铳铴铵铷铹铼铽铿锃锂锆锇锉锊锍锎锏锒",4,"锘锛锝锞锟锢锪锫锩锬锱锲锴锶锷锸锼锾锿镂锵镄镅镆镉镌镎镏镒镓镔镖镗镘镙镛镞镟镝镡镢镤",8,"镯镱镲镳锺矧矬雉秕秭秣秫稆嵇稃稂稞稔"],["f040","餈",4,"餎餏餑",28,"餯",26],["f080","饊",9,"饖",12,"饤饦饳饸饹饻饾馂馃馉稹稷穑黏馥穰皈皎皓皙皤瓞瓠甬鸠鸢鸨",4,"鸲鸱鸶鸸鸷鸹鸺鸾鹁鹂鹄鹆鹇鹈鹉鹋鹌鹎鹑鹕鹗鹚鹛鹜鹞鹣鹦",6,"鹱鹭鹳疒疔疖疠疝疬疣疳疴疸痄疱疰痃痂痖痍痣痨痦痤痫痧瘃痱痼痿瘐瘀瘅瘌瘗瘊瘥瘘瘕瘙"],["f140","馌馎馚",10,"馦馧馩",47],["f180","駙",32,"瘛瘼瘢瘠癀瘭瘰瘿瘵癃瘾瘳癍癞癔癜癖癫癯翊竦穸穹窀窆窈窕窦窠窬窨窭窳衤衩衲衽衿袂袢裆袷袼裉裢裎裣裥裱褚裼裨裾裰褡褙褓褛褊褴褫褶襁襦襻疋胥皲皴矜耒耔耖耜耠耢耥耦耧耩耨耱耋耵聃聆聍聒聩聱覃顸颀颃"],["f240","駺",62],["f280","騹",32,"颉颌颍颏颔颚颛颞颟颡颢颥颦虍虔虬虮虿虺虼虻蚨蚍蚋蚬蚝蚧蚣蚪蚓蚩蚶蛄蚵蛎蚰蚺蚱蚯蛉蛏蚴蛩蛱蛲蛭蛳蛐蜓蛞蛴蛟蛘蛑蜃蜇蛸蜈蜊蜍蜉蜣蜻蜞蜥蜮蜚蜾蝈蜴蜱蜩蜷蜿螂蜢蝽蝾蝻蝠蝰蝌蝮螋蝓蝣蝼蝤蝙蝥螓螯螨蟒"],["f340","驚",17,"驲骃骉骍骎骔骕骙骦骩",6,"骲骳骴骵骹骻骽骾骿髃髄髆",4,"髍髎髏髐髒體髕髖髗髙髚髛髜"],["f380","髝髞髠髢髣髤髥髧髨髩髪髬髮髰",8,"髺髼",6,"鬄鬅鬆蟆螈螅螭螗螃螫蟥螬螵螳蟋蟓螽蟑蟀蟊蟛蟪蟠蟮蠖蠓蟾蠊蠛蠡蠹蠼缶罂罄罅舐竺竽笈笃笄笕笊笫笏筇笸笪笙笮笱笠笥笤笳笾笞筘筚筅筵筌筝筠筮筻筢筲筱箐箦箧箸箬箝箨箅箪箜箢箫箴篑篁篌篝篚篥篦篪簌篾篼簏簖簋"],["f440","鬇鬉",5,"鬐鬑鬒鬔",10,"鬠鬡鬢鬤",10,"鬰鬱鬳",7,"鬽鬾鬿魀魆魊魋魌魎魐魒魓魕",5],["f480","魛",32,"簟簪簦簸籁籀臾舁舂舄臬衄舡舢舣舭舯舨舫舸舻舳舴舾艄艉艋艏艚艟艨衾袅袈裘裟襞羝羟羧羯羰羲籼敉粑粝粜粞粢粲粼粽糁糇糌糍糈糅糗糨艮暨羿翎翕翥翡翦翩翮翳糸絷綦綮繇纛麸麴赳趄趔趑趱赧赭豇豉酊酐酎酏酤"],["f540","魼",62],["f580","鮻",32,"酢酡酰酩酯酽酾酲酴酹醌醅醐醍醑醢醣醪醭醮醯醵醴醺豕鹾趸跫踅蹙蹩趵趿趼趺跄跖跗跚跞跎跏跛跆跬跷跸跣跹跻跤踉跽踔踝踟踬踮踣踯踺蹀踹踵踽踱蹉蹁蹂蹑蹒蹊蹰蹶蹼蹯蹴躅躏躔躐躜躞豸貂貊貅貘貔斛觖觞觚觜"],["f640","鯜",62],["f680","鰛",32,"觥觫觯訾謦靓雩雳雯霆霁霈霏霎霪霭霰霾龀龃龅",5,"龌黾鼋鼍隹隼隽雎雒瞿雠銎銮鋈錾鍪鏊鎏鐾鑫鱿鲂鲅鲆鲇鲈稣鲋鲎鲐鲑鲒鲔鲕鲚鲛鲞",5,"鲥",4,"鲫鲭鲮鲰",7,"鲺鲻鲼鲽鳄鳅鳆鳇鳊鳋"],["f740","鰼",62],["f780","鱻鱽鱾鲀鲃鲄鲉鲊鲌鲏鲓鲖鲗鲘鲙鲝鲪鲬鲯鲹鲾",4,"鳈鳉鳑鳒鳚鳛鳠鳡鳌",4,"鳓鳔鳕鳗鳘鳙鳜鳝鳟鳢靼鞅鞑鞒鞔鞯鞫鞣鞲鞴骱骰骷鹘骶骺骼髁髀髅髂髋髌髑魅魃魇魉魈魍魑飨餍餮饕饔髟髡髦髯髫髻髭髹鬈鬏鬓鬟鬣麽麾縻麂麇麈麋麒鏖麝麟黛黜黝黠黟黢黩黧黥黪黯鼢鼬鼯鼹鼷鼽鼾齄"],["f840","鳣",62],["f880","鴢",32],["f940","鵃",62],["f980","鶂",32],["fa40","鶣",62],["fa80","鷢",32],["fb40","鸃",27,"鸤鸧鸮鸰鸴鸻鸼鹀鹍鹐鹒鹓鹔鹖鹙鹝鹟鹠鹡鹢鹥鹮鹯鹲鹴",9,"麀"],["fb80","麁麃麄麅麆麉麊麌",5,"麔",8,"麞麠",5,"麧麨麩麪"],["fc40","麫",8,"麵麶麷麹麺麼麿",4,"黅黆黇黈黊黋黌黐黒黓黕黖黗黙黚點黡黣黤黦黨黫黬黭黮黰",8,"黺黽黿",6],["fc80","鼆",4,"鼌鼏鼑鼒鼔鼕鼖鼘鼚",5,"鼡鼣",8,"鼭鼮鼰鼱"],["fd40","鼲",4,"鼸鼺鼼鼿",4,"齅",10,"齒",38],["fd80","齹",5,"龁龂龍",11,"龜龝龞龡",4,"郎凉秊裏隣"],["fe40","兀嗀﨎﨏﨑﨓﨔礼﨟蘒﨡﨣﨤﨧﨨﨩"]]'), aR = [
+], Zh = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["8ea1","｡",62],["a1a1","　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈",9,"＋－±×÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄￠￡％＃＆＊＠§☆★○●◎◇"],["a2a1","◆□■△▲▽▼※〒→←↑↓〓"],["a2ba","∈∋⊆⊇⊂⊃∪∩"],["a2ca","∧∨￢⇒⇔∀∃"],["a2dc","∠⊥⌒∂∇≡≒≪≫√∽∝∵∫∬"],["a2f2","Å‰♯♭♪†‡¶"],["a2fe","◯"],["a3b0","０",9],["a3c1","Ａ",25],["a3e1","ａ",25],["a4a1","ぁ",82],["a5a1","ァ",85],["a6a1","Α",16,"Σ",6],["a6c1","α",16,"σ",6],["a7a1","А",5,"ЁЖ",25],["a7d1","а",5,"ёж",25],["a8a1","─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂"],["ada1","①",19,"Ⅰ",9],["adc0","㍉㌔㌢㍍㌘㌧㌃㌶㍑㍗㌍㌦㌣㌫㍊㌻㎜㎝㎞㎎㎏㏄㎡"],["addf","㍻〝〟№㏍℡㊤",4,"㈱㈲㈹㍾㍽㍼≒≡∫∮∑√⊥∠∟⊿∵∩∪"],["b0a1","亜唖娃阿哀愛挨姶逢葵茜穐悪握渥旭葦芦鯵梓圧斡扱宛姐虻飴絢綾鮎或粟袷安庵按暗案闇鞍杏以伊位依偉囲夷委威尉惟意慰易椅為畏異移維緯胃萎衣謂違遺医井亥域育郁磯一壱溢逸稲茨芋鰯允印咽員因姻引飲淫胤蔭"],["b1a1","院陰隠韻吋右宇烏羽迂雨卯鵜窺丑碓臼渦嘘唄欝蔚鰻姥厩浦瓜閏噂云運雲荏餌叡営嬰影映曳栄永泳洩瑛盈穎頴英衛詠鋭液疫益駅悦謁越閲榎厭円園堰奄宴延怨掩援沿演炎焔煙燕猿縁艶苑薗遠鉛鴛塩於汚甥凹央奥往応"],["b2a1","押旺横欧殴王翁襖鴬鴎黄岡沖荻億屋憶臆桶牡乙俺卸恩温穏音下化仮何伽価佳加可嘉夏嫁家寡科暇果架歌河火珂禍禾稼箇花苛茄荷華菓蝦課嘩貨迦過霞蚊俄峨我牙画臥芽蛾賀雅餓駕介会解回塊壊廻快怪悔恢懐戒拐改"],["b3a1","魁晦械海灰界皆絵芥蟹開階貝凱劾外咳害崖慨概涯碍蓋街該鎧骸浬馨蛙垣柿蛎鈎劃嚇各廓拡撹格核殻獲確穫覚角赫較郭閣隔革学岳楽額顎掛笠樫橿梶鰍潟割喝恰括活渇滑葛褐轄且鰹叶椛樺鞄株兜竃蒲釜鎌噛鴨栢茅萱"],["b4a1","粥刈苅瓦乾侃冠寒刊勘勧巻喚堪姦完官寛干幹患感慣憾換敢柑桓棺款歓汗漢澗潅環甘監看竿管簡緩缶翰肝艦莞観諌貫還鑑間閑関陥韓館舘丸含岸巌玩癌眼岩翫贋雁頑顔願企伎危喜器基奇嬉寄岐希幾忌揮机旗既期棋棄"],["b5a1","機帰毅気汽畿祈季稀紀徽規記貴起軌輝飢騎鬼亀偽儀妓宜戯技擬欺犠疑祇義蟻誼議掬菊鞠吉吃喫桔橘詰砧杵黍却客脚虐逆丘久仇休及吸宮弓急救朽求汲泣灸球究窮笈級糾給旧牛去居巨拒拠挙渠虚許距鋸漁禦魚亨享京"],["b6a1","供侠僑兇競共凶協匡卿叫喬境峡強彊怯恐恭挟教橋況狂狭矯胸脅興蕎郷鏡響饗驚仰凝尭暁業局曲極玉桐粁僅勤均巾錦斤欣欽琴禁禽筋緊芹菌衿襟謹近金吟銀九倶句区狗玖矩苦躯駆駈駒具愚虞喰空偶寓遇隅串櫛釧屑屈"],["b7a1","掘窟沓靴轡窪熊隈粂栗繰桑鍬勲君薫訓群軍郡卦袈祁係傾刑兄啓圭珪型契形径恵慶慧憩掲携敬景桂渓畦稽系経継繋罫茎荊蛍計詣警軽頚鶏芸迎鯨劇戟撃激隙桁傑欠決潔穴結血訣月件倹倦健兼券剣喧圏堅嫌建憲懸拳捲"],["b8a1","検権牽犬献研硯絹県肩見謙賢軒遣鍵険顕験鹸元原厳幻弦減源玄現絃舷言諺限乎個古呼固姑孤己庫弧戸故枯湖狐糊袴股胡菰虎誇跨鈷雇顧鼓五互伍午呉吾娯後御悟梧檎瑚碁語誤護醐乞鯉交佼侯候倖光公功効勾厚口向"],["b9a1","后喉坑垢好孔孝宏工巧巷幸広庚康弘恒慌抗拘控攻昂晃更杭校梗構江洪浩港溝甲皇硬稿糠紅紘絞綱耕考肯肱腔膏航荒行衡講貢購郊酵鉱砿鋼閤降項香高鴻剛劫号合壕拷濠豪轟麹克刻告国穀酷鵠黒獄漉腰甑忽惚骨狛込"],["baa1","此頃今困坤墾婚恨懇昏昆根梱混痕紺艮魂些佐叉唆嵯左差査沙瑳砂詐鎖裟坐座挫債催再最哉塞妻宰彩才採栽歳済災采犀砕砦祭斎細菜裁載際剤在材罪財冴坂阪堺榊肴咲崎埼碕鷺作削咋搾昨朔柵窄策索錯桜鮭笹匙冊刷"],["bba1","察拶撮擦札殺薩雑皐鯖捌錆鮫皿晒三傘参山惨撒散桟燦珊産算纂蚕讃賛酸餐斬暫残仕仔伺使刺司史嗣四士始姉姿子屍市師志思指支孜斯施旨枝止死氏獅祉私糸紙紫肢脂至視詞詩試誌諮資賜雌飼歯事似侍児字寺慈持時"],["bca1","次滋治爾璽痔磁示而耳自蒔辞汐鹿式識鴫竺軸宍雫七叱執失嫉室悉湿漆疾質実蔀篠偲柴芝屡蕊縞舎写射捨赦斜煮社紗者謝車遮蛇邪借勺尺杓灼爵酌釈錫若寂弱惹主取守手朱殊狩珠種腫趣酒首儒受呪寿授樹綬需囚収周"],["bda1","宗就州修愁拾洲秀秋終繍習臭舟蒐衆襲讐蹴輯週酋酬集醜什住充十従戎柔汁渋獣縦重銃叔夙宿淑祝縮粛塾熟出術述俊峻春瞬竣舜駿准循旬楯殉淳準潤盾純巡遵醇順処初所暑曙渚庶緒署書薯藷諸助叙女序徐恕鋤除傷償"],["bea1","勝匠升召哨商唱嘗奨妾娼宵将小少尚庄床廠彰承抄招掌捷昇昌昭晶松梢樟樵沼消渉湘焼焦照症省硝礁祥称章笑粧紹肖菖蒋蕉衝裳訟証詔詳象賞醤鉦鍾鐘障鞘上丈丞乗冗剰城場壌嬢常情擾条杖浄状畳穣蒸譲醸錠嘱埴飾"],["bfa1","拭植殖燭織職色触食蝕辱尻伸信侵唇娠寝審心慎振新晋森榛浸深申疹真神秦紳臣芯薪親診身辛進針震人仁刃塵壬尋甚尽腎訊迅陣靭笥諏須酢図厨逗吹垂帥推水炊睡粋翠衰遂酔錐錘随瑞髄崇嵩数枢趨雛据杉椙菅頗雀裾"],["c0a1","澄摺寸世瀬畝是凄制勢姓征性成政整星晴棲栖正清牲生盛精聖声製西誠誓請逝醒青静斉税脆隻席惜戚斥昔析石積籍績脊責赤跡蹟碩切拙接摂折設窃節説雪絶舌蝉仙先千占宣専尖川戦扇撰栓栴泉浅洗染潜煎煽旋穿箭線"],["c1a1","繊羨腺舛船薦詮賎践選遷銭銑閃鮮前善漸然全禅繕膳糎噌塑岨措曾曽楚狙疏疎礎祖租粗素組蘇訴阻遡鼠僧創双叢倉喪壮奏爽宋層匝惣想捜掃挿掻操早曹巣槍槽漕燥争痩相窓糟総綜聡草荘葬蒼藻装走送遭鎗霜騒像増憎"],["c2a1","臓蔵贈造促側則即息捉束測足速俗属賊族続卒袖其揃存孫尊損村遜他多太汰詑唾堕妥惰打柁舵楕陀駄騨体堆対耐岱帯待怠態戴替泰滞胎腿苔袋貸退逮隊黛鯛代台大第醍題鷹滝瀧卓啄宅托択拓沢濯琢託鐸濁諾茸凧蛸只"],["c3a1","叩但達辰奪脱巽竪辿棚谷狸鱈樽誰丹単嘆坦担探旦歎淡湛炭短端箪綻耽胆蛋誕鍛団壇弾断暖檀段男談値知地弛恥智池痴稚置致蜘遅馳築畜竹筑蓄逐秩窒茶嫡着中仲宙忠抽昼柱注虫衷註酎鋳駐樗瀦猪苧著貯丁兆凋喋寵"],["c4a1","帖帳庁弔張彫徴懲挑暢朝潮牒町眺聴脹腸蝶調諜超跳銚長頂鳥勅捗直朕沈珍賃鎮陳津墜椎槌追鎚痛通塚栂掴槻佃漬柘辻蔦綴鍔椿潰坪壷嬬紬爪吊釣鶴亭低停偵剃貞呈堤定帝底庭廷弟悌抵挺提梯汀碇禎程締艇訂諦蹄逓"],["c5a1","邸鄭釘鼎泥摘擢敵滴的笛適鏑溺哲徹撤轍迭鉄典填天展店添纏甜貼転顛点伝殿澱田電兎吐堵塗妬屠徒斗杜渡登菟賭途都鍍砥砺努度土奴怒倒党冬凍刀唐塔塘套宕島嶋悼投搭東桃梼棟盗淘湯涛灯燈当痘祷等答筒糖統到"],["c6a1","董蕩藤討謄豆踏逃透鐙陶頭騰闘働動同堂導憧撞洞瞳童胴萄道銅峠鴇匿得徳涜特督禿篤毒独読栃橡凸突椴届鳶苫寅酉瀞噸屯惇敦沌豚遁頓呑曇鈍奈那内乍凪薙謎灘捺鍋楢馴縄畷南楠軟難汝二尼弐迩匂賑肉虹廿日乳入"],["c7a1","如尿韮任妊忍認濡禰祢寧葱猫熱年念捻撚燃粘乃廼之埜嚢悩濃納能脳膿農覗蚤巴把播覇杷波派琶破婆罵芭馬俳廃拝排敗杯盃牌背肺輩配倍培媒梅楳煤狽買売賠陪這蝿秤矧萩伯剥博拍柏泊白箔粕舶薄迫曝漠爆縛莫駁麦"],["c8a1","函箱硲箸肇筈櫨幡肌畑畠八鉢溌発醗髪伐罰抜筏閥鳩噺塙蛤隼伴判半反叛帆搬斑板氾汎版犯班畔繁般藩販範釆煩頒飯挽晩番盤磐蕃蛮匪卑否妃庇彼悲扉批披斐比泌疲皮碑秘緋罷肥被誹費避非飛樋簸備尾微枇毘琵眉美"],["c9a1","鼻柊稗匹疋髭彦膝菱肘弼必畢筆逼桧姫媛紐百謬俵彪標氷漂瓢票表評豹廟描病秒苗錨鋲蒜蛭鰭品彬斌浜瀕貧賓頻敏瓶不付埠夫婦富冨布府怖扶敷斧普浮父符腐膚芙譜負賦赴阜附侮撫武舞葡蕪部封楓風葺蕗伏副復幅服"],["caa1","福腹複覆淵弗払沸仏物鮒分吻噴墳憤扮焚奮粉糞紛雰文聞丙併兵塀幣平弊柄並蔽閉陛米頁僻壁癖碧別瞥蔑箆偏変片篇編辺返遍便勉娩弁鞭保舗鋪圃捕歩甫補輔穂募墓慕戊暮母簿菩倣俸包呆報奉宝峰峯崩庖抱捧放方朋"],["cba1","法泡烹砲縫胞芳萌蓬蜂褒訪豊邦鋒飽鳳鵬乏亡傍剖坊妨帽忘忙房暴望某棒冒紡肪膨謀貌貿鉾防吠頬北僕卜墨撲朴牧睦穆釦勃没殆堀幌奔本翻凡盆摩磨魔麻埋妹昧枚毎哩槙幕膜枕鮪柾鱒桝亦俣又抹末沫迄侭繭麿万慢満"],["cca1","漫蔓味未魅巳箕岬密蜜湊蓑稔脈妙粍民眠務夢無牟矛霧鵡椋婿娘冥名命明盟迷銘鳴姪牝滅免棉綿緬面麺摸模茂妄孟毛猛盲網耗蒙儲木黙目杢勿餅尤戻籾貰問悶紋門匁也冶夜爺耶野弥矢厄役約薬訳躍靖柳薮鑓愉愈油癒"],["cda1","諭輸唯佑優勇友宥幽悠憂揖有柚湧涌猶猷由祐裕誘遊邑郵雄融夕予余与誉輿預傭幼妖容庸揚揺擁曜楊様洋溶熔用窯羊耀葉蓉要謡踊遥陽養慾抑欲沃浴翌翼淀羅螺裸来莱頼雷洛絡落酪乱卵嵐欄濫藍蘭覧利吏履李梨理璃"],["cea1","痢裏裡里離陸律率立葎掠略劉流溜琉留硫粒隆竜龍侶慮旅虜了亮僚両凌寮料梁涼猟療瞭稜糧良諒遼量陵領力緑倫厘林淋燐琳臨輪隣鱗麟瑠塁涙累類令伶例冷励嶺怜玲礼苓鈴隷零霊麗齢暦歴列劣烈裂廉恋憐漣煉簾練聯"],["cfa1","蓮連錬呂魯櫓炉賂路露労婁廊弄朗楼榔浪漏牢狼篭老聾蝋郎六麓禄肋録論倭和話歪賄脇惑枠鷲亙亘鰐詫藁蕨椀湾碗腕"],["d0a1","弌丐丕个丱丶丼丿乂乖乘亂亅豫亊舒弍于亞亟亠亢亰亳亶从仍仄仆仂仗仞仭仟价伉佚估佛佝佗佇佶侈侏侘佻佩佰侑佯來侖儘俔俟俎俘俛俑俚俐俤俥倚倨倔倪倥倅伜俶倡倩倬俾俯們倆偃假會偕偐偈做偖偬偸傀傚傅傴傲"],["d1a1","僉僊傳僂僖僞僥僭僣僮價僵儉儁儂儖儕儔儚儡儺儷儼儻儿兀兒兌兔兢竸兩兪兮冀冂囘册冉冏冑冓冕冖冤冦冢冩冪冫决冱冲冰况冽凅凉凛几處凩凭凰凵凾刄刋刔刎刧刪刮刳刹剏剄剋剌剞剔剪剴剩剳剿剽劍劔劒剱劈劑辨"],["d2a1","辧劬劭劼劵勁勍勗勞勣勦飭勠勳勵勸勹匆匈甸匍匐匏匕匚匣匯匱匳匸區卆卅丗卉卍凖卞卩卮夘卻卷厂厖厠厦厥厮厰厶參簒雙叟曼燮叮叨叭叺吁吽呀听吭吼吮吶吩吝呎咏呵咎呟呱呷呰咒呻咀呶咄咐咆哇咢咸咥咬哄哈咨"],["d3a1","咫哂咤咾咼哘哥哦唏唔哽哮哭哺哢唹啀啣啌售啜啅啖啗唸唳啝喙喀咯喊喟啻啾喘喞單啼喃喩喇喨嗚嗅嗟嗄嗜嗤嗔嘔嗷嘖嗾嗽嘛嗹噎噐營嘴嘶嘲嘸噫噤嘯噬噪嚆嚀嚊嚠嚔嚏嚥嚮嚶嚴囂嚼囁囃囀囈囎囑囓囗囮囹圀囿圄圉"],["d4a1","圈國圍圓團圖嗇圜圦圷圸坎圻址坏坩埀垈坡坿垉垓垠垳垤垪垰埃埆埔埒埓堊埖埣堋堙堝塲堡塢塋塰毀塒堽塹墅墹墟墫墺壞墻墸墮壅壓壑壗壙壘壥壜壤壟壯壺壹壻壼壽夂夊夐夛梦夥夬夭夲夸夾竒奕奐奎奚奘奢奠奧奬奩"],["d5a1","奸妁妝佞侫妣妲姆姨姜妍姙姚娥娟娑娜娉娚婀婬婉娵娶婢婪媚媼媾嫋嫂媽嫣嫗嫦嫩嫖嫺嫻嬌嬋嬖嬲嫐嬪嬶嬾孃孅孀孑孕孚孛孥孩孰孳孵學斈孺宀它宦宸寃寇寉寔寐寤實寢寞寥寫寰寶寳尅將專對尓尠尢尨尸尹屁屆屎屓"],["d6a1","屐屏孱屬屮乢屶屹岌岑岔妛岫岻岶岼岷峅岾峇峙峩峽峺峭嶌峪崋崕崗嵜崟崛崑崔崢崚崙崘嵌嵒嵎嵋嵬嵳嵶嶇嶄嶂嶢嶝嶬嶮嶽嶐嶷嶼巉巍巓巒巖巛巫已巵帋帚帙帑帛帶帷幄幃幀幎幗幔幟幢幤幇幵并幺麼广庠廁廂廈廐廏"],["d7a1","廖廣廝廚廛廢廡廨廩廬廱廳廰廴廸廾弃弉彝彜弋弑弖弩弭弸彁彈彌彎弯彑彖彗彙彡彭彳彷徃徂彿徊很徑徇從徙徘徠徨徭徼忖忻忤忸忱忝悳忿怡恠怙怐怩怎怱怛怕怫怦怏怺恚恁恪恷恟恊恆恍恣恃恤恂恬恫恙悁悍惧悃悚"],["d8a1","悄悛悖悗悒悧悋惡悸惠惓悴忰悽惆悵惘慍愕愆惶惷愀惴惺愃愡惻惱愍愎慇愾愨愧慊愿愼愬愴愽慂慄慳慷慘慙慚慫慴慯慥慱慟慝慓慵憙憖憇憬憔憚憊憑憫憮懌懊應懷懈懃懆憺懋罹懍懦懣懶懺懴懿懽懼懾戀戈戉戍戌戔戛"],["d9a1","戞戡截戮戰戲戳扁扎扞扣扛扠扨扼抂抉找抒抓抖拔抃抔拗拑抻拏拿拆擔拈拜拌拊拂拇抛拉挌拮拱挧挂挈拯拵捐挾捍搜捏掖掎掀掫捶掣掏掉掟掵捫捩掾揩揀揆揣揉插揶揄搖搴搆搓搦搶攝搗搨搏摧摯摶摎攪撕撓撥撩撈撼"],["daa1","據擒擅擇撻擘擂擱擧舉擠擡抬擣擯攬擶擴擲擺攀擽攘攜攅攤攣攫攴攵攷收攸畋效敖敕敍敘敞敝敲數斂斃變斛斟斫斷旃旆旁旄旌旒旛旙无旡旱杲昊昃旻杳昵昶昴昜晏晄晉晁晞晝晤晧晨晟晢晰暃暈暎暉暄暘暝曁暹曉暾暼"],["dba1","曄暸曖曚曠昿曦曩曰曵曷朏朖朞朦朧霸朮朿朶杁朸朷杆杞杠杙杣杤枉杰枩杼杪枌枋枦枡枅枷柯枴柬枳柩枸柤柞柝柢柮枹柎柆柧檜栞框栩桀桍栲桎梳栫桙档桷桿梟梏梭梔條梛梃檮梹桴梵梠梺椏梍桾椁棊椈棘椢椦棡椌棍"],["dca1","棔棧棕椶椒椄棗棣椥棹棠棯椨椪椚椣椡棆楹楷楜楸楫楔楾楮椹楴椽楙椰楡楞楝榁楪榲榮槐榿槁槓榾槎寨槊槝榻槃榧樮榑榠榜榕榴槞槨樂樛槿權槹槲槧樅榱樞槭樔槫樊樒櫁樣樓橄樌橲樶橸橇橢橙橦橈樸樢檐檍檠檄檢檣"],["dda1","檗蘗檻櫃櫂檸檳檬櫞櫑櫟檪櫚櫪櫻欅蘖櫺欒欖鬱欟欸欷盜欹飮歇歃歉歐歙歔歛歟歡歸歹歿殀殄殃殍殘殕殞殤殪殫殯殲殱殳殷殼毆毋毓毟毬毫毳毯麾氈氓气氛氤氣汞汕汢汪沂沍沚沁沛汾汨汳沒沐泄泱泓沽泗泅泝沮沱沾"],["dea1","沺泛泯泙泪洟衍洶洫洽洸洙洵洳洒洌浣涓浤浚浹浙涎涕濤涅淹渕渊涵淇淦涸淆淬淞淌淨淒淅淺淙淤淕淪淮渭湮渮渙湲湟渾渣湫渫湶湍渟湃渺湎渤滿渝游溂溪溘滉溷滓溽溯滄溲滔滕溏溥滂溟潁漑灌滬滸滾漿滲漱滯漲滌"],["dfa1","漾漓滷澆潺潸澁澀潯潛濳潭澂潼潘澎澑濂潦澳澣澡澤澹濆澪濟濕濬濔濘濱濮濛瀉瀋濺瀑瀁瀏濾瀛瀚潴瀝瀘瀟瀰瀾瀲灑灣炙炒炯烱炬炸炳炮烟烋烝烙焉烽焜焙煥煕熈煦煢煌煖煬熏燻熄熕熨熬燗熹熾燒燉燔燎燠燬燧燵燼"],["e0a1","燹燿爍爐爛爨爭爬爰爲爻爼爿牀牆牋牘牴牾犂犁犇犒犖犢犧犹犲狃狆狄狎狒狢狠狡狹狷倏猗猊猜猖猝猴猯猩猥猾獎獏默獗獪獨獰獸獵獻獺珈玳珎玻珀珥珮珞璢琅瑯琥珸琲琺瑕琿瑟瑙瑁瑜瑩瑰瑣瑪瑶瑾璋璞璧瓊瓏瓔珱"],["e1a1","瓠瓣瓧瓩瓮瓲瓰瓱瓸瓷甄甃甅甌甎甍甕甓甞甦甬甼畄畍畊畉畛畆畚畩畤畧畫畭畸當疆疇畴疊疉疂疔疚疝疥疣痂疳痃疵疽疸疼疱痍痊痒痙痣痞痾痿痼瘁痰痺痲痳瘋瘍瘉瘟瘧瘠瘡瘢瘤瘴瘰瘻癇癈癆癜癘癡癢癨癩癪癧癬癰"],["e2a1","癲癶癸發皀皃皈皋皎皖皓皙皚皰皴皸皹皺盂盍盖盒盞盡盥盧盪蘯盻眈眇眄眩眤眞眥眦眛眷眸睇睚睨睫睛睥睿睾睹瞎瞋瞑瞠瞞瞰瞶瞹瞿瞼瞽瞻矇矍矗矚矜矣矮矼砌砒礦砠礪硅碎硴碆硼碚碌碣碵碪碯磑磆磋磔碾碼磅磊磬"],["e3a1","磧磚磽磴礇礒礑礙礬礫祀祠祗祟祚祕祓祺祿禊禝禧齋禪禮禳禹禺秉秕秧秬秡秣稈稍稘稙稠稟禀稱稻稾稷穃穗穉穡穢穩龝穰穹穽窈窗窕窘窖窩竈窰窶竅竄窿邃竇竊竍竏竕竓站竚竝竡竢竦竭竰笂笏笊笆笳笘笙笞笵笨笶筐"],["e4a1","筺笄筍笋筌筅筵筥筴筧筰筱筬筮箝箘箟箍箜箚箋箒箏筝箙篋篁篌篏箴篆篝篩簑簔篦篥籠簀簇簓篳篷簗簍篶簣簧簪簟簷簫簽籌籃籔籏籀籐籘籟籤籖籥籬籵粃粐粤粭粢粫粡粨粳粲粱粮粹粽糀糅糂糘糒糜糢鬻糯糲糴糶糺紆"],["e5a1","紂紜紕紊絅絋紮紲紿紵絆絳絖絎絲絨絮絏絣經綉絛綏絽綛綺綮綣綵緇綽綫總綢綯緜綸綟綰緘緝緤緞緻緲緡縅縊縣縡縒縱縟縉縋縢繆繦縻縵縹繃縷縲縺繧繝繖繞繙繚繹繪繩繼繻纃緕繽辮繿纈纉續纒纐纓纔纖纎纛纜缸缺"],["e6a1","罅罌罍罎罐网罕罔罘罟罠罨罩罧罸羂羆羃羈羇羌羔羞羝羚羣羯羲羹羮羶羸譱翅翆翊翕翔翡翦翩翳翹飜耆耄耋耒耘耙耜耡耨耿耻聊聆聒聘聚聟聢聨聳聲聰聶聹聽聿肄肆肅肛肓肚肭冐肬胛胥胙胝胄胚胖脉胯胱脛脩脣脯腋"],["e7a1","隋腆脾腓腑胼腱腮腥腦腴膃膈膊膀膂膠膕膤膣腟膓膩膰膵膾膸膽臀臂膺臉臍臑臙臘臈臚臟臠臧臺臻臾舁舂舅與舊舍舐舖舩舫舸舳艀艙艘艝艚艟艤艢艨艪艫舮艱艷艸艾芍芒芫芟芻芬苡苣苟苒苴苳苺莓范苻苹苞茆苜茉苙"],["e8a1","茵茴茖茲茱荀茹荐荅茯茫茗茘莅莚莪莟莢莖茣莎莇莊荼莵荳荵莠莉莨菴萓菫菎菽萃菘萋菁菷萇菠菲萍萢萠莽萸蔆菻葭萪萼蕚蒄葷葫蒭葮蒂葩葆萬葯葹萵蓊葢蒹蒿蒟蓙蓍蒻蓚蓐蓁蓆蓖蒡蔡蓿蓴蔗蔘蔬蔟蔕蔔蓼蕀蕣蕘蕈"],["e9a1","蕁蘂蕋蕕薀薤薈薑薊薨蕭薔薛藪薇薜蕷蕾薐藉薺藏薹藐藕藝藥藜藹蘊蘓蘋藾藺蘆蘢蘚蘰蘿虍乕虔號虧虱蚓蚣蚩蚪蚋蚌蚶蚯蛄蛆蚰蛉蠣蚫蛔蛞蛩蛬蛟蛛蛯蜒蜆蜈蜀蜃蛻蜑蜉蜍蛹蜊蜴蜿蜷蜻蜥蜩蜚蝠蝟蝸蝌蝎蝴蝗蝨蝮蝙"],["eaa1","蝓蝣蝪蠅螢螟螂螯蟋螽蟀蟐雖螫蟄螳蟇蟆螻蟯蟲蟠蠏蠍蟾蟶蟷蠎蟒蠑蠖蠕蠢蠡蠱蠶蠹蠧蠻衄衂衒衙衞衢衫袁衾袞衵衽袵衲袂袗袒袮袙袢袍袤袰袿袱裃裄裔裘裙裝裹褂裼裴裨裲褄褌褊褓襃褞褥褪褫襁襄褻褶褸襌褝襠襞"],["eba1","襦襤襭襪襯襴襷襾覃覈覊覓覘覡覩覦覬覯覲覺覽覿觀觚觜觝觧觴觸訃訖訐訌訛訝訥訶詁詛詒詆詈詼詭詬詢誅誂誄誨誡誑誥誦誚誣諄諍諂諚諫諳諧諤諱謔諠諢諷諞諛謌謇謚諡謖謐謗謠謳鞫謦謫謾謨譁譌譏譎證譖譛譚譫"],["eca1","譟譬譯譴譽讀讌讎讒讓讖讙讚谺豁谿豈豌豎豐豕豢豬豸豺貂貉貅貊貍貎貔豼貘戝貭貪貽貲貳貮貶賈賁賤賣賚賽賺賻贄贅贊贇贏贍贐齎贓賍贔贖赧赭赱赳趁趙跂趾趺跏跚跖跌跛跋跪跫跟跣跼踈踉跿踝踞踐踟蹂踵踰踴蹊"],["eda1","蹇蹉蹌蹐蹈蹙蹤蹠踪蹣蹕蹶蹲蹼躁躇躅躄躋躊躓躑躔躙躪躡躬躰軆躱躾軅軈軋軛軣軼軻軫軾輊輅輕輒輙輓輜輟輛輌輦輳輻輹轅轂輾轌轉轆轎轗轜轢轣轤辜辟辣辭辯辷迚迥迢迪迯邇迴逅迹迺逑逕逡逍逞逖逋逧逶逵逹迸"],["eea1","遏遐遑遒逎遉逾遖遘遞遨遯遶隨遲邂遽邁邀邊邉邏邨邯邱邵郢郤扈郛鄂鄒鄙鄲鄰酊酖酘酣酥酩酳酲醋醉醂醢醫醯醪醵醴醺釀釁釉釋釐釖釟釡釛釼釵釶鈞釿鈔鈬鈕鈑鉞鉗鉅鉉鉤鉈銕鈿鉋鉐銜銖銓銛鉚鋏銹銷鋩錏鋺鍄錮"],["efa1","錙錢錚錣錺錵錻鍜鍠鍼鍮鍖鎰鎬鎭鎔鎹鏖鏗鏨鏥鏘鏃鏝鏐鏈鏤鐚鐔鐓鐃鐇鐐鐶鐫鐵鐡鐺鑁鑒鑄鑛鑠鑢鑞鑪鈩鑰鑵鑷鑽鑚鑼鑾钁鑿閂閇閊閔閖閘閙閠閨閧閭閼閻閹閾闊濶闃闍闌闕闔闖關闡闥闢阡阨阮阯陂陌陏陋陷陜陞"],["f0a1","陝陟陦陲陬隍隘隕隗險隧隱隲隰隴隶隸隹雎雋雉雍襍雜霍雕雹霄霆霈霓霎霑霏霖霙霤霪霰霹霽霾靄靆靈靂靉靜靠靤靦靨勒靫靱靹鞅靼鞁靺鞆鞋鞏鞐鞜鞨鞦鞣鞳鞴韃韆韈韋韜韭齏韲竟韶韵頏頌頸頤頡頷頽顆顏顋顫顯顰"],["f1a1","顱顴顳颪颯颱颶飄飃飆飩飫餃餉餒餔餘餡餝餞餤餠餬餮餽餾饂饉饅饐饋饑饒饌饕馗馘馥馭馮馼駟駛駝駘駑駭駮駱駲駻駸騁騏騅駢騙騫騷驅驂驀驃騾驕驍驛驗驟驢驥驤驩驫驪骭骰骼髀髏髑髓體髞髟髢髣髦髯髫髮髴髱髷"],["f2a1","髻鬆鬘鬚鬟鬢鬣鬥鬧鬨鬩鬪鬮鬯鬲魄魃魏魍魎魑魘魴鮓鮃鮑鮖鮗鮟鮠鮨鮴鯀鯊鮹鯆鯏鯑鯒鯣鯢鯤鯔鯡鰺鯲鯱鯰鰕鰔鰉鰓鰌鰆鰈鰒鰊鰄鰮鰛鰥鰤鰡鰰鱇鰲鱆鰾鱚鱠鱧鱶鱸鳧鳬鳰鴉鴈鳫鴃鴆鴪鴦鶯鴣鴟鵄鴕鴒鵁鴿鴾鵆鵈"],["f3a1","鵝鵞鵤鵑鵐鵙鵲鶉鶇鶫鵯鵺鶚鶤鶩鶲鷄鷁鶻鶸鶺鷆鷏鷂鷙鷓鷸鷦鷭鷯鷽鸚鸛鸞鹵鹹鹽麁麈麋麌麒麕麑麝麥麩麸麪麭靡黌黎黏黐黔黜點黝黠黥黨黯黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠"],["f4a1","堯槇遙瑤凜熙"],["f9a1","纊褜鍈銈蓜俉炻昱棈鋹曻彅丨仡仼伀伃伹佖侒侊侚侔俍偀倢俿倞偆偰偂傔僴僘兊兤冝冾凬刕劜劦勀勛匀匇匤卲厓厲叝﨎咜咊咩哿喆坙坥垬埈埇﨏塚增墲夋奓奛奝奣妤妺孖寀甯寘寬尞岦岺峵崧嵓﨑嵂嵭嶸嶹巐弡弴彧德"],["faa1","忞恝悅悊惞惕愠惲愑愷愰憘戓抦揵摠撝擎敎昀昕昻昉昮昞昤晥晗晙晴晳暙暠暲暿曺朎朗杦枻桒柀栁桄棏﨓楨﨔榘槢樰橫橆橳橾櫢櫤毖氿汜沆汯泚洄涇浯涖涬淏淸淲淼渹湜渧渼溿澈澵濵瀅瀇瀨炅炫焏焄煜煆煇凞燁燾犱"],["fba1","犾猤猪獷玽珉珖珣珒琇珵琦琪琩琮瑢璉璟甁畯皂皜皞皛皦益睆劯砡硎硤硺礰礼神祥禔福禛竑竧靖竫箞精絈絜綷綠緖繒罇羡羽茁荢荿菇菶葈蒴蕓蕙蕫﨟薰蘒﨡蠇裵訒訷詹誧誾諟諸諶譓譿賰賴贒赶﨣軏﨤逸遧郞都鄕鄧釚"],["fca1","釗釞釭釮釤釥鈆鈐鈊鈺鉀鈼鉎鉙鉑鈹鉧銧鉷鉸鋧鋗鋙鋐﨧鋕鋠鋓錥錡鋻﨨錞鋿錝錂鍰鍗鎤鏆鏞鏸鐱鑅鑈閒隆﨩隝隯霳霻靃靍靏靑靕顗顥飯飼餧館馞驎髙髜魵魲鮏鮱鮻鰀鵰鵫鶴鸙黑"],["fcf1","ⅰ",9,"￢￤＇＂"],["8fa2af","˘ˇ¸˙˝¯˛˚～΄΅"],["8fa2c2","¡¦¿"],["8fa2eb","ºª©®™¤№"],["8fa6e1","ΆΈΉΊΪ"],["8fa6e7","Ό"],["8fa6e9","ΎΫ"],["8fa6ec","Ώ"],["8fa6f1","άέήίϊΐόςύϋΰώ"],["8fa7c2","Ђ",10,"ЎЏ"],["8fa7f2","ђ",10,"ўџ"],["8fa9a1","ÆĐ"],["8fa9a4","Ħ"],["8fa9a6","Ĳ"],["8fa9a8","ŁĿ"],["8fa9ab","ŊØŒ"],["8fa9af","ŦÞ"],["8fa9c1","æđðħıĳĸłŀŉŋøœßŧþ"],["8faaa1","ÁÀÄÂĂǍĀĄÅÃĆĈČÇĊĎÉÈËÊĚĖĒĘ"],["8faaba","ĜĞĢĠĤÍÌÏÎǏİĪĮĨĴĶĹĽĻŃŇŅÑÓÒÖÔǑŐŌÕŔŘŖŚŜŠŞŤŢÚÙÜÛŬǓŰŪŲŮŨǗǛǙǕŴÝŸŶŹŽŻ"],["8faba1","áàäâăǎāąåãćĉčçċďéèëêěėēęǵĝğ"],["8fabbd","ġĥíìïîǐ"],["8fabc5","īįĩĵķĺľļńňņñóòöôǒőōõŕřŗśŝšşťţúùüûŭǔűūųůũǘǜǚǖŵýÿŷźžż"],["8fb0a1","丂丄丅丌丒丟丣两丨丫丮丯丰丵乀乁乄乇乑乚乜乣乨乩乴乵乹乿亍亖亗亝亯亹仃仐仚仛仠仡仢仨仯仱仳仵份仾仿伀伂伃伈伋伌伒伕伖众伙伮伱你伳伵伷伹伻伾佀佂佈佉佋佌佒佔佖佘佟佣佪佬佮佱佷佸佹佺佽佾侁侂侄"],["8fb1a1","侅侉侊侌侎侐侒侓侔侗侙侚侞侟侲侷侹侻侼侽侾俀俁俅俆俈俉俋俌俍俏俒俜俠俢俰俲俼俽俿倀倁倄倇倊倌倎倐倓倗倘倛倜倝倞倢倧倮倰倲倳倵偀偁偂偅偆偊偌偎偑偒偓偗偙偟偠偢偣偦偧偪偭偰偱倻傁傃傄傆傊傎傏傐"],["8fb2a1","傒傓傔傖傛傜傞",4,"傪傯傰傹傺傽僀僃僄僇僌僎僐僓僔僘僜僝僟僢僤僦僨僩僯僱僶僺僾儃儆儇儈儋儌儍儎僲儐儗儙儛儜儝儞儣儧儨儬儭儯儱儳儴儵儸儹兂兊兏兓兕兗兘兟兤兦兾冃冄冋冎冘冝冡冣冭冸冺冼冾冿凂"],["8fb3a1","凈减凑凒凓凕凘凞凢凥凮凲凳凴凷刁刂刅划刓刕刖刘刢刨刱刲刵刼剅剉剕剗剘剚剜剟剠剡剦剮剷剸剹劀劂劅劊劌劓劕劖劗劘劚劜劤劥劦劧劯劰劶劷劸劺劻劽勀勄勆勈勌勏勑勔勖勛勜勡勥勨勩勪勬勰勱勴勶勷匀匃匊匋"],["8fb4a1","匌匑匓匘匛匜匞匟匥匧匨匩匫匬匭匰匲匵匼匽匾卂卌卋卙卛卡卣卥卬卭卲卹卾厃厇厈厎厓厔厙厝厡厤厪厫厯厲厴厵厷厸厺厽叀叅叏叒叓叕叚叝叞叠另叧叵吂吓吚吡吧吨吪启吱吴吵呃呄呇呍呏呞呢呤呦呧呩呫呭呮呴呿"],["8fb5a1","咁咃咅咈咉咍咑咕咖咜咟咡咦咧咩咪咭咮咱咷咹咺咻咿哆哊响哎哠哪哬哯哶哼哾哿唀唁唅唈唉唌唍唎唕唪唫唲唵唶唻唼唽啁啇啉啊啍啐啑啘啚啛啞啠啡啤啦啿喁喂喆喈喎喏喑喒喓喔喗喣喤喭喲喿嗁嗃嗆嗉嗋嗌嗎嗑嗒"],["8fb6a1","嗓嗗嗘嗛嗞嗢嗩嗶嗿嘅嘈嘊嘍",5,"嘙嘬嘰嘳嘵嘷嘹嘻嘼嘽嘿噀噁噃噄噆噉噋噍噏噔噞噠噡噢噣噦噩噭噯噱噲噵嚄嚅嚈嚋嚌嚕嚙嚚嚝嚞嚟嚦嚧嚨嚩嚫嚬嚭嚱嚳嚷嚾囅囉囊囋囏囐囌囍囙囜囝囟囡囤",4,"囱囫园"],["8fb7a1","囶囷圁圂圇圊圌圑圕圚圛圝圠圢圣圤圥圩圪圬圮圯圳圴圽圾圿坅坆坌坍坒坢坥坧坨坫坭",4,"坳坴坵坷坹坺坻坼坾垁垃垌垔垗垙垚垜垝垞垟垡垕垧垨垩垬垸垽埇埈埌埏埕埝埞埤埦埧埩埭埰埵埶埸埽埾埿堃堄堈堉埡"],["8fb8a1","堌堍堛堞堟堠堦堧堭堲堹堿塉塌塍塏塐塕塟塡塤塧塨塸塼塿墀墁墇墈墉墊墌墍墏墐墔墖墝墠墡墢墦墩墱墲壄墼壂壈壍壎壐壒壔壖壚壝壡壢壩壳夅夆夋夌夒夓夔虁夝夡夣夤夨夯夰夳夵夶夿奃奆奒奓奙奛奝奞奟奡奣奫奭"],["8fb9a1","奯奲奵奶她奻奼妋妌妎妒妕妗妟妤妧妭妮妯妰妳妷妺妼姁姃姄姈姊姍姒姝姞姟姣姤姧姮姯姱姲姴姷娀娄娌娍娎娒娓娞娣娤娧娨娪娭娰婄婅婇婈婌婐婕婞婣婥婧婭婷婺婻婾媋媐媓媖媙媜媞媟媠媢媧媬媱媲媳媵媸媺媻媿"],["8fbaa1","嫄嫆嫈嫏嫚嫜嫠嫥嫪嫮嫵嫶嫽嬀嬁嬈嬗嬴嬙嬛嬝嬡嬥嬭嬸孁孋孌孒孖孞孨孮孯孼孽孾孿宁宄宆宊宎宐宑宓宔宖宨宩宬宭宯宱宲宷宺宼寀寁寍寏寖",4,"寠寯寱寴寽尌尗尞尟尣尦尩尫尬尮尰尲尵尶屙屚屜屢屣屧屨屩"],["8fbba1","屭屰屴屵屺屻屼屽岇岈岊岏岒岝岟岠岢岣岦岪岲岴岵岺峉峋峒峝峗峮峱峲峴崁崆崍崒崫崣崤崦崧崱崴崹崽崿嵂嵃嵆嵈嵕嵑嵙嵊嵟嵠嵡嵢嵤嵪嵭嵰嵹嵺嵾嵿嶁嶃嶈嶊嶒嶓嶔嶕嶙嶛嶟嶠嶧嶫嶰嶴嶸嶹巃巇巋巐巎巘巙巠巤"],["8fbca1","巩巸巹帀帇帍帒帔帕帘帟帠帮帨帲帵帾幋幐幉幑幖幘幛幜幞幨幪",4,"幰庀庋庎庢庤庥庨庪庬庱庳庽庾庿廆廌廋廎廑廒廔廕廜廞廥廫异弆弇弈弎弙弜弝弡弢弣弤弨弫弬弮弰弴弶弻弽弿彀彄彅彇彍彐彔彘彛彠彣彤彧"],["8fbda1","彯彲彴彵彸彺彽彾徉徍徏徖徜徝徢徧徫徤徬徯徰徱徸忄忇忈忉忋忐",4,"忞忡忢忨忩忪忬忭忮忯忲忳忶忺忼怇怊怍怓怔怗怘怚怟怤怭怳怵恀恇恈恉恌恑恔恖恗恝恡恧恱恾恿悂悆悈悊悎悑悓悕悘悝悞悢悤悥您悰悱悷"],["8fbea1","悻悾惂惄惈惉惊惋惎惏惔惕惙惛惝惞惢惥惲惵惸惼惽愂愇愊愌愐",4,"愖愗愙愜愞愢愪愫愰愱愵愶愷愹慁慅慆慉慞慠慬慲慸慻慼慿憀憁憃憄憋憍憒憓憗憘憜憝憟憠憥憨憪憭憸憹憼懀懁懂懎懏懕懜懝懞懟懡懢懧懩懥"],["8fbfa1","懬懭懯戁戃戄戇戓戕戜戠戢戣戧戩戫戹戽扂扃扄扆扌扐扑扒扔扖扚扜扤扭扯扳扺扽抍抎抏抐抦抨抳抶抷抺抾抿拄拎拕拖拚拪拲拴拼拽挃挄挊挋挍挐挓挖挘挩挪挭挵挶挹挼捁捂捃捄捆捊捋捎捒捓捔捘捛捥捦捬捭捱捴捵"],["8fc0a1","捸捼捽捿掂掄掇掊掐掔掕掙掚掞掤掦掭掮掯掽揁揅揈揎揑揓揔揕揜揠揥揪揬揲揳揵揸揹搉搊搐搒搔搘搞搠搢搤搥搩搪搯搰搵搽搿摋摏摑摒摓摔摚摛摜摝摟摠摡摣摭摳摴摻摽撅撇撏撐撑撘撙撛撝撟撡撣撦撨撬撳撽撾撿"],["8fc1a1","擄擉擊擋擌擎擐擑擕擗擤擥擩擪擭擰擵擷擻擿攁攄攈攉攊攏攓攔攖攙攛攞攟攢攦攩攮攱攺攼攽敃敇敉敐敒敔敟敠敧敫敺敽斁斅斊斒斕斘斝斠斣斦斮斲斳斴斿旂旈旉旎旐旔旖旘旟旰旲旴旵旹旾旿昀昄昈昉昍昑昒昕昖昝"],["8fc2a1","昞昡昢昣昤昦昩昪昫昬昮昰昱昳昹昷晀晅晆晊晌晑晎晗晘晙晛晜晠晡曻晪晫晬晾晳晵晿晷晸晹晻暀晼暋暌暍暐暒暙暚暛暜暟暠暤暭暱暲暵暻暿曀曂曃曈曌曎曏曔曛曟曨曫曬曮曺朅朇朎朓朙朜朠朢朳朾杅杇杈杌杔杕杝"],["8fc3a1","杦杬杮杴杶杻极构枎枏枑枓枖枘枙枛枰枱枲枵枻枼枽柹柀柂柃柅柈柉柒柗柙柜柡柦柰柲柶柷桒栔栙栝栟栨栧栬栭栯栰栱栳栻栿桄桅桊桌桕桗桘桛桫桮",4,"桵桹桺桻桼梂梄梆梈梖梘梚梜梡梣梥梩梪梮梲梻棅棈棌棏"],["8fc4a1","棐棑棓棖棙棜棝棥棨棪棫棬棭棰棱棵棶棻棼棽椆椉椊椐椑椓椖椗椱椳椵椸椻楂楅楉楎楗楛楣楤楥楦楨楩楬楰楱楲楺楻楿榀榍榒榖榘榡榥榦榨榫榭榯榷榸榺榼槅槈槑槖槗槢槥槮槯槱槳槵槾樀樁樃樏樑樕樚樝樠樤樨樰樲"],["8fc5a1","樴樷樻樾樿橅橆橉橊橎橐橑橒橕橖橛橤橧橪橱橳橾檁檃檆檇檉檋檑檛檝檞檟檥檫檯檰檱檴檽檾檿櫆櫉櫈櫌櫐櫔櫕櫖櫜櫝櫤櫧櫬櫰櫱櫲櫼櫽欂欃欆欇欉欏欐欑欗欛欞欤欨欫欬欯欵欶欻欿歆歊歍歒歖歘歝歠歧歫歮歰歵歽"],["8fc6a1","歾殂殅殗殛殟殠殢殣殨殩殬殭殮殰殸殹殽殾毃毄毉毌毖毚毡毣毦毧毮毱毷毹毿氂氄氅氉氍氎氐氒氙氟氦氧氨氬氮氳氵氶氺氻氿汊汋汍汏汒汔汙汛汜汫汭汯汴汶汸汹汻沅沆沇沉沔沕沗沘沜沟沰沲沴泂泆泍泏泐泑泒泔泖"],["8fc7a1","泚泜泠泧泩泫泬泮泲泴洄洇洊洎洏洑洓洚洦洧洨汧洮洯洱洹洼洿浗浞浟浡浥浧浯浰浼涂涇涑涒涔涖涗涘涪涬涴涷涹涽涿淄淈淊淎淏淖淛淝淟淠淢淥淩淯淰淴淶淼渀渄渞渢渧渲渶渹渻渼湄湅湈湉湋湏湑湒湓湔湗湜湝湞"],["8fc8a1","湢湣湨湳湻湽溍溓溙溠溧溭溮溱溳溻溿滀滁滃滇滈滊滍滎滏滫滭滮滹滻滽漄漈漊漌漍漖漘漚漛漦漩漪漯漰漳漶漻漼漭潏潑潒潓潗潙潚潝潞潡潢潨潬潽潾澃澇澈澋澌澍澐澒澓澔澖澚澟澠澥澦澧澨澮澯澰澵澶澼濅濇濈濊"],["8fc9a1","濚濞濨濩濰濵濹濼濽瀀瀅瀆瀇瀍瀗瀠瀣瀯瀴瀷瀹瀼灃灄灈灉灊灋灔灕灝灞灎灤灥灬灮灵灶灾炁炅炆炔",4,"炛炤炫炰炱炴炷烊烑烓烔烕烖烘烜烤烺焃",4,"焋焌焏焞焠焫焭焯焰焱焸煁煅煆煇煊煋煐煒煗煚煜煞煠"],["8fcaa1","煨煹熀熅熇熌熒熚熛熠熢熯熰熲熳熺熿燀燁燄燋燌燓燖燙燚燜燸燾爀爇爈爉爓爗爚爝爟爤爫爯爴爸爹牁牂牃牅牎牏牐牓牕牖牚牜牞牠牣牨牫牮牯牱牷牸牻牼牿犄犉犍犎犓犛犨犭犮犱犴犾狁狇狉狌狕狖狘狟狥狳狴狺狻"],["8fcba1","狾猂猄猅猇猋猍猒猓猘猙猞猢猤猧猨猬猱猲猵猺猻猽獃獍獐獒獖獘獝獞獟獠獦獧獩獫獬獮獯獱獷獹獼玀玁玃玅玆玎玐玓玕玗玘玜玞玟玠玢玥玦玪玫玭玵玷玹玼玽玿珅珆珉珋珌珏珒珓珖珙珝珡珣珦珧珩珴珵珷珹珺珻珽"],["8fcca1","珿琀琁琄琇琊琑琚琛琤琦琨",9,"琹瑀瑃瑄瑆瑇瑋瑍瑑瑒瑗瑝瑢瑦瑧瑨瑫瑭瑮瑱瑲璀璁璅璆璇璉璏璐璑璒璘璙璚璜璟璠璡璣璦璨璩璪璫璮璯璱璲璵璹璻璿瓈瓉瓌瓐瓓瓘瓚瓛瓞瓟瓤瓨瓪瓫瓯瓴瓺瓻瓼瓿甆"],["8fcda1","甒甖甗甠甡甤甧甩甪甯甶甹甽甾甿畀畃畇畈畎畐畒畗畞畟畡畯畱畹",5,"疁疅疐疒疓疕疙疜疢疤疴疺疿痀痁痄痆痌痎痏痗痜痟痠痡痤痧痬痮痯痱痹瘀瘂瘃瘄瘇瘈瘊瘌瘏瘒瘓瘕瘖瘙瘛瘜瘝瘞瘣瘥瘦瘩瘭瘲瘳瘵瘸瘹"],["8fcea1","瘺瘼癊癀癁癃癄癅癉癋癕癙癟癤癥癭癮癯癱癴皁皅皌皍皕皛皜皝皟皠皢",6,"皪皭皽盁盅盉盋盌盎盔盙盠盦盨盬盰盱盶盹盼眀眆眊眎眒眔眕眗眙眚眜眢眨眭眮眯眴眵眶眹眽眾睂睅睆睊睍睎睏睒睖睗睜睞睟睠睢"],["8fcfa1","睤睧睪睬睰睲睳睴睺睽瞀瞄瞌瞍瞔瞕瞖瞚瞟瞢瞧瞪瞮瞯瞱瞵瞾矃矉矑矒矕矙矞矟矠矤矦矪矬矰矱矴矸矻砅砆砉砍砎砑砝砡砢砣砭砮砰砵砷硃硄硇硈硌硎硒硜硞硠硡硣硤硨硪确硺硾碊碏碔碘碡碝碞碟碤碨碬碭碰碱碲碳"],["8fd0a1","碻碽碿磇磈磉磌磎磒磓磕磖磤磛磟磠磡磦磪磲磳礀磶磷磺磻磿礆礌礐礚礜礞礟礠礥礧礩礭礱礴礵礻礽礿祄祅祆祊祋祏祑祔祘祛祜祧祩祫祲祹祻祼祾禋禌禑禓禔禕禖禘禛禜禡禨禩禫禯禱禴禸离秂秄秇秈秊秏秔秖秚秝秞"],["8fd1a1","秠秢秥秪秫秭秱秸秼稂稃稇稉稊稌稑稕稛稞稡稧稫稭稯稰稴稵稸稹稺穄穅穇穈穌穕穖穙穜穝穟穠穥穧穪穭穵穸穾窀窂窅窆窊窋窐窑窔窞窠窣窬窳窵窹窻窼竆竉竌竎竑竛竨竩竫竬竱竴竻竽竾笇笔笟笣笧笩笪笫笭笮笯笰"],["8fd2a1","笱笴笽笿筀筁筇筎筕筠筤筦筩筪筭筯筲筳筷箄箉箎箐箑箖箛箞箠箥箬箯箰箲箵箶箺箻箼箽篂篅篈篊篔篖篗篙篚篛篨篪篲篴篵篸篹篺篼篾簁簂簃簄簆簉簋簌簎簏簙簛簠簥簦簨簬簱簳簴簶簹簺籆籊籕籑籒籓籙",5],["8fd3a1","籡籣籧籩籭籮籰籲籹籼籽粆粇粏粔粞粠粦粰粶粷粺粻粼粿糄糇糈糉糍糏糓糔糕糗糙糚糝糦糩糫糵紃紇紈紉紏紑紒紓紖紝紞紣紦紪紭紱紼紽紾絀絁絇絈絍絑絓絗絙絚絜絝絥絧絪絰絸絺絻絿綁綂綃綅綆綈綋綌綍綑綖綗綝"],["8fd4a1","綞綦綧綪綳綶綷綹緂",4,"緌緍緎緗緙縀緢緥緦緪緫緭緱緵緶緹緺縈縐縑縕縗縜縝縠縧縨縬縭縯縳縶縿繄繅繇繎繐繒繘繟繡繢繥繫繮繯繳繸繾纁纆纇纊纍纑纕纘纚纝纞缼缻缽缾缿罃罄罇罏罒罓罛罜罝罡罣罤罥罦罭"],["8fd5a1","罱罽罾罿羀羋羍羏羐羑羖羗羜羡羢羦羪羭羴羼羿翀翃翈翎翏翛翟翣翥翨翬翮翯翲翺翽翾翿耇耈耊耍耎耏耑耓耔耖耝耞耟耠耤耦耬耮耰耴耵耷耹耺耼耾聀聄聠聤聦聭聱聵肁肈肎肜肞肦肧肫肸肹胈胍胏胒胔胕胗胘胠胭胮"],["8fd6a1","胰胲胳胶胹胺胾脃脋脖脗脘脜脞脠脤脧脬脰脵脺脼腅腇腊腌腒腗腠腡腧腨腩腭腯腷膁膐膄膅膆膋膎膖膘膛膞膢膮膲膴膻臋臃臅臊臎臏臕臗臛臝臞臡臤臫臬臰臱臲臵臶臸臹臽臿舀舃舏舓舔舙舚舝舡舢舨舲舴舺艃艄艅艆"],["8fd7a1","艋艎艏艑艖艜艠艣艧艭艴艻艽艿芀芁芃芄芇芉芊芎芑芔芖芘芚芛芠芡芣芤芧芨芩芪芮芰芲芴芷芺芼芾芿苆苐苕苚苠苢苤苨苪苭苯苶苷苽苾茀茁茇茈茊茋荔茛茝茞茟茡茢茬茭茮茰茳茷茺茼茽荂荃荄荇荍荎荑荕荖荗荰荸"],["8fd8a1","荽荿莀莂莄莆莍莒莔莕莘莙莛莜莝莦莧莩莬莾莿菀菇菉菏菐菑菔菝荓菨菪菶菸菹菼萁萆萊萏萑萕萙莭萯萹葅葇葈葊葍葏葑葒葖葘葙葚葜葠葤葥葧葪葰葳葴葶葸葼葽蒁蒅蒒蒓蒕蒞蒦蒨蒩蒪蒯蒱蒴蒺蒽蒾蓀蓂蓇蓈蓌蓏蓓"],["8fd9a1","蓜蓧蓪蓯蓰蓱蓲蓷蔲蓺蓻蓽蔂蔃蔇蔌蔎蔐蔜蔞蔢蔣蔤蔥蔧蔪蔫蔯蔳蔴蔶蔿蕆蕏",4,"蕖蕙蕜",6,"蕤蕫蕯蕹蕺蕻蕽蕿薁薅薆薉薋薌薏薓薘薝薟薠薢薥薧薴薶薷薸薼薽薾薿藂藇藊藋藎薭藘藚藟藠藦藨藭藳藶藼"],["8fdaa1","藿蘀蘄蘅蘍蘎蘐蘑蘒蘘蘙蘛蘞蘡蘧蘩蘶蘸蘺蘼蘽虀虂虆虒虓虖虗虘虙虝虠",4,"虩虬虯虵虶虷虺蚍蚑蚖蚘蚚蚜蚡蚦蚧蚨蚭蚱蚳蚴蚵蚷蚸蚹蚿蛀蛁蛃蛅蛑蛒蛕蛗蛚蛜蛠蛣蛥蛧蚈蛺蛼蛽蜄蜅蜇蜋蜎蜏蜐蜓蜔蜙蜞蜟蜡蜣"],["8fdba1","蜨蜮蜯蜱蜲蜹蜺蜼蜽蜾蝀蝃蝅蝍蝘蝝蝡蝤蝥蝯蝱蝲蝻螃",6,"螋螌螐螓螕螗螘螙螞螠螣螧螬螭螮螱螵螾螿蟁蟈蟉蟊蟎蟕蟖蟙蟚蟜蟟蟢蟣蟤蟪蟫蟭蟱蟳蟸蟺蟿蠁蠃蠆蠉蠊蠋蠐蠙蠒蠓蠔蠘蠚蠛蠜蠞蠟蠨蠭蠮蠰蠲蠵"],["8fdca1","蠺蠼衁衃衅衈衉衊衋衎衑衕衖衘衚衜衟衠衤衩衱衹衻袀袘袚袛袜袟袠袨袪袺袽袾裀裊",4,"裑裒裓裛裞裧裯裰裱裵裷褁褆褍褎褏褕褖褘褙褚褜褠褦褧褨褰褱褲褵褹褺褾襀襂襅襆襉襏襒襗襚襛襜襡襢襣襫襮襰襳襵襺"],["8fdda1","襻襼襽覉覍覐覔覕覛覜覟覠覥覰覴覵覶覷覼觔",4,"觥觩觫觭觱觳觶觹觽觿訄訅訇訏訑訒訔訕訞訠訢訤訦訫訬訯訵訷訽訾詀詃詅詇詉詍詎詓詖詗詘詜詝詡詥詧詵詶詷詹詺詻詾詿誀誃誆誋誏誐誒誖誗誙誟誧誩誮誯誳"],["8fdea1","誶誷誻誾諃諆諈諉諊諑諓諔諕諗諝諟諬諰諴諵諶諼諿謅謆謋謑謜謞謟謊謭謰謷謼譂",4,"譈譒譓譔譙譍譞譣譭譶譸譹譼譾讁讄讅讋讍讏讔讕讜讞讟谸谹谽谾豅豇豉豋豏豑豓豔豗豘豛豝豙豣豤豦豨豩豭豳豵豶豻豾貆"],["8fdfa1","貇貋貐貒貓貙貛貜貤貹貺賅賆賉賋賏賖賕賙賝賡賨賬賯賰賲賵賷賸賾賿贁贃贉贒贗贛赥赩赬赮赿趂趄趈趍趐趑趕趞趟趠趦趫趬趯趲趵趷趹趻跀跅跆跇跈跊跎跑跔跕跗跙跤跥跧跬跰趼跱跲跴跽踁踄踅踆踋踑踔踖踠踡踢"],["8fe0a1","踣踦踧踱踳踶踷踸踹踽蹀蹁蹋蹍蹎蹏蹔蹛蹜蹝蹞蹡蹢蹩蹬蹭蹯蹰蹱蹹蹺蹻躂躃躉躐躒躕躚躛躝躞躢躧躩躭躮躳躵躺躻軀軁軃軄軇軏軑軔軜軨軮軰軱軷軹軺軭輀輂輇輈輏輐輖輗輘輞輠輡輣輥輧輨輬輭輮輴輵輶輷輺轀轁"],["8fe1a1","轃轇轏轑",4,"轘轝轞轥辝辠辡辤辥辦辵辶辸达迀迁迆迊迋迍运迒迓迕迠迣迤迨迮迱迵迶迻迾适逄逈逌逘逛逨逩逯逪逬逭逳逴逷逿遃遄遌遛遝遢遦遧遬遰遴遹邅邈邋邌邎邐邕邗邘邙邛邠邡邢邥邰邲邳邴邶邽郌邾郃"],["8fe2a1","郄郅郇郈郕郗郘郙郜郝郟郥郒郶郫郯郰郴郾郿鄀鄄鄅鄆鄈鄍鄐鄔鄖鄗鄘鄚鄜鄞鄠鄥鄢鄣鄧鄩鄮鄯鄱鄴鄶鄷鄹鄺鄼鄽酃酇酈酏酓酗酙酚酛酡酤酧酭酴酹酺酻醁醃醅醆醊醎醑醓醔醕醘醞醡醦醨醬醭醮醰醱醲醳醶醻醼醽醿"],["8fe3a1","釂釃釅釓釔釗釙釚釞釤釥釩釪釬",5,"釷釹釻釽鈀鈁鈄鈅鈆鈇鈉鈊鈌鈐鈒鈓鈖鈘鈜鈝鈣鈤鈥鈦鈨鈮鈯鈰鈳鈵鈶鈸鈹鈺鈼鈾鉀鉂鉃鉆鉇鉊鉍鉎鉏鉑鉘鉙鉜鉝鉠鉡鉥鉧鉨鉩鉮鉯鉰鉵",4,"鉻鉼鉽鉿銈銉銊銍銎銒銗"],["8fe4a1","銙銟銠銤銥銧銨銫銯銲銶銸銺銻銼銽銿",4,"鋅鋆鋇鋈鋋鋌鋍鋎鋐鋓鋕鋗鋘鋙鋜鋝鋟鋠鋡鋣鋥鋧鋨鋬鋮鋰鋹鋻鋿錀錂錈錍錑錔錕錜錝錞錟錡錤錥錧錩錪錳錴錶錷鍇鍈鍉鍐鍑鍒鍕鍗鍘鍚鍞鍤鍥鍧鍩鍪鍭鍯鍰鍱鍳鍴鍶"],["8fe5a1","鍺鍽鍿鎀鎁鎂鎈鎊鎋鎍鎏鎒鎕鎘鎛鎞鎡鎣鎤鎦鎨鎫鎴鎵鎶鎺鎩鏁鏄鏅鏆鏇鏉",4,"鏓鏙鏜鏞鏟鏢鏦鏧鏹鏷鏸鏺鏻鏽鐁鐂鐄鐈鐉鐍鐎鐏鐕鐖鐗鐟鐮鐯鐱鐲鐳鐴鐻鐿鐽鑃鑅鑈鑊鑌鑕鑙鑜鑟鑡鑣鑨鑫鑭鑮鑯鑱鑲钄钃镸镹"],["8fe6a1","镾閄閈閌閍閎閝閞閟閡閦閩閫閬閴閶閺閽閿闆闈闉闋闐闑闒闓闙闚闝闞闟闠闤闦阝阞阢阤阥阦阬阱阳阷阸阹阺阼阽陁陒陔陖陗陘陡陮陴陻陼陾陿隁隂隃隄隉隑隖隚隝隟隤隥隦隩隮隯隳隺雊雒嶲雘雚雝雞雟雩雯雱雺霂"],["8fe7a1","霃霅霉霚霛霝霡霢霣霨霱霳靁靃靊靎靏靕靗靘靚靛靣靧靪靮靳靶靷靸靻靽靿鞀鞉鞕鞖鞗鞙鞚鞞鞟鞢鞬鞮鞱鞲鞵鞶鞸鞹鞺鞼鞾鞿韁韄韅韇韉韊韌韍韎韐韑韔韗韘韙韝韞韠韛韡韤韯韱韴韷韸韺頇頊頙頍頎頔頖頜頞頠頣頦"],["8fe8a1","頫頮頯頰頲頳頵頥頾顄顇顊顑顒顓顖顗顙顚顢顣顥顦顪顬颫颭颮颰颴颷颸颺颻颿飂飅飈飌飡飣飥飦飧飪飳飶餂餇餈餑餕餖餗餚餛餜餟餢餦餧餫餱",4,"餹餺餻餼饀饁饆饇饈饍饎饔饘饙饛饜饞饟饠馛馝馟馦馰馱馲馵"],["8fe9a1","馹馺馽馿駃駉駓駔駙駚駜駞駧駪駫駬駰駴駵駹駽駾騂騃騄騋騌騐騑騖騞騠騢騣騤騧騭騮騳騵騶騸驇驁驄驊驋驌驎驑驔驖驝骪骬骮骯骲骴骵骶骹骻骾骿髁髃髆髈髎髐髒髕髖髗髛髜髠髤髥髧髩髬髲髳髵髹髺髽髿",4],["8feaa1","鬄鬅鬈鬉鬋鬌鬍鬎鬐鬒鬖鬙鬛鬜鬠鬦鬫鬭鬳鬴鬵鬷鬹鬺鬽魈魋魌魕魖魗魛魞魡魣魥魦魨魪",4,"魳魵魷魸魹魿鮀鮄鮅鮆鮇鮉鮊鮋鮍鮏鮐鮔鮚鮝鮞鮦鮧鮩鮬鮰鮱鮲鮷鮸鮻鮼鮾鮿鯁鯇鯈鯎鯐鯗鯘鯝鯟鯥鯧鯪鯫鯯鯳鯷鯸"],["8feba1","鯹鯺鯽鯿鰀鰂鰋鰏鰑鰖鰘鰙鰚鰜鰞鰢鰣鰦",4,"鰱鰵鰶鰷鰽鱁鱃鱄鱅鱉鱊鱎鱏鱐鱓鱔鱖鱘鱛鱝鱞鱟鱣鱩鱪鱜鱫鱨鱮鱰鱲鱵鱷鱻鳦鳲鳷鳹鴋鴂鴑鴗鴘鴜鴝鴞鴯鴰鴲鴳鴴鴺鴼鵅鴽鵂鵃鵇鵊鵓鵔鵟鵣鵢鵥鵩鵪鵫鵰鵶鵷鵻"],["8feca1","鵼鵾鶃鶄鶆鶊鶍鶎鶒鶓鶕鶖鶗鶘鶡鶪鶬鶮鶱鶵鶹鶼鶿鷃鷇鷉鷊鷔鷕鷖鷗鷚鷞鷟鷠鷥鷧鷩鷫鷮鷰鷳鷴鷾鸊鸂鸇鸎鸐鸑鸒鸕鸖鸙鸜鸝鹺鹻鹼麀麂麃麄麅麇麎麏麖麘麛麞麤麨麬麮麯麰麳麴麵黆黈黋黕黟黤黧黬黭黮黰黱黲黵"],["8feda1","黸黿鼂鼃鼉鼏鼐鼑鼒鼔鼖鼗鼙鼚鼛鼟鼢鼦鼪鼫鼯鼱鼲鼴鼷鼹鼺鼼鼽鼿齁齃",4,"齓齕齖齗齘齚齝齞齨齩齭",4,"齳齵齺齽龏龐龑龒龔龖龗龞龡龢龣龥"]]'), Ka = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127,"€"],["8140","丂丄丅丆丏丒丗丟丠両丣並丩丮丯丱丳丵丷丼乀乁乂乄乆乊乑乕乗乚乛乢乣乤乥乧乨乪",5,"乲乴",9,"乿",6,"亇亊"],["8180","亐亖亗亙亜亝亞亣亪亯亰亱亴亶亷亸亹亼亽亾仈仌仏仐仒仚仛仜仠仢仦仧仩仭仮仯仱仴仸仹仺仼仾伀伂",6,"伋伌伒",4,"伜伝伡伣伨伩伬伭伮伱伳伵伷伹伻伾",4,"佄佅佇",5,"佒佔佖佡佢佦佨佪佫佭佮佱佲併佷佸佹佺佽侀侁侂侅來侇侊侌侎侐侒侓侕侖侘侙侚侜侞侟価侢"],["8240","侤侫侭侰",4,"侶",8,"俀俁係俆俇俈俉俋俌俍俒",4,"俙俛俠俢俤俥俧俫俬俰俲俴俵俶俷俹俻俼俽俿",11],["8280","個倎倐們倓倕倖倗倛倝倞倠倢倣値倧倫倯",10,"倻倽倿偀偁偂偄偅偆偉偊偋偍偐",4,"偖偗偘偙偛偝",7,"偦",5,"偭",8,"偸偹偺偼偽傁傂傃傄傆傇傉傊傋傌傎",20,"傤傦傪傫傭",4,"傳",6,"傼"],["8340","傽",17,"僐",5,"僗僘僙僛",10,"僨僩僪僫僯僰僱僲僴僶",4,"僼",9,"儈"],["8380","儉儊儌",5,"儓",13,"儢",28,"兂兇兊兌兎兏児兒兓兗兘兙兛兝",4,"兣兤兦內兩兪兯兲兺兾兿冃冄円冇冊冋冎冏冐冑冓冔冘冚冝冞冟冡冣冦",4,"冭冮冴冸冹冺冾冿凁凂凃凅凈凊凍凎凐凒",5],["8440","凘凙凚凜凞凟凢凣凥",5,"凬凮凱凲凴凷凾刄刅刉刋刌刏刐刓刔刕刜刞刟刡刢刣別刦刧刪刬刯刱刲刴刵刼刾剄",5,"剋剎剏剒剓剕剗剘"],["8480","剙剚剛剝剟剠剢剣剤剦剨剫剬剭剮剰剱剳",9,"剾劀劃",4,"劉",6,"劑劒劔",6,"劜劤劥劦劧劮劯劰労",9,"勀勁勂勄勅勆勈勊勌勍勎勏勑勓勔動勗務",5,"勠勡勢勣勥",10,"勱",7,"勻勼勽匁匂匃匄匇匉匊匋匌匎"],["8540","匑匒匓匔匘匛匜匞匟匢匤匥匧匨匩匫匬匭匯",9,"匼匽區卂卄卆卋卌卍卐協単卙卛卝卥卨卪卬卭卲卶卹卻卼卽卾厀厁厃厇厈厊厎厏"],["8580","厐",4,"厖厗厙厛厜厞厠厡厤厧厪厫厬厭厯",6,"厷厸厹厺厼厽厾叀參",4,"収叏叐叒叓叕叚叜叝叞叡叢叧叴叺叾叿吀吂吅吇吋吔吘吙吚吜吢吤吥吪吰吳吶吷吺吽吿呁呂呄呅呇呉呌呍呎呏呑呚呝",4,"呣呥呧呩",7,"呴呹呺呾呿咁咃咅咇咈咉咊咍咑咓咗咘咜咞咟咠咡"],["8640","咢咥咮咰咲咵咶咷咹咺咼咾哃哅哊哋哖哘哛哠",4,"哫哬哯哰哱哴",5,"哻哾唀唂唃唄唅唈唊",4,"唒唓唕",5,"唜唝唞唟唡唥唦"],["8680","唨唩唫唭唲唴唵唶唸唹唺唻唽啀啂啅啇啈啋",4,"啑啒啓啔啗",4,"啝啞啟啠啢啣啨啩啫啯",5,"啹啺啽啿喅喆喌喍喎喐喒喓喕喖喗喚喛喞喠",6,"喨",8,"喲喴営喸喺喼喿",4,"嗆嗇嗈嗊嗋嗎嗏嗐嗕嗗",4,"嗞嗠嗢嗧嗩嗭嗮嗰嗱嗴嗶嗸",4,"嗿嘂嘃嘄嘅"],["8740","嘆嘇嘊嘋嘍嘐",7,"嘙嘚嘜嘝嘠嘡嘢嘥嘦嘨嘩嘪嘫嘮嘯嘰嘳嘵嘷嘸嘺嘼嘽嘾噀",11,"噏",4,"噕噖噚噛噝",4],["8780","噣噥噦噧噭噮噯噰噲噳噴噵噷噸噹噺噽",7,"嚇",6,"嚐嚑嚒嚔",14,"嚤",10,"嚰",6,"嚸嚹嚺嚻嚽",12,"囋",8,"囕囖囘囙囜団囥",5,"囬囮囯囲図囶囷囸囻囼圀圁圂圅圇國",6],["8840","園",9,"圝圞圠圡圢圤圥圦圧圫圱圲圴",4,"圼圽圿坁坃坄坅坆坈坉坋坒",4,"坘坙坢坣坥坧坬坮坰坱坲坴坵坸坹坺坽坾坿垀"],["8880","垁垇垈垉垊垍",4,"垔",6,"垜垝垞垟垥垨垪垬垯垰垱垳垵垶垷垹",8,"埄",6,"埌埍埐埑埓埖埗埛埜埞埡埢埣埥",7,"埮埰埱埲埳埵埶執埻埼埾埿堁堃堄堅堈堉堊堌堎堏堐堒堓堔堖堗堘堚堛堜堝堟堢堣堥",4,"堫",4,"報堲堳場堶",7],["8940","堾",5,"塅",6,"塎塏塐塒塓塕塖塗塙",4,"塟",5,"塦",4,"塭",16,"塿墂墄墆墇墈墊墋墌"],["8980","墍",4,"墔",4,"墛墜墝墠",7,"墪",17,"墽墾墿壀壂壃壄壆",10,"壒壓壔壖",13,"壥",5,"壭壯壱売壴壵壷壸壺",7,"夃夅夆夈",4,"夎夐夑夒夓夗夘夛夝夞夠夡夢夣夦夨夬夰夲夳夵夶夻"],["8a40","夽夾夿奀奃奅奆奊奌奍奐奒奓奙奛",4,"奡奣奤奦",12,"奵奷奺奻奼奾奿妀妅妉妋妌妎妏妐妑妔妕妘妚妛妜妝妟妠妡妢妦"],["8a80","妧妬妭妰妱妳",5,"妺妼妽妿",6,"姇姈姉姌姍姎姏姕姖姙姛姞",4,"姤姦姧姩姪姫姭",11,"姺姼姽姾娀娂娊娋娍娎娏娐娒娔娕娖娗娙娚娛娝娞娡娢娤娦娧娨娪",6,"娳娵娷",4,"娽娾娿婁",4,"婇婈婋",9,"婖婗婘婙婛",5],["8b40","婡婣婤婥婦婨婩婫",8,"婸婹婻婼婽婾媀",17,"媓",6,"媜",13,"媫媬"],["8b80","媭",4,"媴媶媷媹",4,"媿嫀嫃",5,"嫊嫋嫍",4,"嫓嫕嫗嫙嫚嫛嫝嫞嫟嫢嫤嫥嫧嫨嫪嫬",4,"嫲",22,"嬊",11,"嬘",25,"嬳嬵嬶嬸",7,"孁",6],["8c40","孈",7,"孒孖孞孠孡孧孨孫孭孮孯孲孴孶孷學孹孻孼孾孿宂宆宊宍宎宐宑宒宔宖実宧宨宩宬宭宮宯宱宲宷宺宻宼寀寁寃寈寉寊寋寍寎寏"],["8c80","寑寔",8,"寠寢寣實寧審",4,"寯寱",6,"寽対尀専尃尅將專尋尌對導尐尒尓尗尙尛尞尟尠尡尣尦尨尩尪尫尭尮尯尰尲尳尵尶尷屃屄屆屇屌屍屒屓屔屖屗屘屚屛屜屝屟屢層屧",6,"屰屲",6,"屻屼屽屾岀岃",4,"岉岊岋岎岏岒岓岕岝",4,"岤",4],["8d40","岪岮岯岰岲岴岶岹岺岻岼岾峀峂峃峅",5,"峌",5,"峓",5,"峚",6,"峢峣峧峩峫峬峮峯峱",9,"峼",4],["8d80","崁崄崅崈",5,"崏",4,"崕崗崘崙崚崜崝崟",4,"崥崨崪崫崬崯",4,"崵",7,"崿",7,"嵈嵉嵍",10,"嵙嵚嵜嵞",10,"嵪嵭嵮嵰嵱嵲嵳嵵",12,"嶃",21,"嶚嶛嶜嶞嶟嶠"],["8e40","嶡",21,"嶸",12,"巆",6,"巎",12,"巜巟巠巣巤巪巬巭"],["8e80","巰巵巶巸",4,"巿帀帄帇帉帊帋帍帎帒帓帗帞",7,"帨",4,"帯帰帲",4,"帹帺帾帿幀幁幃幆",5,"幍",6,"幖",4,"幜幝幟幠幣",14,"幵幷幹幾庁庂広庅庈庉庌庍庎庒庘庛庝庡庢庣庤庨",4,"庮",4,"庴庺庻庼庽庿",6],["8f40","廆廇廈廋",5,"廔廕廗廘廙廚廜",11,"廩廫",8,"廵廸廹廻廼廽弅弆弇弉弌弍弎弐弒弔弖弙弚弜弝弞弡弢弣弤"],["8f80","弨弫弬弮弰弲",6,"弻弽弾弿彁",14,"彑彔彙彚彛彜彞彟彠彣彥彧彨彫彮彯彲彴彵彶彸彺彽彾彿徃徆徍徎徏徑従徔徖徚徛徝從徟徠徢",5,"復徫徬徯",5,"徶徸徹徺徻徾",4,"忇忈忊忋忎忓忔忕忚忛応忞忟忢忣忥忦忨忩忬忯忰忲忳忴忶忷忹忺忼怇"],["9040","怈怉怋怌怐怑怓怗怘怚怞怟怢怣怤怬怭怮怰",4,"怶",4,"怽怾恀恄",6,"恌恎恏恑恓恔恖恗恘恛恜恞恟恠恡恥恦恮恱恲恴恵恷恾悀"],["9080","悁悂悅悆悇悈悊悋悎悏悐悑悓悕悗悘悙悜悞悡悢悤悥悧悩悪悮悰悳悵悶悷悹悺悽",7,"惇惈惉惌",4,"惒惓惔惖惗惙惛惞惡",4,"惪惱惲惵惷惸惻",4,"愂愃愄愅愇愊愋愌愐",4,"愖愗愘愙愛愜愝愞愡愢愥愨愩愪愬",18,"慀",6],["9140","慇慉態慍慏慐慒慓慔慖",6,"慞慟慠慡慣慤慥慦慩",6,"慱慲慳慴慶慸",18,"憌憍憏",4,"憕"],["9180","憖",6,"憞",8,"憪憫憭",9,"憸",5,"憿懀懁懃",4,"應懌",4,"懓懕",16,"懧",13,"懶",8,"戀",5,"戇戉戓戔戙戜戝戞戠戣戦戧戨戩戫戭戯戰戱戲戵戶戸",4,"扂扄扅扆扊"],["9240","扏扐払扖扗扙扚扜",6,"扤扥扨扱扲扴扵扷扸扺扻扽抁抂抃抅抆抇抈抋",5,"抔抙抜抝択抣抦抧抩抪抭抮抯抰抲抳抴抶抷抸抺抾拀拁"],["9280","拃拋拏拑拕拝拞拠拡拤拪拫拰拲拵拸拹拺拻挀挃挄挅挆挊挋挌挍挏挐挒挓挔挕挗挘挙挜挦挧挩挬挭挮挰挱挳",5,"挻挼挾挿捀捁捄捇捈捊捑捒捓捔捖",7,"捠捤捥捦捨捪捫捬捯捰捲捳捴捵捸捹捼捽捾捿掁掃掄掅掆掋掍掑掓掔掕掗掙",6,"採掤掦掫掯掱掲掵掶掹掻掽掿揀"],["9340","揁揂揃揅揇揈揊揋揌揑揓揔揕揗",6,"揟揢揤",4,"揫揬揮揯揰揱揳揵揷揹揺揻揼揾搃搄搆",4,"損搎搑搒搕",5,"搝搟搢搣搤"],["9380","搥搧搨搩搫搮",5,"搵",4,"搻搼搾摀摂摃摉摋",6,"摓摕摖摗摙",4,"摟",7,"摨摪摫摬摮",9,"摻",6,"撃撆撈",8,"撓撔撗撘撚撛撜撝撟",4,"撥撦撧撨撪撫撯撱撲撳撴撶撹撻撽撾撿擁擃擄擆",6,"擏擑擓擔擕擖擙據"],["9440","擛擜擝擟擠擡擣擥擧",24,"攁",7,"攊",7,"攓",4,"攙",8],["9480","攢攣攤攦",4,"攬攭攰攱攲攳攷攺攼攽敀",4,"敆敇敊敋敍敎敐敒敓敔敗敘敚敜敟敠敡敤敥敧敨敩敪敭敮敯敱敳敵敶數",14,"斈斉斊斍斎斏斒斔斕斖斘斚斝斞斠斢斣斦斨斪斬斮斱",7,"斺斻斾斿旀旂旇旈旉旊旍旐旑旓旔旕旘",7,"旡旣旤旪旫"],["9540","旲旳旴旵旸旹旻",4,"昁昄昅昇昈昉昋昍昐昑昒昖昗昘昚昛昜昞昡昢昣昤昦昩昪昫昬昮昰昲昳昷",4,"昽昿晀時晄",6,"晍晎晐晑晘"],["9580","晙晛晜晝晞晠晢晣晥晧晩",4,"晱晲晳晵晸晹晻晼晽晿暀暁暃暅暆暈暉暊暋暍暎暏暐暒暓暔暕暘",4,"暞",8,"暩",4,"暯",4,"暵暶暷暸暺暻暼暽暿",25,"曚曞",7,"曧曨曪",5,"曱曵曶書曺曻曽朁朂會"],["9640","朄朅朆朇朌朎朏朑朒朓朖朘朙朚朜朞朠",5,"朧朩朮朰朲朳朶朷朸朹朻朼朾朿杁杄杅杇杊杋杍杒杔杕杗",4,"杝杢杣杤杦杧杫杬杮東杴杶"],["9680","杸杹杺杻杽枀枂枃枅枆枈枊枌枍枎枏枑枒枓枔枖枙枛枟枠枡枤枦枩枬枮枱枲枴枹",7,"柂柅",9,"柕柖柗柛柟柡柣柤柦柧柨柪柫柭柮柲柵",7,"柾栁栂栃栄栆栍栐栒栔栕栘",4,"栞栟栠栢",6,"栫",6,"栴栵栶栺栻栿桇桋桍桏桒桖",5],["9740","桜桝桞桟桪桬",7,"桵桸",8,"梂梄梇",7,"梐梑梒梔梕梖梘",9,"梣梤梥梩梪梫梬梮梱梲梴梶梷梸"],["9780","梹",6,"棁棃",5,"棊棌棎棏棐棑棓棔棖棗棙棛",4,"棡棢棤",9,"棯棲棳棴棶棷棸棻棽棾棿椀椂椃椄椆",4,"椌椏椑椓",11,"椡椢椣椥",7,"椮椯椱椲椳椵椶椷椸椺椻椼椾楀楁楃",16,"楕楖楘楙楛楜楟"],["9840","楡楢楤楥楧楨楩楪楬業楯楰楲",4,"楺楻楽楾楿榁榃榅榊榋榌榎",5,"榖榗榙榚榝",9,"榩榪榬榮榯榰榲榳榵榶榸榹榺榼榽"],["9880","榾榿槀槂",7,"構槍槏槑槒槓槕",5,"槜槝槞槡",11,"槮槯槰槱槳",9,"槾樀",9,"樋",11,"標",5,"樠樢",5,"権樫樬樭樮樰樲樳樴樶",6,"樿",4,"橅橆橈",7,"橑",6,"橚"],["9940","橜",4,"橢橣橤橦",10,"橲",6,"橺橻橽橾橿檁檂檃檅",8,"檏檒",4,"檘",7,"檡",5],["9980","檧檨檪檭",114,"欥欦欨",6],["9a40","欯欰欱欳欴欵欶欸欻欼欽欿歀歁歂歄歅歈歊歋歍",11,"歚",7,"歨歩歫",13,"歺歽歾歿殀殅殈"],["9a80","殌殎殏殐殑殔殕殗殘殙殜",4,"殢",7,"殫",7,"殶殸",6,"毀毃毄毆",4,"毌毎毐毑毘毚毜",4,"毢",7,"毬毭毮毰毱毲毴毶毷毸毺毻毼毾",6,"氈",4,"氎氒気氜氝氞氠氣氥氫氬氭氱氳氶氷氹氺氻氼氾氿汃汄汅汈汋",4,"汑汒汓汖汘"],["9b40","汙汚汢汣汥汦汧汫",4,"汱汳汵汷汸決汻汼汿沀沄沇沊沋沍沎沑沒沕沖沗沘沚沜沝沞沠沢沨沬沯沰沴沵沶沷沺泀況泂泃泆泇泈泋泍泎泏泑泒泘"],["9b80","泙泚泜泝泟泤泦泧泩泬泭泲泴泹泿洀洂洃洅洆洈洉洊洍洏洐洑洓洔洕洖洘洜洝洟",5,"洦洨洩洬洭洯洰洴洶洷洸洺洿浀浂浄浉浌浐浕浖浗浘浛浝浟浡浢浤浥浧浨浫浬浭浰浱浲浳浵浶浹浺浻浽",4,"涃涄涆涇涊涋涍涏涐涒涖",4,"涜涢涥涬涭涰涱涳涴涶涷涹",5,"淁淂淃淈淉淊"],["9c40","淍淎淏淐淒淓淔淕淗淚淛淜淟淢淣淥淧淨淩淪淭淯淰淲淴淵淶淸淺淽",7,"渆渇済渉渋渏渒渓渕渘渙減渜渞渟渢渦渧渨渪測渮渰渱渳渵"],["9c80","渶渷渹渻",7,"湅",7,"湏湐湑湒湕湗湙湚湜湝湞湠",10,"湬湭湯",14,"満溁溂溄溇溈溊",4,"溑",6,"溙溚溛溝溞溠溡溣溤溦溨溩溫溬溭溮溰溳溵溸溹溼溾溿滀滃滄滅滆滈滉滊滌滍滎滐滒滖滘滙滛滜滝滣滧滪",5],["9d40","滰滱滲滳滵滶滷滸滺",7,"漃漄漅漇漈漊",4,"漐漑漒漖",9,"漡漢漣漥漦漧漨漬漮漰漲漴漵漷",6,"漿潀潁潂"],["9d80","潃潄潅潈潉潊潌潎",9,"潙潚潛潝潟潠潡潣潤潥潧",5,"潯潰潱潳潵潶潷潹潻潽",6,"澅澆澇澊澋澏",12,"澝澞澟澠澢",4,"澨",10,"澴澵澷澸澺",5,"濁濃",5,"濊",6,"濓",10,"濟濢濣濤濥"],["9e40","濦",7,"濰",32,"瀒",7,"瀜",6,"瀤",6],["9e80","瀫",9,"瀶瀷瀸瀺",17,"灍灎灐",13,"灟",11,"灮灱灲灳灴灷灹灺灻災炁炂炃炄炆炇炈炋炌炍炏炐炑炓炗炘炚炛炞",12,"炰炲炴炵炶為炾炿烄烅烆烇烉烋",12,"烚"],["9f40","烜烝烞烠烡烢烣烥烪烮烰",6,"烸烺烻烼烾",10,"焋",4,"焑焒焔焗焛",10,"焧",7,"焲焳焴"],["9f80","焵焷",13,"煆煇煈煉煋煍煏",12,"煝煟",4,"煥煩",4,"煯煰煱煴煵煶煷煹煻煼煾",5,"熅",4,"熋熌熍熎熐熑熒熓熕熖熗熚",4,"熡",6,"熩熪熫熭",5,"熴熶熷熸熺",8,"燄",9,"燏",4],["a040","燖",9,"燡燢燣燤燦燨",5,"燯",9,"燺",11,"爇",19],["a080","爛爜爞",9,"爩爫爭爮爯爲爳爴爺爼爾牀",6,"牉牊牋牎牏牐牑牓牔牕牗牘牚牜牞牠牣牤牥牨牪牫牬牭牰牱牳牴牶牷牸牻牼牽犂犃犅",4,"犌犎犐犑犓",11,"犠",11,"犮犱犲犳犵犺",6,"狅狆狇狉狊狋狌狏狑狓狔狕狖狘狚狛"],["a1a1","　、。·ˉˇ¨〃々—～‖…‘’“”〔〕〈",7,"〖〗【】±×÷∶∧∨∑∏∪∩∈∷√⊥∥∠⌒⊙∫∮≡≌≈∽∝≠≮≯≤≥∞∵∴♂♀°′″℃＄¤￠￡‰§№☆★○●◎◇◆□■△▲※→←↑↓〓"],["a2a1","ⅰ",9],["a2b1","⒈",19,"⑴",19,"①",9],["a2e5","㈠",9],["a2f1","Ⅰ",11],["a3a1","！＂＃￥％",88,"￣"],["a4a1","ぁ",82],["a5a1","ァ",85],["a6a1","Α",16,"Σ",6],["a6c1","α",16,"σ",6],["a6e0","︵︶︹︺︿﹀︽︾﹁﹂﹃﹄"],["a6ee","︻︼︷︸︱"],["a6f4","︳︴"],["a7a1","А",5,"ЁЖ",25],["a7d1","а",5,"ёж",25],["a840","ˊˋ˙–―‥‵℅℉↖↗↘↙∕∟∣≒≦≧⊿═",35,"▁",6],["a880","█",7,"▓▔▕▼▽◢◣◤◥☉⊕〒〝〞"],["a8a1","āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüêɑ"],["a8bd","ńň"],["a8c0","ɡ"],["a8c5","ㄅ",36],["a940","〡",8,"㊣㎎㎏㎜㎝㎞㎡㏄㏎㏑㏒㏕︰￢￤"],["a959","℡㈱"],["a95c","‐"],["a960","ー゛゜ヽヾ〆ゝゞ﹉",9,"﹔﹕﹖﹗﹙",8],["a980","﹢",4,"﹨﹩﹪﹫"],["a996","〇"],["a9a4","─",75],["aa40","狜狝狟狢",5,"狪狫狵狶狹狽狾狿猀猂猄",5,"猋猌猍猏猐猑猒猔猘猙猚猟猠猣猤猦猧猨猭猯猰猲猳猵猶猺猻猼猽獀",8],["aa80","獉獊獋獌獎獏獑獓獔獕獖獘",7,"獡",10,"獮獰獱"],["ab40","獲",11,"獿",4,"玅玆玈玊玌玍玏玐玒玓玔玕玗玘玙玚玜玝玞玠玡玣",5,"玪玬玭玱玴玵玶玸玹玼玽玾玿珁珃",4],["ab80","珋珌珎珒",6,"珚珛珜珝珟珡珢珣珤珦珨珪珫珬珮珯珰珱珳",4],["ac40","珸",10,"琄琇琈琋琌琍琎琑",8,"琜",5,"琣琤琧琩琫琭琯琱琲琷",4,"琽琾琿瑀瑂",11],["ac80","瑎",6,"瑖瑘瑝瑠",12,"瑮瑯瑱",4,"瑸瑹瑺"],["ad40","瑻瑼瑽瑿璂璄璅璆璈璉璊璌璍璏璑",10,"璝璟",7,"璪",15,"璻",12],["ad80","瓈",9,"瓓",8,"瓝瓟瓡瓥瓧",6,"瓰瓱瓲"],["ae40","瓳瓵瓸",6,"甀甁甂甃甅",7,"甎甐甒甔甕甖甗甛甝甞甠",4,"甦甧甪甮甴甶甹甼甽甿畁畂畃畄畆畇畉畊畍畐畑畒畓畕畖畗畘"],["ae80","畝",7,"畧畨畩畫",6,"畳畵當畷畺",4,"疀疁疂疄疅疇"],["af40","疈疉疊疌疍疎疐疓疕疘疛疜疞疢疦",4,"疭疶疷疺疻疿痀痁痆痋痌痎痏痐痑痓痗痙痚痜痝痟痠痡痥痩痬痭痮痯痲痳痵痶痷痸痺痻痽痾瘂瘄瘆瘇"],["af80","瘈瘉瘋瘍瘎瘏瘑瘒瘓瘔瘖瘚瘜瘝瘞瘡瘣瘧瘨瘬瘮瘯瘱瘲瘶瘷瘹瘺瘻瘽癁療癄"],["b040","癅",6,"癎",5,"癕癗",4,"癝癟癠癡癢癤",6,"癬癭癮癰",7,"癹発發癿皀皁皃皅皉皊皌皍皏皐皒皔皕皗皘皚皛"],["b080","皜",7,"皥",8,"皯皰皳皵",9,"盀盁盃啊阿埃挨哎唉哀皑癌蔼矮艾碍爱隘鞍氨安俺按暗岸胺案肮昂盎凹敖熬翱袄傲奥懊澳芭捌扒叭吧笆八疤巴拔跋靶把耙坝霸罢爸白柏百摆佰败拜稗斑班搬扳般颁板版扮拌伴瓣半办绊邦帮梆榜膀绑棒磅蚌镑傍谤苞胞包褒剥"],["b140","盄盇盉盋盌盓盕盙盚盜盝盞盠",4,"盦",7,"盰盳盵盶盷盺盻盽盿眀眂眃眅眆眊県眎",10,"眛眜眝眞眡眣眤眥眧眪眫"],["b180","眬眮眰",4,"眹眻眽眾眿睂睄睅睆睈",7,"睒",7,"睜薄雹保堡饱宝抱报暴豹鲍爆杯碑悲卑北辈背贝钡倍狈备惫焙被奔苯本笨崩绷甭泵蹦迸逼鼻比鄙笔彼碧蓖蔽毕毙毖币庇痹闭敝弊必辟壁臂避陛鞭边编贬扁便变卞辨辩辫遍标彪膘表鳖憋别瘪彬斌濒滨宾摈兵冰柄丙秉饼炳"],["b240","睝睞睟睠睤睧睩睪睭",11,"睺睻睼瞁瞂瞃瞆",5,"瞏瞐瞓",11,"瞡瞣瞤瞦瞨瞫瞭瞮瞯瞱瞲瞴瞶",4],["b280","瞼瞾矀",12,"矎",8,"矘矙矚矝",4,"矤病并玻菠播拨钵波博勃搏铂箔伯帛舶脖膊渤泊驳捕卜哺补埠不布步簿部怖擦猜裁材才财睬踩采彩菜蔡餐参蚕残惭惨灿苍舱仓沧藏操糙槽曹草厕策侧册测层蹭插叉茬茶查碴搽察岔差诧拆柴豺搀掺蝉馋谗缠铲产阐颤昌猖"],["b340","矦矨矪矯矰矱矲矴矵矷矹矺矻矼砃",5,"砊砋砎砏砐砓砕砙砛砞砠砡砢砤砨砪砫砮砯砱砲砳砵砶砽砿硁硂硃硄硆硈硉硊硋硍硏硑硓硔硘硙硚"],["b380","硛硜硞",11,"硯",7,"硸硹硺硻硽",6,"场尝常长偿肠厂敞畅唱倡超抄钞朝嘲潮巢吵炒车扯撤掣彻澈郴臣辰尘晨忱沉陈趁衬撑称城橙成呈乘程惩澄诚承逞骋秤吃痴持匙池迟弛驰耻齿侈尺赤翅斥炽充冲虫崇宠抽酬畴踌稠愁筹仇绸瞅丑臭初出橱厨躇锄雏滁除楚"],["b440","碄碅碆碈碊碋碏碐碒碔碕碖碙碝碞碠碢碤碦碨",7,"碵碶碷碸確碻碼碽碿磀磂磃磄磆磇磈磌磍磎磏磑磒磓磖磗磘磚",9],["b480","磤磥磦磧磩磪磫磭",4,"磳磵磶磸磹磻",5,"礂礃礄礆",6,"础储矗搐触处揣川穿椽传船喘串疮窗幢床闯创吹炊捶锤垂春椿醇唇淳纯蠢戳绰疵茨磁雌辞慈瓷词此刺赐次聪葱囱匆从丛凑粗醋簇促蹿篡窜摧崔催脆瘁粹淬翠村存寸磋撮搓措挫错搭达答瘩打大呆歹傣戴带殆代贷袋待逮"],["b540","礍",5,"礔",9,"礟",4,"礥",14,"礵",4,"礽礿祂祃祄祅祇祊",8,"祔祕祘祙祡祣"],["b580","祤祦祩祪祫祬祮祰",6,"祹祻",4,"禂禃禆禇禈禉禋禌禍禎禐禑禒怠耽担丹单郸掸胆旦氮但惮淡诞弹蛋当挡党荡档刀捣蹈倒岛祷导到稻悼道盗德得的蹬灯登等瞪凳邓堤低滴迪敌笛狄涤翟嫡抵底地蒂第帝弟递缔颠掂滇碘点典靛垫电佃甸店惦奠淀殿碉叼雕凋刁掉吊钓调跌爹碟蝶迭谍叠"],["b640","禓",6,"禛",11,"禨",10,"禴",4,"禼禿秂秄秅秇秈秊秌秎秏秐秓秔秖秗秙",5,"秠秡秢秥秨秪"],["b680","秬秮秱",6,"秹秺秼秾秿稁稄稅稇稈稉稊稌稏",4,"稕稖稘稙稛稜丁盯叮钉顶鼎锭定订丢东冬董懂动栋侗恫冻洞兜抖斗陡豆逗痘都督毒犊独读堵睹赌杜镀肚度渡妒端短锻段断缎堆兑队对墩吨蹲敦顿囤钝盾遁掇哆多夺垛躲朵跺舵剁惰堕蛾峨鹅俄额讹娥恶厄扼遏鄂饿恩而儿耳尔饵洱二"],["b740","稝稟稡稢稤",14,"稴稵稶稸稺稾穀",5,"穇",9,"穒",4,"穘",16],["b780","穩",6,"穱穲穳穵穻穼穽穾窂窅窇窉窊窋窌窎窏窐窓窔窙窚窛窞窡窢贰发罚筏伐乏阀法珐藩帆番翻樊矾钒繁凡烦反返范贩犯饭泛坊芳方肪房防妨仿访纺放菲非啡飞肥匪诽吠肺废沸费芬酚吩氛分纷坟焚汾粉奋份忿愤粪丰封枫蜂峰锋风疯烽逢冯缝讽奉凤佛否夫敷肤孵扶拂辐幅氟符伏俘服"],["b840","窣窤窧窩窪窫窮",4,"窴",10,"竀",10,"竌",9,"竗竘竚竛竜竝竡竢竤竧",5,"竮竰竱竲竳"],["b880","竴",4,"竻竼竾笀笁笂笅笇笉笌笍笎笐笒笓笖笗笘笚笜笝笟笡笢笣笧笩笭浮涪福袱弗甫抚辅俯釜斧脯腑府腐赴副覆赋复傅付阜父腹负富讣附妇缚咐噶嘎该改概钙盖溉干甘杆柑竿肝赶感秆敢赣冈刚钢缸肛纲岗港杠篙皋高膏羔糕搞镐稿告哥歌搁戈鸽胳疙割革葛格蛤阁隔铬个各给根跟耕更庚羹"],["b940","笯笰笲笴笵笶笷笹笻笽笿",5,"筆筈筊筍筎筓筕筗筙筜筞筟筡筣",10,"筯筰筳筴筶筸筺筼筽筿箁箂箃箄箆",6,"箎箏"],["b980","箑箒箓箖箘箙箚箛箞箟箠箣箤箥箮箯箰箲箳箵箶箷箹",7,"篂篃範埂耿梗工攻功恭龚供躬公宫弓巩汞拱贡共钩勾沟苟狗垢构购够辜菇咕箍估沽孤姑鼓古蛊骨谷股故顾固雇刮瓜剐寡挂褂乖拐怪棺关官冠观管馆罐惯灌贯光广逛瑰规圭硅归龟闺轨鬼诡癸桂柜跪贵刽辊滚棍锅郭国果裹过哈"],["ba40","篅篈築篊篋篍篎篏篐篒篔",4,"篛篜篞篟篠篢篣篤篧篨篩篫篬篭篯篰篲",4,"篸篹篺篻篽篿",7,"簈簉簊簍簎簐",5,"簗簘簙"],["ba80","簚",4,"簠",5,"簨簩簫",12,"簹",5,"籂骸孩海氦亥害骇酣憨邯韩含涵寒函喊罕翰撼捍旱憾悍焊汗汉夯杭航壕嚎豪毫郝好耗号浩呵喝荷菏核禾和何合盒貉阂河涸赫褐鹤贺嘿黑痕很狠恨哼亨横衡恒轰哄烘虹鸿洪宏弘红喉侯猴吼厚候后呼乎忽瑚壶葫胡蝴狐糊湖"],["bb40","籃",9,"籎",36,"籵",5,"籾",9],["bb80","粈粊",6,"粓粔粖粙粚粛粠粡粣粦粧粨粩粫粬粭粯粰粴",4,"粺粻弧虎唬护互沪户花哗华猾滑画划化话槐徊怀淮坏欢环桓还缓换患唤痪豢焕涣宦幻荒慌黄磺蝗簧皇凰惶煌晃幌恍谎灰挥辉徽恢蛔回毁悔慧卉惠晦贿秽会烩汇讳诲绘荤昏婚魂浑混豁活伙火获或惑霍货祸击圾基机畸稽积箕"],["bc40","粿糀糂糃糄糆糉糋糎",6,"糘糚糛糝糞糡",6,"糩",5,"糰",7,"糹糺糼",13,"紋",5],["bc80","紑",14,"紡紣紤紥紦紨紩紪紬紭紮細",6,"肌饥迹激讥鸡姬绩缉吉极棘辑籍集及急疾汲即嫉级挤几脊己蓟技冀季伎祭剂悸济寄寂计记既忌际妓继纪嘉枷夹佳家加荚颊贾甲钾假稼价架驾嫁歼监坚尖笺间煎兼肩艰奸缄茧检柬碱硷拣捡简俭剪减荐槛鉴践贱见键箭件"],["bd40","紷",54,"絯",7],["bd80","絸",32,"健舰剑饯渐溅涧建僵姜将浆江疆蒋桨奖讲匠酱降蕉椒礁焦胶交郊浇骄娇嚼搅铰矫侥脚狡角饺缴绞剿教酵轿较叫窖揭接皆秸街阶截劫节桔杰捷睫竭洁结解姐戒藉芥界借介疥诫届巾筋斤金今津襟紧锦仅谨进靳晋禁近烬浸"],["be40","継",12,"綧",6,"綯",42],["be80","線",32,"尽劲荆兢茎睛晶鲸京惊精粳经井警景颈静境敬镜径痉靖竟竞净炯窘揪究纠玖韭久灸九酒厩救旧臼舅咎就疚鞠拘狙疽居驹菊局咀矩举沮聚拒据巨具距踞锯俱句惧炬剧捐鹃娟倦眷卷绢撅攫抉掘倔爵觉决诀绝均菌钧军君峻"],["bf40","緻",62],["bf80","縺縼",4,"繂",4,"繈",21,"俊竣浚郡骏喀咖卡咯开揩楷凯慨刊堪勘坎砍看康慷糠扛抗亢炕考拷烤靠坷苛柯棵磕颗科壳咳可渴克刻客课肯啃垦恳坑吭空恐孔控抠口扣寇枯哭窟苦酷库裤夸垮挎跨胯块筷侩快宽款匡筐狂框矿眶旷况亏盔岿窥葵奎魁傀"],["c040","繞",35,"纃",23,"纜纝纞"],["c080","纮纴纻纼绖绤绬绹缊缐缞缷缹缻",6,"罃罆",9,"罒罓馈愧溃坤昆捆困括扩廓阔垃拉喇蜡腊辣啦莱来赖蓝婪栏拦篮阑兰澜谰揽览懒缆烂滥琅榔狼廊郎朗浪捞劳牢老佬姥酪烙涝勒乐雷镭蕾磊累儡垒擂肋类泪棱楞冷厘梨犁黎篱狸离漓理李里鲤礼莉荔吏栗丽厉励砾历利傈例俐"],["c140","罖罙罛罜罝罞罠罣",4,"罫罬罭罯罰罳罵罶罷罸罺罻罼罽罿羀羂",7,"羋羍羏",4,"羕",4,"羛羜羠羢羣羥羦羨",6,"羱"],["c180","羳",4,"羺羻羾翀翂翃翄翆翇翈翉翋翍翏",4,"翖翗翙",5,"翢翣痢立粒沥隶力璃哩俩联莲连镰廉怜涟帘敛脸链恋炼练粮凉梁粱良两辆量晾亮谅撩聊僚疗燎寥辽潦了撂镣廖料列裂烈劣猎琳林磷霖临邻鳞淋凛赁吝拎玲菱零龄铃伶羚凌灵陵岭领另令溜琉榴硫馏留刘瘤流柳六龙聋咙笼窿"],["c240","翤翧翨翪翫翬翭翯翲翴",6,"翽翾翿耂耇耈耉耊耎耏耑耓耚耛耝耞耟耡耣耤耫",5,"耲耴耹耺耼耾聀聁聄聅聇聈聉聎聏聐聑聓聕聖聗"],["c280","聙聛",13,"聫",5,"聲",11,"隆垄拢陇楼娄搂篓漏陋芦卢颅庐炉掳卤虏鲁麓碌露路赂鹿潞禄录陆戮驴吕铝侣旅履屡缕虑氯律率滤绿峦挛孪滦卵乱掠略抡轮伦仑沦纶论萝螺罗逻锣箩骡裸落洛骆络妈麻玛码蚂马骂嘛吗埋买麦卖迈脉瞒馒蛮满蔓曼慢漫"],["c340","聾肁肂肅肈肊肍",5,"肔肕肗肙肞肣肦肧肨肬肰肳肵肶肸肹肻胅胇",4,"胏",6,"胘胟胠胢胣胦胮胵胷胹胻胾胿脀脁脃脄脅脇脈脋"],["c380","脌脕脗脙脛脜脝脟",12,"脭脮脰脳脴脵脷脹",4,"脿谩芒茫盲氓忙莽猫茅锚毛矛铆卯茂冒帽貌贸么玫枚梅酶霉煤没眉媒镁每美昧寐妹媚门闷们萌蒙檬盟锰猛梦孟眯醚靡糜迷谜弥米秘觅泌蜜密幂棉眠绵冕免勉娩缅面苗描瞄藐秒渺庙妙蔑灭民抿皿敏悯闽明螟鸣铭名命谬摸"],["c440","腀",5,"腇腉腍腎腏腒腖腗腘腛",4,"腡腢腣腤腦腨腪腫腬腯腲腳腵腶腷腸膁膃",4,"膉膋膌膍膎膐膒",5,"膙膚膞",4,"膤膥"],["c480","膧膩膫",7,"膴",5,"膼膽膾膿臄臅臇臈臉臋臍",6,"摹蘑模膜磨摩魔抹末莫墨默沫漠寞陌谋牟某拇牡亩姆母墓暮幕募慕木目睦牧穆拿哪呐钠那娜纳氖乃奶耐奈南男难囊挠脑恼闹淖呢馁内嫩能妮霓倪泥尼拟你匿腻逆溺蔫拈年碾撵捻念娘酿鸟尿捏聂孽啮镊镍涅您柠狞凝宁"],["c540","臔",14,"臤臥臦臨臩臫臮",4,"臵",5,"臽臿舃與",4,"舎舏舑舓舕",5,"舝舠舤舥舦舧舩舮舲舺舼舽舿"],["c580","艀艁艂艃艅艆艈艊艌艍艎艐",7,"艙艛艜艝艞艠",7,"艩拧泞牛扭钮纽脓浓农弄奴努怒女暖虐疟挪懦糯诺哦欧鸥殴藕呕偶沤啪趴爬帕怕琶拍排牌徘湃派攀潘盘磐盼畔判叛乓庞旁耪胖抛咆刨炮袍跑泡呸胚培裴赔陪配佩沛喷盆砰抨烹澎彭蓬棚硼篷膨朋鹏捧碰坯砒霹批披劈琵毗"],["c640","艪艫艬艭艱艵艶艷艸艻艼芀芁芃芅芆芇芉芌芐芓芔芕芖芚芛芞芠芢芣芧芲芵芶芺芻芼芿苀苂苃苅苆苉苐苖苙苚苝苢苧苨苩苪苬苭苮苰苲苳苵苶苸"],["c680","苺苼",4,"茊茋茍茐茒茓茖茘茙茝",9,"茩茪茮茰茲茷茻茽啤脾疲皮匹痞僻屁譬篇偏片骗飘漂瓢票撇瞥拼频贫品聘乒坪苹萍平凭瓶评屏坡泼颇婆破魄迫粕剖扑铺仆莆葡菩蒲埔朴圃普浦谱曝瀑期欺栖戚妻七凄漆柒沏其棋奇歧畦崎脐齐旗祈祁骑起岂乞企启契砌器气迄弃汽泣讫掐"],["c740","茾茿荁荂荄荅荈荊",4,"荓荕",4,"荝荢荰",6,"荹荺荾",6,"莇莈莊莋莌莍莏莐莑莔莕莖莗莙莚莝莟莡",6,"莬莭莮"],["c780","莯莵莻莾莿菂菃菄菆菈菉菋菍菎菐菑菒菓菕菗菙菚菛菞菢菣菤菦菧菨菫菬菭恰洽牵扦钎铅千迁签仟谦乾黔钱钳前潜遣浅谴堑嵌欠歉枪呛腔羌墙蔷强抢橇锹敲悄桥瞧乔侨巧鞘撬翘峭俏窍切茄且怯窃钦侵亲秦琴勤芹擒禽寝沁青轻氢倾卿清擎晴氰情顷请庆琼穷秋丘邱球求囚酋泅趋区蛆曲躯屈驱渠"],["c840","菮華菳",4,"菺菻菼菾菿萀萂萅萇萈萉萊萐萒",5,"萙萚萛萞",5,"萩",7,"萲",5,"萹萺萻萾",7,"葇葈葉"],["c880","葊",6,"葒",4,"葘葝葞葟葠葢葤",4,"葪葮葯葰葲葴葷葹葻葼取娶龋趣去圈颧权醛泉全痊拳犬券劝缺炔瘸却鹊榷确雀裙群然燃冉染瓤壤攘嚷让饶扰绕惹热壬仁人忍韧任认刃妊纫扔仍日戎茸蓉荣融熔溶容绒冗揉柔肉茹蠕儒孺如辱乳汝入褥软阮蕊瑞锐闰润若弱撒洒萨腮鳃塞赛三叁"],["c940","葽",4,"蒃蒄蒅蒆蒊蒍蒏",7,"蒘蒚蒛蒝蒞蒟蒠蒢",12,"蒰蒱蒳蒵蒶蒷蒻蒼蒾蓀蓂蓃蓅蓆蓇蓈蓋蓌蓎蓏蓒蓔蓕蓗"],["c980","蓘",4,"蓞蓡蓢蓤蓧",4,"蓭蓮蓯蓱",10,"蓽蓾蔀蔁蔂伞散桑嗓丧搔骚扫嫂瑟色涩森僧莎砂杀刹沙纱傻啥煞筛晒珊苫杉山删煽衫闪陕擅赡膳善汕扇缮墒伤商赏晌上尚裳梢捎稍烧芍勺韶少哨邵绍奢赊蛇舌舍赦摄射慑涉社设砷申呻伸身深娠绅神沈审婶甚肾慎渗声生甥牲升绳"],["ca40","蔃",8,"蔍蔎蔏蔐蔒蔔蔕蔖蔘蔙蔛蔜蔝蔞蔠蔢",8,"蔭",9,"蔾",4,"蕄蕅蕆蕇蕋",10],["ca80","蕗蕘蕚蕛蕜蕝蕟",4,"蕥蕦蕧蕩",8,"蕳蕵蕶蕷蕸蕼蕽蕿薀薁省盛剩胜圣师失狮施湿诗尸虱十石拾时什食蚀实识史矢使屎驶始式示士世柿事拭誓逝势是嗜噬适仕侍释饰氏市恃室视试收手首守寿授售受瘦兽蔬枢梳殊抒输叔舒淑疏书赎孰熟薯暑曙署蜀黍鼠属术述树束戍竖墅庶数漱"],["cb40","薂薃薆薈",6,"薐",10,"薝",6,"薥薦薧薩薫薬薭薱",5,"薸薺",6,"藂",6,"藊",4,"藑藒"],["cb80","藔藖",5,"藝",6,"藥藦藧藨藪",14,"恕刷耍摔衰甩帅栓拴霜双爽谁水睡税吮瞬顺舜说硕朔烁斯撕嘶思私司丝死肆寺嗣四伺似饲巳松耸怂颂送宋讼诵搜艘擞嗽苏酥俗素速粟僳塑溯宿诉肃酸蒜算虽隋随绥髓碎岁穗遂隧祟孙损笋蓑梭唆缩琐索锁所塌他它她塔"],["cc40","藹藺藼藽藾蘀",4,"蘆",10,"蘒蘓蘔蘕蘗",15,"蘨蘪",13,"蘹蘺蘻蘽蘾蘿虀"],["cc80","虁",11,"虒虓處",4,"虛虜虝號虠虡虣",7,"獭挞蹋踏胎苔抬台泰酞太态汰坍摊贪瘫滩坛檀痰潭谭谈坦毯袒碳探叹炭汤塘搪堂棠膛唐糖倘躺淌趟烫掏涛滔绦萄桃逃淘陶讨套特藤腾疼誊梯剔踢锑提题蹄啼体替嚏惕涕剃屉天添填田甜恬舔腆挑条迢眺跳贴铁帖厅听烃"],["cd40","虭虯虰虲",6,"蚃",6,"蚎",4,"蚔蚖",5,"蚞",4,"蚥蚦蚫蚭蚮蚲蚳蚷蚸蚹蚻",4,"蛁蛂蛃蛅蛈蛌蛍蛒蛓蛕蛖蛗蛚蛜"],["cd80","蛝蛠蛡蛢蛣蛥蛦蛧蛨蛪蛫蛬蛯蛵蛶蛷蛺蛻蛼蛽蛿蜁蜄蜅蜆蜋蜌蜎蜏蜐蜑蜔蜖汀廷停亭庭挺艇通桐酮瞳同铜彤童桶捅筒统痛偷投头透凸秃突图徒途涂屠土吐兔湍团推颓腿蜕褪退吞屯臀拖托脱鸵陀驮驼椭妥拓唾挖哇蛙洼娃瓦袜歪外豌弯湾玩顽丸烷完碗挽晚皖惋宛婉万腕汪王亡枉网往旺望忘妄威"],["ce40","蜙蜛蜝蜟蜠蜤蜦蜧蜨蜪蜫蜬蜭蜯蜰蜲蜳蜵蜶蜸蜹蜺蜼蜽蝀",6,"蝊蝋蝍蝏蝐蝑蝒蝔蝕蝖蝘蝚",5,"蝡蝢蝦",7,"蝯蝱蝲蝳蝵"],["ce80","蝷蝸蝹蝺蝿螀螁螄螆螇螉螊螌螎",4,"螔螕螖螘",6,"螠",4,"巍微危韦违桅围唯惟为潍维苇萎委伟伪尾纬未蔚味畏胃喂魏位渭谓尉慰卫瘟温蚊文闻纹吻稳紊问嗡翁瓮挝蜗涡窝我斡卧握沃巫呜钨乌污诬屋无芜梧吾吴毋武五捂午舞伍侮坞戊雾晤物勿务悟误昔熙析西硒矽晰嘻吸锡牺"],["cf40","螥螦螧螩螪螮螰螱螲螴螶螷螸螹螻螼螾螿蟁",4,"蟇蟈蟉蟌",4,"蟔",6,"蟜蟝蟞蟟蟡蟢蟣蟤蟦蟧蟨蟩蟫蟬蟭蟯",9],["cf80","蟺蟻蟼蟽蟿蠀蠁蠂蠄",5,"蠋",7,"蠔蠗蠘蠙蠚蠜",4,"蠣稀息希悉膝夕惜熄烯溪汐犀檄袭席习媳喜铣洗系隙戏细瞎虾匣霞辖暇峡侠狭下厦夏吓掀锨先仙鲜纤咸贤衔舷闲涎弦嫌显险现献县腺馅羡宪陷限线相厢镶香箱襄湘乡翔祥详想响享项巷橡像向象萧硝霄削哮嚣销消宵淆晓"],["d040","蠤",13,"蠳",5,"蠺蠻蠽蠾蠿衁衂衃衆",5,"衎",5,"衕衖衘衚",6,"衦衧衪衭衯衱衳衴衵衶衸衹衺"],["d080","衻衼袀袃袆袇袉袊袌袎袏袐袑袓袔袕袗",4,"袝",4,"袣袥",5,"小孝校肖啸笑效楔些歇蝎鞋协挟携邪斜胁谐写械卸蟹懈泄泻谢屑薪芯锌欣辛新忻心信衅星腥猩惺兴刑型形邢行醒幸杏性姓兄凶胸匈汹雄熊休修羞朽嗅锈秀袖绣墟戌需虚嘘须徐许蓄酗叙旭序畜恤絮婿绪续轩喧宣悬旋玄"],["d140","袬袮袯袰袲",4,"袸袹袺袻袽袾袿裀裃裄裇裈裊裋裌裍裏裐裑裓裖裗裚",4,"裠裡裦裧裩",6,"裲裵裶裷裺裻製裿褀褁褃",5],["d180","褉褋",4,"褑褔",4,"褜",4,"褢褣褤褦褧褨褩褬褭褮褯褱褲褳褵褷选癣眩绚靴薛学穴雪血勋熏循旬询寻驯巡殉汛训讯逊迅压押鸦鸭呀丫芽牙蚜崖衙涯雅哑亚讶焉咽阉烟淹盐严研蜒岩延言颜阎炎沿奄掩眼衍演艳堰燕厌砚雁唁彦焰宴谚验殃央鸯秧杨扬佯疡羊洋阳氧仰痒养样漾邀腰妖瑶"],["d240","褸",8,"襂襃襅",24,"襠",5,"襧",19,"襼"],["d280","襽襾覀覂覄覅覇",26,"摇尧遥窑谣姚咬舀药要耀椰噎耶爷野冶也页掖业叶曳腋夜液一壹医揖铱依伊衣颐夷遗移仪胰疑沂宜姨彝椅蚁倚已乙矣以艺抑易邑屹亿役臆逸肄疫亦裔意毅忆义益溢诣议谊译异翼翌绎茵荫因殷音阴姻吟银淫寅饮尹引隐"],["d340","覢",30,"觃觍觓觔觕觗觘觙觛觝觟觠觡觢觤觧觨觩觪觬觭觮觰觱觲觴",6],["d380","觻",4,"訁",5,"計",21,"印英樱婴鹰应缨莹萤营荧蝇迎赢盈影颖硬映哟拥佣臃痈庸雍踊蛹咏泳涌永恿勇用幽优悠忧尤由邮铀犹油游酉有友右佑釉诱又幼迂淤于盂榆虞愚舆余俞逾鱼愉渝渔隅予娱雨与屿禹宇语羽玉域芋郁吁遇喻峪御愈欲狱育誉"],["d440","訞",31,"訿",8,"詉",21],["d480","詟",25,"詺",6,"浴寓裕预豫驭鸳渊冤元垣袁原援辕园员圆猿源缘远苑愿怨院曰约越跃钥岳粤月悦阅耘云郧匀陨允运蕴酝晕韵孕匝砸杂栽哉灾宰载再在咱攒暂赞赃脏葬遭糟凿藻枣早澡蚤躁噪造皂灶燥责择则泽贼怎增憎曾赠扎喳渣札轧"],["d540","誁",7,"誋",7,"誔",46],["d580","諃",32,"铡闸眨栅榨咋乍炸诈摘斋宅窄债寨瞻毡詹粘沾盏斩辗崭展蘸栈占战站湛绽樟章彰漳张掌涨杖丈帐账仗胀瘴障招昭找沼赵照罩兆肇召遮折哲蛰辙者锗蔗这浙珍斟真甄砧臻贞针侦枕疹诊震振镇阵蒸挣睁征狰争怔整拯正政"],["d640","諤",34,"謈",27],["d680","謤謥謧",30,"帧症郑证芝枝支吱蜘知肢脂汁之织职直植殖执值侄址指止趾只旨纸志挚掷至致置帜峙制智秩稚质炙痔滞治窒中盅忠钟衷终种肿重仲众舟周州洲诌粥轴肘帚咒皱宙昼骤珠株蛛朱猪诸诛逐竹烛煮拄瞩嘱主著柱助蛀贮铸筑"],["d740","譆",31,"譧",4,"譭",25],["d780","讇",24,"讬讱讻诇诐诪谉谞住注祝驻抓爪拽专砖转撰赚篆桩庄装妆撞壮状椎锥追赘坠缀谆准捉拙卓桌琢茁酌啄着灼浊兹咨资姿滋淄孜紫仔籽滓子自渍字鬃棕踪宗综总纵邹走奏揍租足卒族祖诅阻组钻纂嘴醉最罪尊遵昨左佐柞做作坐座"],["d840","谸",8,"豂豃豄豅豈豊豋豍",7,"豖豗豘豙豛",5,"豣",6,"豬",6,"豴豵豶豷豻",6,"貃貄貆貇"],["d880","貈貋貍",6,"貕貖貗貙",20,"亍丌兀丐廿卅丕亘丞鬲孬噩丨禺丿匕乇夭爻卮氐囟胤馗毓睾鼗丶亟鼐乜乩亓芈孛啬嘏仄厍厝厣厥厮靥赝匚叵匦匮匾赜卦卣刂刈刎刭刳刿剀剌剞剡剜蒯剽劂劁劐劓冂罔亻仃仉仂仨仡仫仞伛仳伢佤仵伥伧伉伫佞佧攸佚佝"],["d940","貮",62],["d980","賭",32,"佟佗伲伽佶佴侑侉侃侏佾佻侪佼侬侔俦俨俪俅俚俣俜俑俟俸倩偌俳倬倏倮倭俾倜倌倥倨偾偃偕偈偎偬偻傥傧傩傺僖儆僭僬僦僮儇儋仝氽佘佥俎龠汆籴兮巽黉馘冁夔勹匍訇匐凫夙兕亠兖亳衮袤亵脔裒禀嬴蠃羸冫冱冽冼"],["da40","贎",14,"贠赑赒赗赟赥赨赩赪赬赮赯赱赲赸",8,"趂趃趆趇趈趉趌",4,"趒趓趕",9,"趠趡"],["da80","趢趤",12,"趲趶趷趹趻趽跀跁跂跅跇跈跉跊跍跐跒跓跔凇冖冢冥讠讦讧讪讴讵讷诂诃诋诏诎诒诓诔诖诘诙诜诟诠诤诨诩诮诰诳诶诹诼诿谀谂谄谇谌谏谑谒谔谕谖谙谛谘谝谟谠谡谥谧谪谫谮谯谲谳谵谶卩卺阝阢阡阱阪阽阼陂陉陔陟陧陬陲陴隈隍隗隰邗邛邝邙邬邡邴邳邶邺"],["db40","跕跘跙跜跠跡跢跥跦跧跩跭跮跰跱跲跴跶跼跾",6,"踆踇踈踋踍踎踐踑踒踓踕",7,"踠踡踤",4,"踫踭踰踲踳踴踶踷踸踻踼踾"],["db80","踿蹃蹅蹆蹌",4,"蹓",5,"蹚",11,"蹧蹨蹪蹫蹮蹱邸邰郏郅邾郐郄郇郓郦郢郜郗郛郫郯郾鄄鄢鄞鄣鄱鄯鄹酃酆刍奂劢劬劭劾哿勐勖勰叟燮矍廴凵凼鬯厶弁畚巯坌垩垡塾墼壅壑圩圬圪圳圹圮圯坜圻坂坩垅坫垆坼坻坨坭坶坳垭垤垌垲埏垧垴垓垠埕埘埚埙埒垸埴埯埸埤埝"],["dc40","蹳蹵蹷",4,"蹽蹾躀躂躃躄躆躈",6,"躑躒躓躕",6,"躝躟",11,"躭躮躰躱躳",6,"躻",7],["dc80","軃",10,"軏",21,"堋堍埽埭堀堞堙塄堠塥塬墁墉墚墀馨鼙懿艹艽艿芏芊芨芄芎芑芗芙芫芸芾芰苈苊苣芘芷芮苋苌苁芩芴芡芪芟苄苎芤苡茉苷苤茏茇苜苴苒苘茌苻苓茑茚茆茔茕苠苕茜荑荛荜茈莒茼茴茱莛荞茯荏荇荃荟荀茗荠茭茺茳荦荥"],["dd40","軥",62],["dd80","輤",32,"荨茛荩荬荪荭荮莰荸莳莴莠莪莓莜莅荼莶莩荽莸荻莘莞莨莺莼菁萁菥菘堇萘萋菝菽菖萜萸萑萆菔菟萏萃菸菹菪菅菀萦菰菡葜葑葚葙葳蒇蒈葺蒉葸萼葆葩葶蒌蒎萱葭蓁蓍蓐蓦蒽蓓蓊蒿蒺蓠蒡蒹蒴蒗蓥蓣蔌甍蔸蓰蔹蔟蔺"],["de40","轅",32,"轪辀辌辒辝辠辡辢辤辥辦辧辪辬辭辮辯農辳辴辵辷辸辺辻込辿迀迃迆"],["de80","迉",4,"迏迒迖迗迚迠迡迣迧迬迯迱迲迴迵迶迺迻迼迾迿逇逈逌逎逓逕逘蕖蔻蓿蓼蕙蕈蕨蕤蕞蕺瞢蕃蕲蕻薤薨薇薏蕹薮薜薅薹薷薰藓藁藜藿蘧蘅蘩蘖蘼廾弈夼奁耷奕奚奘匏尢尥尬尴扌扪抟抻拊拚拗拮挢拶挹捋捃掭揶捱捺掎掴捭掬掊捩掮掼揲揸揠揿揄揞揎摒揆掾摅摁搋搛搠搌搦搡摞撄摭撖"],["df40","這逜連逤逥逧",5,"逰",4,"逷逹逺逽逿遀遃遅遆遈",4,"過達違遖遙遚遜",5,"遤遦遧適遪遫遬遯",4,"遶",6,"遾邁"],["df80","還邅邆邇邉邊邌",4,"邒邔邖邘邚邜邞邟邠邤邥邧邨邩邫邭邲邷邼邽邿郀摺撷撸撙撺擀擐擗擤擢攉攥攮弋忒甙弑卟叱叽叩叨叻吒吖吆呋呒呓呔呖呃吡呗呙吣吲咂咔呷呱呤咚咛咄呶呦咝哐咭哂咴哒咧咦哓哔呲咣哕咻咿哌哙哚哜咩咪咤哝哏哞唛哧唠哽唔哳唢唣唏唑唧唪啧喏喵啉啭啁啕唿啐唼"],["e040","郂郃郆郈郉郋郌郍郒郔郕郖郘郙郚郞郟郠郣郤郥郩郪郬郮郰郱郲郳郵郶郷郹郺郻郼郿鄀鄁鄃鄅",19,"鄚鄛鄜"],["e080","鄝鄟鄠鄡鄤",10,"鄰鄲",6,"鄺",8,"酄唷啖啵啶啷唳唰啜喋嗒喃喱喹喈喁喟啾嗖喑啻嗟喽喾喔喙嗪嗷嗉嘟嗑嗫嗬嗔嗦嗝嗄嗯嗥嗲嗳嗌嗍嗨嗵嗤辔嘞嘈嘌嘁嘤嘣嗾嘀嘧嘭噘嘹噗嘬噍噢噙噜噌噔嚆噤噱噫噻噼嚅嚓嚯囔囗囝囡囵囫囹囿圄圊圉圜帏帙帔帑帱帻帼"],["e140","酅酇酈酑酓酔酕酖酘酙酛酜酟酠酦酧酨酫酭酳酺酻酼醀",4,"醆醈醊醎醏醓",6,"醜",5,"醤",5,"醫醬醰醱醲醳醶醷醸醹醻"],["e180","醼",10,"釈釋釐釒",9,"針",8,"帷幄幔幛幞幡岌屺岍岐岖岈岘岙岑岚岜岵岢岽岬岫岱岣峁岷峄峒峤峋峥崂崃崧崦崮崤崞崆崛嵘崾崴崽嵬嵛嵯嵝嵫嵋嵊嵩嵴嶂嶙嶝豳嶷巅彳彷徂徇徉後徕徙徜徨徭徵徼衢彡犭犰犴犷犸狃狁狎狍狒狨狯狩狲狴狷猁狳猃狺"],["e240","釦",62],["e280","鈥",32,"狻猗猓猡猊猞猝猕猢猹猥猬猸猱獐獍獗獠獬獯獾舛夥飧夤夂饣饧",5,"饴饷饽馀馄馇馊馍馐馑馓馔馕庀庑庋庖庥庠庹庵庾庳赓廒廑廛廨廪膺忄忉忖忏怃忮怄忡忤忾怅怆忪忭忸怙怵怦怛怏怍怩怫怊怿怡恸恹恻恺恂"],["e340","鉆",45,"鉵",16],["e380","銆",7,"銏",24,"恪恽悖悚悭悝悃悒悌悛惬悻悱惝惘惆惚悴愠愦愕愣惴愀愎愫慊慵憬憔憧憷懔懵忝隳闩闫闱闳闵闶闼闾阃阄阆阈阊阋阌阍阏阒阕阖阗阙阚丬爿戕氵汔汜汊沣沅沐沔沌汨汩汴汶沆沩泐泔沭泷泸泱泗沲泠泖泺泫泮沱泓泯泾"],["e440","銨",5,"銯",24,"鋉",31],["e480","鋩",32,"洹洧洌浃浈洇洄洙洎洫浍洮洵洚浏浒浔洳涑浯涞涠浞涓涔浜浠浼浣渚淇淅淞渎涿淠渑淦淝淙渖涫渌涮渫湮湎湫溲湟溆湓湔渲渥湄滟溱溘滠漭滢溥溧溽溻溷滗溴滏溏滂溟潢潆潇漤漕滹漯漶潋潴漪漉漩澉澍澌潸潲潼潺濑"],["e540","錊",51,"錿",10],["e580","鍊",31,"鍫濉澧澹澶濂濡濮濞濠濯瀚瀣瀛瀹瀵灏灞宀宄宕宓宥宸甯骞搴寤寮褰寰蹇謇辶迓迕迥迮迤迩迦迳迨逅逄逋逦逑逍逖逡逵逶逭逯遄遑遒遐遨遘遢遛暹遴遽邂邈邃邋彐彗彖彘尻咫屐屙孱屣屦羼弪弩弭艴弼鬻屮妁妃妍妩妪妣"],["e640","鍬",34,"鎐",27],["e680","鎬",29,"鏋鏌鏍妗姊妫妞妤姒妲妯姗妾娅娆姝娈姣姘姹娌娉娲娴娑娣娓婀婧婊婕娼婢婵胬媪媛婷婺媾嫫媲嫒嫔媸嫠嫣嫱嫖嫦嫘嫜嬉嬗嬖嬲嬷孀尕尜孚孥孳孑孓孢驵驷驸驺驿驽骀骁骅骈骊骐骒骓骖骘骛骜骝骟骠骢骣骥骧纟纡纣纥纨纩"],["e740","鏎",7,"鏗",54],["e780","鐎",32,"纭纰纾绀绁绂绉绋绌绐绔绗绛绠绡绨绫绮绯绱绲缍绶绺绻绾缁缂缃缇缈缋缌缏缑缒缗缙缜缛缟缡",6,"缪缫缬缭缯",4,"缵幺畿巛甾邕玎玑玮玢玟珏珂珑玷玳珀珉珈珥珙顼琊珩珧珞玺珲琏琪瑛琦琥琨琰琮琬"],["e840","鐯",14,"鐿",43,"鑬鑭鑮鑯"],["e880","鑰",20,"钑钖钘铇铏铓铔铚铦铻锜锠琛琚瑁瑜瑗瑕瑙瑷瑭瑾璜璎璀璁璇璋璞璨璩璐璧瓒璺韪韫韬杌杓杞杈杩枥枇杪杳枘枧杵枨枞枭枋杷杼柰栉柘栊柩枰栌柙枵柚枳柝栀柃枸柢栎柁柽栲栳桠桡桎桢桄桤梃栝桕桦桁桧桀栾桊桉栩梵梏桴桷梓桫棂楮棼椟椠棹"],["e940","锧锳锽镃镈镋镕镚镠镮镴镵長",7,"門",42],["e980","閫",32,"椤棰椋椁楗棣椐楱椹楠楂楝榄楫榀榘楸椴槌榇榈槎榉楦楣楹榛榧榻榫榭槔榱槁槊槟榕槠榍槿樯槭樗樘橥槲橄樾檠橐橛樵檎橹樽樨橘橼檑檐檩檗檫猷獒殁殂殇殄殒殓殍殚殛殡殪轫轭轱轲轳轵轶轸轷轹轺轼轾辁辂辄辇辋"],["ea40","闌",27,"闬闿阇阓阘阛阞阠阣",6,"阫阬阭阯阰阷阸阹阺阾陁陃陊陎陏陑陒陓陖陗"],["ea80","陘陙陚陜陝陞陠陣陥陦陫陭",4,"陳陸",12,"隇隉隊辍辎辏辘辚軎戋戗戛戟戢戡戥戤戬臧瓯瓴瓿甏甑甓攴旮旯旰昊昙杲昃昕昀炅曷昝昴昱昶昵耆晟晔晁晏晖晡晗晷暄暌暧暝暾曛曜曦曩贲贳贶贻贽赀赅赆赈赉赇赍赕赙觇觊觋觌觎觏觐觑牮犟牝牦牯牾牿犄犋犍犏犒挈挲掰"],["eb40","隌階隑隒隓隕隖隚際隝",9,"隨",7,"隱隲隴隵隷隸隺隻隿雂雃雈雊雋雐雑雓雔雖",9,"雡",6,"雫"],["eb80","雬雭雮雰雱雲雴雵雸雺電雼雽雿霂霃霅霊霋霌霐霑霒霔霕霗",4,"霝霟霠搿擘耄毪毳毽毵毹氅氇氆氍氕氘氙氚氡氩氤氪氲攵敕敫牍牒牖爰虢刖肟肜肓肼朊肽肱肫肭肴肷胧胨胩胪胛胂胄胙胍胗朐胝胫胱胴胭脍脎胲胼朕脒豚脶脞脬脘脲腈腌腓腴腙腚腱腠腩腼腽腭腧塍媵膈膂膑滕膣膪臌朦臊膻"],["ec40","霡",8,"霫霬霮霯霱霳",4,"霺霻霼霽霿",18,"靔靕靗靘靚靜靝靟靣靤靦靧靨靪",7],["ec80","靲靵靷",4,"靽",7,"鞆",4,"鞌鞎鞏鞐鞓鞕鞖鞗鞙",4,"臁膦欤欷欹歃歆歙飑飒飓飕飙飚殳彀毂觳斐齑斓於旆旄旃旌旎旒旖炀炜炖炝炻烀炷炫炱烨烊焐焓焖焯焱煳煜煨煅煲煊煸煺熘熳熵熨熠燠燔燧燹爝爨灬焘煦熹戾戽扃扈扉礻祀祆祉祛祜祓祚祢祗祠祯祧祺禅禊禚禧禳忑忐"],["ed40","鞞鞟鞡鞢鞤",6,"鞬鞮鞰鞱鞳鞵",46],["ed80","韤韥韨韮",4,"韴韷",23,"怼恝恚恧恁恙恣悫愆愍慝憩憝懋懑戆肀聿沓泶淼矶矸砀砉砗砘砑斫砭砜砝砹砺砻砟砼砥砬砣砩硎硭硖硗砦硐硇硌硪碛碓碚碇碜碡碣碲碹碥磔磙磉磬磲礅磴礓礤礞礴龛黹黻黼盱眄眍盹眇眈眚眢眙眭眦眵眸睐睑睇睃睚睨"],["ee40","頏",62],["ee80","顎",32,"睢睥睿瞍睽瞀瞌瞑瞟瞠瞰瞵瞽町畀畎畋畈畛畲畹疃罘罡罟詈罨罴罱罹羁罾盍盥蠲钅钆钇钋钊钌钍钏钐钔钗钕钚钛钜钣钤钫钪钭钬钯钰钲钴钶",4,"钼钽钿铄铈",6,"铐铑铒铕铖铗铙铘铛铞铟铠铢铤铥铧铨铪"],["ef40","顯",5,"颋颎颒颕颙颣風",37,"飏飐飔飖飗飛飜飝飠",4],["ef80","飥飦飩",30,"铩铫铮铯铳铴铵铷铹铼铽铿锃锂锆锇锉锊锍锎锏锒",4,"锘锛锝锞锟锢锪锫锩锬锱锲锴锶锷锸锼锾锿镂锵镄镅镆镉镌镎镏镒镓镔镖镗镘镙镛镞镟镝镡镢镤",8,"镯镱镲镳锺矧矬雉秕秭秣秫稆嵇稃稂稞稔"],["f040","餈",4,"餎餏餑",28,"餯",26],["f080","饊",9,"饖",12,"饤饦饳饸饹饻饾馂馃馉稹稷穑黏馥穰皈皎皓皙皤瓞瓠甬鸠鸢鸨",4,"鸲鸱鸶鸸鸷鸹鸺鸾鹁鹂鹄鹆鹇鹈鹉鹋鹌鹎鹑鹕鹗鹚鹛鹜鹞鹣鹦",6,"鹱鹭鹳疒疔疖疠疝疬疣疳疴疸痄疱疰痃痂痖痍痣痨痦痤痫痧瘃痱痼痿瘐瘀瘅瘌瘗瘊瘥瘘瘕瘙"],["f140","馌馎馚",10,"馦馧馩",47],["f180","駙",32,"瘛瘼瘢瘠癀瘭瘰瘿瘵癃瘾瘳癍癞癔癜癖癫癯翊竦穸穹窀窆窈窕窦窠窬窨窭窳衤衩衲衽衿袂袢裆袷袼裉裢裎裣裥裱褚裼裨裾裰褡褙褓褛褊褴褫褶襁襦襻疋胥皲皴矜耒耔耖耜耠耢耥耦耧耩耨耱耋耵聃聆聍聒聩聱覃顸颀颃"],["f240","駺",62],["f280","騹",32,"颉颌颍颏颔颚颛颞颟颡颢颥颦虍虔虬虮虿虺虼虻蚨蚍蚋蚬蚝蚧蚣蚪蚓蚩蚶蛄蚵蛎蚰蚺蚱蚯蛉蛏蚴蛩蛱蛲蛭蛳蛐蜓蛞蛴蛟蛘蛑蜃蜇蛸蜈蜊蜍蜉蜣蜻蜞蜥蜮蜚蜾蝈蜴蜱蜩蜷蜿螂蜢蝽蝾蝻蝠蝰蝌蝮螋蝓蝣蝼蝤蝙蝥螓螯螨蟒"],["f340","驚",17,"驲骃骉骍骎骔骕骙骦骩",6,"骲骳骴骵骹骻骽骾骿髃髄髆",4,"髍髎髏髐髒體髕髖髗髙髚髛髜"],["f380","髝髞髠髢髣髤髥髧髨髩髪髬髮髰",8,"髺髼",6,"鬄鬅鬆蟆螈螅螭螗螃螫蟥螬螵螳蟋蟓螽蟑蟀蟊蟛蟪蟠蟮蠖蠓蟾蠊蠛蠡蠹蠼缶罂罄罅舐竺竽笈笃笄笕笊笫笏筇笸笪笙笮笱笠笥笤笳笾笞筘筚筅筵筌筝筠筮筻筢筲筱箐箦箧箸箬箝箨箅箪箜箢箫箴篑篁篌篝篚篥篦篪簌篾篼簏簖簋"],["f440","鬇鬉",5,"鬐鬑鬒鬔",10,"鬠鬡鬢鬤",10,"鬰鬱鬳",7,"鬽鬾鬿魀魆魊魋魌魎魐魒魓魕",5],["f480","魛",32,"簟簪簦簸籁籀臾舁舂舄臬衄舡舢舣舭舯舨舫舸舻舳舴舾艄艉艋艏艚艟艨衾袅袈裘裟襞羝羟羧羯羰羲籼敉粑粝粜粞粢粲粼粽糁糇糌糍糈糅糗糨艮暨羿翎翕翥翡翦翩翮翳糸絷綦綮繇纛麸麴赳趄趔趑趱赧赭豇豉酊酐酎酏酤"],["f540","魼",62],["f580","鮻",32,"酢酡酰酩酯酽酾酲酴酹醌醅醐醍醑醢醣醪醭醮醯醵醴醺豕鹾趸跫踅蹙蹩趵趿趼趺跄跖跗跚跞跎跏跛跆跬跷跸跣跹跻跤踉跽踔踝踟踬踮踣踯踺蹀踹踵踽踱蹉蹁蹂蹑蹒蹊蹰蹶蹼蹯蹴躅躏躔躐躜躞豸貂貊貅貘貔斛觖觞觚觜"],["f640","鯜",62],["f680","鰛",32,"觥觫觯訾謦靓雩雳雯霆霁霈霏霎霪霭霰霾龀龃龅",5,"龌黾鼋鼍隹隼隽雎雒瞿雠銎銮鋈錾鍪鏊鎏鐾鑫鱿鲂鲅鲆鲇鲈稣鲋鲎鲐鲑鲒鲔鲕鲚鲛鲞",5,"鲥",4,"鲫鲭鲮鲰",7,"鲺鲻鲼鲽鳄鳅鳆鳇鳊鳋"],["f740","鰼",62],["f780","鱻鱽鱾鲀鲃鲄鲉鲊鲌鲏鲓鲖鲗鲘鲙鲝鲪鲬鲯鲹鲾",4,"鳈鳉鳑鳒鳚鳛鳠鳡鳌",4,"鳓鳔鳕鳗鳘鳙鳜鳝鳟鳢靼鞅鞑鞒鞔鞯鞫鞣鞲鞴骱骰骷鹘骶骺骼髁髀髅髂髋髌髑魅魃魇魉魈魍魑飨餍餮饕饔髟髡髦髯髫髻髭髹鬈鬏鬓鬟鬣麽麾縻麂麇麈麋麒鏖麝麟黛黜黝黠黟黢黩黧黥黪黯鼢鼬鼯鼹鼷鼽鼾齄"],["f840","鳣",62],["f880","鴢",32],["f940","鵃",62],["f980","鶂",32],["fa40","鶣",62],["fa80","鷢",32],["fb40","鸃",27,"鸤鸧鸮鸰鸴鸻鸼鹀鹍鹐鹒鹓鹔鹖鹙鹝鹟鹠鹡鹢鹥鹮鹯鹲鹴",9,"麀"],["fb80","麁麃麄麅麆麉麊麌",5,"麔",8,"麞麠",5,"麧麨麩麪"],["fc40","麫",8,"麵麶麷麹麺麼麿",4,"黅黆黇黈黊黋黌黐黒黓黕黖黗黙黚點黡黣黤黦黨黫黬黭黮黰",8,"黺黽黿",6],["fc80","鼆",4,"鼌鼏鼑鼒鼔鼕鼖鼘鼚",5,"鼡鼣",8,"鼭鼮鼰鼱"],["fd40","鼲",4,"鼸鼺鼼鼿",4,"齅",10,"齒",38],["fd80","齹",5,"龁龂龍",11,"龜龝龞龡",4,"郎凉秊裏隣"],["fe40","兀嗀﨎﨏﨑﨓﨔礼﨟蘒﨡﨣﨤﨧﨨﨩"]]'), sR = [
   [
     "a140",
     "",
@@ -15275,10 +15275,10 @@ const qh = [
     "8135f437",
     ""
   ]
-], zh = [128, 165, 169, 178, 184, 216, 226, 235, 238, 244, 248, 251, 253, 258, 276, 284, 300, 325, 329, 334, 364, 463, 465, 467, 469, 471, 473, 475, 477, 506, 594, 610, 712, 716, 730, 930, 938, 962, 970, 1026, 1104, 1106, 8209, 8215, 8218, 8222, 8231, 8241, 8244, 8246, 8252, 8365, 8452, 8454, 8458, 8471, 8482, 8556, 8570, 8596, 8602, 8713, 8720, 8722, 8726, 8731, 8737, 8740, 8742, 8748, 8751, 8760, 8766, 8777, 8781, 8787, 8802, 8808, 8816, 8854, 8858, 8870, 8896, 8979, 9322, 9372, 9548, 9588, 9616, 9622, 9634, 9652, 9662, 9672, 9676, 9680, 9702, 9735, 9738, 9793, 9795, 11906, 11909, 11913, 11917, 11928, 11944, 11947, 11951, 11956, 11960, 11964, 11979, 12284, 12292, 12312, 12319, 12330, 12351, 12436, 12447, 12535, 12543, 12586, 12842, 12850, 12964, 13200, 13215, 13218, 13253, 13263, 13267, 13270, 13384, 13428, 13727, 13839, 13851, 14617, 14703, 14801, 14816, 14964, 15183, 15471, 15585, 16471, 16736, 17208, 17325, 17330, 17374, 17623, 17997, 18018, 18212, 18218, 18301, 18318, 18760, 18811, 18814, 18820, 18823, 18844, 18848, 18872, 19576, 19620, 19738, 19887, 40870, 59244, 59336, 59367, 59413, 59417, 59423, 59431, 59437, 59443, 59452, 59460, 59478, 59493, 63789, 63866, 63894, 63976, 63986, 64016, 64018, 64021, 64025, 64034, 64037, 64042, 65074, 65093, 65107, 65112, 65127, 65132, 65375, 65510, 65536], Jh = [0, 36, 38, 45, 50, 81, 89, 95, 96, 100, 103, 104, 105, 109, 126, 133, 148, 172, 175, 179, 208, 306, 307, 308, 309, 310, 311, 312, 313, 341, 428, 443, 544, 545, 558, 741, 742, 749, 750, 805, 819, 820, 7922, 7924, 7925, 7927, 7934, 7943, 7944, 7945, 7950, 8062, 8148, 8149, 8152, 8164, 8174, 8236, 8240, 8262, 8264, 8374, 8380, 8381, 8384, 8388, 8390, 8392, 8393, 8394, 8396, 8401, 8406, 8416, 8419, 8424, 8437, 8439, 8445, 8482, 8485, 8496, 8521, 8603, 8936, 8946, 9046, 9050, 9063, 9066, 9076, 9092, 9100, 9108, 9111, 9113, 9131, 9162, 9164, 9218, 9219, 11329, 11331, 11334, 11336, 11346, 11361, 11363, 11366, 11370, 11372, 11375, 11389, 11682, 11686, 11687, 11692, 11694, 11714, 11716, 11723, 11725, 11730, 11736, 11982, 11989, 12102, 12336, 12348, 12350, 12384, 12393, 12395, 12397, 12510, 12553, 12851, 12962, 12973, 13738, 13823, 13919, 13933, 14080, 14298, 14585, 14698, 15583, 15847, 16318, 16434, 16438, 16481, 16729, 17102, 17122, 17315, 17320, 17402, 17418, 17859, 17909, 17911, 17915, 17916, 17936, 17939, 17961, 18664, 18703, 18814, 18962, 19043, 33469, 33470, 33471, 33484, 33485, 33490, 33497, 33501, 33505, 33513, 33520, 33536, 33550, 37845, 37921, 37948, 38029, 38038, 38064, 38065, 38066, 38069, 38075, 38076, 38078, 39108, 39109, 39113, 39114, 39115, 39116, 39265, 39394, 189e3], Zh = {
-  uChars: zh,
-  gbChars: Jh
-}, xh = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["8141","갂갃갅갆갋",4,"갘갞갟갡갢갣갥",6,"갮갲갳갴"],["8161","갵갶갷갺갻갽갾갿걁",9,"걌걎",5,"걕"],["8181","걖걗걙걚걛걝",18,"걲걳걵걶걹걻",4,"겂겇겈겍겎겏겑겒겓겕",6,"겞겢",5,"겫겭겮겱",6,"겺겾겿곀곂곃곅곆곇곉곊곋곍",7,"곖곘",7,"곢곣곥곦곩곫곭곮곲곴곷",4,"곾곿괁괂괃괅괇",4,"괎괐괒괓"],["8241","괔괕괖괗괙괚괛괝괞괟괡",7,"괪괫괮",5],["8261","괶괷괹괺괻괽",6,"굆굈굊",5,"굑굒굓굕굖굗"],["8281","굙",7,"굢굤",7,"굮굯굱굲굷굸굹굺굾궀궃",4,"궊궋궍궎궏궑",10,"궞",5,"궥",17,"궸",7,"귂귃귅귆귇귉",6,"귒귔",7,"귝귞귟귡귢귣귥",18],["8341","귺귻귽귾긂",5,"긊긌긎",5,"긕",7],["8361","긝",18,"긲긳긵긶긹긻긼"],["8381","긽긾긿깂깄깇깈깉깋깏깑깒깓깕깗",4,"깞깢깣깤깦깧깪깫깭깮깯깱",6,"깺깾",5,"꺆",5,"꺍",46,"꺿껁껂껃껅",6,"껎껒",5,"껚껛껝",8],["8441","껦껧껩껪껬껮",5,"껵껶껷껹껺껻껽",8],["8461","꼆꼉꼊꼋꼌꼎꼏꼑",18],["8481","꼤",7,"꼮꼯꼱꼳꼵",6,"꼾꽀꽄꽅꽆꽇꽊",5,"꽑",10,"꽞",5,"꽦",18,"꽺",5,"꾁꾂꾃꾅꾆꾇꾉",6,"꾒꾓꾔꾖",5,"꾝",26,"꾺꾻꾽꾾"],["8541","꾿꿁",5,"꿊꿌꿏",4,"꿕",6,"꿝",4],["8561","꿢",5,"꿪",5,"꿲꿳꿵꿶꿷꿹",6,"뀂뀃"],["8581","뀅",6,"뀍뀎뀏뀑뀒뀓뀕",6,"뀞",9,"뀩",26,"끆끇끉끋끍끏끐끑끒끖끘끚끛끜끞",29,"끾끿낁낂낃낅",6,"낎낐낒",5,"낛낝낞낣낤"],["8641","낥낦낧낪낰낲낶낷낹낺낻낽",6,"냆냊",5,"냒"],["8661","냓냕냖냗냙",6,"냡냢냣냤냦",10],["8681","냱",22,"넊넍넎넏넑넔넕넖넗넚넞",4,"넦넧넩넪넫넭",6,"넶넺",5,"녂녃녅녆녇녉",6,"녒녓녖녗녙녚녛녝녞녟녡",22,"녺녻녽녾녿놁놃",4,"놊놌놎놏놐놑놕놖놗놙놚놛놝"],["8741","놞",9,"놩",15],["8761","놹",18,"뇍뇎뇏뇑뇒뇓뇕"],["8781","뇖",5,"뇞뇠",7,"뇪뇫뇭뇮뇯뇱",7,"뇺뇼뇾",5,"눆눇눉눊눍",6,"눖눘눚",5,"눡",18,"눵",6,"눽",26,"뉙뉚뉛뉝뉞뉟뉡",6,"뉪",4],["8841","뉯",4,"뉶",5,"뉽",6,"늆늇늈늊",4],["8861","늏늒늓늕늖늗늛",4,"늢늤늧늨늩늫늭늮늯늱늲늳늵늶늷"],["8881","늸",15,"닊닋닍닎닏닑닓",4,"닚닜닞닟닠닡닣닧닩닪닰닱닲닶닼닽닾댂댃댅댆댇댉",6,"댒댖",5,"댝",54,"덗덙덚덝덠덡덢덣"],["8941","덦덨덪덬덭덯덲덳덵덶덷덹",6,"뎂뎆",5,"뎍"],["8961","뎎뎏뎑뎒뎓뎕",10,"뎢",5,"뎩뎪뎫뎭"],["8981","뎮",21,"돆돇돉돊돍돏돑돒돓돖돘돚돜돞돟돡돢돣돥돦돧돩",18,"돽",18,"됑",6,"됙됚됛됝됞됟됡",6,"됪됬",7,"됵",15],["8a41","둅",10,"둒둓둕둖둗둙",6,"둢둤둦"],["8a61","둧",4,"둭",18,"뒁뒂"],["8a81","뒃",4,"뒉",19,"뒞",5,"뒥뒦뒧뒩뒪뒫뒭",7,"뒶뒸뒺",5,"듁듂듃듅듆듇듉",6,"듑듒듓듔듖",5,"듞듟듡듢듥듧",4,"듮듰듲",5,"듹",26,"딖딗딙딚딝"],["8b41","딞",5,"딦딫",4,"딲딳딵딶딷딹",6,"땂땆"],["8b61","땇땈땉땊땎땏땑땒땓땕",6,"땞땢",8],["8b81","땫",52,"떢떣떥떦떧떩떬떭떮떯떲떶",4,"떾떿뗁뗂뗃뗅",6,"뗎뗒",5,"뗙",18,"뗭",18],["8c41","똀",15,"똒똓똕똖똗똙",4],["8c61","똞",6,"똦",5,"똭",6,"똵",5],["8c81","똻",12,"뙉",26,"뙥뙦뙧뙩",50,"뚞뚟뚡뚢뚣뚥",5,"뚭뚮뚯뚰뚲",16],["8d41","뛃",16,"뛕",8],["8d61","뛞",17,"뛱뛲뛳뛵뛶뛷뛹뛺"],["8d81","뛻",4,"뜂뜃뜄뜆",33,"뜪뜫뜭뜮뜱",6,"뜺뜼",7,"띅띆띇띉띊띋띍",6,"띖",9,"띡띢띣띥띦띧띩",6,"띲띴띶",5,"띾띿랁랂랃랅",6,"랎랓랔랕랚랛랝랞"],["8e41","랟랡",6,"랪랮",5,"랶랷랹",8],["8e61","럂",4,"럈럊",19],["8e81","럞",13,"럮럯럱럲럳럵",6,"럾렂",4,"렊렋렍렎렏렑",6,"렚렜렞",5,"렦렧렩렪렫렭",6,"렶렺",5,"롁롂롃롅",11,"롒롔",7,"롞롟롡롢롣롥",6,"롮롰롲",5,"롹롺롻롽",7],["8f41","뢅",7,"뢎",17],["8f61","뢠",7,"뢩",6,"뢱뢲뢳뢵뢶뢷뢹",4],["8f81","뢾뢿룂룄룆",5,"룍룎룏룑룒룓룕",7,"룞룠룢",5,"룪룫룭룮룯룱",6,"룺룼룾",5,"뤅",18,"뤙",6,"뤡",26,"뤾뤿륁륂륃륅",6,"륍륎륐륒",5],["9041","륚륛륝륞륟륡",6,"륪륬륮",5,"륶륷륹륺륻륽"],["9061","륾",5,"릆릈릋릌릏",15],["9081","릟",12,"릮릯릱릲릳릵",6,"릾맀맂",5,"맊맋맍맓",4,"맚맜맟맠맢맦맧맩맪맫맭",6,"맶맻",4,"먂",5,"먉",11,"먖",33,"먺먻먽먾먿멁멃멄멅멆"],["9141","멇멊멌멏멐멑멒멖멗멙멚멛멝",6,"멦멪",5],["9161","멲멳멵멶멷멹",9,"몆몈몉몊몋몍",5],["9181","몓",20,"몪몭몮몯몱몳",4,"몺몼몾",5,"뫅뫆뫇뫉",14,"뫚",33,"뫽뫾뫿묁묂묃묅",7,"묎묐묒",5,"묙묚묛묝묞묟묡",6],["9241","묨묪묬",7,"묷묹묺묿",4,"뭆뭈뭊뭋뭌뭎뭑뭒"],["9261","뭓뭕뭖뭗뭙",7,"뭢뭤",7,"뭭",4],["9281","뭲",21,"뮉뮊뮋뮍뮎뮏뮑",18,"뮥뮦뮧뮩뮪뮫뮭",6,"뮵뮶뮸",7,"믁믂믃믅믆믇믉",6,"믑믒믔",35,"믺믻믽믾밁"],["9341","밃",4,"밊밎밐밒밓밙밚밠밡밢밣밦밨밪밫밬밮밯밲밳밵"],["9361","밶밷밹",6,"뱂뱆뱇뱈뱊뱋뱎뱏뱑",8],["9381","뱚뱛뱜뱞",37,"벆벇벉벊벍벏",4,"벖벘벛",4,"벢벣벥벦벩",6,"벲벶",5,"벾벿볁볂볃볅",7,"볎볒볓볔볖볗볙볚볛볝",22,"볷볹볺볻볽"],["9441","볾",5,"봆봈봊",5,"봑봒봓봕",8],["9461","봞",5,"봥",6,"봭",12],["9481","봺",5,"뵁",6,"뵊뵋뵍뵎뵏뵑",6,"뵚",9,"뵥뵦뵧뵩",22,"붂붃붅붆붋",4,"붒붔붖붗붘붛붝",6,"붥",10,"붱",6,"붹",24],["9541","뷒뷓뷖뷗뷙뷚뷛뷝",11,"뷪",5,"뷱"],["9561","뷲뷳뷵뷶뷷뷹",6,"븁븂븄븆",5,"븎븏븑븒븓"],["9581","븕",6,"븞븠",35,"빆빇빉빊빋빍빏",4,"빖빘빜빝빞빟빢빣빥빦빧빩빫",4,"빲빶",4,"빾빿뺁뺂뺃뺅",6,"뺎뺒",5,"뺚",13,"뺩",14],["9641","뺸",23,"뻒뻓"],["9661","뻕뻖뻙",6,"뻡뻢뻦",5,"뻭",8],["9681","뻶",10,"뼂",5,"뼊",13,"뼚뼞",33,"뽂뽃뽅뽆뽇뽉",6,"뽒뽓뽔뽖",44],["9741","뾃",16,"뾕",8],["9761","뾞",17,"뾱",7],["9781","뾹",11,"뿆",5,"뿎뿏뿑뿒뿓뿕",6,"뿝뿞뿠뿢",89,"쀽쀾쀿"],["9841","쁀",16,"쁒",5,"쁙쁚쁛"],["9861","쁝쁞쁟쁡",6,"쁪",15],["9881","쁺",21,"삒삓삕삖삗삙",6,"삢삤삦",5,"삮삱삲삷",4,"삾샂샃샄샆샇샊샋샍샎샏샑",6,"샚샞",5,"샦샧샩샪샫샭",6,"샶샸샺",5,"섁섂섃섅섆섇섉",6,"섑섒섓섔섖",5,"섡섢섥섨섩섪섫섮"],["9941","섲섳섴섵섷섺섻섽섾섿셁",6,"셊셎",5,"셖셗"],["9961","셙셚셛셝",6,"셦셪",5,"셱셲셳셵셶셷셹셺셻"],["9981","셼",8,"솆",5,"솏솑솒솓솕솗",4,"솞솠솢솣솤솦솧솪솫솭솮솯솱",11,"솾",5,"쇅쇆쇇쇉쇊쇋쇍",6,"쇕쇖쇙",6,"쇡쇢쇣쇥쇦쇧쇩",6,"쇲쇴",7,"쇾쇿숁숂숃숅",6,"숎숐숒",5,"숚숛숝숞숡숢숣"],["9a41","숤숥숦숧숪숬숮숰숳숵",16],["9a61","쉆쉇쉉",6,"쉒쉓쉕쉖쉗쉙",6,"쉡쉢쉣쉤쉦"],["9a81","쉧",4,"쉮쉯쉱쉲쉳쉵",6,"쉾슀슂",5,"슊",5,"슑",6,"슙슚슜슞",5,"슦슧슩슪슫슮",5,"슶슸슺",33,"싞싟싡싢싥",5,"싮싰싲싳싴싵싷싺싽싾싿쌁",6,"쌊쌋쌎쌏"],["9b41","쌐쌑쌒쌖쌗쌙쌚쌛쌝",6,"쌦쌧쌪",8],["9b61","쌳",17,"썆",7],["9b81","썎",25,"썪썫썭썮썯썱썳",4,"썺썻썾",5,"쎅쎆쎇쎉쎊쎋쎍",50,"쏁",22,"쏚"],["9c41","쏛쏝쏞쏡쏣",4,"쏪쏫쏬쏮",5,"쏶쏷쏹",5],["9c61","쏿",8,"쐉",6,"쐑",9],["9c81","쐛",8,"쐥",6,"쐭쐮쐯쐱쐲쐳쐵",6,"쐾",9,"쑉",26,"쑦쑧쑩쑪쑫쑭",6,"쑶쑷쑸쑺",5,"쒁",18,"쒕",6,"쒝",12],["9d41","쒪",13,"쒹쒺쒻쒽",8],["9d61","쓆",25],["9d81","쓠",8,"쓪",5,"쓲쓳쓵쓶쓷쓹쓻쓼쓽쓾씂",9,"씍씎씏씑씒씓씕",6,"씝",10,"씪씫씭씮씯씱",6,"씺씼씾",5,"앆앇앋앏앐앑앒앖앚앛앜앟앢앣앥앦앧앩",6,"앲앶",5,"앾앿얁얂얃얅얆얈얉얊얋얎얐얒얓얔"],["9e41","얖얙얚얛얝얞얟얡",7,"얪",9,"얶"],["9e61","얷얺얿",4,"엋엍엏엒엓엕엖엗엙",6,"엢엤엦엧"],["9e81","엨엩엪엫엯엱엲엳엵엸엹엺엻옂옃옄옉옊옋옍옎옏옑",6,"옚옝",6,"옦옧옩옪옫옯옱옲옶옸옺옼옽옾옿왂왃왅왆왇왉",6,"왒왖",5,"왞왟왡",10,"왭왮왰왲",5,"왺왻왽왾왿욁",6,"욊욌욎",5,"욖욗욙욚욛욝",6,"욦"],["9f41","욨욪",5,"욲욳욵욶욷욻",4,"웂웄웆",5,"웎"],["9f61","웏웑웒웓웕",6,"웞웟웢",5,"웪웫웭웮웯웱웲"],["9f81","웳",4,"웺웻웼웾",5,"윆윇윉윊윋윍",6,"윖윘윚",5,"윢윣윥윦윧윩",6,"윲윴윶윸윹윺윻윾윿읁읂읃읅",4,"읋읎읐읙읚읛읝읞읟읡",6,"읩읪읬",7,"읶읷읹읺읻읿잀잁잂잆잋잌잍잏잒잓잕잙잛",4,"잢잧",4,"잮잯잱잲잳잵잶잷"],["a041","잸잹잺잻잾쟂",5,"쟊쟋쟍쟏쟑",6,"쟙쟚쟛쟜"],["a061","쟞",5,"쟥쟦쟧쟩쟪쟫쟭",13],["a081","쟻",4,"젂젃젅젆젇젉젋",4,"젒젔젗",4,"젞젟젡젢젣젥",6,"젮젰젲",5,"젹젺젻젽젾젿졁",6,"졊졋졎",5,"졕",26,"졲졳졵졶졷졹졻",4,"좂좄좈좉좊좎",5,"좕",7,"좞좠좢좣좤"],["a141","좥좦좧좩",18,"좾좿죀죁"],["a161","죂죃죅죆죇죉죊죋죍",6,"죖죘죚",5,"죢죣죥"],["a181","죦",14,"죶",5,"죾죿줁줂줃줇",4,"줎　、。·‥…¨〃­―∥＼∼‘’“”〔〕〈",9,"±×÷≠≤≥∞∴°′″℃Å￠￡￥♂♀∠⊥⌒∂∇≡≒§※☆★○●◎◇◆□■△▲▽▼→←↑↓↔〓≪≫√∽∝∵∫∬∈∋⊆⊇⊂⊃∪∩∧∨￢"],["a241","줐줒",5,"줙",18],["a261","줭",6,"줵",18],["a281","쥈",7,"쥒쥓쥕쥖쥗쥙",6,"쥢쥤",7,"쥭쥮쥯⇒⇔∀∃´～ˇ˘˝˚˙¸˛¡¿ː∮∑∏¤℉‰◁◀▷▶♤♠♡♥♧♣⊙◈▣◐◑▒▤▥▨▧▦▩♨☏☎☜☞¶†‡↕↗↙↖↘♭♩♪♬㉿㈜№㏇™㏂㏘℡€®"],["a341","쥱쥲쥳쥵",6,"쥽",10,"즊즋즍즎즏"],["a361","즑",6,"즚즜즞",16],["a381","즯",16,"짂짃짅짆짉짋",4,"짒짔짗짘짛！",58,"￦］",32,"￣"],["a441","짞짟짡짣짥짦짨짩짪짫짮짲",5,"짺짻짽짾짿쨁쨂쨃쨄"],["a461","쨅쨆쨇쨊쨎",5,"쨕쨖쨗쨙",12],["a481","쨦쨧쨨쨪",28,"ㄱ",93],["a541","쩇",4,"쩎쩏쩑쩒쩓쩕",6,"쩞쩢",5,"쩩쩪"],["a561","쩫",17,"쩾",5,"쪅쪆"],["a581","쪇",16,"쪙",14,"ⅰ",9],["a5b0","Ⅰ",9],["a5c1","Α",16,"Σ",6],["a5e1","α",16,"σ",6],["a641","쪨",19,"쪾쪿쫁쫂쫃쫅"],["a661","쫆",5,"쫎쫐쫒쫔쫕쫖쫗쫚",5,"쫡",6],["a681","쫨쫩쫪쫫쫭",6,"쫵",18,"쬉쬊─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂┒┑┚┙┖┕┎┍┞┟┡┢┦┧┩┪┭┮┱┲┵┶┹┺┽┾╀╁╃",7],["a741","쬋",4,"쬑쬒쬓쬕쬖쬗쬙",6,"쬢",7],["a761","쬪",22,"쭂쭃쭄"],["a781","쭅쭆쭇쭊쭋쭍쭎쭏쭑",6,"쭚쭛쭜쭞",5,"쭥",7,"㎕㎖㎗ℓ㎘㏄㎣㎤㎥㎦㎙",9,"㏊㎍㎎㎏㏏㎈㎉㏈㎧㎨㎰",9,"㎀",4,"㎺",5,"㎐",4,"Ω㏀㏁㎊㎋㎌㏖㏅㎭㎮㎯㏛㎩㎪㎫㎬㏝㏐㏓㏃㏉㏜㏆"],["a841","쭭",10,"쭺",14],["a861","쮉",18,"쮝",6],["a881","쮤",19,"쮹",11,"ÆÐªĦ"],["a8a6","Ĳ"],["a8a8","ĿŁØŒºÞŦŊ"],["a8b1","㉠",27,"ⓐ",25,"①",14,"½⅓⅔¼¾⅛⅜⅝⅞"],["a941","쯅",14,"쯕",10],["a961","쯠쯡쯢쯣쯥쯦쯨쯪",18],["a981","쯽",14,"찎찏찑찒찓찕",6,"찞찟찠찣찤æđðħıĳĸŀłøœßþŧŋŉ㈀",27,"⒜",25,"⑴",14,"¹²³⁴ⁿ₁₂₃₄"],["aa41","찥찦찪찫찭찯찱",6,"찺찿",4,"챆챇챉챊챋챍챎"],["aa61","챏",4,"챖챚",5,"챡챢챣챥챧챩",6,"챱챲"],["aa81","챳챴챶",29,"ぁ",82],["ab41","첔첕첖첗첚첛첝첞첟첡",6,"첪첮",5,"첶첷첹"],["ab61","첺첻첽",6,"쳆쳈쳊",5,"쳑쳒쳓쳕",5],["ab81","쳛",8,"쳥",6,"쳭쳮쳯쳱",12,"ァ",85],["ac41","쳾쳿촀촂",5,"촊촋촍촎촏촑",6,"촚촜촞촟촠"],["ac61","촡촢촣촥촦촧촩촪촫촭",11,"촺",4],["ac81","촿",28,"쵝쵞쵟А",5,"ЁЖ",25],["acd1","а",5,"ёж",25],["ad41","쵡쵢쵣쵥",6,"쵮쵰쵲",5,"쵹",7],["ad61","춁",6,"춉",10,"춖춗춙춚춛춝춞춟"],["ad81","춠춡춢춣춦춨춪",5,"춱",18,"췅"],["ae41","췆",5,"췍췎췏췑",16],["ae61","췢",5,"췩췪췫췭췮췯췱",6,"췺췼췾",4],["ae81","츃츅츆츇츉츊츋츍",6,"츕츖츗츘츚",5,"츢츣츥츦츧츩츪츫"],["af41","츬츭츮츯츲츴츶",19],["af61","칊",13,"칚칛칝칞칢",5,"칪칬"],["af81","칮",5,"칶칷칹칺칻칽",6,"캆캈캊",5,"캒캓캕캖캗캙"],["b041","캚",5,"캢캦",5,"캮",12],["b061","캻",5,"컂",19],["b081","컖",13,"컦컧컩컪컭",6,"컶컺",5,"가각간갇갈갉갊감",7,"같",4,"갠갤갬갭갯갰갱갸갹갼걀걋걍걔걘걜거걱건걷걸걺검겁것겄겅겆겉겊겋게겐겔겜겝겟겠겡겨격겪견겯결겸겹겻겼경곁계곈곌곕곗고곡곤곧골곪곬곯곰곱곳공곶과곽관괄괆"],["b141","켂켃켅켆켇켉",6,"켒켔켖",5,"켝켞켟켡켢켣"],["b161","켥",6,"켮켲",5,"켹",11],["b181","콅",14,"콖콗콙콚콛콝",6,"콦콨콪콫콬괌괍괏광괘괜괠괩괬괭괴괵괸괼굄굅굇굉교굔굘굡굣구국군굳굴굵굶굻굼굽굿궁궂궈궉권궐궜궝궤궷귀귁귄귈귐귑귓규균귤그극근귿글긁금급긋긍긔기긱긴긷길긺김깁깃깅깆깊까깍깎깐깔깖깜깝깟깠깡깥깨깩깬깰깸"],["b241","콭콮콯콲콳콵콶콷콹",6,"쾁쾂쾃쾄쾆",5,"쾍"],["b261","쾎",18,"쾢",5,"쾩"],["b281","쾪",5,"쾱",18,"쿅",6,"깹깻깼깽꺄꺅꺌꺼꺽꺾껀껄껌껍껏껐껑께껙껜껨껫껭껴껸껼꼇꼈꼍꼐꼬꼭꼰꼲꼴꼼꼽꼿꽁꽂꽃꽈꽉꽐꽜꽝꽤꽥꽹꾀꾄꾈꾐꾑꾕꾜꾸꾹꾼꿀꿇꿈꿉꿋꿍꿎꿔꿜꿨꿩꿰꿱꿴꿸뀀뀁뀄뀌뀐뀔뀜뀝뀨끄끅끈끊끌끎끓끔끕끗끙"],["b341","쿌",19,"쿢쿣쿥쿦쿧쿩"],["b361","쿪",5,"쿲쿴쿶",5,"쿽쿾쿿퀁퀂퀃퀅",5],["b381","퀋",5,"퀒",5,"퀙",19,"끝끼끽낀낄낌낍낏낑나낙낚난낟날낡낢남납낫",4,"낱낳내낵낸낼냄냅냇냈냉냐냑냔냘냠냥너넉넋넌널넒넓넘넙넛넜넝넣네넥넨넬넴넵넷넸넹녀녁년녈념녑녔녕녘녜녠노녹논놀놂놈놉놋농높놓놔놘놜놨뇌뇐뇔뇜뇝"],["b441","퀮",5,"퀶퀷퀹퀺퀻퀽",6,"큆큈큊",5],["b461","큑큒큓큕큖큗큙",6,"큡",10,"큮큯"],["b481","큱큲큳큵",6,"큾큿킀킂",18,"뇟뇨뇩뇬뇰뇹뇻뇽누눅눈눋눌눔눕눗눙눠눴눼뉘뉜뉠뉨뉩뉴뉵뉼늄늅늉느늑는늘늙늚늠늡늣능늦늪늬늰늴니닉닌닐닒님닙닛닝닢다닥닦단닫",4,"닳담답닷",4,"닿대댁댄댈댐댑댓댔댕댜더덕덖던덛덜덞덟덤덥"],["b541","킕",14,"킦킧킩킪킫킭",5],["b561","킳킶킸킺",5,"탂탃탅탆탇탊",5,"탒탖",4],["b581","탛탞탟탡탢탣탥",6,"탮탲",5,"탹",11,"덧덩덫덮데덱덴델뎀뎁뎃뎄뎅뎌뎐뎔뎠뎡뎨뎬도독돈돋돌돎돐돔돕돗동돛돝돠돤돨돼됐되된될됨됩됫됴두둑둔둘둠둡둣둥둬뒀뒈뒝뒤뒨뒬뒵뒷뒹듀듄듈듐듕드득든듣들듦듬듭듯등듸디딕딘딛딜딤딥딧딨딩딪따딱딴딸"],["b641","턅",7,"턎",17],["b661","턠",15,"턲턳턵턶턷턹턻턼턽턾"],["b681","턿텂텆",5,"텎텏텑텒텓텕",6,"텞텠텢",5,"텩텪텫텭땀땁땃땄땅땋때땍땐땔땜땝땟땠땡떠떡떤떨떪떫떰떱떳떴떵떻떼떽뗀뗄뗌뗍뗏뗐뗑뗘뗬또똑똔똘똥똬똴뙈뙤뙨뚜뚝뚠뚤뚫뚬뚱뛔뛰뛴뛸뜀뜁뜅뜨뜩뜬뜯뜰뜸뜹뜻띄띈띌띔띕띠띤띨띰띱띳띵라락란랄람랍랏랐랑랒랖랗"],["b741","텮",13,"텽",6,"톅톆톇톉톊"],["b761","톋",20,"톢톣톥톦톧"],["b781","톩",6,"톲톴톶톷톸톹톻톽톾톿퇁",14,"래랙랜랠램랩랫랬랭랴략랸럇량러럭런럴럼럽럿렀렁렇레렉렌렐렘렙렛렝려력련렬렴렵렷렸령례롄롑롓로록론롤롬롭롯롱롸롼뢍뢨뢰뢴뢸룀룁룃룅료룐룔룝룟룡루룩룬룰룸룹룻룽뤄뤘뤠뤼뤽륀륄륌륏륑류륙륜률륨륩"],["b841","퇐",7,"퇙",17],["b861","퇫",8,"퇵퇶퇷퇹",13],["b881","툈툊",5,"툑",24,"륫륭르륵른를름릅릇릉릊릍릎리릭린릴림립릿링마막만많",4,"맘맙맛망맞맡맣매맥맨맬맴맵맷맸맹맺먀먁먈먕머먹먼멀멂멈멉멋멍멎멓메멕멘멜멤멥멧멨멩며멱면멸몃몄명몇몌모목몫몬몰몲몸몹못몽뫄뫈뫘뫙뫼"],["b941","툪툫툮툯툱툲툳툵",6,"툾퉀퉂",5,"퉉퉊퉋퉌"],["b961","퉍",14,"퉝",6,"퉥퉦퉧퉨"],["b981","퉩",22,"튂튃튅튆튇튉튊튋튌묀묄묍묏묑묘묜묠묩묫무묵묶문묻물묽묾뭄뭅뭇뭉뭍뭏뭐뭔뭘뭡뭣뭬뮈뮌뮐뮤뮨뮬뮴뮷므믄믈믐믓미믹민믿밀밂밈밉밋밌밍및밑바",4,"받",4,"밤밥밧방밭배백밴밸뱀뱁뱃뱄뱅뱉뱌뱍뱐뱝버벅번벋벌벎범법벗"],["ba41","튍튎튏튒튓튔튖",5,"튝튞튟튡튢튣튥",6,"튭"],["ba61","튮튯튰튲",5,"튺튻튽튾틁틃",4,"틊틌",5],["ba81","틒틓틕틖틗틙틚틛틝",6,"틦",9,"틲틳틵틶틷틹틺벙벚베벡벤벧벨벰벱벳벴벵벼벽변별볍볏볐병볕볘볜보복볶본볼봄봅봇봉봐봔봤봬뵀뵈뵉뵌뵐뵘뵙뵤뵨부북분붇불붉붊붐붑붓붕붙붚붜붤붰붸뷔뷕뷘뷜뷩뷰뷴뷸븀븃븅브븍븐블븜븝븟비빅빈빌빎빔빕빗빙빚빛빠빡빤"],["bb41","틻",4,"팂팄팆",5,"팏팑팒팓팕팗",4,"팞팢팣"],["bb61","팤팦팧팪팫팭팮팯팱",6,"팺팾",5,"퍆퍇퍈퍉"],["bb81","퍊",31,"빨빪빰빱빳빴빵빻빼빽뺀뺄뺌뺍뺏뺐뺑뺘뺙뺨뻐뻑뻔뻗뻘뻠뻣뻤뻥뻬뼁뼈뼉뼘뼙뼛뼜뼝뽀뽁뽄뽈뽐뽑뽕뾔뾰뿅뿌뿍뿐뿔뿜뿟뿡쀼쁑쁘쁜쁠쁨쁩삐삑삔삘삠삡삣삥사삭삯산삳살삵삶삼삽삿샀상샅새색샌샐샘샙샛샜생샤"],["bc41","퍪",17,"퍾퍿펁펂펃펅펆펇"],["bc61","펈펉펊펋펎펒",5,"펚펛펝펞펟펡",6,"펪펬펮"],["bc81","펯",4,"펵펶펷펹펺펻펽",6,"폆폇폊",5,"폑",5,"샥샨샬샴샵샷샹섀섄섈섐섕서",4,"섣설섦섧섬섭섯섰성섶세섹센셀셈셉셋셌셍셔셕션셜셤셥셧셨셩셰셴셸솅소속솎손솔솖솜솝솟송솥솨솩솬솰솽쇄쇈쇌쇔쇗쇘쇠쇤쇨쇰쇱쇳쇼쇽숀숄숌숍숏숑수숙순숟술숨숩숫숭"],["bd41","폗폙",7,"폢폤",7,"폮폯폱폲폳폵폶폷"],["bd61","폸폹폺폻폾퐀퐂",5,"퐉",13],["bd81","퐗",5,"퐞",25,"숯숱숲숴쉈쉐쉑쉔쉘쉠쉥쉬쉭쉰쉴쉼쉽쉿슁슈슉슐슘슛슝스슥슨슬슭슴습슷승시식신싣실싫심십싯싱싶싸싹싻싼쌀쌈쌉쌌쌍쌓쌔쌕쌘쌜쌤쌥쌨쌩썅써썩썬썰썲썸썹썼썽쎄쎈쎌쏀쏘쏙쏜쏟쏠쏢쏨쏩쏭쏴쏵쏸쐈쐐쐤쐬쐰"],["be41","퐸",7,"푁푂푃푅",14],["be61","푔",7,"푝푞푟푡푢푣푥",7,"푮푰푱푲"],["be81","푳",4,"푺푻푽푾풁풃",4,"풊풌풎",5,"풕",8,"쐴쐼쐽쑈쑤쑥쑨쑬쑴쑵쑹쒀쒔쒜쒸쒼쓩쓰쓱쓴쓸쓺쓿씀씁씌씐씔씜씨씩씬씰씸씹씻씽아악안앉않알앍앎앓암압앗았앙앝앞애액앤앨앰앱앳앴앵야약얀얄얇얌얍얏양얕얗얘얜얠얩어억언얹얻얼얽얾엄",6,"엌엎"],["bf41","풞",10,"풪",14],["bf61","풹",18,"퓍퓎퓏퓑퓒퓓퓕"],["bf81","퓖",5,"퓝퓞퓠",7,"퓩퓪퓫퓭퓮퓯퓱",6,"퓹퓺퓼에엑엔엘엠엡엣엥여역엮연열엶엷염",5,"옅옆옇예옌옐옘옙옛옜오옥온올옭옮옰옳옴옵옷옹옻와왁완왈왐왑왓왔왕왜왝왠왬왯왱외왹왼욀욈욉욋욍요욕욘욜욤욥욧용우욱운울욹욺움웁웃웅워웍원월웜웝웠웡웨"],["c041","퓾",5,"픅픆픇픉픊픋픍",6,"픖픘",5],["c061","픞",25],["c081","픸픹픺픻픾픿핁핂핃핅",6,"핎핐핒",5,"핚핛핝핞핟핡핢핣웩웬웰웸웹웽위윅윈윌윔윕윗윙유육윤율윰윱윳융윷으윽은을읊음읍읏응",7,"읜읠읨읫이익인일읽읾잃임입잇있잉잊잎자작잔잖잗잘잚잠잡잣잤장잦재잭잰잴잼잽잿쟀쟁쟈쟉쟌쟎쟐쟘쟝쟤쟨쟬저적전절젊"],["c141","핤핦핧핪핬핮",5,"핶핷핹핺핻핽",6,"햆햊햋"],["c161","햌햍햎햏햑",19,"햦햧"],["c181","햨",31,"점접젓정젖제젝젠젤젬젭젯젱져젼졀졈졉졌졍졔조족존졸졺좀좁좃종좆좇좋좌좍좔좝좟좡좨좼좽죄죈죌죔죕죗죙죠죡죤죵주죽준줄줅줆줌줍줏중줘줬줴쥐쥑쥔쥘쥠쥡쥣쥬쥰쥴쥼즈즉즌즐즘즙즛증지직진짇질짊짐집짓"],["c241","헊헋헍헎헏헑헓",4,"헚헜헞",5,"헦헧헩헪헫헭헮"],["c261","헯",4,"헶헸헺",5,"혂혃혅혆혇혉",6,"혒"],["c281","혖",5,"혝혞혟혡혢혣혥",7,"혮",9,"혺혻징짖짙짚짜짝짠짢짤짧짬짭짯짰짱째짹짼쨀쨈쨉쨋쨌쨍쨔쨘쨩쩌쩍쩐쩔쩜쩝쩟쩠쩡쩨쩽쪄쪘쪼쪽쫀쫄쫌쫍쫏쫑쫓쫘쫙쫠쫬쫴쬈쬐쬔쬘쬠쬡쭁쭈쭉쭌쭐쭘쭙쭝쭤쭸쭹쮜쮸쯔쯤쯧쯩찌찍찐찔찜찝찡찢찧차착찬찮찰참찹찻"],["c341","혽혾혿홁홂홃홄홆홇홊홌홎홏홐홒홓홖홗홙홚홛홝",4],["c361","홢",4,"홨홪",5,"홲홳홵",11],["c381","횁횂횄횆",5,"횎횏횑횒횓횕",7,"횞횠횢",5,"횩횪찼창찾채책챈챌챔챕챗챘챙챠챤챦챨챰챵처척천철첨첩첫첬청체첵첸첼쳄쳅쳇쳉쳐쳔쳤쳬쳰촁초촉촌촐촘촙촛총촤촨촬촹최쵠쵤쵬쵭쵯쵱쵸춈추축춘출춤춥춧충춰췄췌췐취췬췰췸췹췻췽츄츈츌츔츙츠측츤츨츰츱츳층"],["c441","횫횭횮횯횱",7,"횺횼",7,"훆훇훉훊훋"],["c461","훍훎훏훐훒훓훕훖훘훚",5,"훡훢훣훥훦훧훩",4],["c481","훮훯훱훲훳훴훶",5,"훾훿휁휂휃휅",11,"휒휓휔치칙친칟칠칡침칩칫칭카칵칸칼캄캅캇캉캐캑캔캘캠캡캣캤캥캬캭컁커컥컨컫컬컴컵컷컸컹케켁켄켈켐켑켓켕켜켠켤켬켭켯켰켱켸코콕콘콜콤콥콧콩콰콱콴콸쾀쾅쾌쾡쾨쾰쿄쿠쿡쿤쿨쿰쿱쿳쿵쿼퀀퀄퀑퀘퀭퀴퀵퀸퀼"],["c541","휕휖휗휚휛휝휞휟휡",6,"휪휬휮",5,"휶휷휹"],["c561","휺휻휽",6,"흅흆흈흊",5,"흒흓흕흚",4],["c581","흟흢흤흦흧흨흪흫흭흮흯흱흲흳흵",6,"흾흿힀힂",5,"힊힋큄큅큇큉큐큔큘큠크큭큰클큼큽킁키킥킨킬킴킵킷킹타탁탄탈탉탐탑탓탔탕태택탠탤탬탭탯탰탱탸턍터턱턴털턺텀텁텃텄텅테텍텐텔템텝텟텡텨텬텼톄톈토톡톤톨톰톱톳통톺톼퇀퇘퇴퇸툇툉툐투툭툰툴툼툽툿퉁퉈퉜"],["c641","힍힎힏힑",6,"힚힜힞",5],["c6a1","퉤튀튁튄튈튐튑튕튜튠튤튬튱트특튼튿틀틂틈틉틋틔틘틜틤틥티틱틴틸팀팁팃팅파팍팎판팔팖팜팝팟팠팡팥패팩팬팰팸팹팻팼팽퍄퍅퍼퍽펀펄펌펍펏펐펑페펙펜펠펨펩펫펭펴편펼폄폅폈평폐폘폡폣포폭폰폴폼폽폿퐁"],["c7a1","퐈퐝푀푄표푠푤푭푯푸푹푼푿풀풂품풉풋풍풔풩퓌퓐퓔퓜퓟퓨퓬퓰퓸퓻퓽프픈플픔픕픗피픽핀필핌핍핏핑하학한할핥함합핫항해핵핸핼햄햅햇했행햐향허헉헌헐헒험헙헛헝헤헥헨헬헴헵헷헹혀혁현혈혐협혓혔형혜혠"],["c8a1","혤혭호혹혼홀홅홈홉홋홍홑화확환활홧황홰홱홴횃횅회획횐횔횝횟횡효횬횰횹횻후훅훈훌훑훔훗훙훠훤훨훰훵훼훽휀휄휑휘휙휜휠휨휩휫휭휴휵휸휼흄흇흉흐흑흔흖흗흘흙흠흡흣흥흩희흰흴흼흽힁히힉힌힐힘힙힛힝"],["caa1","伽佳假價加可呵哥嘉嫁家暇架枷柯歌珂痂稼苛茄街袈訶賈跏軻迦駕刻却各恪慤殼珏脚覺角閣侃刊墾奸姦干幹懇揀杆柬桿澗癎看磵稈竿簡肝艮艱諫間乫喝曷渴碣竭葛褐蝎鞨勘坎堪嵌感憾戡敢柑橄減甘疳監瞰紺邯鑑鑒龕"],["cba1","匣岬甲胛鉀閘剛堈姜岡崗康强彊慷江畺疆糠絳綱羌腔舡薑襁講鋼降鱇介价個凱塏愷愾慨改槪漑疥皆盖箇芥蓋豈鎧開喀客坑更粳羹醵倨去居巨拒据據擧渠炬祛距踞車遽鉅鋸乾件健巾建愆楗腱虔蹇鍵騫乞傑杰桀儉劍劒檢"],["cca1","瞼鈐黔劫怯迲偈憩揭擊格檄激膈覡隔堅牽犬甄絹繭肩見譴遣鵑抉決潔結缺訣兼慊箝謙鉗鎌京俓倞傾儆勁勍卿坰境庚徑慶憬擎敬景暻更梗涇炅烱璟璥瓊痙硬磬竟競絅經耕耿脛莖警輕逕鏡頃頸驚鯨係啓堺契季屆悸戒桂械"],["cda1","棨溪界癸磎稽系繫繼計誡谿階鷄古叩告呱固姑孤尻庫拷攷故敲暠枯槁沽痼皐睾稿羔考股膏苦苽菰藁蠱袴誥賈辜錮雇顧高鼓哭斛曲梏穀谷鵠困坤崑昆梱棍滾琨袞鯤汨滑骨供公共功孔工恐恭拱控攻珙空蚣貢鞏串寡戈果瓜"],["cea1","科菓誇課跨過鍋顆廓槨藿郭串冠官寬慣棺款灌琯瓘管罐菅觀貫關館刮恝括适侊光匡壙廣曠洸炚狂珖筐胱鑛卦掛罫乖傀塊壞怪愧拐槐魁宏紘肱轟交僑咬喬嬌嶠巧攪敎校橋狡皎矯絞翹膠蕎蛟較轎郊餃驕鮫丘久九仇俱具勾"],["cfa1","區口句咎嘔坵垢寇嶇廐懼拘救枸柩構歐毆毬求溝灸狗玖球瞿矩究絿耉臼舅舊苟衢謳購軀逑邱鉤銶駒驅鳩鷗龜國局菊鞠鞫麴君窘群裙軍郡堀屈掘窟宮弓穹窮芎躬倦券勸卷圈拳捲權淃眷厥獗蕨蹶闕机櫃潰詭軌饋句晷歸貴"],["d0a1","鬼龜叫圭奎揆槻珪硅窺竅糾葵規赳逵閨勻均畇筠菌鈞龜橘克剋劇戟棘極隙僅劤勤懃斤根槿瑾筋芹菫覲謹近饉契今妗擒昑檎琴禁禽芩衾衿襟金錦伋及急扱汲級給亘兢矜肯企伎其冀嗜器圻基埼夔奇妓寄岐崎己幾忌技旗旣"],["d1a1","朞期杞棋棄機欺氣汽沂淇玘琦琪璂璣畸畿碁磯祁祇祈祺箕紀綺羈耆耭肌記譏豈起錡錤飢饑騎騏驥麒緊佶吉拮桔金喫儺喇奈娜懦懶拏拿癩",5,"那樂",4,"諾酪駱亂卵暖欄煖爛蘭難鸞捏捺南嵐枏楠湳濫男藍襤拉"],["d2a1","納臘蠟衲囊娘廊",4,"乃來內奈柰耐冷女年撚秊念恬拈捻寧寗努勞奴弩怒擄櫓爐瑙盧",5,"駑魯",10,"濃籠聾膿農惱牢磊腦賂雷尿壘",7,"嫩訥杻紐勒",5,"能菱陵尼泥匿溺多茶"],["d3a1","丹亶但單團壇彖斷旦檀段湍短端簞緞蛋袒鄲鍛撻澾獺疸達啖坍憺擔曇淡湛潭澹痰聃膽蕁覃談譚錟沓畓答踏遝唐堂塘幢戇撞棠當糖螳黨代垈坮大對岱帶待戴擡玳臺袋貸隊黛宅德悳倒刀到圖堵塗導屠島嶋度徒悼挑掉搗桃"],["d4a1","棹櫂淘渡滔濤燾盜睹禱稻萄覩賭跳蹈逃途道都鍍陶韜毒瀆牘犢獨督禿篤纛讀墩惇敦旽暾沌焞燉豚頓乭突仝冬凍動同憧東桐棟洞潼疼瞳童胴董銅兜斗杜枓痘竇荳讀豆逗頭屯臀芚遁遯鈍得嶝橙燈登等藤謄鄧騰喇懶拏癩羅"],["d5a1","蘿螺裸邏樂洛烙珞絡落諾酪駱丹亂卵欄欒瀾爛蘭鸞剌辣嵐擥攬欖濫籃纜藍襤覽拉臘蠟廊朗浪狼琅瑯螂郞來崍徠萊冷掠略亮倆兩凉梁樑粮粱糧良諒輛量侶儷勵呂廬慮戾旅櫚濾礪藜蠣閭驢驪麗黎力曆歷瀝礫轢靂憐戀攣漣"],["d6a1","煉璉練聯蓮輦連鍊冽列劣洌烈裂廉斂殮濂簾獵令伶囹寧岺嶺怜玲笭羚翎聆逞鈴零靈領齡例澧禮醴隷勞怒撈擄櫓潞瀘爐盧老蘆虜路輅露魯鷺鹵碌祿綠菉錄鹿麓論壟弄朧瀧瓏籠聾儡瀨牢磊賂賚賴雷了僚寮廖料燎療瞭聊蓼"],["d7a1","遼鬧龍壘婁屢樓淚漏瘻累縷蔞褸鏤陋劉旒柳榴流溜瀏琉瑠留瘤硫謬類六戮陸侖倫崙淪綸輪律慄栗率隆勒肋凜凌楞稜綾菱陵俚利厘吏唎履悧李梨浬犁狸理璃異痢籬罹羸莉裏裡里釐離鯉吝潾燐璘藺躪隣鱗麟林淋琳臨霖砬"],["d8a1","立笠粒摩瑪痲碼磨馬魔麻寞幕漠膜莫邈万卍娩巒彎慢挽晩曼滿漫灣瞞萬蔓蠻輓饅鰻唜抹末沫茉襪靺亡妄忘忙望網罔芒茫莽輞邙埋妹媒寐昧枚梅每煤罵買賣邁魅脈貊陌驀麥孟氓猛盲盟萌冪覓免冕勉棉沔眄眠綿緬面麵滅"],["d9a1","蔑冥名命明暝椧溟皿瞑茗蓂螟酩銘鳴袂侮冒募姆帽慕摸摹暮某模母毛牟牡瑁眸矛耗芼茅謀謨貌木沐牧目睦穆鶩歿沒夢朦蒙卯墓妙廟描昴杳渺猫竗苗錨務巫憮懋戊拇撫无楙武毋無珷畝繆舞茂蕪誣貿霧鵡墨默們刎吻問文"],["daa1","汶紊紋聞蚊門雯勿沕物味媚尾嵋彌微未梶楣渼湄眉米美薇謎迷靡黴岷悶愍憫敏旻旼民泯玟珉緡閔密蜜謐剝博拍搏撲朴樸泊珀璞箔粕縛膊舶薄迫雹駁伴半反叛拌搬攀斑槃泮潘班畔瘢盤盼磐磻礬絆般蟠返頒飯勃拔撥渤潑"],["dba1","發跋醱鉢髮魃倣傍坊妨尨幇彷房放方旁昉枋榜滂磅紡肪膀舫芳蒡蚌訪謗邦防龐倍俳北培徘拜排杯湃焙盃背胚裴裵褙賠輩配陪伯佰帛柏栢白百魄幡樊煩燔番磻繁蕃藩飜伐筏罰閥凡帆梵氾汎泛犯範范法琺僻劈壁擘檗璧癖"],["dca1","碧蘗闢霹便卞弁變辨辯邊別瞥鱉鼈丙倂兵屛幷昞昺柄棅炳甁病秉竝輧餠騈保堡報寶普步洑湺潽珤甫菩補褓譜輔伏僕匐卜宓復服福腹茯蔔複覆輹輻馥鰒本乶俸奉封峯峰捧棒烽熢琫縫蓬蜂逢鋒鳳不付俯傅剖副否咐埠夫婦"],["dda1","孚孵富府復扶敷斧浮溥父符簿缶腐腑膚艀芙莩訃負賦賻赴趺部釜阜附駙鳧北分吩噴墳奔奮忿憤扮昐汾焚盆粉糞紛芬賁雰不佛弗彿拂崩朋棚硼繃鵬丕備匕匪卑妃婢庇悲憊扉批斐枇榧比毖毗毘沸泌琵痺砒碑秕秘粃緋翡肥"],["dea1","脾臂菲蜚裨誹譬費鄙非飛鼻嚬嬪彬斌檳殯浜濱瀕牝玭貧賓頻憑氷聘騁乍事些仕伺似使俟僿史司唆嗣四士奢娑寫寺射巳師徙思捨斜斯柶査梭死沙泗渣瀉獅砂社祀祠私篩紗絲肆舍莎蓑蛇裟詐詞謝賜赦辭邪飼駟麝削數朔索"],["dfa1","傘刪山散汕珊産疝算蒜酸霰乷撒殺煞薩三參杉森渗芟蔘衫揷澁鈒颯上傷像償商喪嘗孀尙峠常床庠廂想桑橡湘爽牀狀相祥箱翔裳觴詳象賞霜塞璽賽嗇塞穡索色牲生甥省笙墅壻嶼序庶徐恕抒捿敍暑曙書栖棲犀瑞筮絮緖署"],["e0a1","胥舒薯西誓逝鋤黍鼠夕奭席惜昔晳析汐淅潟石碩蓆釋錫仙僊先善嬋宣扇敾旋渲煽琁瑄璇璿癬禪線繕羨腺膳船蘚蟬詵跣選銑鐥饍鮮卨屑楔泄洩渫舌薛褻設說雪齧剡暹殲纖蟾贍閃陝攝涉燮葉城姓宬性惺成星晟猩珹盛省筬"],["e1a1","聖聲腥誠醒世勢歲洗稅笹細說貰召嘯塑宵小少巢所掃搔昭梳沼消溯瀟炤燒甦疏疎瘙笑篠簫素紹蔬蕭蘇訴逍遡邵銷韶騷俗屬束涑粟續謖贖速孫巽損蓀遜飡率宋悚松淞訟誦送頌刷殺灑碎鎖衰釗修受嗽囚垂壽嫂守岫峀帥愁"],["e2a1","戍手授搜收數樹殊水洙漱燧狩獸琇璲瘦睡秀穗竪粹綏綬繡羞脩茱蒐蓚藪袖誰讐輸遂邃酬銖銹隋隧隨雖需須首髓鬚叔塾夙孰宿淑潚熟琡璹肅菽巡徇循恂旬栒楯橓殉洵淳珣盾瞬筍純脣舜荀蓴蕣詢諄醇錞順馴戌術述鉥崇崧"],["e3a1","嵩瑟膝蝨濕拾習褶襲丞乘僧勝升承昇繩蠅陞侍匙嘶始媤尸屎屍市弑恃施是時枾柴猜矢示翅蒔蓍視試詩諡豕豺埴寔式息拭植殖湜熄篒蝕識軾食飾伸侁信呻娠宸愼新晨燼申神紳腎臣莘薪藎蜃訊身辛辰迅失室實悉審尋心沁"],["e4a1","沈深瀋甚芯諶什十拾雙氏亞俄兒啞娥峨我牙芽莪蛾衙訝阿雅餓鴉鵝堊岳嶽幄惡愕握樂渥鄂鍔顎鰐齷安岸按晏案眼雁鞍顔鮟斡謁軋閼唵岩巖庵暗癌菴闇壓押狎鴨仰央怏昻殃秧鴦厓哀埃崖愛曖涯碍艾隘靄厄扼掖液縊腋額"],["e5a1","櫻罌鶯鸚也倻冶夜惹揶椰爺耶若野弱掠略約若葯蒻藥躍亮佯兩凉壤孃恙揚攘敭暘梁楊樣洋瀁煬痒瘍禳穰糧羊良襄諒讓釀陽量養圄御於漁瘀禦語馭魚齬億憶抑檍臆偃堰彦焉言諺孼蘖俺儼嚴奄掩淹嶪業円予余勵呂女如廬"],["e6a1","旅歟汝濾璵礖礪與艅茹輿轝閭餘驪麗黎亦力域役易曆歷疫繹譯轢逆驛嚥堧姸娟宴年延憐戀捐挻撚椽沇沿涎涓淵演漣烟然煙煉燃燕璉硏硯秊筵緣練縯聯衍軟輦蓮連鉛鍊鳶列劣咽悅涅烈熱裂說閱厭廉念捻染殮炎焰琰艶苒"],["e7a1","簾閻髥鹽曄獵燁葉令囹塋寧嶺嶸影怜映暎楹榮永泳渶潁濚瀛瀯煐營獰玲瑛瑩瓔盈穎纓羚聆英詠迎鈴鍈零霙靈領乂倪例刈叡曳汭濊猊睿穢芮藝蘂禮裔詣譽豫醴銳隸霓預五伍俉傲午吾吳嗚塢墺奧娛寤悟惡懊敖旿晤梧汚澳"],["e8a1","烏熬獒筽蜈誤鰲鼇屋沃獄玉鈺溫瑥瘟穩縕蘊兀壅擁瓮甕癰翁邕雍饔渦瓦窩窪臥蛙蝸訛婉完宛梡椀浣玩琓琬碗緩翫脘腕莞豌阮頑曰往旺枉汪王倭娃歪矮外嵬巍猥畏了僚僥凹堯夭妖姚寥寮尿嶢拗搖撓擾料曜樂橈燎燿瑤療"],["e9a1","窈窯繇繞耀腰蓼蟯要謠遙遼邀饒慾欲浴縟褥辱俑傭冗勇埇墉容庸慂榕涌湧溶熔瑢用甬聳茸蓉踊鎔鏞龍于佑偶優又友右宇寓尤愚憂旴牛玗瑀盂祐禑禹紆羽芋藕虞迂遇郵釪隅雨雩勖彧旭昱栯煜稶郁頊云暈橒殞澐熉耘芸蕓"],["eaa1","運隕雲韻蔚鬱亐熊雄元原員圓園垣媛嫄寃怨愿援沅洹湲源爰猿瑗苑袁轅遠阮院願鴛月越鉞位偉僞危圍委威尉慰暐渭爲瑋緯胃萎葦蔿蝟衛褘謂違韋魏乳侑儒兪劉唯喩孺宥幼幽庾悠惟愈愉揄攸有杻柔柚柳楡楢油洧流游溜"],["eba1","濡猶猷琉瑜由留癒硫紐維臾萸裕誘諛諭踰蹂遊逾遺酉釉鍮類六堉戮毓肉育陸倫允奫尹崙淪潤玧胤贇輪鈗閏律慄栗率聿戎瀜絨融隆垠恩慇殷誾銀隱乙吟淫蔭陰音飮揖泣邑凝應膺鷹依倚儀宜意懿擬椅毅疑矣義艤薏蟻衣誼"],["eca1","議醫二以伊利吏夷姨履已弛彛怡易李梨泥爾珥理異痍痢移罹而耳肄苡荑裏裡貽貳邇里離飴餌匿溺瀷益翊翌翼謚人仁刃印吝咽因姻寅引忍湮燐璘絪茵藺蚓認隣靭靷鱗麟一佚佾壹日溢逸鎰馹任壬妊姙恁林淋稔臨荏賃入卄"],["eda1","立笠粒仍剩孕芿仔刺咨姉姿子字孜恣慈滋炙煮玆瓷疵磁紫者自茨蔗藉諮資雌作勺嚼斫昨灼炸爵綽芍酌雀鵲孱棧殘潺盞岑暫潛箴簪蠶雜丈仗匠場墻壯奬將帳庄張掌暲杖樟檣欌漿牆狀獐璋章粧腸臟臧莊葬蔣薔藏裝贓醬長"],["eea1","障再哉在宰才材栽梓渽滓災縡裁財載齋齎爭箏諍錚佇低儲咀姐底抵杵楮樗沮渚狙猪疽箸紵苧菹著藷詛貯躇這邸雎齟勣吊嫡寂摘敵滴狄炙的積笛籍績翟荻謫賊赤跡蹟迪迹適鏑佃佺傳全典前剪塡塼奠專展廛悛戰栓殿氈澱"],["efa1","煎琠田甸畑癲筌箋箭篆纏詮輾轉鈿銓錢鐫電顚顫餞切截折浙癤竊節絶占岾店漸点粘霑鮎點接摺蝶丁井亭停偵呈姃定幀庭廷征情挺政整旌晶晸柾楨檉正汀淀淨渟湞瀞炡玎珽町睛碇禎程穽精綎艇訂諪貞鄭酊釘鉦鋌錠霆靖"],["f0a1","靜頂鼎制劑啼堤帝弟悌提梯濟祭第臍薺製諸蹄醍除際霽題齊俎兆凋助嘲弔彫措操早晁曺曹朝條棗槽漕潮照燥爪璪眺祖祚租稠窕粗糟組繰肇藻蚤詔調趙躁造遭釣阻雕鳥族簇足鏃存尊卒拙猝倧宗從悰慫棕淙琮種終綜縱腫"],["f1a1","踪踵鍾鐘佐坐左座挫罪主住侏做姝胄呪周嗾奏宙州廚晝朱柱株注洲湊澍炷珠疇籌紂紬綢舟蛛註誅走躊輳週酎酒鑄駐竹粥俊儁准埈寯峻晙樽浚準濬焌畯竣蠢逡遵雋駿茁中仲衆重卽櫛楫汁葺增憎曾拯烝甑症繒蒸證贈之只"],["f2a1","咫地址志持指摯支旨智枝枳止池沚漬知砥祉祗紙肢脂至芝芷蜘誌識贄趾遲直稙稷織職唇嗔塵振搢晉晋桭榛殄津溱珍瑨璡畛疹盡眞瞋秦縉縝臻蔯袗診賑軫辰進鎭陣陳震侄叱姪嫉帙桎瓆疾秩窒膣蛭質跌迭斟朕什執潗緝輯"],["f3a1","鏶集徵懲澄且侘借叉嗟嵯差次此磋箚茶蹉車遮捉搾着窄錯鑿齪撰澯燦璨瓚竄簒纂粲纘讚贊鑽餐饌刹察擦札紮僭參塹慘慙懺斬站讒讖倉倡創唱娼廠彰愴敞昌昶暢槍滄漲猖瘡窓脹艙菖蒼債埰寀寨彩採砦綵菜蔡采釵冊柵策"],["f4a1","責凄妻悽處倜刺剔尺慽戚拓擲斥滌瘠脊蹠陟隻仟千喘天川擅泉淺玔穿舛薦賤踐遷釧闡阡韆凸哲喆徹撤澈綴輟轍鐵僉尖沾添甛瞻簽籤詹諂堞妾帖捷牒疊睫諜貼輒廳晴淸聽菁請靑鯖切剃替涕滯締諦逮遞體初剿哨憔抄招梢"],["f5a1","椒楚樵炒焦硝礁礎秒稍肖艸苕草蕉貂超酢醋醮促囑燭矗蜀觸寸忖村邨叢塚寵悤憁摠總聰蔥銃撮催崔最墜抽推椎楸樞湫皺秋芻萩諏趨追鄒酋醜錐錘鎚雛騶鰍丑畜祝竺筑築縮蓄蹙蹴軸逐春椿瑃出朮黜充忠沖蟲衝衷悴膵萃"],["f6a1","贅取吹嘴娶就炊翠聚脆臭趣醉驟鷲側仄厠惻測層侈値嗤峙幟恥梔治淄熾痔痴癡稚穉緇緻置致蚩輜雉馳齒則勅飭親七柒漆侵寢枕沈浸琛砧針鍼蟄秤稱快他咤唾墮妥惰打拖朶楕舵陀馱駝倬卓啄坼度托拓擢晫柝濁濯琢琸託"],["f7a1","鐸呑嘆坦彈憚歎灘炭綻誕奪脫探眈耽貪塔搭榻宕帑湯糖蕩兌台太怠態殆汰泰笞胎苔跆邰颱宅擇澤撑攄兎吐土討慟桶洞痛筒統通堆槌腿褪退頹偸套妬投透鬪慝特闖坡婆巴把播擺杷波派爬琶破罷芭跛頗判坂板版瓣販辦鈑"],["f8a1","阪八叭捌佩唄悖敗沛浿牌狽稗覇貝彭澎烹膨愎便偏扁片篇編翩遍鞭騙貶坪平枰萍評吠嬖幣廢弊斃肺蔽閉陛佈包匍匏咆哺圃布怖抛抱捕暴泡浦疱砲胞脯苞葡蒲袍褒逋鋪飽鮑幅暴曝瀑爆輻俵剽彪慓杓標漂瓢票表豹飇飄驃"],["f9a1","品稟楓諷豊風馮彼披疲皮被避陂匹弼必泌珌畢疋筆苾馝乏逼下何厦夏廈昰河瑕荷蝦賀遐霞鰕壑學虐謔鶴寒恨悍旱汗漢澣瀚罕翰閑閒限韓割轄函含咸啣喊檻涵緘艦銜陷鹹合哈盒蛤閤闔陜亢伉姮嫦巷恒抗杭桁沆港缸肛航"],["faa1","行降項亥偕咳垓奚孩害懈楷海瀣蟹解該諧邂駭骸劾核倖幸杏荇行享向嚮珦鄕響餉饗香噓墟虛許憲櫶獻軒歇險驗奕爀赫革俔峴弦懸晛泫炫玄玹現眩睍絃絢縣舷衒見賢鉉顯孑穴血頁嫌俠協夾峽挾浹狹脅脇莢鋏頰亨兄刑型"],["fba1","形泂滎瀅灐炯熒珩瑩荊螢衡逈邢鎣馨兮彗惠慧暳蕙蹊醯鞋乎互呼壕壺好岵弧戶扈昊晧毫浩淏湖滸澔濠濩灝狐琥瑚瓠皓祜糊縞胡芦葫蒿虎號蝴護豪鎬頀顥惑或酷婚昏混渾琿魂忽惚笏哄弘汞泓洪烘紅虹訌鴻化和嬅樺火畵"],["fca1","禍禾花華話譁貨靴廓擴攫確碻穫丸喚奐宦幻患換歡晥桓渙煥環紈還驩鰥活滑猾豁闊凰幌徨恍惶愰慌晃晄榥況湟滉潢煌璜皇篁簧荒蝗遑隍黃匯回廻徊恢悔懷晦會檜淮澮灰獪繪膾茴蛔誨賄劃獲宖橫鐄哮嚆孝效斅曉梟涍淆"],["fda1","爻肴酵驍侯候厚后吼喉嗅帿後朽煦珝逅勛勳塤壎焄熏燻薰訓暈薨喧暄煊萱卉喙毁彙徽揮暉煇諱輝麾休携烋畦虧恤譎鷸兇凶匈洶胸黑昕欣炘痕吃屹紇訖欠欽歆吸恰洽翕興僖凞喜噫囍姬嬉希憙憘戱晞曦熙熹熺犧禧稀羲詰"]]'), _R = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["a140","　，、。．‧；：？！︰…‥﹐﹑﹒·﹔﹕﹖﹗｜–︱—︳╴︴﹏（）︵︶｛｝︷︸〔〕︹︺【】︻︼《》︽︾〈〉︿﹀「」﹁﹂『』﹃﹄﹙﹚"],["a1a1","﹛﹜﹝﹞‘’“”〝〞‵′＃＆＊※§〃○●△▲◎☆★◇◆□■▽▼㊣℅¯￣＿ˍ﹉﹊﹍﹎﹋﹌﹟﹠﹡＋－×÷±√＜＞＝≦≧≠∞≒≡﹢",4,"～∩∪⊥∠∟⊿㏒㏑∫∮∵∴♀♂⊕⊙↑↓←→↖↗↙↘∥∣／"],["a240","＼∕﹨＄￥〒￠￡％＠℃℉﹩﹪﹫㏕㎜㎝㎞㏎㎡㎎㎏㏄°兙兛兞兝兡兣嗧瓩糎▁",7,"▏▎▍▌▋▊▉┼┴┬┤├▔─│▕┌┐└┘╭"],["a2a1","╮╰╯═╞╪╡◢◣◥◤╱╲╳０",9,"Ⅰ",9,"〡",8,"十卄卅Ａ",25,"ａ",21],["a340","ｗｘｙｚΑ",16,"Σ",6,"α",16,"σ",6,"ㄅ",10],["a3a1","ㄐ",25,"˙ˉˊˇˋ"],["a3e1","€"],["a440","一乙丁七乃九了二人儿入八几刀刁力匕十卜又三下丈上丫丸凡久么也乞于亡兀刃勺千叉口土士夕大女子孑孓寸小尢尸山川工己已巳巾干廾弋弓才"],["a4a1","丑丐不中丰丹之尹予云井互五亢仁什仃仆仇仍今介仄元允內六兮公冗凶分切刈勻勾勿化匹午升卅卞厄友及反壬天夫太夭孔少尤尺屯巴幻廿弔引心戈戶手扎支文斗斤方日曰月木欠止歹毋比毛氏水火爪父爻片牙牛犬王丙"],["a540","世丕且丘主乍乏乎以付仔仕他仗代令仙仞充兄冉冊冬凹出凸刊加功包匆北匝仟半卉卡占卯卮去可古右召叮叩叨叼司叵叫另只史叱台句叭叻四囚外"],["a5a1","央失奴奶孕它尼巨巧左市布平幼弁弘弗必戊打扔扒扑斥旦朮本未末札正母民氐永汁汀氾犯玄玉瓜瓦甘生用甩田由甲申疋白皮皿目矛矢石示禾穴立丞丟乒乓乩亙交亦亥仿伉伙伊伕伍伐休伏仲件任仰仳份企伋光兇兆先全"],["a640","共再冰列刑划刎刖劣匈匡匠印危吉吏同吊吐吁吋各向名合吃后吆吒因回囝圳地在圭圬圯圩夙多夷夸妄奸妃好她如妁字存宇守宅安寺尖屹州帆并年"],["a6a1","式弛忙忖戎戌戍成扣扛托收早旨旬旭曲曳有朽朴朱朵次此死氖汝汗汙江池汐汕污汛汍汎灰牟牝百竹米糸缶羊羽老考而耒耳聿肉肋肌臣自至臼舌舛舟艮色艾虫血行衣西阡串亨位住佇佗佞伴佛何估佐佑伽伺伸佃佔似但佣"],["a740","作你伯低伶余佝佈佚兌克免兵冶冷別判利刪刨劫助努劬匣即卵吝吭吞吾否呎吧呆呃吳呈呂君吩告吹吻吸吮吵吶吠吼呀吱含吟听囪困囤囫坊坑址坍"],["a7a1","均坎圾坐坏圻壯夾妝妒妨妞妣妙妖妍妤妓妊妥孝孜孚孛完宋宏尬局屁尿尾岐岑岔岌巫希序庇床廷弄弟彤形彷役忘忌志忍忱快忸忪戒我抄抗抖技扶抉扭把扼找批扳抒扯折扮投抓抑抆改攻攸旱更束李杏材村杜杖杞杉杆杠"],["a840","杓杗步每求汞沙沁沈沉沅沛汪決沐汰沌汨沖沒汽沃汲汾汴沆汶沍沔沘沂灶灼災灸牢牡牠狄狂玖甬甫男甸皂盯矣私秀禿究系罕肖肓肝肘肛肚育良芒"],["a8a1","芋芍見角言谷豆豕貝赤走足身車辛辰迂迆迅迄巡邑邢邪邦那酉釆里防阮阱阪阬並乖乳事些亞享京佯依侍佳使佬供例來侃佰併侈佩佻侖佾侏侑佺兔兒兕兩具其典冽函刻券刷刺到刮制剁劾劻卒協卓卑卦卷卸卹取叔受味呵"],["a940","咖呸咕咀呻呷咄咒咆呼咐呱呶和咚呢周咋命咎固垃坷坪坩坡坦坤坼夜奉奇奈奄奔妾妻委妹妮姑姆姐姍始姓姊妯妳姒姅孟孤季宗定官宜宙宛尚屈居"],["a9a1","屆岷岡岸岩岫岱岳帘帚帖帕帛帑幸庚店府底庖延弦弧弩往征彿彼忝忠忽念忿怏怔怯怵怖怪怕怡性怩怫怛或戕房戾所承拉拌拄抿拂抹拒招披拓拔拋拈抨抽押拐拙拇拍抵拚抱拘拖拗拆抬拎放斧於旺昔易昌昆昂明昀昏昕昊"],["aa40","昇服朋杭枋枕東果杳杷枇枝林杯杰板枉松析杵枚枓杼杪杲欣武歧歿氓氛泣注泳沱泌泥河沽沾沼波沫法泓沸泄油況沮泗泅泱沿治泡泛泊沬泯泜泖泠"],["aaa1","炕炎炒炊炙爬爭爸版牧物狀狎狙狗狐玩玨玟玫玥甽疝疙疚的盂盲直知矽社祀祁秉秈空穹竺糾罔羌羋者肺肥肢肱股肫肩肴肪肯臥臾舍芳芝芙芭芽芟芹花芬芥芯芸芣芰芾芷虎虱初表軋迎返近邵邸邱邶采金長門阜陀阿阻附"],["ab40","陂隹雨青非亟亭亮信侵侯便俠俑俏保促侶俘俟俊俗侮俐俄係俚俎俞侷兗冒冑冠剎剃削前剌剋則勇勉勃勁匍南卻厚叛咬哀咨哎哉咸咦咳哇哂咽咪品"],["aba1","哄哈咯咫咱咻咩咧咿囿垂型垠垣垢城垮垓奕契奏奎奐姜姘姿姣姨娃姥姪姚姦威姻孩宣宦室客宥封屎屏屍屋峙峒巷帝帥帟幽庠度建弈弭彥很待徊律徇後徉怒思怠急怎怨恍恰恨恢恆恃恬恫恪恤扁拜挖按拼拭持拮拽指拱拷"],["ac40","拯括拾拴挑挂政故斫施既春昭映昧是星昨昱昤曷柿染柱柔某柬架枯柵柩柯柄柑枴柚查枸柏柞柳枰柙柢柝柒歪殃殆段毒毗氟泉洋洲洪流津洌洱洞洗"],["aca1","活洽派洶洛泵洹洧洸洩洮洵洎洫炫為炳炬炯炭炸炮炤爰牲牯牴狩狠狡玷珊玻玲珍珀玳甚甭畏界畎畋疫疤疥疢疣癸皆皇皈盈盆盃盅省盹相眉看盾盼眇矜砂研砌砍祆祉祈祇禹禺科秒秋穿突竿竽籽紂紅紀紉紇約紆缸美羿耄"],["ad40","耐耍耑耶胖胥胚胃胄背胡胛胎胞胤胝致舢苧范茅苣苛苦茄若茂茉苒苗英茁苜苔苑苞苓苟苯茆虐虹虻虺衍衫要觔計訂訃貞負赴赳趴軍軌述迦迢迪迥"],["ada1","迭迫迤迨郊郎郁郃酋酊重閂限陋陌降面革韋韭音頁風飛食首香乘亳倌倍倣俯倦倥俸倩倖倆值借倚倒們俺倀倔倨俱倡個候倘俳修倭倪俾倫倉兼冤冥冢凍凌准凋剖剜剔剛剝匪卿原厝叟哨唐唁唷哼哥哲唆哺唔哩哭員唉哮哪"],["ae40","哦唧唇哽唏圃圄埂埔埋埃堉夏套奘奚娑娘娜娟娛娓姬娠娣娩娥娌娉孫屘宰害家宴宮宵容宸射屑展屐峭峽峻峪峨峰島崁峴差席師庫庭座弱徒徑徐恙"],["aea1","恣恥恐恕恭恩息悄悟悚悍悔悌悅悖扇拳挈拿捎挾振捕捂捆捏捉挺捐挽挪挫挨捍捌效敉料旁旅時晉晏晃晒晌晅晁書朔朕朗校核案框桓根桂桔栩梳栗桌桑栽柴桐桀格桃株桅栓栘桁殊殉殷氣氧氨氦氤泰浪涕消涇浦浸海浙涓"],["af40","浬涉浮浚浴浩涌涊浹涅浥涔烊烘烤烙烈烏爹特狼狹狽狸狷玆班琉珮珠珪珞畔畝畜畚留疾病症疲疳疽疼疹痂疸皋皰益盍盎眩真眠眨矩砰砧砸砝破砷"],["afa1","砥砭砠砟砲祕祐祠祟祖神祝祗祚秤秣秧租秦秩秘窄窈站笆笑粉紡紗紋紊素索純紐紕級紜納紙紛缺罟羔翅翁耆耘耕耙耗耽耿胱脂胰脅胭胴脆胸胳脈能脊胼胯臭臬舀舐航舫舨般芻茫荒荔荊茸荐草茵茴荏茲茹茶茗荀茱茨荃"],["b040","虔蚊蚪蚓蚤蚩蚌蚣蚜衰衷袁袂衽衹記訐討訌訕訊託訓訖訏訑豈豺豹財貢起躬軒軔軏辱送逆迷退迺迴逃追逅迸邕郡郝郢酒配酌釘針釗釜釙閃院陣陡"],["b0a1","陛陝除陘陞隻飢馬骨高鬥鬲鬼乾偺偽停假偃偌做偉健偶偎偕偵側偷偏倏偯偭兜冕凰剪副勒務勘動匐匏匙匿區匾參曼商啪啦啄啞啡啃啊唱啖問啕唯啤唸售啜唬啣唳啁啗圈國圉域堅堊堆埠埤基堂堵執培夠奢娶婁婉婦婪婀"],["b140","娼婢婚婆婊孰寇寅寄寂宿密尉專將屠屜屝崇崆崎崛崖崢崑崩崔崙崤崧崗巢常帶帳帷康庸庶庵庾張強彗彬彩彫得徙從徘御徠徜恿患悉悠您惋悴惦悽"],["b1a1","情悻悵惜悼惘惕惆惟悸惚惇戚戛扈掠控捲掖探接捷捧掘措捱掩掉掃掛捫推掄授掙採掬排掏掀捻捩捨捺敝敖救教敗啟敏敘敕敔斜斛斬族旋旌旎晝晚晤晨晦晞曹勗望梁梯梢梓梵桿桶梱梧梗械梃棄梭梆梅梔條梨梟梡梂欲殺"],["b240","毫毬氫涎涼淳淙液淡淌淤添淺清淇淋涯淑涮淞淹涸混淵淅淒渚涵淚淫淘淪深淮淨淆淄涪淬涿淦烹焉焊烽烯爽牽犁猜猛猖猓猙率琅琊球理現琍瓠瓶"],["b2a1","瓷甜產略畦畢異疏痔痕疵痊痍皎盔盒盛眷眾眼眶眸眺硫硃硎祥票祭移窒窕笠笨笛第符笙笞笮粒粗粕絆絃統紮紹紼絀細紳組累終紲紱缽羞羚翌翎習耜聊聆脯脖脣脫脩脰脤舂舵舷舶船莎莞莘荸莢莖莽莫莒莊莓莉莠荷荻荼"],["b340","莆莧處彪蛇蛀蚶蛄蚵蛆蛋蚱蚯蛉術袞袈被袒袖袍袋覓規訪訝訣訥許設訟訛訢豉豚販責貫貨貪貧赧赦趾趺軛軟這逍通逗連速逝逐逕逞造透逢逖逛途"],["b3a1","部郭都酗野釵釦釣釧釭釩閉陪陵陳陸陰陴陶陷陬雀雪雩章竟頂頃魚鳥鹵鹿麥麻傢傍傅備傑傀傖傘傚最凱割剴創剩勞勝勛博厥啻喀喧啼喊喝喘喂喜喪喔喇喋喃喳單喟唾喲喚喻喬喱啾喉喫喙圍堯堪場堤堰報堡堝堠壹壺奠"],["b440","婷媚婿媒媛媧孳孱寒富寓寐尊尋就嵌嵐崴嵇巽幅帽幀幃幾廊廁廂廄弼彭復循徨惑惡悲悶惠愜愣惺愕惰惻惴慨惱愎惶愉愀愒戟扉掣掌描揀揩揉揆揍"],["b4a1","插揣提握揖揭揮捶援揪換摒揚揹敞敦敢散斑斐斯普晰晴晶景暑智晾晷曾替期朝棺棕棠棘棗椅棟棵森棧棹棒棲棣棋棍植椒椎棉棚楮棻款欺欽殘殖殼毯氮氯氬港游湔渡渲湧湊渠渥渣減湛湘渤湖湮渭渦湯渴湍渺測湃渝渾滋"],["b540","溉渙湎湣湄湲湩湟焙焚焦焰無然煮焜牌犄犀猶猥猴猩琺琪琳琢琥琵琶琴琯琛琦琨甥甦畫番痢痛痣痙痘痞痠登發皖皓皴盜睏短硝硬硯稍稈程稅稀窘"],["b5a1","窗窖童竣等策筆筐筒答筍筋筏筑粟粥絞結絨絕紫絮絲絡給絢絰絳善翔翕耋聒肅腕腔腋腑腎脹腆脾腌腓腴舒舜菩萃菸萍菠菅萋菁華菱菴著萊菰萌菌菽菲菊萸萎萄菜萇菔菟虛蛟蛙蛭蛔蛛蛤蛐蛞街裁裂袱覃視註詠評詞証詁"],["b640","詔詛詐詆訴診訶詖象貂貯貼貳貽賁費賀貴買貶貿貸越超趁跎距跋跚跑跌跛跆軻軸軼辜逮逵週逸進逶鄂郵鄉郾酣酥量鈔鈕鈣鈉鈞鈍鈐鈇鈑閔閏開閑"],["b6a1","間閒閎隊階隋陽隅隆隍陲隄雁雅雄集雇雯雲韌項順須飧飪飯飩飲飭馮馭黃黍黑亂傭債傲傳僅傾催傷傻傯僇剿剷剽募勦勤勢勣匯嗟嗨嗓嗦嗎嗜嗇嗑嗣嗤嗯嗚嗡嗅嗆嗥嗉園圓塞塑塘塗塚塔填塌塭塊塢塒塋奧嫁嫉嫌媾媽媼"],["b740","媳嫂媲嵩嵯幌幹廉廈弒彙徬微愚意慈感想愛惹愁愈慎慌慄慍愾愴愧愍愆愷戡戢搓搾搞搪搭搽搬搏搜搔損搶搖搗搆敬斟新暗暉暇暈暖暄暘暍會榔業"],["b7a1","楚楷楠楔極椰概楊楨楫楞楓楹榆楝楣楛歇歲毀殿毓毽溢溯滓溶滂源溝滇滅溥溘溼溺溫滑準溜滄滔溪溧溴煎煙煩煤煉照煜煬煦煌煥煞煆煨煖爺牒猷獅猿猾瑯瑚瑕瑟瑞瑁琿瑙瑛瑜當畸瘀痰瘁痲痱痺痿痴痳盞盟睛睫睦睞督"],["b840","睹睪睬睜睥睨睢矮碎碰碗碘碌碉硼碑碓硿祺祿禁萬禽稜稚稠稔稟稞窟窠筷節筠筮筧粱粳粵經絹綑綁綏絛置罩罪署義羨群聖聘肆肄腱腰腸腥腮腳腫"],["b8a1","腹腺腦舅艇蒂葷落萱葵葦葫葉葬葛萼萵葡董葩葭葆虞虜號蛹蜓蜈蜇蜀蛾蛻蜂蜃蜆蜊衙裟裔裙補裘裝裡裊裕裒覜解詫該詳試詩詰誇詼詣誠話誅詭詢詮詬詹詻訾詨豢貊貉賊資賈賄貲賃賂賅跡跟跨路跳跺跪跤跦躲較載軾輊"],["b940","辟農運遊道遂達逼違遐遇遏過遍遑逾遁鄒鄗酬酪酩釉鈷鉗鈸鈽鉀鈾鉛鉋鉤鉑鈴鉉鉍鉅鈹鈿鉚閘隘隔隕雍雋雉雊雷電雹零靖靴靶預頑頓頊頒頌飼飴"],["b9a1","飽飾馳馱馴髡鳩麂鼎鼓鼠僧僮僥僖僭僚僕像僑僱僎僩兢凳劃劂匱厭嗾嘀嘛嘗嗽嘔嘆嘉嘍嘎嗷嘖嘟嘈嘐嗶團圖塵塾境墓墊塹墅塽壽夥夢夤奪奩嫡嫦嫩嫗嫖嫘嫣孵寞寧寡寥實寨寢寤察對屢嶄嶇幛幣幕幗幔廓廖弊彆彰徹慇"],["ba40","愿態慷慢慣慟慚慘慵截撇摘摔撤摸摟摺摑摧搴摭摻敲斡旗旖暢暨暝榜榨榕槁榮槓構榛榷榻榫榴槐槍榭槌榦槃榣歉歌氳漳演滾漓滴漩漾漠漬漏漂漢"],["baa1","滿滯漆漱漸漲漣漕漫漯澈漪滬漁滲滌滷熔熙煽熊熄熒爾犒犖獄獐瑤瑣瑪瑰瑭甄疑瘧瘍瘋瘉瘓盡監瞄睽睿睡磁碟碧碳碩碣禎福禍種稱窪窩竭端管箕箋筵算箝箔箏箸箇箄粹粽精綻綰綜綽綾綠緊綴網綱綺綢綿綵綸維緒緇綬"],["bb40","罰翠翡翟聞聚肇腐膀膏膈膊腿膂臧臺與舔舞艋蓉蒿蓆蓄蒙蒞蒲蒜蓋蒸蓀蓓蒐蒼蓑蓊蜿蜜蜻蜢蜥蜴蜘蝕蜷蜩裳褂裴裹裸製裨褚裯誦誌語誣認誡誓誤"],["bba1","說誥誨誘誑誚誧豪貍貌賓賑賒赫趙趕跼輔輒輕輓辣遠遘遜遣遙遞遢遝遛鄙鄘鄞酵酸酷酴鉸銀銅銘銖鉻銓銜銨鉼銑閡閨閩閣閥閤隙障際雌雒需靼鞅韶頗領颯颱餃餅餌餉駁骯骰髦魁魂鳴鳶鳳麼鼻齊億儀僻僵價儂儈儉儅凜"],["bc40","劇劈劉劍劊勰厲嘮嘻嘹嘲嘿嘴嘩噓噎噗噴嘶嘯嘰墀墟增墳墜墮墩墦奭嬉嫻嬋嫵嬌嬈寮寬審寫層履嶝嶔幢幟幡廢廚廟廝廣廠彈影德徵慶慧慮慝慕憂"],["bca1","慼慰慫慾憧憐憫憎憬憚憤憔憮戮摩摯摹撞撲撈撐撰撥撓撕撩撒撮播撫撚撬撙撢撳敵敷數暮暫暴暱樣樟槨樁樞標槽模樓樊槳樂樅槭樑歐歎殤毅毆漿潼澄潑潦潔澆潭潛潸潮澎潺潰潤澗潘滕潯潠潟熟熬熱熨牖犛獎獗瑩璋璃"],["bd40","瑾璀畿瘠瘩瘟瘤瘦瘡瘢皚皺盤瞎瞇瞌瞑瞋磋磅確磊碾磕碼磐稿稼穀稽稷稻窯窮箭箱範箴篆篇篁箠篌糊締練緯緻緘緬緝編緣線緞緩綞緙緲緹罵罷羯"],["bda1","翩耦膛膜膝膠膚膘蔗蔽蔚蓮蔬蔭蔓蔑蔣蔡蔔蓬蔥蓿蔆螂蝴蝶蝠蝦蝸蝨蝙蝗蝌蝓衛衝褐複褒褓褕褊誼諒談諄誕請諸課諉諂調誰論諍誶誹諛豌豎豬賠賞賦賤賬賭賢賣賜質賡赭趟趣踫踐踝踢踏踩踟踡踞躺輝輛輟輩輦輪輜輞"],["be40","輥適遮遨遭遷鄰鄭鄧鄱醇醉醋醃鋅銻銷鋪銬鋤鋁銳銼鋒鋇鋰銲閭閱霄霆震霉靠鞍鞋鞏頡頫頜颳養餓餒餘駝駐駟駛駑駕駒駙骷髮髯鬧魅魄魷魯鴆鴉"],["bea1","鴃麩麾黎墨齒儒儘儔儐儕冀冪凝劑劓勳噙噫噹噩噤噸噪器噥噱噯噬噢噶壁墾壇壅奮嬝嬴學寰導彊憲憑憩憊懍憶憾懊懈戰擅擁擋撻撼據擄擇擂操撿擒擔撾整曆曉暹曄曇暸樽樸樺橙橫橘樹橄橢橡橋橇樵機橈歙歷氅濂澱澡"],["bf40","濃澤濁澧澳激澹澶澦澠澴熾燉燐燒燈燕熹燎燙燜燃燄獨璜璣璘璟璞瓢甌甍瘴瘸瘺盧盥瞠瞞瞟瞥磨磚磬磧禦積穎穆穌穋窺篙簑築篤篛篡篩篦糕糖縊"],["bfa1","縑縈縛縣縞縝縉縐罹羲翰翱翮耨膳膩膨臻興艘艙蕊蕙蕈蕨蕩蕃蕉蕭蕪蕞螃螟螞螢融衡褪褲褥褫褡親覦諦諺諫諱謀諜諧諮諾謁謂諷諭諳諶諼豫豭貓賴蹄踱踴蹂踹踵輻輯輸輳辨辦遵遴選遲遼遺鄴醒錠錶鋸錳錯錢鋼錫錄錚"],["c040","錐錦錡錕錮錙閻隧隨險雕霎霑霖霍霓霏靛靜靦鞘頰頸頻頷頭頹頤餐館餞餛餡餚駭駢駱骸骼髻髭鬨鮑鴕鴣鴦鴨鴒鴛默黔龍龜優償儡儲勵嚎嚀嚐嚅嚇"],["c0a1","嚏壕壓壑壎嬰嬪嬤孺尷屨嶼嶺嶽嶸幫彌徽應懂懇懦懋戲戴擎擊擘擠擰擦擬擱擢擭斂斃曙曖檀檔檄檢檜櫛檣橾檗檐檠歜殮毚氈濘濱濟濠濛濤濫濯澀濬濡濩濕濮濰燧營燮燦燥燭燬燴燠爵牆獰獲璩環璦璨癆療癌盪瞳瞪瞰瞬"],["c140","瞧瞭矯磷磺磴磯礁禧禪穗窿簇簍篾篷簌篠糠糜糞糢糟糙糝縮績繆縷縲繃縫總縱繅繁縴縹繈縵縿縯罄翳翼聱聲聰聯聳臆臃膺臂臀膿膽臉膾臨舉艱薪"],["c1a1","薄蕾薜薑薔薯薛薇薨薊虧蟀蟑螳蟒蟆螫螻螺蟈蟋褻褶襄褸褽覬謎謗謙講謊謠謝謄謐豁谿豳賺賽購賸賻趨蹉蹋蹈蹊轄輾轂轅輿避遽還邁邂邀鄹醣醞醜鍍鎂錨鍵鍊鍥鍋錘鍾鍬鍛鍰鍚鍔闊闋闌闈闆隱隸雖霜霞鞠韓顆颶餵騁"],["c240","駿鮮鮫鮪鮭鴻鴿麋黏點黜黝黛鼾齋叢嚕嚮壙壘嬸彝懣戳擴擲擾攆擺擻擷斷曜朦檳檬櫃檻檸櫂檮檯歟歸殯瀉瀋濾瀆濺瀑瀏燻燼燾燸獷獵璧璿甕癖癘"],["c2a1","癒瞽瞿瞻瞼礎禮穡穢穠竄竅簫簧簪簞簣簡糧織繕繞繚繡繒繙罈翹翻職聶臍臏舊藏薩藍藐藉薰薺薹薦蟯蟬蟲蟠覆覲觴謨謹謬謫豐贅蹙蹣蹦蹤蹟蹕軀轉轍邇邃邈醫醬釐鎔鎊鎖鎢鎳鎮鎬鎰鎘鎚鎗闔闖闐闕離雜雙雛雞霤鞣鞦"],["c340","鞭韹額顏題顎顓颺餾餿餽餮馥騎髁鬃鬆魏魎魍鯊鯉鯽鯈鯀鵑鵝鵠黠鼕鼬儳嚥壞壟壢寵龐廬懲懷懶懵攀攏曠曝櫥櫝櫚櫓瀛瀟瀨瀚瀝瀕瀘爆爍牘犢獸"],["c3a1","獺璽瓊瓣疇疆癟癡矇礙禱穫穩簾簿簸簽簷籀繫繭繹繩繪羅繳羶羹羸臘藩藝藪藕藤藥藷蟻蠅蠍蟹蟾襠襟襖襞譁譜識證譚譎譏譆譙贈贊蹼蹲躇蹶蹬蹺蹴轔轎辭邊邋醱醮鏡鏑鏟鏃鏈鏜鏝鏖鏢鏍鏘鏤鏗鏨關隴難霪霧靡韜韻類"],["c440","願顛颼饅饉騖騙鬍鯨鯧鯖鯛鶉鵡鵲鵪鵬麒麗麓麴勸嚨嚷嚶嚴嚼壤孀孃孽寶巉懸懺攘攔攙曦朧櫬瀾瀰瀲爐獻瓏癢癥礦礪礬礫竇競籌籃籍糯糰辮繽繼"],["c4a1","纂罌耀臚艦藻藹蘑藺蘆蘋蘇蘊蠔蠕襤覺觸議譬警譯譟譫贏贍躉躁躅躂醴釋鐘鐃鏽闡霰飄饒饑馨騫騰騷騵鰓鰍鹹麵黨鼯齟齣齡儷儸囁囀囂夔屬巍懼懾攝攜斕曩櫻欄櫺殲灌爛犧瓖瓔癩矓籐纏續羼蘗蘭蘚蠣蠢蠡蠟襪襬覽譴"],["c540","護譽贓躊躍躋轟辯醺鐮鐳鐵鐺鐸鐲鐫闢霸霹露響顧顥饗驅驃驀騾髏魔魑鰭鰥鶯鶴鷂鶸麝黯鼙齜齦齧儼儻囈囊囉孿巔巒彎懿攤權歡灑灘玀瓤疊癮癬"],["c5a1","禳籠籟聾聽臟襲襯觼讀贖贗躑躓轡酈鑄鑑鑒霽霾韃韁顫饕驕驍髒鬚鱉鰱鰾鰻鷓鷗鼴齬齪龔囌巖戀攣攫攪曬欐瓚竊籤籣籥纓纖纔臢蘸蘿蠱變邐邏鑣鑠鑤靨顯饜驚驛驗髓體髑鱔鱗鱖鷥麟黴囑壩攬灞癱癲矗罐羈蠶蠹衢讓讒"],["c640","讖艷贛釀鑪靂靈靄韆顰驟鬢魘鱟鷹鷺鹼鹽鼇齷齲廳欖灣籬籮蠻觀躡釁鑲鑰顱饞髖鬣黌灤矚讚鑷韉驢驥纜讜躪釅鑽鑾鑼鱷鱸黷豔鑿鸚爨驪鬱鸛鸞籲"],["c940","乂乜凵匚厂万丌乇亍囗兀屮彳丏冇与丮亓仂仉仈冘勼卬厹圠夃夬尐巿旡殳毌气爿丱丼仨仜仩仡仝仚刌匜卌圢圣夗夯宁宄尒尻屴屳帄庀庂忉戉扐氕"],["c9a1","氶汃氿氻犮犰玊禸肊阞伎优伬仵伔仱伀价伈伝伂伅伢伓伄仴伒冱刓刉刐劦匢匟卍厊吇囡囟圮圪圴夼妀奼妅奻奾奷奿孖尕尥屼屺屻屾巟幵庄异弚彴忕忔忏扜扞扤扡扦扢扙扠扚扥旯旮朾朹朸朻机朿朼朳氘汆汒汜汏汊汔汋"],["ca40","汌灱牞犴犵玎甪癿穵网艸艼芀艽艿虍襾邙邗邘邛邔阢阤阠阣佖伻佢佉体佤伾佧佒佟佁佘伭伳伿佡冏冹刜刞刡劭劮匉卣卲厎厏吰吷吪呔呅吙吜吥吘"],["caa1","吽呏呁吨吤呇囮囧囥坁坅坌坉坋坒夆奀妦妘妠妗妎妢妐妏妧妡宎宒尨尪岍岏岈岋岉岒岊岆岓岕巠帊帎庋庉庌庈庍弅弝彸彶忒忑忐忭忨忮忳忡忤忣忺忯忷忻怀忴戺抃抌抎抏抔抇扱扻扺扰抁抈扷扽扲扴攷旰旴旳旲旵杅杇"],["cb40","杙杕杌杈杝杍杚杋毐氙氚汸汧汫沄沋沏汱汯汩沚汭沇沕沜汦汳汥汻沎灴灺牣犿犽狃狆狁犺狅玕玗玓玔玒町甹疔疕皁礽耴肕肙肐肒肜芐芏芅芎芑芓"],["cba1","芊芃芄豸迉辿邟邡邥邞邧邠阰阨阯阭丳侘佼侅佽侀侇佶佴侉侄佷佌侗佪侚佹侁佸侐侜侔侞侒侂侕佫佮冞冼冾刵刲刳剆刱劼匊匋匼厒厔咇呿咁咑咂咈呫呺呾呥呬呴呦咍呯呡呠咘呣呧呤囷囹坯坲坭坫坱坰坶垀坵坻坳坴坢"],["cc40","坨坽夌奅妵妺姏姎妲姌姁妶妼姃姖妱妽姀姈妴姇孢孥宓宕屄屇岮岤岠岵岯岨岬岟岣岭岢岪岧岝岥岶岰岦帗帔帙弨弢弣弤彔徂彾彽忞忥怭怦怙怲怋"],["cca1","怴怊怗怳怚怞怬怢怍怐怮怓怑怌怉怜戔戽抭抴拑抾抪抶拊抮抳抯抻抩抰抸攽斨斻昉旼昄昒昈旻昃昋昍昅旽昑昐曶朊枅杬枎枒杶杻枘枆构杴枍枌杺枟枑枙枃杽极杸杹枔欥殀歾毞氝沓泬泫泮泙沶泔沭泧沷泐泂沺泃泆泭泲"],["cd40","泒泝沴沊沝沀泞泀洰泍泇沰泹泏泩泑炔炘炅炓炆炄炑炖炂炚炃牪狖狋狘狉狜狒狔狚狌狑玤玡玭玦玢玠玬玝瓝瓨甿畀甾疌疘皯盳盱盰盵矸矼矹矻矺"],["cda1","矷祂礿秅穸穻竻籵糽耵肏肮肣肸肵肭舠芠苀芫芚芘芛芵芧芮芼芞芺芴芨芡芩苂芤苃芶芢虰虯虭虮豖迒迋迓迍迖迕迗邲邴邯邳邰阹阽阼阺陃俍俅俓侲俉俋俁俔俜俙侻侳俛俇俖侺俀侹俬剄剉勀勂匽卼厗厖厙厘咺咡咭咥哏"],["ce40","哃茍咷咮哖咶哅哆咠呰咼咢咾呲哞咰垵垞垟垤垌垗垝垛垔垘垏垙垥垚垕壴复奓姡姞姮娀姱姝姺姽姼姶姤姲姷姛姩姳姵姠姾姴姭宨屌峐峘峌峗峋峛"],["cea1","峞峚峉峇峊峖峓峔峏峈峆峎峟峸巹帡帢帣帠帤庰庤庢庛庣庥弇弮彖徆怷怹恔恲恞恅恓恇恉恛恌恀恂恟怤恄恘恦恮扂扃拏挍挋拵挎挃拫拹挏挌拸拶挀挓挔拺挕拻拰敁敃斪斿昶昡昲昵昜昦昢昳昫昺昝昴昹昮朏朐柁柲柈枺"],["cf40","柜枻柸柘柀枷柅柫柤柟枵柍枳柷柶柮柣柂枹柎柧柰枲柼柆柭柌枮柦柛柺柉柊柃柪柋欨殂殄殶毖毘毠氠氡洨洴洭洟洼洿洒洊泚洳洄洙洺洚洑洀洝浂"],["cfa1","洁洘洷洃洏浀洇洠洬洈洢洉洐炷炟炾炱炰炡炴炵炩牁牉牊牬牰牳牮狊狤狨狫狟狪狦狣玅珌珂珈珅玹玶玵玴珫玿珇玾珃珆玸珋瓬瓮甮畇畈疧疪癹盄眈眃眄眅眊盷盻盺矧矨砆砑砒砅砐砏砎砉砃砓祊祌祋祅祄秕种秏秖秎窀"],["d040","穾竑笀笁籺籸籹籿粀粁紃紈紁罘羑羍羾耇耎耏耔耷胘胇胠胑胈胂胐胅胣胙胜胊胕胉胏胗胦胍臿舡芔苙苾苹茇苨茀苕茺苫苖苴苬苡苲苵茌苻苶苰苪"],["d0a1","苤苠苺苳苭虷虴虼虳衁衎衧衪衩觓訄訇赲迣迡迮迠郱邽邿郕郅邾郇郋郈釔釓陔陏陑陓陊陎倞倅倇倓倢倰倛俵俴倳倷倬俶俷倗倜倠倧倵倯倱倎党冔冓凊凄凅凈凎剡剚剒剞剟剕剢勍匎厞唦哢唗唒哧哳哤唚哿唄唈哫唑唅哱"],["d140","唊哻哷哸哠唎唃唋圁圂埌堲埕埒垺埆垽垼垸垶垿埇埐垹埁夎奊娙娖娭娮娕娏娗娊娞娳孬宧宭宬尃屖屔峬峿峮峱峷崀峹帩帨庨庮庪庬弳弰彧恝恚恧"],["d1a1","恁悢悈悀悒悁悝悃悕悛悗悇悜悎戙扆拲挐捖挬捄捅挶捃揤挹捋捊挼挩捁挴捘捔捙挭捇挳捚捑挸捗捀捈敊敆旆旃旄旂晊晟晇晑朒朓栟栚桉栲栳栻桋桏栖栱栜栵栫栭栯桎桄栴栝栒栔栦栨栮桍栺栥栠欬欯欭欱欴歭肂殈毦毤"],["d240","毨毣毢毧氥浺浣浤浶洍浡涒浘浢浭浯涑涍淯浿涆浞浧浠涗浰浼浟涂涘洯浨涋浾涀涄洖涃浻浽浵涐烜烓烑烝烋缹烢烗烒烞烠烔烍烅烆烇烚烎烡牂牸"],["d2a1","牷牶猀狺狴狾狶狳狻猁珓珙珥珖玼珧珣珩珜珒珛珔珝珚珗珘珨瓞瓟瓴瓵甡畛畟疰痁疻痄痀疿疶疺皊盉眝眛眐眓眒眣眑眕眙眚眢眧砣砬砢砵砯砨砮砫砡砩砳砪砱祔祛祏祜祓祒祑秫秬秠秮秭秪秜秞秝窆窉窅窋窌窊窇竘笐"],["d340","笄笓笅笏笈笊笎笉笒粄粑粊粌粈粍粅紞紝紑紎紘紖紓紟紒紏紌罜罡罞罠罝罛羖羒翃翂翀耖耾耹胺胲胹胵脁胻脀舁舯舥茳茭荄茙荑茥荖茿荁茦茜茢"],["d3a1","荂荎茛茪茈茼荍茖茤茠茷茯茩荇荅荌荓茞茬荋茧荈虓虒蚢蚨蚖蚍蚑蚞蚇蚗蚆蚋蚚蚅蚥蚙蚡蚧蚕蚘蚎蚝蚐蚔衃衄衭衵衶衲袀衱衿衯袃衾衴衼訒豇豗豻貤貣赶赸趵趷趶軑軓迾迵适迿迻逄迼迶郖郠郙郚郣郟郥郘郛郗郜郤酐"],["d440","酎酏釕釢釚陜陟隼飣髟鬯乿偰偪偡偞偠偓偋偝偲偈偍偁偛偊偢倕偅偟偩偫偣偤偆偀偮偳偗偑凐剫剭剬剮勖勓匭厜啵啶唼啍啐唴唪啑啢唶唵唰啒啅"],["d4a1","唌唲啥啎唹啈唭唻啀啋圊圇埻堔埢埶埜埴堀埭埽堈埸堋埳埏堇埮埣埲埥埬埡堎埼堐埧堁堌埱埩埰堍堄奜婠婘婕婧婞娸娵婭婐婟婥婬婓婤婗婃婝婒婄婛婈媎娾婍娹婌婰婩婇婑婖婂婜孲孮寁寀屙崞崋崝崚崠崌崨崍崦崥崏"],["d540","崰崒崣崟崮帾帴庱庴庹庲庳弶弸徛徖徟悊悐悆悾悰悺惓惔惏惤惙惝惈悱惛悷惊悿惃惍惀挲捥掊掂捽掽掞掭掝掗掫掎捯掇掐据掯捵掜捭掮捼掤挻掟"],["d5a1","捸掅掁掑掍捰敓旍晥晡晛晙晜晢朘桹梇梐梜桭桮梮梫楖桯梣梬梩桵桴梲梏桷梒桼桫桲梪梀桱桾梛梖梋梠梉梤桸桻梑梌梊桽欶欳欷欸殑殏殍殎殌氪淀涫涴涳湴涬淩淢涷淶淔渀淈淠淟淖涾淥淜淝淛淴淊涽淭淰涺淕淂淏淉"],["d640","淐淲淓淽淗淍淣涻烺焍烷焗烴焌烰焄烳焐烼烿焆焓焀烸烶焋焂焎牾牻牼牿猝猗猇猑猘猊猈狿猏猞玈珶珸珵琄琁珽琇琀珺珼珿琌琋珴琈畤畣痎痒痏"],["d6a1","痋痌痑痐皏皉盓眹眯眭眱眲眴眳眽眥眻眵硈硒硉硍硊硌砦硅硐祤祧祩祪祣祫祡离秺秸秶秷窏窔窐笵筇笴笥笰笢笤笳笘笪笝笱笫笭笯笲笸笚笣粔粘粖粣紵紽紸紶紺絅紬紩絁絇紾紿絊紻紨罣羕羜羝羛翊翋翍翐翑翇翏翉耟"],["d740","耞耛聇聃聈脘脥脙脛脭脟脬脞脡脕脧脝脢舑舸舳舺舴舲艴莐莣莨莍荺荳莤荴莏莁莕莙荵莔莩荽莃莌莝莛莪莋荾莥莯莈莗莰荿莦莇莮荶莚虙虖蚿蚷"],["d7a1","蛂蛁蛅蚺蚰蛈蚹蚳蚸蛌蚴蚻蚼蛃蚽蚾衒袉袕袨袢袪袚袑袡袟袘袧袙袛袗袤袬袌袓袎覂觖觙觕訰訧訬訞谹谻豜豝豽貥赽赻赹趼跂趹趿跁軘軞軝軜軗軠軡逤逋逑逜逌逡郯郪郰郴郲郳郔郫郬郩酖酘酚酓酕釬釴釱釳釸釤釹釪"],["d840","釫釷釨釮镺閆閈陼陭陫陱陯隿靪頄飥馗傛傕傔傞傋傣傃傌傎傝偨傜傒傂傇兟凔匒匑厤厧喑喨喥喭啷噅喢喓喈喏喵喁喣喒喤啽喌喦啿喕喡喎圌堩堷"],["d8a1","堙堞堧堣堨埵塈堥堜堛堳堿堶堮堹堸堭堬堻奡媯媔媟婺媢媞婸媦婼媥媬媕媮娷媄媊媗媃媋媩婻婽媌媜媏媓媝寪寍寋寔寑寊寎尌尰崷嵃嵫嵁嵋崿崵嵑嵎嵕崳崺嵒崽崱嵙嵂崹嵉崸崼崲崶嵀嵅幄幁彘徦徥徫惉悹惌惢惎惄愔"],["d940","惲愊愖愅惵愓惸惼惾惁愃愘愝愐惿愄愋扊掔掱掰揎揥揨揯揃撝揳揊揠揶揕揲揵摡揟掾揝揜揄揘揓揂揇揌揋揈揰揗揙攲敧敪敤敜敨敥斌斝斞斮旐旒"],["d9a1","晼晬晻暀晱晹晪晲朁椌棓椄棜椪棬棪棱椏棖棷棫棤棶椓椐棳棡椇棌椈楰梴椑棯棆椔棸棐棽棼棨椋椊椗棎棈棝棞棦棴棑椆棔棩椕椥棇欹欻欿欼殔殗殙殕殽毰毲毳氰淼湆湇渟湉溈渼渽湅湢渫渿湁湝湳渜渳湋湀湑渻渃渮湞"],["da40","湨湜湡渱渨湠湱湫渹渢渰湓湥渧湸湤湷湕湹湒湦渵渶湚焠焞焯烻焮焱焣焥焢焲焟焨焺焛牋牚犈犉犆犅犋猒猋猰猢猱猳猧猲猭猦猣猵猌琮琬琰琫琖"],["daa1","琚琡琭琱琤琣琝琩琠琲瓻甯畯畬痧痚痡痦痝痟痤痗皕皒盚睆睇睄睍睅睊睎睋睌矞矬硠硤硥硜硭硱硪确硰硩硨硞硢祴祳祲祰稂稊稃稌稄窙竦竤筊笻筄筈筌筎筀筘筅粢粞粨粡絘絯絣絓絖絧絪絏絭絜絫絒絔絩絑絟絎缾缿罥"],["db40","罦羢羠羡翗聑聏聐胾胔腃腊腒腏腇脽腍脺臦臮臷臸臹舄舼舽舿艵茻菏菹萣菀菨萒菧菤菼菶萐菆菈菫菣莿萁菝菥菘菿菡菋菎菖菵菉萉萏菞萑萆菂菳"],["dba1","菕菺菇菑菪萓菃菬菮菄菻菗菢萛菛菾蛘蛢蛦蛓蛣蛚蛪蛝蛫蛜蛬蛩蛗蛨蛑衈衖衕袺裗袹袸裀袾袶袼袷袽袲褁裉覕覘覗觝觚觛詎詍訹詙詀詗詘詄詅詒詈詑詊詌詏豟貁貀貺貾貰貹貵趄趀趉跘跓跍跇跖跜跏跕跙跈跗跅軯軷軺"],["dc40","軹軦軮軥軵軧軨軶軫軱軬軴軩逭逴逯鄆鄬鄄郿郼鄈郹郻鄁鄀鄇鄅鄃酡酤酟酢酠鈁鈊鈥鈃鈚鈦鈏鈌鈀鈒釿釽鈆鈄鈧鈂鈜鈤鈙鈗鈅鈖镻閍閌閐隇陾隈"],["dca1","隉隃隀雂雈雃雱雰靬靰靮頇颩飫鳦黹亃亄亶傽傿僆傮僄僊傴僈僂傰僁傺傱僋僉傶傸凗剺剸剻剼嗃嗛嗌嗐嗋嗊嗝嗀嗔嗄嗩喿嗒喍嗏嗕嗢嗖嗈嗲嗍嗙嗂圔塓塨塤塏塍塉塯塕塎塝塙塥塛堽塣塱壼嫇嫄嫋媺媸媱媵媰媿嫈媻嫆"],["dd40","媷嫀嫊媴媶嫍媹媐寖寘寙尟尳嵱嵣嵊嵥嵲嵬嵞嵨嵧嵢巰幏幎幊幍幋廅廌廆廋廇彀徯徭惷慉慊愫慅愶愲愮慆愯慏愩慀戠酨戣戥戤揅揱揫搐搒搉搠搤"],["dda1","搳摃搟搕搘搹搷搢搣搌搦搰搨摁搵搯搊搚摀搥搧搋揧搛搮搡搎敯斒旓暆暌暕暐暋暊暙暔晸朠楦楟椸楎楢楱椿楅楪椹楂楗楙楺楈楉椵楬椳椽楥棰楸椴楩楀楯楄楶楘楁楴楌椻楋椷楜楏楑椲楒椯楻椼歆歅歃歂歈歁殛嗀毻毼"],["de40","毹毷毸溛滖滈溏滀溟溓溔溠溱溹滆滒溽滁溞滉溷溰滍溦滏溲溾滃滜滘溙溒溎溍溤溡溿溳滐滊溗溮溣煇煔煒煣煠煁煝煢煲煸煪煡煂煘煃煋煰煟煐煓"],["dea1","煄煍煚牏犍犌犑犐犎猼獂猻猺獀獊獉瑄瑊瑋瑒瑑瑗瑀瑏瑐瑎瑂瑆瑍瑔瓡瓿瓾瓽甝畹畷榃痯瘏瘃痷痾痼痹痸瘐痻痶痭痵痽皙皵盝睕睟睠睒睖睚睩睧睔睙睭矠碇碚碔碏碄碕碅碆碡碃硹碙碀碖硻祼禂祽祹稑稘稙稒稗稕稢稓"],["df40","稛稐窣窢窞竫筦筤筭筴筩筲筥筳筱筰筡筸筶筣粲粴粯綈綆綀綍絿綅絺綎絻綃絼綌綔綄絽綒罭罫罧罨罬羦羥羧翛翜耡腤腠腷腜腩腛腢腲朡腞腶腧腯"],["dfa1","腄腡舝艉艄艀艂艅蓱萿葖葶葹蒏蒍葥葑葀蒆葧萰葍葽葚葙葴葳葝蔇葞萷萺萴葺葃葸萲葅萩菙葋萯葂萭葟葰萹葎葌葒葯蓅蒎萻葇萶萳葨葾葄萫葠葔葮葐蜋蜄蛷蜌蛺蛖蛵蝍蛸蜎蜉蜁蛶蜍蜅裖裋裍裎裞裛裚裌裐覅覛觟觥觤"],["e040","觡觠觢觜触詶誆詿詡訿詷誂誄詵誃誁詴詺谼豋豊豥豤豦貆貄貅賌赨赩趑趌趎趏趍趓趔趐趒跰跠跬跱跮跐跩跣跢跧跲跫跴輆軿輁輀輅輇輈輂輋遒逿"],["e0a1","遄遉逽鄐鄍鄏鄑鄖鄔鄋鄎酮酯鉈鉒鈰鈺鉦鈳鉥鉞銃鈮鉊鉆鉭鉬鉏鉠鉧鉯鈶鉡鉰鈱鉔鉣鉐鉲鉎鉓鉌鉖鈲閟閜閞閛隒隓隑隗雎雺雽雸雵靳靷靸靲頏頍頎颬飶飹馯馲馰馵骭骫魛鳪鳭鳧麀黽僦僔僗僨僳僛僪僝僤僓僬僰僯僣僠"],["e140","凘劀劁勩勫匰厬嘧嘕嘌嘒嗼嘏嘜嘁嘓嘂嗺嘝嘄嗿嗹墉塼墐墘墆墁塿塴墋塺墇墑墎塶墂墈塻墔墏壾奫嫜嫮嫥嫕嫪嫚嫭嫫嫳嫢嫠嫛嫬嫞嫝嫙嫨嫟孷寠"],["e1a1","寣屣嶂嶀嵽嶆嵺嶁嵷嶊嶉嶈嵾嵼嶍嵹嵿幘幙幓廘廑廗廎廜廕廙廒廔彄彃彯徶愬愨慁慞慱慳慒慓慲慬憀慴慔慺慛慥愻慪慡慖戩戧戫搫摍摛摝摴摶摲摳摽摵摦撦摎撂摞摜摋摓摠摐摿搿摬摫摙摥摷敳斠暡暠暟朅朄朢榱榶槉"],["e240","榠槎榖榰榬榼榑榙榎榧榍榩榾榯榿槄榽榤槔榹槊榚槏榳榓榪榡榞槙榗榐槂榵榥槆歊歍歋殞殟殠毃毄毾滎滵滱漃漥滸漷滻漮漉潎漙漚漧漘漻漒滭漊"],["e2a1","漶潳滹滮漭潀漰漼漵滫漇漎潃漅滽滶漹漜滼漺漟漍漞漈漡熇熐熉熀熅熂熏煻熆熁熗牄牓犗犕犓獃獍獑獌瑢瑳瑱瑵瑲瑧瑮甀甂甃畽疐瘖瘈瘌瘕瘑瘊瘔皸瞁睼瞅瞂睮瞀睯睾瞃碲碪碴碭碨硾碫碞碥碠碬碢碤禘禊禋禖禕禔禓"],["e340","禗禈禒禐稫穊稰稯稨稦窨窫窬竮箈箜箊箑箐箖箍箌箛箎箅箘劄箙箤箂粻粿粼粺綧綷緂綣綪緁緀緅綝緎緄緆緋緌綯綹綖綼綟綦綮綩綡緉罳翢翣翥翞"],["e3a1","耤聝聜膉膆膃膇膍膌膋舕蒗蒤蒡蒟蒺蓎蓂蒬蒮蒫蒹蒴蓁蓍蒪蒚蒱蓐蒝蒧蒻蒢蒔蓇蓌蒛蒩蒯蒨蓖蒘蒶蓏蒠蓗蓔蓒蓛蒰蒑虡蜳蜣蜨蝫蝀蜮蜞蜡蜙蜛蝃蜬蝁蜾蝆蜠蜲蜪蜭蜼蜒蜺蜱蜵蝂蜦蜧蜸蜤蜚蜰蜑裷裧裱裲裺裾裮裼裶裻"],["e440","裰裬裫覝覡覟覞觩觫觨誫誙誋誒誏誖谽豨豩賕賏賗趖踉踂跿踍跽踊踃踇踆踅跾踀踄輐輑輎輍鄣鄜鄠鄢鄟鄝鄚鄤鄡鄛酺酲酹酳銥銤鉶銛鉺銠銔銪銍"],["e4a1","銦銚銫鉹銗鉿銣鋮銎銂銕銢鉽銈銡銊銆銌銙銧鉾銇銩銝銋鈭隞隡雿靘靽靺靾鞃鞀鞂靻鞄鞁靿韎韍頖颭颮餂餀餇馝馜駃馹馻馺駂馽駇骱髣髧鬾鬿魠魡魟鳱鳲鳵麧僿儃儰僸儆儇僶僾儋儌僽儊劋劌勱勯噈噂噌嘵噁噊噉噆噘"],["e540","噚噀嘳嘽嘬嘾嘸嘪嘺圚墫墝墱墠墣墯墬墥墡壿嫿嫴嫽嫷嫶嬃嫸嬂嫹嬁嬇嬅嬏屧嶙嶗嶟嶒嶢嶓嶕嶠嶜嶡嶚嶞幩幝幠幜緳廛廞廡彉徲憋憃慹憱憰憢憉"],["e5a1","憛憓憯憭憟憒憪憡憍慦憳戭摮摰撖撠撅撗撜撏撋撊撌撣撟摨撱撘敶敺敹敻斲斳暵暰暩暲暷暪暯樀樆樗槥槸樕槱槤樠槿槬槢樛樝槾樧槲槮樔槷槧橀樈槦槻樍槼槫樉樄樘樥樏槶樦樇槴樖歑殥殣殢殦氁氀毿氂潁漦潾澇濆澒"],["e640","澍澉澌潢潏澅潚澖潶潬澂潕潲潒潐潗澔澓潝漀潡潫潽潧澐潓澋潩潿澕潣潷潪潻熲熯熛熰熠熚熩熵熝熥熞熤熡熪熜熧熳犘犚獘獒獞獟獠獝獛獡獚獙"],["e6a1","獢璇璉璊璆璁瑽璅璈瑼瑹甈甇畾瘥瘞瘙瘝瘜瘣瘚瘨瘛皜皝皞皛瞍瞏瞉瞈磍碻磏磌磑磎磔磈磃磄磉禚禡禠禜禢禛歶稹窲窴窳箷篋箾箬篎箯箹篊箵糅糈糌糋緷緛緪緧緗緡縃緺緦緶緱緰緮緟罶羬羰羭翭翫翪翬翦翨聤聧膣膟"],["e740","膞膕膢膙膗舖艏艓艒艐艎艑蔤蔻蔏蔀蔩蔎蔉蔍蔟蔊蔧蔜蓻蔫蓺蔈蔌蓴蔪蓲蔕蓷蓫蓳蓼蔒蓪蓩蔖蓾蔨蔝蔮蔂蓽蔞蓶蔱蔦蓧蓨蓰蓯蓹蔘蔠蔰蔋蔙蔯虢"],["e7a1","蝖蝣蝤蝷蟡蝳蝘蝔蝛蝒蝡蝚蝑蝞蝭蝪蝐蝎蝟蝝蝯蝬蝺蝮蝜蝥蝏蝻蝵蝢蝧蝩衚褅褌褔褋褗褘褙褆褖褑褎褉覢覤覣觭觰觬諏諆誸諓諑諔諕誻諗誾諀諅諘諃誺誽諙谾豍貏賥賟賙賨賚賝賧趠趜趡趛踠踣踥踤踮踕踛踖踑踙踦踧"],["e840","踔踒踘踓踜踗踚輬輤輘輚輠輣輖輗遳遰遯遧遫鄯鄫鄩鄪鄲鄦鄮醅醆醊醁醂醄醀鋐鋃鋄鋀鋙銶鋏鋱鋟鋘鋩鋗鋝鋌鋯鋂鋨鋊鋈鋎鋦鋍鋕鋉鋠鋞鋧鋑鋓"],["e8a1","銵鋡鋆銴镼閬閫閮閰隤隢雓霅霈霂靚鞊鞎鞈韐韏頞頝頦頩頨頠頛頧颲餈飺餑餔餖餗餕駜駍駏駓駔駎駉駖駘駋駗駌骳髬髫髳髲髱魆魃魧魴魱魦魶魵魰魨魤魬鳼鳺鳽鳿鳷鴇鴀鳹鳻鴈鴅鴄麃黓鼏鼐儜儓儗儚儑凞匴叡噰噠噮"],["e940","噳噦噣噭噲噞噷圜圛壈墽壉墿墺壂墼壆嬗嬙嬛嬡嬔嬓嬐嬖嬨嬚嬠嬞寯嶬嶱嶩嶧嶵嶰嶮嶪嶨嶲嶭嶯嶴幧幨幦幯廩廧廦廨廥彋徼憝憨憖懅憴懆懁懌憺"],["e9a1","憿憸憌擗擖擐擏擉撽撉擃擛擳擙攳敿敼斢曈暾曀曊曋曏暽暻暺曌朣樴橦橉橧樲橨樾橝橭橶橛橑樨橚樻樿橁橪橤橐橏橔橯橩橠樼橞橖橕橍橎橆歕歔歖殧殪殫毈毇氄氃氆澭濋澣濇澼濎濈潞濄澽澞濊澨瀄澥澮澺澬澪濏澿澸"],["ea40","澢濉澫濍澯澲澰燅燂熿熸燖燀燁燋燔燊燇燏熽燘熼燆燚燛犝犞獩獦獧獬獥獫獪瑿璚璠璔璒璕璡甋疀瘯瘭瘱瘽瘳瘼瘵瘲瘰皻盦瞚瞝瞡瞜瞛瞢瞣瞕瞙"],["eaa1","瞗磝磩磥磪磞磣磛磡磢磭磟磠禤穄穈穇窶窸窵窱窷篞篣篧篝篕篥篚篨篹篔篪篢篜篫篘篟糒糔糗糐糑縒縡縗縌縟縠縓縎縜縕縚縢縋縏縖縍縔縥縤罃罻罼罺羱翯耪耩聬膱膦膮膹膵膫膰膬膴膲膷膧臲艕艖艗蕖蕅蕫蕍蕓蕡蕘"],["eb40","蕀蕆蕤蕁蕢蕄蕑蕇蕣蔾蕛蕱蕎蕮蕵蕕蕧蕠薌蕦蕝蕔蕥蕬虣虥虤螛螏螗螓螒螈螁螖螘蝹螇螣螅螐螑螝螄螔螜螚螉褞褦褰褭褮褧褱褢褩褣褯褬褟觱諠"],["eba1","諢諲諴諵諝謔諤諟諰諈諞諡諨諿諯諻貑貒貐賵賮賱賰賳赬赮趥趧踳踾踸蹀蹅踶踼踽蹁踰踿躽輶輮輵輲輹輷輴遶遹遻邆郺鄳鄵鄶醓醐醑醍醏錧錞錈錟錆錏鍺錸錼錛錣錒錁鍆錭錎錍鋋錝鋺錥錓鋹鋷錴錂錤鋿錩錹錵錪錔錌"],["ec40","錋鋾錉錀鋻錖閼闍閾閹閺閶閿閵閽隩雔霋霒霐鞙鞗鞔韰韸頵頯頲餤餟餧餩馞駮駬駥駤駰駣駪駩駧骹骿骴骻髶髺髹髷鬳鮀鮅鮇魼魾魻鮂鮓鮒鮐魺鮕"],["eca1","魽鮈鴥鴗鴠鴞鴔鴩鴝鴘鴢鴐鴙鴟麈麆麇麮麭黕黖黺鼒鼽儦儥儢儤儠儩勴嚓嚌嚍嚆嚄嚃噾嚂噿嚁壖壔壏壒嬭嬥嬲嬣嬬嬧嬦嬯嬮孻寱寲嶷幬幪徾徻懃憵憼懧懠懥懤懨懞擯擩擣擫擤擨斁斀斶旚曒檍檖檁檥檉檟檛檡檞檇檓檎"],["ed40","檕檃檨檤檑橿檦檚檅檌檒歛殭氉濌澩濴濔濣濜濭濧濦濞濲濝濢濨燡燱燨燲燤燰燢獳獮獯璗璲璫璐璪璭璱璥璯甐甑甒甏疄癃癈癉癇皤盩瞵瞫瞲瞷瞶"],["eda1","瞴瞱瞨矰磳磽礂磻磼磲礅磹磾礄禫禨穜穛穖穘穔穚窾竀竁簅簏篲簀篿篻簎篴簋篳簂簉簃簁篸篽簆篰篱簐簊糨縭縼繂縳顈縸縪繉繀繇縩繌縰縻縶繄縺罅罿罾罽翴翲耬膻臄臌臊臅臇膼臩艛艚艜薃薀薏薧薕薠薋薣蕻薤薚薞"],["ee40","蕷蕼薉薡蕺蕸蕗薎薖薆薍薙薝薁薢薂薈薅蕹蕶薘薐薟虨螾螪螭蟅螰螬螹螵螼螮蟉蟃蟂蟌螷螯蟄蟊螴螶螿螸螽蟞螲褵褳褼褾襁襒褷襂覭覯覮觲觳謞"],["eea1","謘謖謑謅謋謢謏謒謕謇謍謈謆謜謓謚豏豰豲豱豯貕貔賹赯蹎蹍蹓蹐蹌蹇轃轀邅遾鄸醚醢醛醙醟醡醝醠鎡鎃鎯鍤鍖鍇鍼鍘鍜鍶鍉鍐鍑鍠鍭鎏鍌鍪鍹鍗鍕鍒鍏鍱鍷鍻鍡鍞鍣鍧鎀鍎鍙闇闀闉闃闅閷隮隰隬霠霟霘霝霙鞚鞡鞜"],["ef40","鞞鞝韕韔韱顁顄顊顉顅顃餥餫餬餪餳餲餯餭餱餰馘馣馡騂駺駴駷駹駸駶駻駽駾駼騃骾髾髽鬁髼魈鮚鮨鮞鮛鮦鮡鮥鮤鮆鮢鮠鮯鴳鵁鵧鴶鴮鴯鴱鴸鴰"],["efa1","鵅鵂鵃鴾鴷鵀鴽翵鴭麊麉麍麰黈黚黻黿鼤鼣鼢齔龠儱儭儮嚘嚜嚗嚚嚝嚙奰嬼屩屪巀幭幮懘懟懭懮懱懪懰懫懖懩擿攄擽擸攁攃擼斔旛曚曛曘櫅檹檽櫡櫆檺檶檷櫇檴檭歞毉氋瀇瀌瀍瀁瀅瀔瀎濿瀀濻瀦濼濷瀊爁燿燹爃燽獶"],["f040","璸瓀璵瓁璾璶璻瓂甔甓癜癤癙癐癓癗癚皦皽盬矂瞺磿礌礓礔礉礐礒礑禭禬穟簜簩簙簠簟簭簝簦簨簢簥簰繜繐繖繣繘繢繟繑繠繗繓羵羳翷翸聵臑臒"],["f0a1","臐艟艞薴藆藀藃藂薳薵薽藇藄薿藋藎藈藅薱薶藒蘤薸薷薾虩蟧蟦蟢蟛蟫蟪蟥蟟蟳蟤蟔蟜蟓蟭蟘蟣螤蟗蟙蠁蟴蟨蟝襓襋襏襌襆襐襑襉謪謧謣謳謰謵譇謯謼謾謱謥謷謦謶謮謤謻謽謺豂豵貙貘貗賾贄贂贀蹜蹢蹠蹗蹖蹞蹥蹧"],["f140","蹛蹚蹡蹝蹩蹔轆轇轈轋鄨鄺鄻鄾醨醥醧醯醪鎵鎌鎒鎷鎛鎝鎉鎧鎎鎪鎞鎦鎕鎈鎙鎟鎍鎱鎑鎲鎤鎨鎴鎣鎥闒闓闑隳雗雚巂雟雘雝霣霢霥鞬鞮鞨鞫鞤鞪"],["f1a1","鞢鞥韗韙韖韘韺顐顑顒颸饁餼餺騏騋騉騍騄騑騊騅騇騆髀髜鬈鬄鬅鬩鬵魊魌魋鯇鯆鯃鮿鯁鮵鮸鯓鮶鯄鮹鮽鵜鵓鵏鵊鵛鵋鵙鵖鵌鵗鵒鵔鵟鵘鵚麎麌黟鼁鼀鼖鼥鼫鼪鼩鼨齌齕儴儵劖勷厴嚫嚭嚦嚧嚪嚬壚壝壛夒嬽嬾嬿巃幰"],["f240","徿懻攇攐攍攉攌攎斄旞旝曞櫧櫠櫌櫑櫙櫋櫟櫜櫐櫫櫏櫍櫞歠殰氌瀙瀧瀠瀖瀫瀡瀢瀣瀩瀗瀤瀜瀪爌爊爇爂爅犥犦犤犣犡瓋瓅璷瓃甖癠矉矊矄矱礝礛"],["f2a1","礡礜礗礞禰穧穨簳簼簹簬簻糬糪繶繵繸繰繷繯繺繲繴繨罋罊羃羆羷翽翾聸臗臕艤艡艣藫藱藭藙藡藨藚藗藬藲藸藘藟藣藜藑藰藦藯藞藢蠀蟺蠃蟶蟷蠉蠌蠋蠆蟼蠈蟿蠊蠂襢襚襛襗襡襜襘襝襙覈覷覶觶譐譈譊譀譓譖譔譋譕"],["f340","譑譂譒譗豃豷豶貚贆贇贉趬趪趭趫蹭蹸蹳蹪蹯蹻軂轒轑轏轐轓辴酀鄿醰醭鏞鏇鏏鏂鏚鏐鏹鏬鏌鏙鎩鏦鏊鏔鏮鏣鏕鏄鏎鏀鏒鏧镽闚闛雡霩霫霬霨霦"],["f3a1","鞳鞷鞶韝韞韟顜顙顝顗颿颽颻颾饈饇饃馦馧騚騕騥騝騤騛騢騠騧騣騞騜騔髂鬋鬊鬎鬌鬷鯪鯫鯠鯞鯤鯦鯢鯰鯔鯗鯬鯜鯙鯥鯕鯡鯚鵷鶁鶊鶄鶈鵱鶀鵸鶆鶋鶌鵽鵫鵴鵵鵰鵩鶅鵳鵻鶂鵯鵹鵿鶇鵨麔麑黀黼鼭齀齁齍齖齗齘匷嚲"],["f440","嚵嚳壣孅巆巇廮廯忀忁懹攗攖攕攓旟曨曣曤櫳櫰櫪櫨櫹櫱櫮櫯瀼瀵瀯瀷瀴瀱灂瀸瀿瀺瀹灀瀻瀳灁爓爔犨獽獼璺皫皪皾盭矌矎矏矍矲礥礣礧礨礤礩"],["f4a1","禲穮穬穭竷籉籈籊籇籅糮繻繾纁纀羺翿聹臛臙舋艨艩蘢藿蘁藾蘛蘀藶蘄蘉蘅蘌藽蠙蠐蠑蠗蠓蠖襣襦覹觷譠譪譝譨譣譥譧譭趮躆躈躄轙轖轗轕轘轚邍酃酁醷醵醲醳鐋鐓鏻鐠鐏鐔鏾鐕鐐鐨鐙鐍鏵鐀鏷鐇鐎鐖鐒鏺鐉鏸鐊鏿"],["f540","鏼鐌鏶鐑鐆闞闠闟霮霯鞹鞻韽韾顠顢顣顟飁飂饐饎饙饌饋饓騲騴騱騬騪騶騩騮騸騭髇髊髆鬐鬒鬑鰋鰈鯷鰅鰒鯸鱀鰇鰎鰆鰗鰔鰉鶟鶙鶤鶝鶒鶘鶐鶛"],["f5a1","鶠鶔鶜鶪鶗鶡鶚鶢鶨鶞鶣鶿鶩鶖鶦鶧麙麛麚黥黤黧黦鼰鼮齛齠齞齝齙龑儺儹劘劗囃嚽嚾孈孇巋巏廱懽攛欂櫼欃櫸欀灃灄灊灈灉灅灆爝爚爙獾甗癪矐礭礱礯籔籓糲纊纇纈纋纆纍罍羻耰臝蘘蘪蘦蘟蘣蘜蘙蘧蘮蘡蘠蘩蘞蘥"],["f640","蠩蠝蠛蠠蠤蠜蠫衊襭襩襮襫觺譹譸譅譺譻贐贔趯躎躌轞轛轝酆酄酅醹鐿鐻鐶鐩鐽鐼鐰鐹鐪鐷鐬鑀鐱闥闤闣霵霺鞿韡顤飉飆飀饘饖騹騽驆驄驂驁騺"],["f6a1","騿髍鬕鬗鬘鬖鬺魒鰫鰝鰜鰬鰣鰨鰩鰤鰡鶷鶶鶼鷁鷇鷊鷏鶾鷅鷃鶻鶵鷎鶹鶺鶬鷈鶱鶭鷌鶳鷍鶲鹺麜黫黮黭鼛鼘鼚鼱齎齥齤龒亹囆囅囋奱孋孌巕巑廲攡攠攦攢欋欈欉氍灕灖灗灒爞爟犩獿瓘瓕瓙瓗癭皭礵禴穰穱籗籜籙籛籚"],["f740","糴糱纑罏羇臞艫蘴蘵蘳蘬蘲蘶蠬蠨蠦蠪蠥襱覿覾觻譾讄讂讆讅譿贕躕躔躚躒躐躖躗轠轢酇鑌鑐鑊鑋鑏鑇鑅鑈鑉鑆霿韣顪顩飋饔饛驎驓驔驌驏驈驊"],["f7a1","驉驒驐髐鬙鬫鬻魖魕鱆鱈鰿鱄鰹鰳鱁鰼鰷鰴鰲鰽鰶鷛鷒鷞鷚鷋鷐鷜鷑鷟鷩鷙鷘鷖鷵鷕鷝麶黰鼵鼳鼲齂齫龕龢儽劙壨壧奲孍巘蠯彏戁戃戄攩攥斖曫欑欒欏毊灛灚爢玂玁玃癰矔籧籦纕艬蘺虀蘹蘼蘱蘻蘾蠰蠲蠮蠳襶襴襳觾"],["f840","讌讎讋讈豅贙躘轤轣醼鑢鑕鑝鑗鑞韄韅頀驖驙鬞鬟鬠鱒鱘鱐鱊鱍鱋鱕鱙鱌鱎鷻鷷鷯鷣鷫鷸鷤鷶鷡鷮鷦鷲鷰鷢鷬鷴鷳鷨鷭黂黐黲黳鼆鼜鼸鼷鼶齃齏"],["f8a1","齱齰齮齯囓囍孎屭攭曭曮欓灟灡灝灠爣瓛瓥矕礸禷禶籪纗羉艭虃蠸蠷蠵衋讔讕躞躟躠躝醾醽釂鑫鑨鑩雥靆靃靇韇韥驞髕魙鱣鱧鱦鱢鱞鱠鸂鷾鸇鸃鸆鸅鸀鸁鸉鷿鷽鸄麠鼞齆齴齵齶囔攮斸欘欙欗欚灢爦犪矘矙礹籩籫糶纚"],["f940","纘纛纙臠臡虆虇虈襹襺襼襻觿讘讙躥躤躣鑮鑭鑯鑱鑳靉顲饟鱨鱮鱭鸋鸍鸐鸏鸒鸑麡黵鼉齇齸齻齺齹圞灦籯蠼趲躦釃鑴鑸鑶鑵驠鱴鱳鱱鱵鸔鸓黶鼊"],["f9a1","龤灨灥糷虪蠾蠽蠿讞貜躩軉靋顳顴飌饡馫驤驦驧鬤鸕鸗齈戇欞爧虌躨钂钀钁驩驨鬮鸙爩虋讟钃鱹麷癵驫鱺鸝灩灪麤齾齉龘碁銹裏墻恒粧嫺╔╦╗╠╬╣╚╩╝╒╤╕╞╪╡╘╧╛╓╥╖╟╫╢╙╨╜║═╭╮╰╯▓"]]'), $h = [
+], xh = [128, 165, 169, 178, 184, 216, 226, 235, 238, 244, 248, 251, 253, 258, 276, 284, 300, 325, 329, 334, 364, 463, 465, 467, 469, 471, 473, 475, 477, 506, 594, 610, 712, 716, 730, 930, 938, 962, 970, 1026, 1104, 1106, 8209, 8215, 8218, 8222, 8231, 8241, 8244, 8246, 8252, 8365, 8452, 8454, 8458, 8471, 8482, 8556, 8570, 8596, 8602, 8713, 8720, 8722, 8726, 8731, 8737, 8740, 8742, 8748, 8751, 8760, 8766, 8777, 8781, 8787, 8802, 8808, 8816, 8854, 8858, 8870, 8896, 8979, 9322, 9372, 9548, 9588, 9616, 9622, 9634, 9652, 9662, 9672, 9676, 9680, 9702, 9735, 9738, 9793, 9795, 11906, 11909, 11913, 11917, 11928, 11944, 11947, 11951, 11956, 11960, 11964, 11979, 12284, 12292, 12312, 12319, 12330, 12351, 12436, 12447, 12535, 12543, 12586, 12842, 12850, 12964, 13200, 13215, 13218, 13253, 13263, 13267, 13270, 13384, 13428, 13727, 13839, 13851, 14617, 14703, 14801, 14816, 14964, 15183, 15471, 15585, 16471, 16736, 17208, 17325, 17330, 17374, 17623, 17997, 18018, 18212, 18218, 18301, 18318, 18760, 18811, 18814, 18820, 18823, 18844, 18848, 18872, 19576, 19620, 19738, 19887, 40870, 59244, 59336, 59367, 59413, 59417, 59423, 59431, 59437, 59443, 59452, 59460, 59478, 59493, 63789, 63866, 63894, 63976, 63986, 64016, 64018, 64021, 64025, 64034, 64037, 64042, 65074, 65093, 65107, 65112, 65127, 65132, 65375, 65510, 65536], $h = [0, 36, 38, 45, 50, 81, 89, 95, 96, 100, 103, 104, 105, 109, 126, 133, 148, 172, 175, 179, 208, 306, 307, 308, 309, 310, 311, 312, 313, 341, 428, 443, 544, 545, 558, 741, 742, 749, 750, 805, 819, 820, 7922, 7924, 7925, 7927, 7934, 7943, 7944, 7945, 7950, 8062, 8148, 8149, 8152, 8164, 8174, 8236, 8240, 8262, 8264, 8374, 8380, 8381, 8384, 8388, 8390, 8392, 8393, 8394, 8396, 8401, 8406, 8416, 8419, 8424, 8437, 8439, 8445, 8482, 8485, 8496, 8521, 8603, 8936, 8946, 9046, 9050, 9063, 9066, 9076, 9092, 9100, 9108, 9111, 9113, 9131, 9162, 9164, 9218, 9219, 11329, 11331, 11334, 11336, 11346, 11361, 11363, 11366, 11370, 11372, 11375, 11389, 11682, 11686, 11687, 11692, 11694, 11714, 11716, 11723, 11725, 11730, 11736, 11982, 11989, 12102, 12336, 12348, 12350, 12384, 12393, 12395, 12397, 12510, 12553, 12851, 12962, 12973, 13738, 13823, 13919, 13933, 14080, 14298, 14585, 14698, 15583, 15847, 16318, 16434, 16438, 16481, 16729, 17102, 17122, 17315, 17320, 17402, 17418, 17859, 17909, 17911, 17915, 17916, 17936, 17939, 17961, 18664, 18703, 18814, 18962, 19043, 33469, 33470, 33471, 33484, 33485, 33490, 33497, 33501, 33505, 33513, 33520, 33536, 33550, 37845, 37921, 37948, 38029, 38038, 38064, 38065, 38066, 38069, 38075, 38076, 38078, 39108, 39109, 39113, 39114, 39115, 39116, 39265, 39394, 189e3], ed = {
+  uChars: xh,
+  gbChars: $h
+}, nd = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["8141","갂갃갅갆갋",4,"갘갞갟갡갢갣갥",6,"갮갲갳갴"],["8161","갵갶갷갺갻갽갾갿걁",9,"걌걎",5,"걕"],["8181","걖걗걙걚걛걝",18,"걲걳걵걶걹걻",4,"겂겇겈겍겎겏겑겒겓겕",6,"겞겢",5,"겫겭겮겱",6,"겺겾겿곀곂곃곅곆곇곉곊곋곍",7,"곖곘",7,"곢곣곥곦곩곫곭곮곲곴곷",4,"곾곿괁괂괃괅괇",4,"괎괐괒괓"],["8241","괔괕괖괗괙괚괛괝괞괟괡",7,"괪괫괮",5],["8261","괶괷괹괺괻괽",6,"굆굈굊",5,"굑굒굓굕굖굗"],["8281","굙",7,"굢굤",7,"굮굯굱굲굷굸굹굺굾궀궃",4,"궊궋궍궎궏궑",10,"궞",5,"궥",17,"궸",7,"귂귃귅귆귇귉",6,"귒귔",7,"귝귞귟귡귢귣귥",18],["8341","귺귻귽귾긂",5,"긊긌긎",5,"긕",7],["8361","긝",18,"긲긳긵긶긹긻긼"],["8381","긽긾긿깂깄깇깈깉깋깏깑깒깓깕깗",4,"깞깢깣깤깦깧깪깫깭깮깯깱",6,"깺깾",5,"꺆",5,"꺍",46,"꺿껁껂껃껅",6,"껎껒",5,"껚껛껝",8],["8441","껦껧껩껪껬껮",5,"껵껶껷껹껺껻껽",8],["8461","꼆꼉꼊꼋꼌꼎꼏꼑",18],["8481","꼤",7,"꼮꼯꼱꼳꼵",6,"꼾꽀꽄꽅꽆꽇꽊",5,"꽑",10,"꽞",5,"꽦",18,"꽺",5,"꾁꾂꾃꾅꾆꾇꾉",6,"꾒꾓꾔꾖",5,"꾝",26,"꾺꾻꾽꾾"],["8541","꾿꿁",5,"꿊꿌꿏",4,"꿕",6,"꿝",4],["8561","꿢",5,"꿪",5,"꿲꿳꿵꿶꿷꿹",6,"뀂뀃"],["8581","뀅",6,"뀍뀎뀏뀑뀒뀓뀕",6,"뀞",9,"뀩",26,"끆끇끉끋끍끏끐끑끒끖끘끚끛끜끞",29,"끾끿낁낂낃낅",6,"낎낐낒",5,"낛낝낞낣낤"],["8641","낥낦낧낪낰낲낶낷낹낺낻낽",6,"냆냊",5,"냒"],["8661","냓냕냖냗냙",6,"냡냢냣냤냦",10],["8681","냱",22,"넊넍넎넏넑넔넕넖넗넚넞",4,"넦넧넩넪넫넭",6,"넶넺",5,"녂녃녅녆녇녉",6,"녒녓녖녗녙녚녛녝녞녟녡",22,"녺녻녽녾녿놁놃",4,"놊놌놎놏놐놑놕놖놗놙놚놛놝"],["8741","놞",9,"놩",15],["8761","놹",18,"뇍뇎뇏뇑뇒뇓뇕"],["8781","뇖",5,"뇞뇠",7,"뇪뇫뇭뇮뇯뇱",7,"뇺뇼뇾",5,"눆눇눉눊눍",6,"눖눘눚",5,"눡",18,"눵",6,"눽",26,"뉙뉚뉛뉝뉞뉟뉡",6,"뉪",4],["8841","뉯",4,"뉶",5,"뉽",6,"늆늇늈늊",4],["8861","늏늒늓늕늖늗늛",4,"늢늤늧늨늩늫늭늮늯늱늲늳늵늶늷"],["8881","늸",15,"닊닋닍닎닏닑닓",4,"닚닜닞닟닠닡닣닧닩닪닰닱닲닶닼닽닾댂댃댅댆댇댉",6,"댒댖",5,"댝",54,"덗덙덚덝덠덡덢덣"],["8941","덦덨덪덬덭덯덲덳덵덶덷덹",6,"뎂뎆",5,"뎍"],["8961","뎎뎏뎑뎒뎓뎕",10,"뎢",5,"뎩뎪뎫뎭"],["8981","뎮",21,"돆돇돉돊돍돏돑돒돓돖돘돚돜돞돟돡돢돣돥돦돧돩",18,"돽",18,"됑",6,"됙됚됛됝됞됟됡",6,"됪됬",7,"됵",15],["8a41","둅",10,"둒둓둕둖둗둙",6,"둢둤둦"],["8a61","둧",4,"둭",18,"뒁뒂"],["8a81","뒃",4,"뒉",19,"뒞",5,"뒥뒦뒧뒩뒪뒫뒭",7,"뒶뒸뒺",5,"듁듂듃듅듆듇듉",6,"듑듒듓듔듖",5,"듞듟듡듢듥듧",4,"듮듰듲",5,"듹",26,"딖딗딙딚딝"],["8b41","딞",5,"딦딫",4,"딲딳딵딶딷딹",6,"땂땆"],["8b61","땇땈땉땊땎땏땑땒땓땕",6,"땞땢",8],["8b81","땫",52,"떢떣떥떦떧떩떬떭떮떯떲떶",4,"떾떿뗁뗂뗃뗅",6,"뗎뗒",5,"뗙",18,"뗭",18],["8c41","똀",15,"똒똓똕똖똗똙",4],["8c61","똞",6,"똦",5,"똭",6,"똵",5],["8c81","똻",12,"뙉",26,"뙥뙦뙧뙩",50,"뚞뚟뚡뚢뚣뚥",5,"뚭뚮뚯뚰뚲",16],["8d41","뛃",16,"뛕",8],["8d61","뛞",17,"뛱뛲뛳뛵뛶뛷뛹뛺"],["8d81","뛻",4,"뜂뜃뜄뜆",33,"뜪뜫뜭뜮뜱",6,"뜺뜼",7,"띅띆띇띉띊띋띍",6,"띖",9,"띡띢띣띥띦띧띩",6,"띲띴띶",5,"띾띿랁랂랃랅",6,"랎랓랔랕랚랛랝랞"],["8e41","랟랡",6,"랪랮",5,"랶랷랹",8],["8e61","럂",4,"럈럊",19],["8e81","럞",13,"럮럯럱럲럳럵",6,"럾렂",4,"렊렋렍렎렏렑",6,"렚렜렞",5,"렦렧렩렪렫렭",6,"렶렺",5,"롁롂롃롅",11,"롒롔",7,"롞롟롡롢롣롥",6,"롮롰롲",5,"롹롺롻롽",7],["8f41","뢅",7,"뢎",17],["8f61","뢠",7,"뢩",6,"뢱뢲뢳뢵뢶뢷뢹",4],["8f81","뢾뢿룂룄룆",5,"룍룎룏룑룒룓룕",7,"룞룠룢",5,"룪룫룭룮룯룱",6,"룺룼룾",5,"뤅",18,"뤙",6,"뤡",26,"뤾뤿륁륂륃륅",6,"륍륎륐륒",5],["9041","륚륛륝륞륟륡",6,"륪륬륮",5,"륶륷륹륺륻륽"],["9061","륾",5,"릆릈릋릌릏",15],["9081","릟",12,"릮릯릱릲릳릵",6,"릾맀맂",5,"맊맋맍맓",4,"맚맜맟맠맢맦맧맩맪맫맭",6,"맶맻",4,"먂",5,"먉",11,"먖",33,"먺먻먽먾먿멁멃멄멅멆"],["9141","멇멊멌멏멐멑멒멖멗멙멚멛멝",6,"멦멪",5],["9161","멲멳멵멶멷멹",9,"몆몈몉몊몋몍",5],["9181","몓",20,"몪몭몮몯몱몳",4,"몺몼몾",5,"뫅뫆뫇뫉",14,"뫚",33,"뫽뫾뫿묁묂묃묅",7,"묎묐묒",5,"묙묚묛묝묞묟묡",6],["9241","묨묪묬",7,"묷묹묺묿",4,"뭆뭈뭊뭋뭌뭎뭑뭒"],["9261","뭓뭕뭖뭗뭙",7,"뭢뭤",7,"뭭",4],["9281","뭲",21,"뮉뮊뮋뮍뮎뮏뮑",18,"뮥뮦뮧뮩뮪뮫뮭",6,"뮵뮶뮸",7,"믁믂믃믅믆믇믉",6,"믑믒믔",35,"믺믻믽믾밁"],["9341","밃",4,"밊밎밐밒밓밙밚밠밡밢밣밦밨밪밫밬밮밯밲밳밵"],["9361","밶밷밹",6,"뱂뱆뱇뱈뱊뱋뱎뱏뱑",8],["9381","뱚뱛뱜뱞",37,"벆벇벉벊벍벏",4,"벖벘벛",4,"벢벣벥벦벩",6,"벲벶",5,"벾벿볁볂볃볅",7,"볎볒볓볔볖볗볙볚볛볝",22,"볷볹볺볻볽"],["9441","볾",5,"봆봈봊",5,"봑봒봓봕",8],["9461","봞",5,"봥",6,"봭",12],["9481","봺",5,"뵁",6,"뵊뵋뵍뵎뵏뵑",6,"뵚",9,"뵥뵦뵧뵩",22,"붂붃붅붆붋",4,"붒붔붖붗붘붛붝",6,"붥",10,"붱",6,"붹",24],["9541","뷒뷓뷖뷗뷙뷚뷛뷝",11,"뷪",5,"뷱"],["9561","뷲뷳뷵뷶뷷뷹",6,"븁븂븄븆",5,"븎븏븑븒븓"],["9581","븕",6,"븞븠",35,"빆빇빉빊빋빍빏",4,"빖빘빜빝빞빟빢빣빥빦빧빩빫",4,"빲빶",4,"빾빿뺁뺂뺃뺅",6,"뺎뺒",5,"뺚",13,"뺩",14],["9641","뺸",23,"뻒뻓"],["9661","뻕뻖뻙",6,"뻡뻢뻦",5,"뻭",8],["9681","뻶",10,"뼂",5,"뼊",13,"뼚뼞",33,"뽂뽃뽅뽆뽇뽉",6,"뽒뽓뽔뽖",44],["9741","뾃",16,"뾕",8],["9761","뾞",17,"뾱",7],["9781","뾹",11,"뿆",5,"뿎뿏뿑뿒뿓뿕",6,"뿝뿞뿠뿢",89,"쀽쀾쀿"],["9841","쁀",16,"쁒",5,"쁙쁚쁛"],["9861","쁝쁞쁟쁡",6,"쁪",15],["9881","쁺",21,"삒삓삕삖삗삙",6,"삢삤삦",5,"삮삱삲삷",4,"삾샂샃샄샆샇샊샋샍샎샏샑",6,"샚샞",5,"샦샧샩샪샫샭",6,"샶샸샺",5,"섁섂섃섅섆섇섉",6,"섑섒섓섔섖",5,"섡섢섥섨섩섪섫섮"],["9941","섲섳섴섵섷섺섻섽섾섿셁",6,"셊셎",5,"셖셗"],["9961","셙셚셛셝",6,"셦셪",5,"셱셲셳셵셶셷셹셺셻"],["9981","셼",8,"솆",5,"솏솑솒솓솕솗",4,"솞솠솢솣솤솦솧솪솫솭솮솯솱",11,"솾",5,"쇅쇆쇇쇉쇊쇋쇍",6,"쇕쇖쇙",6,"쇡쇢쇣쇥쇦쇧쇩",6,"쇲쇴",7,"쇾쇿숁숂숃숅",6,"숎숐숒",5,"숚숛숝숞숡숢숣"],["9a41","숤숥숦숧숪숬숮숰숳숵",16],["9a61","쉆쉇쉉",6,"쉒쉓쉕쉖쉗쉙",6,"쉡쉢쉣쉤쉦"],["9a81","쉧",4,"쉮쉯쉱쉲쉳쉵",6,"쉾슀슂",5,"슊",5,"슑",6,"슙슚슜슞",5,"슦슧슩슪슫슮",5,"슶슸슺",33,"싞싟싡싢싥",5,"싮싰싲싳싴싵싷싺싽싾싿쌁",6,"쌊쌋쌎쌏"],["9b41","쌐쌑쌒쌖쌗쌙쌚쌛쌝",6,"쌦쌧쌪",8],["9b61","쌳",17,"썆",7],["9b81","썎",25,"썪썫썭썮썯썱썳",4,"썺썻썾",5,"쎅쎆쎇쎉쎊쎋쎍",50,"쏁",22,"쏚"],["9c41","쏛쏝쏞쏡쏣",4,"쏪쏫쏬쏮",5,"쏶쏷쏹",5],["9c61","쏿",8,"쐉",6,"쐑",9],["9c81","쐛",8,"쐥",6,"쐭쐮쐯쐱쐲쐳쐵",6,"쐾",9,"쑉",26,"쑦쑧쑩쑪쑫쑭",6,"쑶쑷쑸쑺",5,"쒁",18,"쒕",6,"쒝",12],["9d41","쒪",13,"쒹쒺쒻쒽",8],["9d61","쓆",25],["9d81","쓠",8,"쓪",5,"쓲쓳쓵쓶쓷쓹쓻쓼쓽쓾씂",9,"씍씎씏씑씒씓씕",6,"씝",10,"씪씫씭씮씯씱",6,"씺씼씾",5,"앆앇앋앏앐앑앒앖앚앛앜앟앢앣앥앦앧앩",6,"앲앶",5,"앾앿얁얂얃얅얆얈얉얊얋얎얐얒얓얔"],["9e41","얖얙얚얛얝얞얟얡",7,"얪",9,"얶"],["9e61","얷얺얿",4,"엋엍엏엒엓엕엖엗엙",6,"엢엤엦엧"],["9e81","엨엩엪엫엯엱엲엳엵엸엹엺엻옂옃옄옉옊옋옍옎옏옑",6,"옚옝",6,"옦옧옩옪옫옯옱옲옶옸옺옼옽옾옿왂왃왅왆왇왉",6,"왒왖",5,"왞왟왡",10,"왭왮왰왲",5,"왺왻왽왾왿욁",6,"욊욌욎",5,"욖욗욙욚욛욝",6,"욦"],["9f41","욨욪",5,"욲욳욵욶욷욻",4,"웂웄웆",5,"웎"],["9f61","웏웑웒웓웕",6,"웞웟웢",5,"웪웫웭웮웯웱웲"],["9f81","웳",4,"웺웻웼웾",5,"윆윇윉윊윋윍",6,"윖윘윚",5,"윢윣윥윦윧윩",6,"윲윴윶윸윹윺윻윾윿읁읂읃읅",4,"읋읎읐읙읚읛읝읞읟읡",6,"읩읪읬",7,"읶읷읹읺읻읿잀잁잂잆잋잌잍잏잒잓잕잙잛",4,"잢잧",4,"잮잯잱잲잳잵잶잷"],["a041","잸잹잺잻잾쟂",5,"쟊쟋쟍쟏쟑",6,"쟙쟚쟛쟜"],["a061","쟞",5,"쟥쟦쟧쟩쟪쟫쟭",13],["a081","쟻",4,"젂젃젅젆젇젉젋",4,"젒젔젗",4,"젞젟젡젢젣젥",6,"젮젰젲",5,"젹젺젻젽젾젿졁",6,"졊졋졎",5,"졕",26,"졲졳졵졶졷졹졻",4,"좂좄좈좉좊좎",5,"좕",7,"좞좠좢좣좤"],["a141","좥좦좧좩",18,"좾좿죀죁"],["a161","죂죃죅죆죇죉죊죋죍",6,"죖죘죚",5,"죢죣죥"],["a181","죦",14,"죶",5,"죾죿줁줂줃줇",4,"줎　、。·‥…¨〃­―∥＼∼‘’“”〔〕〈",9,"±×÷≠≤≥∞∴°′″℃Å￠￡￥♂♀∠⊥⌒∂∇≡≒§※☆★○●◎◇◆□■△▲▽▼→←↑↓↔〓≪≫√∽∝∵∫∬∈∋⊆⊇⊂⊃∪∩∧∨￢"],["a241","줐줒",5,"줙",18],["a261","줭",6,"줵",18],["a281","쥈",7,"쥒쥓쥕쥖쥗쥙",6,"쥢쥤",7,"쥭쥮쥯⇒⇔∀∃´～ˇ˘˝˚˙¸˛¡¿ː∮∑∏¤℉‰◁◀▷▶♤♠♡♥♧♣⊙◈▣◐◑▒▤▥▨▧▦▩♨☏☎☜☞¶†‡↕↗↙↖↘♭♩♪♬㉿㈜№㏇™㏂㏘℡€®"],["a341","쥱쥲쥳쥵",6,"쥽",10,"즊즋즍즎즏"],["a361","즑",6,"즚즜즞",16],["a381","즯",16,"짂짃짅짆짉짋",4,"짒짔짗짘짛！",58,"￦］",32,"￣"],["a441","짞짟짡짣짥짦짨짩짪짫짮짲",5,"짺짻짽짾짿쨁쨂쨃쨄"],["a461","쨅쨆쨇쨊쨎",5,"쨕쨖쨗쨙",12],["a481","쨦쨧쨨쨪",28,"ㄱ",93],["a541","쩇",4,"쩎쩏쩑쩒쩓쩕",6,"쩞쩢",5,"쩩쩪"],["a561","쩫",17,"쩾",5,"쪅쪆"],["a581","쪇",16,"쪙",14,"ⅰ",9],["a5b0","Ⅰ",9],["a5c1","Α",16,"Σ",6],["a5e1","α",16,"σ",6],["a641","쪨",19,"쪾쪿쫁쫂쫃쫅"],["a661","쫆",5,"쫎쫐쫒쫔쫕쫖쫗쫚",5,"쫡",6],["a681","쫨쫩쫪쫫쫭",6,"쫵",18,"쬉쬊─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂┒┑┚┙┖┕┎┍┞┟┡┢┦┧┩┪┭┮┱┲┵┶┹┺┽┾╀╁╃",7],["a741","쬋",4,"쬑쬒쬓쬕쬖쬗쬙",6,"쬢",7],["a761","쬪",22,"쭂쭃쭄"],["a781","쭅쭆쭇쭊쭋쭍쭎쭏쭑",6,"쭚쭛쭜쭞",5,"쭥",7,"㎕㎖㎗ℓ㎘㏄㎣㎤㎥㎦㎙",9,"㏊㎍㎎㎏㏏㎈㎉㏈㎧㎨㎰",9,"㎀",4,"㎺",5,"㎐",4,"Ω㏀㏁㎊㎋㎌㏖㏅㎭㎮㎯㏛㎩㎪㎫㎬㏝㏐㏓㏃㏉㏜㏆"],["a841","쭭",10,"쭺",14],["a861","쮉",18,"쮝",6],["a881","쮤",19,"쮹",11,"ÆÐªĦ"],["a8a6","Ĳ"],["a8a8","ĿŁØŒºÞŦŊ"],["a8b1","㉠",27,"ⓐ",25,"①",14,"½⅓⅔¼¾⅛⅜⅝⅞"],["a941","쯅",14,"쯕",10],["a961","쯠쯡쯢쯣쯥쯦쯨쯪",18],["a981","쯽",14,"찎찏찑찒찓찕",6,"찞찟찠찣찤æđðħıĳĸŀłøœßþŧŋŉ㈀",27,"⒜",25,"⑴",14,"¹²³⁴ⁿ₁₂₃₄"],["aa41","찥찦찪찫찭찯찱",6,"찺찿",4,"챆챇챉챊챋챍챎"],["aa61","챏",4,"챖챚",5,"챡챢챣챥챧챩",6,"챱챲"],["aa81","챳챴챶",29,"ぁ",82],["ab41","첔첕첖첗첚첛첝첞첟첡",6,"첪첮",5,"첶첷첹"],["ab61","첺첻첽",6,"쳆쳈쳊",5,"쳑쳒쳓쳕",5],["ab81","쳛",8,"쳥",6,"쳭쳮쳯쳱",12,"ァ",85],["ac41","쳾쳿촀촂",5,"촊촋촍촎촏촑",6,"촚촜촞촟촠"],["ac61","촡촢촣촥촦촧촩촪촫촭",11,"촺",4],["ac81","촿",28,"쵝쵞쵟А",5,"ЁЖ",25],["acd1","а",5,"ёж",25],["ad41","쵡쵢쵣쵥",6,"쵮쵰쵲",5,"쵹",7],["ad61","춁",6,"춉",10,"춖춗춙춚춛춝춞춟"],["ad81","춠춡춢춣춦춨춪",5,"춱",18,"췅"],["ae41","췆",5,"췍췎췏췑",16],["ae61","췢",5,"췩췪췫췭췮췯췱",6,"췺췼췾",4],["ae81","츃츅츆츇츉츊츋츍",6,"츕츖츗츘츚",5,"츢츣츥츦츧츩츪츫"],["af41","츬츭츮츯츲츴츶",19],["af61","칊",13,"칚칛칝칞칢",5,"칪칬"],["af81","칮",5,"칶칷칹칺칻칽",6,"캆캈캊",5,"캒캓캕캖캗캙"],["b041","캚",5,"캢캦",5,"캮",12],["b061","캻",5,"컂",19],["b081","컖",13,"컦컧컩컪컭",6,"컶컺",5,"가각간갇갈갉갊감",7,"같",4,"갠갤갬갭갯갰갱갸갹갼걀걋걍걔걘걜거걱건걷걸걺검겁것겄겅겆겉겊겋게겐겔겜겝겟겠겡겨격겪견겯결겸겹겻겼경곁계곈곌곕곗고곡곤곧골곪곬곯곰곱곳공곶과곽관괄괆"],["b141","켂켃켅켆켇켉",6,"켒켔켖",5,"켝켞켟켡켢켣"],["b161","켥",6,"켮켲",5,"켹",11],["b181","콅",14,"콖콗콙콚콛콝",6,"콦콨콪콫콬괌괍괏광괘괜괠괩괬괭괴괵괸괼굄굅굇굉교굔굘굡굣구국군굳굴굵굶굻굼굽굿궁궂궈궉권궐궜궝궤궷귀귁귄귈귐귑귓규균귤그극근귿글긁금급긋긍긔기긱긴긷길긺김깁깃깅깆깊까깍깎깐깔깖깜깝깟깠깡깥깨깩깬깰깸"],["b241","콭콮콯콲콳콵콶콷콹",6,"쾁쾂쾃쾄쾆",5,"쾍"],["b261","쾎",18,"쾢",5,"쾩"],["b281","쾪",5,"쾱",18,"쿅",6,"깹깻깼깽꺄꺅꺌꺼꺽꺾껀껄껌껍껏껐껑께껙껜껨껫껭껴껸껼꼇꼈꼍꼐꼬꼭꼰꼲꼴꼼꼽꼿꽁꽂꽃꽈꽉꽐꽜꽝꽤꽥꽹꾀꾄꾈꾐꾑꾕꾜꾸꾹꾼꿀꿇꿈꿉꿋꿍꿎꿔꿜꿨꿩꿰꿱꿴꿸뀀뀁뀄뀌뀐뀔뀜뀝뀨끄끅끈끊끌끎끓끔끕끗끙"],["b341","쿌",19,"쿢쿣쿥쿦쿧쿩"],["b361","쿪",5,"쿲쿴쿶",5,"쿽쿾쿿퀁퀂퀃퀅",5],["b381","퀋",5,"퀒",5,"퀙",19,"끝끼끽낀낄낌낍낏낑나낙낚난낟날낡낢남납낫",4,"낱낳내낵낸낼냄냅냇냈냉냐냑냔냘냠냥너넉넋넌널넒넓넘넙넛넜넝넣네넥넨넬넴넵넷넸넹녀녁년녈념녑녔녕녘녜녠노녹논놀놂놈놉놋농높놓놔놘놜놨뇌뇐뇔뇜뇝"],["b441","퀮",5,"퀶퀷퀹퀺퀻퀽",6,"큆큈큊",5],["b461","큑큒큓큕큖큗큙",6,"큡",10,"큮큯"],["b481","큱큲큳큵",6,"큾큿킀킂",18,"뇟뇨뇩뇬뇰뇹뇻뇽누눅눈눋눌눔눕눗눙눠눴눼뉘뉜뉠뉨뉩뉴뉵뉼늄늅늉느늑는늘늙늚늠늡늣능늦늪늬늰늴니닉닌닐닒님닙닛닝닢다닥닦단닫",4,"닳담답닷",4,"닿대댁댄댈댐댑댓댔댕댜더덕덖던덛덜덞덟덤덥"],["b541","킕",14,"킦킧킩킪킫킭",5],["b561","킳킶킸킺",5,"탂탃탅탆탇탊",5,"탒탖",4],["b581","탛탞탟탡탢탣탥",6,"탮탲",5,"탹",11,"덧덩덫덮데덱덴델뎀뎁뎃뎄뎅뎌뎐뎔뎠뎡뎨뎬도독돈돋돌돎돐돔돕돗동돛돝돠돤돨돼됐되된될됨됩됫됴두둑둔둘둠둡둣둥둬뒀뒈뒝뒤뒨뒬뒵뒷뒹듀듄듈듐듕드득든듣들듦듬듭듯등듸디딕딘딛딜딤딥딧딨딩딪따딱딴딸"],["b641","턅",7,"턎",17],["b661","턠",15,"턲턳턵턶턷턹턻턼턽턾"],["b681","턿텂텆",5,"텎텏텑텒텓텕",6,"텞텠텢",5,"텩텪텫텭땀땁땃땄땅땋때땍땐땔땜땝땟땠땡떠떡떤떨떪떫떰떱떳떴떵떻떼떽뗀뗄뗌뗍뗏뗐뗑뗘뗬또똑똔똘똥똬똴뙈뙤뙨뚜뚝뚠뚤뚫뚬뚱뛔뛰뛴뛸뜀뜁뜅뜨뜩뜬뜯뜰뜸뜹뜻띄띈띌띔띕띠띤띨띰띱띳띵라락란랄람랍랏랐랑랒랖랗"],["b741","텮",13,"텽",6,"톅톆톇톉톊"],["b761","톋",20,"톢톣톥톦톧"],["b781","톩",6,"톲톴톶톷톸톹톻톽톾톿퇁",14,"래랙랜랠램랩랫랬랭랴략랸럇량러럭런럴럼럽럿렀렁렇레렉렌렐렘렙렛렝려력련렬렴렵렷렸령례롄롑롓로록론롤롬롭롯롱롸롼뢍뢨뢰뢴뢸룀룁룃룅료룐룔룝룟룡루룩룬룰룸룹룻룽뤄뤘뤠뤼뤽륀륄륌륏륑류륙륜률륨륩"],["b841","퇐",7,"퇙",17],["b861","퇫",8,"퇵퇶퇷퇹",13],["b881","툈툊",5,"툑",24,"륫륭르륵른를름릅릇릉릊릍릎리릭린릴림립릿링마막만많",4,"맘맙맛망맞맡맣매맥맨맬맴맵맷맸맹맺먀먁먈먕머먹먼멀멂멈멉멋멍멎멓메멕멘멜멤멥멧멨멩며멱면멸몃몄명몇몌모목몫몬몰몲몸몹못몽뫄뫈뫘뫙뫼"],["b941","툪툫툮툯툱툲툳툵",6,"툾퉀퉂",5,"퉉퉊퉋퉌"],["b961","퉍",14,"퉝",6,"퉥퉦퉧퉨"],["b981","퉩",22,"튂튃튅튆튇튉튊튋튌묀묄묍묏묑묘묜묠묩묫무묵묶문묻물묽묾뭄뭅뭇뭉뭍뭏뭐뭔뭘뭡뭣뭬뮈뮌뮐뮤뮨뮬뮴뮷므믄믈믐믓미믹민믿밀밂밈밉밋밌밍및밑바",4,"받",4,"밤밥밧방밭배백밴밸뱀뱁뱃뱄뱅뱉뱌뱍뱐뱝버벅번벋벌벎범법벗"],["ba41","튍튎튏튒튓튔튖",5,"튝튞튟튡튢튣튥",6,"튭"],["ba61","튮튯튰튲",5,"튺튻튽튾틁틃",4,"틊틌",5],["ba81","틒틓틕틖틗틙틚틛틝",6,"틦",9,"틲틳틵틶틷틹틺벙벚베벡벤벧벨벰벱벳벴벵벼벽변별볍볏볐병볕볘볜보복볶본볼봄봅봇봉봐봔봤봬뵀뵈뵉뵌뵐뵘뵙뵤뵨부북분붇불붉붊붐붑붓붕붙붚붜붤붰붸뷔뷕뷘뷜뷩뷰뷴뷸븀븃븅브븍븐블븜븝븟비빅빈빌빎빔빕빗빙빚빛빠빡빤"],["bb41","틻",4,"팂팄팆",5,"팏팑팒팓팕팗",4,"팞팢팣"],["bb61","팤팦팧팪팫팭팮팯팱",6,"팺팾",5,"퍆퍇퍈퍉"],["bb81","퍊",31,"빨빪빰빱빳빴빵빻빼빽뺀뺄뺌뺍뺏뺐뺑뺘뺙뺨뻐뻑뻔뻗뻘뻠뻣뻤뻥뻬뼁뼈뼉뼘뼙뼛뼜뼝뽀뽁뽄뽈뽐뽑뽕뾔뾰뿅뿌뿍뿐뿔뿜뿟뿡쀼쁑쁘쁜쁠쁨쁩삐삑삔삘삠삡삣삥사삭삯산삳살삵삶삼삽삿샀상샅새색샌샐샘샙샛샜생샤"],["bc41","퍪",17,"퍾퍿펁펂펃펅펆펇"],["bc61","펈펉펊펋펎펒",5,"펚펛펝펞펟펡",6,"펪펬펮"],["bc81","펯",4,"펵펶펷펹펺펻펽",6,"폆폇폊",5,"폑",5,"샥샨샬샴샵샷샹섀섄섈섐섕서",4,"섣설섦섧섬섭섯섰성섶세섹센셀셈셉셋셌셍셔셕션셜셤셥셧셨셩셰셴셸솅소속솎손솔솖솜솝솟송솥솨솩솬솰솽쇄쇈쇌쇔쇗쇘쇠쇤쇨쇰쇱쇳쇼쇽숀숄숌숍숏숑수숙순숟술숨숩숫숭"],["bd41","폗폙",7,"폢폤",7,"폮폯폱폲폳폵폶폷"],["bd61","폸폹폺폻폾퐀퐂",5,"퐉",13],["bd81","퐗",5,"퐞",25,"숯숱숲숴쉈쉐쉑쉔쉘쉠쉥쉬쉭쉰쉴쉼쉽쉿슁슈슉슐슘슛슝스슥슨슬슭슴습슷승시식신싣실싫심십싯싱싶싸싹싻싼쌀쌈쌉쌌쌍쌓쌔쌕쌘쌜쌤쌥쌨쌩썅써썩썬썰썲썸썹썼썽쎄쎈쎌쏀쏘쏙쏜쏟쏠쏢쏨쏩쏭쏴쏵쏸쐈쐐쐤쐬쐰"],["be41","퐸",7,"푁푂푃푅",14],["be61","푔",7,"푝푞푟푡푢푣푥",7,"푮푰푱푲"],["be81","푳",4,"푺푻푽푾풁풃",4,"풊풌풎",5,"풕",8,"쐴쐼쐽쑈쑤쑥쑨쑬쑴쑵쑹쒀쒔쒜쒸쒼쓩쓰쓱쓴쓸쓺쓿씀씁씌씐씔씜씨씩씬씰씸씹씻씽아악안앉않알앍앎앓암압앗았앙앝앞애액앤앨앰앱앳앴앵야약얀얄얇얌얍얏양얕얗얘얜얠얩어억언얹얻얼얽얾엄",6,"엌엎"],["bf41","풞",10,"풪",14],["bf61","풹",18,"퓍퓎퓏퓑퓒퓓퓕"],["bf81","퓖",5,"퓝퓞퓠",7,"퓩퓪퓫퓭퓮퓯퓱",6,"퓹퓺퓼에엑엔엘엠엡엣엥여역엮연열엶엷염",5,"옅옆옇예옌옐옘옙옛옜오옥온올옭옮옰옳옴옵옷옹옻와왁완왈왐왑왓왔왕왜왝왠왬왯왱외왹왼욀욈욉욋욍요욕욘욜욤욥욧용우욱운울욹욺움웁웃웅워웍원월웜웝웠웡웨"],["c041","퓾",5,"픅픆픇픉픊픋픍",6,"픖픘",5],["c061","픞",25],["c081","픸픹픺픻픾픿핁핂핃핅",6,"핎핐핒",5,"핚핛핝핞핟핡핢핣웩웬웰웸웹웽위윅윈윌윔윕윗윙유육윤율윰윱윳융윷으윽은을읊음읍읏응",7,"읜읠읨읫이익인일읽읾잃임입잇있잉잊잎자작잔잖잗잘잚잠잡잣잤장잦재잭잰잴잼잽잿쟀쟁쟈쟉쟌쟎쟐쟘쟝쟤쟨쟬저적전절젊"],["c141","핤핦핧핪핬핮",5,"핶핷핹핺핻핽",6,"햆햊햋"],["c161","햌햍햎햏햑",19,"햦햧"],["c181","햨",31,"점접젓정젖제젝젠젤젬젭젯젱져젼졀졈졉졌졍졔조족존졸졺좀좁좃종좆좇좋좌좍좔좝좟좡좨좼좽죄죈죌죔죕죗죙죠죡죤죵주죽준줄줅줆줌줍줏중줘줬줴쥐쥑쥔쥘쥠쥡쥣쥬쥰쥴쥼즈즉즌즐즘즙즛증지직진짇질짊짐집짓"],["c241","헊헋헍헎헏헑헓",4,"헚헜헞",5,"헦헧헩헪헫헭헮"],["c261","헯",4,"헶헸헺",5,"혂혃혅혆혇혉",6,"혒"],["c281","혖",5,"혝혞혟혡혢혣혥",7,"혮",9,"혺혻징짖짙짚짜짝짠짢짤짧짬짭짯짰짱째짹짼쨀쨈쨉쨋쨌쨍쨔쨘쨩쩌쩍쩐쩔쩜쩝쩟쩠쩡쩨쩽쪄쪘쪼쪽쫀쫄쫌쫍쫏쫑쫓쫘쫙쫠쫬쫴쬈쬐쬔쬘쬠쬡쭁쭈쭉쭌쭐쭘쭙쭝쭤쭸쭹쮜쮸쯔쯤쯧쯩찌찍찐찔찜찝찡찢찧차착찬찮찰참찹찻"],["c341","혽혾혿홁홂홃홄홆홇홊홌홎홏홐홒홓홖홗홙홚홛홝",4],["c361","홢",4,"홨홪",5,"홲홳홵",11],["c381","횁횂횄횆",5,"횎횏횑횒횓횕",7,"횞횠횢",5,"횩횪찼창찾채책챈챌챔챕챗챘챙챠챤챦챨챰챵처척천철첨첩첫첬청체첵첸첼쳄쳅쳇쳉쳐쳔쳤쳬쳰촁초촉촌촐촘촙촛총촤촨촬촹최쵠쵤쵬쵭쵯쵱쵸춈추축춘출춤춥춧충춰췄췌췐취췬췰췸췹췻췽츄츈츌츔츙츠측츤츨츰츱츳층"],["c441","횫횭횮횯횱",7,"횺횼",7,"훆훇훉훊훋"],["c461","훍훎훏훐훒훓훕훖훘훚",5,"훡훢훣훥훦훧훩",4],["c481","훮훯훱훲훳훴훶",5,"훾훿휁휂휃휅",11,"휒휓휔치칙친칟칠칡침칩칫칭카칵칸칼캄캅캇캉캐캑캔캘캠캡캣캤캥캬캭컁커컥컨컫컬컴컵컷컸컹케켁켄켈켐켑켓켕켜켠켤켬켭켯켰켱켸코콕콘콜콤콥콧콩콰콱콴콸쾀쾅쾌쾡쾨쾰쿄쿠쿡쿤쿨쿰쿱쿳쿵쿼퀀퀄퀑퀘퀭퀴퀵퀸퀼"],["c541","휕휖휗휚휛휝휞휟휡",6,"휪휬휮",5,"휶휷휹"],["c561","휺휻휽",6,"흅흆흈흊",5,"흒흓흕흚",4],["c581","흟흢흤흦흧흨흪흫흭흮흯흱흲흳흵",6,"흾흿힀힂",5,"힊힋큄큅큇큉큐큔큘큠크큭큰클큼큽킁키킥킨킬킴킵킷킹타탁탄탈탉탐탑탓탔탕태택탠탤탬탭탯탰탱탸턍터턱턴털턺텀텁텃텄텅테텍텐텔템텝텟텡텨텬텼톄톈토톡톤톨톰톱톳통톺톼퇀퇘퇴퇸툇툉툐투툭툰툴툼툽툿퉁퉈퉜"],["c641","힍힎힏힑",6,"힚힜힞",5],["c6a1","퉤튀튁튄튈튐튑튕튜튠튤튬튱트특튼튿틀틂틈틉틋틔틘틜틤틥티틱틴틸팀팁팃팅파팍팎판팔팖팜팝팟팠팡팥패팩팬팰팸팹팻팼팽퍄퍅퍼퍽펀펄펌펍펏펐펑페펙펜펠펨펩펫펭펴편펼폄폅폈평폐폘폡폣포폭폰폴폼폽폿퐁"],["c7a1","퐈퐝푀푄표푠푤푭푯푸푹푼푿풀풂품풉풋풍풔풩퓌퓐퓔퓜퓟퓨퓬퓰퓸퓻퓽프픈플픔픕픗피픽핀필핌핍핏핑하학한할핥함합핫항해핵핸핼햄햅햇했행햐향허헉헌헐헒험헙헛헝헤헥헨헬헴헵헷헹혀혁현혈혐협혓혔형혜혠"],["c8a1","혤혭호혹혼홀홅홈홉홋홍홑화확환활홧황홰홱홴횃횅회획횐횔횝횟횡효횬횰횹횻후훅훈훌훑훔훗훙훠훤훨훰훵훼훽휀휄휑휘휙휜휠휨휩휫휭휴휵휸휼흄흇흉흐흑흔흖흗흘흙흠흡흣흥흩희흰흴흼흽힁히힉힌힐힘힙힛힝"],["caa1","伽佳假價加可呵哥嘉嫁家暇架枷柯歌珂痂稼苛茄街袈訶賈跏軻迦駕刻却各恪慤殼珏脚覺角閣侃刊墾奸姦干幹懇揀杆柬桿澗癎看磵稈竿簡肝艮艱諫間乫喝曷渴碣竭葛褐蝎鞨勘坎堪嵌感憾戡敢柑橄減甘疳監瞰紺邯鑑鑒龕"],["cba1","匣岬甲胛鉀閘剛堈姜岡崗康强彊慷江畺疆糠絳綱羌腔舡薑襁講鋼降鱇介价個凱塏愷愾慨改槪漑疥皆盖箇芥蓋豈鎧開喀客坑更粳羹醵倨去居巨拒据據擧渠炬祛距踞車遽鉅鋸乾件健巾建愆楗腱虔蹇鍵騫乞傑杰桀儉劍劒檢"],["cca1","瞼鈐黔劫怯迲偈憩揭擊格檄激膈覡隔堅牽犬甄絹繭肩見譴遣鵑抉決潔結缺訣兼慊箝謙鉗鎌京俓倞傾儆勁勍卿坰境庚徑慶憬擎敬景暻更梗涇炅烱璟璥瓊痙硬磬竟競絅經耕耿脛莖警輕逕鏡頃頸驚鯨係啓堺契季屆悸戒桂械"],["cda1","棨溪界癸磎稽系繫繼計誡谿階鷄古叩告呱固姑孤尻庫拷攷故敲暠枯槁沽痼皐睾稿羔考股膏苦苽菰藁蠱袴誥賈辜錮雇顧高鼓哭斛曲梏穀谷鵠困坤崑昆梱棍滾琨袞鯤汨滑骨供公共功孔工恐恭拱控攻珙空蚣貢鞏串寡戈果瓜"],["cea1","科菓誇課跨過鍋顆廓槨藿郭串冠官寬慣棺款灌琯瓘管罐菅觀貫關館刮恝括适侊光匡壙廣曠洸炚狂珖筐胱鑛卦掛罫乖傀塊壞怪愧拐槐魁宏紘肱轟交僑咬喬嬌嶠巧攪敎校橋狡皎矯絞翹膠蕎蛟較轎郊餃驕鮫丘久九仇俱具勾"],["cfa1","區口句咎嘔坵垢寇嶇廐懼拘救枸柩構歐毆毬求溝灸狗玖球瞿矩究絿耉臼舅舊苟衢謳購軀逑邱鉤銶駒驅鳩鷗龜國局菊鞠鞫麴君窘群裙軍郡堀屈掘窟宮弓穹窮芎躬倦券勸卷圈拳捲權淃眷厥獗蕨蹶闕机櫃潰詭軌饋句晷歸貴"],["d0a1","鬼龜叫圭奎揆槻珪硅窺竅糾葵規赳逵閨勻均畇筠菌鈞龜橘克剋劇戟棘極隙僅劤勤懃斤根槿瑾筋芹菫覲謹近饉契今妗擒昑檎琴禁禽芩衾衿襟金錦伋及急扱汲級給亘兢矜肯企伎其冀嗜器圻基埼夔奇妓寄岐崎己幾忌技旗旣"],["d1a1","朞期杞棋棄機欺氣汽沂淇玘琦琪璂璣畸畿碁磯祁祇祈祺箕紀綺羈耆耭肌記譏豈起錡錤飢饑騎騏驥麒緊佶吉拮桔金喫儺喇奈娜懦懶拏拿癩",5,"那樂",4,"諾酪駱亂卵暖欄煖爛蘭難鸞捏捺南嵐枏楠湳濫男藍襤拉"],["d2a1","納臘蠟衲囊娘廊",4,"乃來內奈柰耐冷女年撚秊念恬拈捻寧寗努勞奴弩怒擄櫓爐瑙盧",5,"駑魯",10,"濃籠聾膿農惱牢磊腦賂雷尿壘",7,"嫩訥杻紐勒",5,"能菱陵尼泥匿溺多茶"],["d3a1","丹亶但單團壇彖斷旦檀段湍短端簞緞蛋袒鄲鍛撻澾獺疸達啖坍憺擔曇淡湛潭澹痰聃膽蕁覃談譚錟沓畓答踏遝唐堂塘幢戇撞棠當糖螳黨代垈坮大對岱帶待戴擡玳臺袋貸隊黛宅德悳倒刀到圖堵塗導屠島嶋度徒悼挑掉搗桃"],["d4a1","棹櫂淘渡滔濤燾盜睹禱稻萄覩賭跳蹈逃途道都鍍陶韜毒瀆牘犢獨督禿篤纛讀墩惇敦旽暾沌焞燉豚頓乭突仝冬凍動同憧東桐棟洞潼疼瞳童胴董銅兜斗杜枓痘竇荳讀豆逗頭屯臀芚遁遯鈍得嶝橙燈登等藤謄鄧騰喇懶拏癩羅"],["d5a1","蘿螺裸邏樂洛烙珞絡落諾酪駱丹亂卵欄欒瀾爛蘭鸞剌辣嵐擥攬欖濫籃纜藍襤覽拉臘蠟廊朗浪狼琅瑯螂郞來崍徠萊冷掠略亮倆兩凉梁樑粮粱糧良諒輛量侶儷勵呂廬慮戾旅櫚濾礪藜蠣閭驢驪麗黎力曆歷瀝礫轢靂憐戀攣漣"],["d6a1","煉璉練聯蓮輦連鍊冽列劣洌烈裂廉斂殮濂簾獵令伶囹寧岺嶺怜玲笭羚翎聆逞鈴零靈領齡例澧禮醴隷勞怒撈擄櫓潞瀘爐盧老蘆虜路輅露魯鷺鹵碌祿綠菉錄鹿麓論壟弄朧瀧瓏籠聾儡瀨牢磊賂賚賴雷了僚寮廖料燎療瞭聊蓼"],["d7a1","遼鬧龍壘婁屢樓淚漏瘻累縷蔞褸鏤陋劉旒柳榴流溜瀏琉瑠留瘤硫謬類六戮陸侖倫崙淪綸輪律慄栗率隆勒肋凜凌楞稜綾菱陵俚利厘吏唎履悧李梨浬犁狸理璃異痢籬罹羸莉裏裡里釐離鯉吝潾燐璘藺躪隣鱗麟林淋琳臨霖砬"],["d8a1","立笠粒摩瑪痲碼磨馬魔麻寞幕漠膜莫邈万卍娩巒彎慢挽晩曼滿漫灣瞞萬蔓蠻輓饅鰻唜抹末沫茉襪靺亡妄忘忙望網罔芒茫莽輞邙埋妹媒寐昧枚梅每煤罵買賣邁魅脈貊陌驀麥孟氓猛盲盟萌冪覓免冕勉棉沔眄眠綿緬面麵滅"],["d9a1","蔑冥名命明暝椧溟皿瞑茗蓂螟酩銘鳴袂侮冒募姆帽慕摸摹暮某模母毛牟牡瑁眸矛耗芼茅謀謨貌木沐牧目睦穆鶩歿沒夢朦蒙卯墓妙廟描昴杳渺猫竗苗錨務巫憮懋戊拇撫无楙武毋無珷畝繆舞茂蕪誣貿霧鵡墨默們刎吻問文"],["daa1","汶紊紋聞蚊門雯勿沕物味媚尾嵋彌微未梶楣渼湄眉米美薇謎迷靡黴岷悶愍憫敏旻旼民泯玟珉緡閔密蜜謐剝博拍搏撲朴樸泊珀璞箔粕縛膊舶薄迫雹駁伴半反叛拌搬攀斑槃泮潘班畔瘢盤盼磐磻礬絆般蟠返頒飯勃拔撥渤潑"],["dba1","發跋醱鉢髮魃倣傍坊妨尨幇彷房放方旁昉枋榜滂磅紡肪膀舫芳蒡蚌訪謗邦防龐倍俳北培徘拜排杯湃焙盃背胚裴裵褙賠輩配陪伯佰帛柏栢白百魄幡樊煩燔番磻繁蕃藩飜伐筏罰閥凡帆梵氾汎泛犯範范法琺僻劈壁擘檗璧癖"],["dca1","碧蘗闢霹便卞弁變辨辯邊別瞥鱉鼈丙倂兵屛幷昞昺柄棅炳甁病秉竝輧餠騈保堡報寶普步洑湺潽珤甫菩補褓譜輔伏僕匐卜宓復服福腹茯蔔複覆輹輻馥鰒本乶俸奉封峯峰捧棒烽熢琫縫蓬蜂逢鋒鳳不付俯傅剖副否咐埠夫婦"],["dda1","孚孵富府復扶敷斧浮溥父符簿缶腐腑膚艀芙莩訃負賦賻赴趺部釜阜附駙鳧北分吩噴墳奔奮忿憤扮昐汾焚盆粉糞紛芬賁雰不佛弗彿拂崩朋棚硼繃鵬丕備匕匪卑妃婢庇悲憊扉批斐枇榧比毖毗毘沸泌琵痺砒碑秕秘粃緋翡肥"],["dea1","脾臂菲蜚裨誹譬費鄙非飛鼻嚬嬪彬斌檳殯浜濱瀕牝玭貧賓頻憑氷聘騁乍事些仕伺似使俟僿史司唆嗣四士奢娑寫寺射巳師徙思捨斜斯柶査梭死沙泗渣瀉獅砂社祀祠私篩紗絲肆舍莎蓑蛇裟詐詞謝賜赦辭邪飼駟麝削數朔索"],["dfa1","傘刪山散汕珊産疝算蒜酸霰乷撒殺煞薩三參杉森渗芟蔘衫揷澁鈒颯上傷像償商喪嘗孀尙峠常床庠廂想桑橡湘爽牀狀相祥箱翔裳觴詳象賞霜塞璽賽嗇塞穡索色牲生甥省笙墅壻嶼序庶徐恕抒捿敍暑曙書栖棲犀瑞筮絮緖署"],["e0a1","胥舒薯西誓逝鋤黍鼠夕奭席惜昔晳析汐淅潟石碩蓆釋錫仙僊先善嬋宣扇敾旋渲煽琁瑄璇璿癬禪線繕羨腺膳船蘚蟬詵跣選銑鐥饍鮮卨屑楔泄洩渫舌薛褻設說雪齧剡暹殲纖蟾贍閃陝攝涉燮葉城姓宬性惺成星晟猩珹盛省筬"],["e1a1","聖聲腥誠醒世勢歲洗稅笹細說貰召嘯塑宵小少巢所掃搔昭梳沼消溯瀟炤燒甦疏疎瘙笑篠簫素紹蔬蕭蘇訴逍遡邵銷韶騷俗屬束涑粟續謖贖速孫巽損蓀遜飡率宋悚松淞訟誦送頌刷殺灑碎鎖衰釗修受嗽囚垂壽嫂守岫峀帥愁"],["e2a1","戍手授搜收數樹殊水洙漱燧狩獸琇璲瘦睡秀穗竪粹綏綬繡羞脩茱蒐蓚藪袖誰讐輸遂邃酬銖銹隋隧隨雖需須首髓鬚叔塾夙孰宿淑潚熟琡璹肅菽巡徇循恂旬栒楯橓殉洵淳珣盾瞬筍純脣舜荀蓴蕣詢諄醇錞順馴戌術述鉥崇崧"],["e3a1","嵩瑟膝蝨濕拾習褶襲丞乘僧勝升承昇繩蠅陞侍匙嘶始媤尸屎屍市弑恃施是時枾柴猜矢示翅蒔蓍視試詩諡豕豺埴寔式息拭植殖湜熄篒蝕識軾食飾伸侁信呻娠宸愼新晨燼申神紳腎臣莘薪藎蜃訊身辛辰迅失室實悉審尋心沁"],["e4a1","沈深瀋甚芯諶什十拾雙氏亞俄兒啞娥峨我牙芽莪蛾衙訝阿雅餓鴉鵝堊岳嶽幄惡愕握樂渥鄂鍔顎鰐齷安岸按晏案眼雁鞍顔鮟斡謁軋閼唵岩巖庵暗癌菴闇壓押狎鴨仰央怏昻殃秧鴦厓哀埃崖愛曖涯碍艾隘靄厄扼掖液縊腋額"],["e5a1","櫻罌鶯鸚也倻冶夜惹揶椰爺耶若野弱掠略約若葯蒻藥躍亮佯兩凉壤孃恙揚攘敭暘梁楊樣洋瀁煬痒瘍禳穰糧羊良襄諒讓釀陽量養圄御於漁瘀禦語馭魚齬億憶抑檍臆偃堰彦焉言諺孼蘖俺儼嚴奄掩淹嶪業円予余勵呂女如廬"],["e6a1","旅歟汝濾璵礖礪與艅茹輿轝閭餘驪麗黎亦力域役易曆歷疫繹譯轢逆驛嚥堧姸娟宴年延憐戀捐挻撚椽沇沿涎涓淵演漣烟然煙煉燃燕璉硏硯秊筵緣練縯聯衍軟輦蓮連鉛鍊鳶列劣咽悅涅烈熱裂說閱厭廉念捻染殮炎焰琰艶苒"],["e7a1","簾閻髥鹽曄獵燁葉令囹塋寧嶺嶸影怜映暎楹榮永泳渶潁濚瀛瀯煐營獰玲瑛瑩瓔盈穎纓羚聆英詠迎鈴鍈零霙靈領乂倪例刈叡曳汭濊猊睿穢芮藝蘂禮裔詣譽豫醴銳隸霓預五伍俉傲午吾吳嗚塢墺奧娛寤悟惡懊敖旿晤梧汚澳"],["e8a1","烏熬獒筽蜈誤鰲鼇屋沃獄玉鈺溫瑥瘟穩縕蘊兀壅擁瓮甕癰翁邕雍饔渦瓦窩窪臥蛙蝸訛婉完宛梡椀浣玩琓琬碗緩翫脘腕莞豌阮頑曰往旺枉汪王倭娃歪矮外嵬巍猥畏了僚僥凹堯夭妖姚寥寮尿嶢拗搖撓擾料曜樂橈燎燿瑤療"],["e9a1","窈窯繇繞耀腰蓼蟯要謠遙遼邀饒慾欲浴縟褥辱俑傭冗勇埇墉容庸慂榕涌湧溶熔瑢用甬聳茸蓉踊鎔鏞龍于佑偶優又友右宇寓尤愚憂旴牛玗瑀盂祐禑禹紆羽芋藕虞迂遇郵釪隅雨雩勖彧旭昱栯煜稶郁頊云暈橒殞澐熉耘芸蕓"],["eaa1","運隕雲韻蔚鬱亐熊雄元原員圓園垣媛嫄寃怨愿援沅洹湲源爰猿瑗苑袁轅遠阮院願鴛月越鉞位偉僞危圍委威尉慰暐渭爲瑋緯胃萎葦蔿蝟衛褘謂違韋魏乳侑儒兪劉唯喩孺宥幼幽庾悠惟愈愉揄攸有杻柔柚柳楡楢油洧流游溜"],["eba1","濡猶猷琉瑜由留癒硫紐維臾萸裕誘諛諭踰蹂遊逾遺酉釉鍮類六堉戮毓肉育陸倫允奫尹崙淪潤玧胤贇輪鈗閏律慄栗率聿戎瀜絨融隆垠恩慇殷誾銀隱乙吟淫蔭陰音飮揖泣邑凝應膺鷹依倚儀宜意懿擬椅毅疑矣義艤薏蟻衣誼"],["eca1","議醫二以伊利吏夷姨履已弛彛怡易李梨泥爾珥理異痍痢移罹而耳肄苡荑裏裡貽貳邇里離飴餌匿溺瀷益翊翌翼謚人仁刃印吝咽因姻寅引忍湮燐璘絪茵藺蚓認隣靭靷鱗麟一佚佾壹日溢逸鎰馹任壬妊姙恁林淋稔臨荏賃入卄"],["eda1","立笠粒仍剩孕芿仔刺咨姉姿子字孜恣慈滋炙煮玆瓷疵磁紫者自茨蔗藉諮資雌作勺嚼斫昨灼炸爵綽芍酌雀鵲孱棧殘潺盞岑暫潛箴簪蠶雜丈仗匠場墻壯奬將帳庄張掌暲杖樟檣欌漿牆狀獐璋章粧腸臟臧莊葬蔣薔藏裝贓醬長"],["eea1","障再哉在宰才材栽梓渽滓災縡裁財載齋齎爭箏諍錚佇低儲咀姐底抵杵楮樗沮渚狙猪疽箸紵苧菹著藷詛貯躇這邸雎齟勣吊嫡寂摘敵滴狄炙的積笛籍績翟荻謫賊赤跡蹟迪迹適鏑佃佺傳全典前剪塡塼奠專展廛悛戰栓殿氈澱"],["efa1","煎琠田甸畑癲筌箋箭篆纏詮輾轉鈿銓錢鐫電顚顫餞切截折浙癤竊節絶占岾店漸点粘霑鮎點接摺蝶丁井亭停偵呈姃定幀庭廷征情挺政整旌晶晸柾楨檉正汀淀淨渟湞瀞炡玎珽町睛碇禎程穽精綎艇訂諪貞鄭酊釘鉦鋌錠霆靖"],["f0a1","靜頂鼎制劑啼堤帝弟悌提梯濟祭第臍薺製諸蹄醍除際霽題齊俎兆凋助嘲弔彫措操早晁曺曹朝條棗槽漕潮照燥爪璪眺祖祚租稠窕粗糟組繰肇藻蚤詔調趙躁造遭釣阻雕鳥族簇足鏃存尊卒拙猝倧宗從悰慫棕淙琮種終綜縱腫"],["f1a1","踪踵鍾鐘佐坐左座挫罪主住侏做姝胄呪周嗾奏宙州廚晝朱柱株注洲湊澍炷珠疇籌紂紬綢舟蛛註誅走躊輳週酎酒鑄駐竹粥俊儁准埈寯峻晙樽浚準濬焌畯竣蠢逡遵雋駿茁中仲衆重卽櫛楫汁葺增憎曾拯烝甑症繒蒸證贈之只"],["f2a1","咫地址志持指摯支旨智枝枳止池沚漬知砥祉祗紙肢脂至芝芷蜘誌識贄趾遲直稙稷織職唇嗔塵振搢晉晋桭榛殄津溱珍瑨璡畛疹盡眞瞋秦縉縝臻蔯袗診賑軫辰進鎭陣陳震侄叱姪嫉帙桎瓆疾秩窒膣蛭質跌迭斟朕什執潗緝輯"],["f3a1","鏶集徵懲澄且侘借叉嗟嵯差次此磋箚茶蹉車遮捉搾着窄錯鑿齪撰澯燦璨瓚竄簒纂粲纘讚贊鑽餐饌刹察擦札紮僭參塹慘慙懺斬站讒讖倉倡創唱娼廠彰愴敞昌昶暢槍滄漲猖瘡窓脹艙菖蒼債埰寀寨彩採砦綵菜蔡采釵冊柵策"],["f4a1","責凄妻悽處倜刺剔尺慽戚拓擲斥滌瘠脊蹠陟隻仟千喘天川擅泉淺玔穿舛薦賤踐遷釧闡阡韆凸哲喆徹撤澈綴輟轍鐵僉尖沾添甛瞻簽籤詹諂堞妾帖捷牒疊睫諜貼輒廳晴淸聽菁請靑鯖切剃替涕滯締諦逮遞體初剿哨憔抄招梢"],["f5a1","椒楚樵炒焦硝礁礎秒稍肖艸苕草蕉貂超酢醋醮促囑燭矗蜀觸寸忖村邨叢塚寵悤憁摠總聰蔥銃撮催崔最墜抽推椎楸樞湫皺秋芻萩諏趨追鄒酋醜錐錘鎚雛騶鰍丑畜祝竺筑築縮蓄蹙蹴軸逐春椿瑃出朮黜充忠沖蟲衝衷悴膵萃"],["f6a1","贅取吹嘴娶就炊翠聚脆臭趣醉驟鷲側仄厠惻測層侈値嗤峙幟恥梔治淄熾痔痴癡稚穉緇緻置致蚩輜雉馳齒則勅飭親七柒漆侵寢枕沈浸琛砧針鍼蟄秤稱快他咤唾墮妥惰打拖朶楕舵陀馱駝倬卓啄坼度托拓擢晫柝濁濯琢琸託"],["f7a1","鐸呑嘆坦彈憚歎灘炭綻誕奪脫探眈耽貪塔搭榻宕帑湯糖蕩兌台太怠態殆汰泰笞胎苔跆邰颱宅擇澤撑攄兎吐土討慟桶洞痛筒統通堆槌腿褪退頹偸套妬投透鬪慝特闖坡婆巴把播擺杷波派爬琶破罷芭跛頗判坂板版瓣販辦鈑"],["f8a1","阪八叭捌佩唄悖敗沛浿牌狽稗覇貝彭澎烹膨愎便偏扁片篇編翩遍鞭騙貶坪平枰萍評吠嬖幣廢弊斃肺蔽閉陛佈包匍匏咆哺圃布怖抛抱捕暴泡浦疱砲胞脯苞葡蒲袍褒逋鋪飽鮑幅暴曝瀑爆輻俵剽彪慓杓標漂瓢票表豹飇飄驃"],["f9a1","品稟楓諷豊風馮彼披疲皮被避陂匹弼必泌珌畢疋筆苾馝乏逼下何厦夏廈昰河瑕荷蝦賀遐霞鰕壑學虐謔鶴寒恨悍旱汗漢澣瀚罕翰閑閒限韓割轄函含咸啣喊檻涵緘艦銜陷鹹合哈盒蛤閤闔陜亢伉姮嫦巷恒抗杭桁沆港缸肛航"],["faa1","行降項亥偕咳垓奚孩害懈楷海瀣蟹解該諧邂駭骸劾核倖幸杏荇行享向嚮珦鄕響餉饗香噓墟虛許憲櫶獻軒歇險驗奕爀赫革俔峴弦懸晛泫炫玄玹現眩睍絃絢縣舷衒見賢鉉顯孑穴血頁嫌俠協夾峽挾浹狹脅脇莢鋏頰亨兄刑型"],["fba1","形泂滎瀅灐炯熒珩瑩荊螢衡逈邢鎣馨兮彗惠慧暳蕙蹊醯鞋乎互呼壕壺好岵弧戶扈昊晧毫浩淏湖滸澔濠濩灝狐琥瑚瓠皓祜糊縞胡芦葫蒿虎號蝴護豪鎬頀顥惑或酷婚昏混渾琿魂忽惚笏哄弘汞泓洪烘紅虹訌鴻化和嬅樺火畵"],["fca1","禍禾花華話譁貨靴廓擴攫確碻穫丸喚奐宦幻患換歡晥桓渙煥環紈還驩鰥活滑猾豁闊凰幌徨恍惶愰慌晃晄榥況湟滉潢煌璜皇篁簧荒蝗遑隍黃匯回廻徊恢悔懷晦會檜淮澮灰獪繪膾茴蛔誨賄劃獲宖橫鐄哮嚆孝效斅曉梟涍淆"],["fda1","爻肴酵驍侯候厚后吼喉嗅帿後朽煦珝逅勛勳塤壎焄熏燻薰訓暈薨喧暄煊萱卉喙毁彙徽揮暉煇諱輝麾休携烋畦虧恤譎鷸兇凶匈洶胸黑昕欣炘痕吃屹紇訖欠欽歆吸恰洽翕興僖凞喜噫囍姬嬉希憙憘戱晞曦熙熹熺犧禧稀羲詰"]]'), uR = /* @__PURE__ */ JSON.parse('[["0","\\u0000",127],["a140","　，、。．‧；：？！︰…‥﹐﹑﹒·﹔﹕﹖﹗｜–︱—︳╴︴﹏（）︵︶｛｝︷︸〔〕︹︺【】︻︼《》︽︾〈〉︿﹀「」﹁﹂『』﹃﹄﹙﹚"],["a1a1","﹛﹜﹝﹞‘’“”〝〞‵′＃＆＊※§〃○●△▲◎☆★◇◆□■▽▼㊣℅¯￣＿ˍ﹉﹊﹍﹎﹋﹌﹟﹠﹡＋－×÷±√＜＞＝≦≧≠∞≒≡﹢",4,"～∩∪⊥∠∟⊿㏒㏑∫∮∵∴♀♂⊕⊙↑↓←→↖↗↙↘∥∣／"],["a240","＼∕﹨＄￥〒￠￡％＠℃℉﹩﹪﹫㏕㎜㎝㎞㏎㎡㎎㎏㏄°兙兛兞兝兡兣嗧瓩糎▁",7,"▏▎▍▌▋▊▉┼┴┬┤├▔─│▕┌┐└┘╭"],["a2a1","╮╰╯═╞╪╡◢◣◥◤╱╲╳０",9,"Ⅰ",9,"〡",8,"十卄卅Ａ",25,"ａ",21],["a340","ｗｘｙｚΑ",16,"Σ",6,"α",16,"σ",6,"ㄅ",10],["a3a1","ㄐ",25,"˙ˉˊˇˋ"],["a3e1","€"],["a440","一乙丁七乃九了二人儿入八几刀刁力匕十卜又三下丈上丫丸凡久么也乞于亡兀刃勺千叉口土士夕大女子孑孓寸小尢尸山川工己已巳巾干廾弋弓才"],["a4a1","丑丐不中丰丹之尹予云井互五亢仁什仃仆仇仍今介仄元允內六兮公冗凶分切刈勻勾勿化匹午升卅卞厄友及反壬天夫太夭孔少尤尺屯巴幻廿弔引心戈戶手扎支文斗斤方日曰月木欠止歹毋比毛氏水火爪父爻片牙牛犬王丙"],["a540","世丕且丘主乍乏乎以付仔仕他仗代令仙仞充兄冉冊冬凹出凸刊加功包匆北匝仟半卉卡占卯卮去可古右召叮叩叨叼司叵叫另只史叱台句叭叻四囚外"],["a5a1","央失奴奶孕它尼巨巧左市布平幼弁弘弗必戊打扔扒扑斥旦朮本未末札正母民氐永汁汀氾犯玄玉瓜瓦甘生用甩田由甲申疋白皮皿目矛矢石示禾穴立丞丟乒乓乩亙交亦亥仿伉伙伊伕伍伐休伏仲件任仰仳份企伋光兇兆先全"],["a640","共再冰列刑划刎刖劣匈匡匠印危吉吏同吊吐吁吋各向名合吃后吆吒因回囝圳地在圭圬圯圩夙多夷夸妄奸妃好她如妁字存宇守宅安寺尖屹州帆并年"],["a6a1","式弛忙忖戎戌戍成扣扛托收早旨旬旭曲曳有朽朴朱朵次此死氖汝汗汙江池汐汕污汛汍汎灰牟牝百竹米糸缶羊羽老考而耒耳聿肉肋肌臣自至臼舌舛舟艮色艾虫血行衣西阡串亨位住佇佗佞伴佛何估佐佑伽伺伸佃佔似但佣"],["a740","作你伯低伶余佝佈佚兌克免兵冶冷別判利刪刨劫助努劬匣即卵吝吭吞吾否呎吧呆呃吳呈呂君吩告吹吻吸吮吵吶吠吼呀吱含吟听囪困囤囫坊坑址坍"],["a7a1","均坎圾坐坏圻壯夾妝妒妨妞妣妙妖妍妤妓妊妥孝孜孚孛完宋宏尬局屁尿尾岐岑岔岌巫希序庇床廷弄弟彤形彷役忘忌志忍忱快忸忪戒我抄抗抖技扶抉扭把扼找批扳抒扯折扮投抓抑抆改攻攸旱更束李杏材村杜杖杞杉杆杠"],["a840","杓杗步每求汞沙沁沈沉沅沛汪決沐汰沌汨沖沒汽沃汲汾汴沆汶沍沔沘沂灶灼災灸牢牡牠狄狂玖甬甫男甸皂盯矣私秀禿究系罕肖肓肝肘肛肚育良芒"],["a8a1","芋芍見角言谷豆豕貝赤走足身車辛辰迂迆迅迄巡邑邢邪邦那酉釆里防阮阱阪阬並乖乳事些亞享京佯依侍佳使佬供例來侃佰併侈佩佻侖佾侏侑佺兔兒兕兩具其典冽函刻券刷刺到刮制剁劾劻卒協卓卑卦卷卸卹取叔受味呵"],["a940","咖呸咕咀呻呷咄咒咆呼咐呱呶和咚呢周咋命咎固垃坷坪坩坡坦坤坼夜奉奇奈奄奔妾妻委妹妮姑姆姐姍始姓姊妯妳姒姅孟孤季宗定官宜宙宛尚屈居"],["a9a1","屆岷岡岸岩岫岱岳帘帚帖帕帛帑幸庚店府底庖延弦弧弩往征彿彼忝忠忽念忿怏怔怯怵怖怪怕怡性怩怫怛或戕房戾所承拉拌拄抿拂抹拒招披拓拔拋拈抨抽押拐拙拇拍抵拚抱拘拖拗拆抬拎放斧於旺昔易昌昆昂明昀昏昕昊"],["aa40","昇服朋杭枋枕東果杳杷枇枝林杯杰板枉松析杵枚枓杼杪杲欣武歧歿氓氛泣注泳沱泌泥河沽沾沼波沫法泓沸泄油況沮泗泅泱沿治泡泛泊沬泯泜泖泠"],["aaa1","炕炎炒炊炙爬爭爸版牧物狀狎狙狗狐玩玨玟玫玥甽疝疙疚的盂盲直知矽社祀祁秉秈空穹竺糾罔羌羋者肺肥肢肱股肫肩肴肪肯臥臾舍芳芝芙芭芽芟芹花芬芥芯芸芣芰芾芷虎虱初表軋迎返近邵邸邱邶采金長門阜陀阿阻附"],["ab40","陂隹雨青非亟亭亮信侵侯便俠俑俏保促侶俘俟俊俗侮俐俄係俚俎俞侷兗冒冑冠剎剃削前剌剋則勇勉勃勁匍南卻厚叛咬哀咨哎哉咸咦咳哇哂咽咪品"],["aba1","哄哈咯咫咱咻咩咧咿囿垂型垠垣垢城垮垓奕契奏奎奐姜姘姿姣姨娃姥姪姚姦威姻孩宣宦室客宥封屎屏屍屋峙峒巷帝帥帟幽庠度建弈弭彥很待徊律徇後徉怒思怠急怎怨恍恰恨恢恆恃恬恫恪恤扁拜挖按拼拭持拮拽指拱拷"],["ac40","拯括拾拴挑挂政故斫施既春昭映昧是星昨昱昤曷柿染柱柔某柬架枯柵柩柯柄柑枴柚查枸柏柞柳枰柙柢柝柒歪殃殆段毒毗氟泉洋洲洪流津洌洱洞洗"],["aca1","活洽派洶洛泵洹洧洸洩洮洵洎洫炫為炳炬炯炭炸炮炤爰牲牯牴狩狠狡玷珊玻玲珍珀玳甚甭畏界畎畋疫疤疥疢疣癸皆皇皈盈盆盃盅省盹相眉看盾盼眇矜砂研砌砍祆祉祈祇禹禺科秒秋穿突竿竽籽紂紅紀紉紇約紆缸美羿耄"],["ad40","耐耍耑耶胖胥胚胃胄背胡胛胎胞胤胝致舢苧范茅苣苛苦茄若茂茉苒苗英茁苜苔苑苞苓苟苯茆虐虹虻虺衍衫要觔計訂訃貞負赴赳趴軍軌述迦迢迪迥"],["ada1","迭迫迤迨郊郎郁郃酋酊重閂限陋陌降面革韋韭音頁風飛食首香乘亳倌倍倣俯倦倥俸倩倖倆值借倚倒們俺倀倔倨俱倡個候倘俳修倭倪俾倫倉兼冤冥冢凍凌准凋剖剜剔剛剝匪卿原厝叟哨唐唁唷哼哥哲唆哺唔哩哭員唉哮哪"],["ae40","哦唧唇哽唏圃圄埂埔埋埃堉夏套奘奚娑娘娜娟娛娓姬娠娣娩娥娌娉孫屘宰害家宴宮宵容宸射屑展屐峭峽峻峪峨峰島崁峴差席師庫庭座弱徒徑徐恙"],["aea1","恣恥恐恕恭恩息悄悟悚悍悔悌悅悖扇拳挈拿捎挾振捕捂捆捏捉挺捐挽挪挫挨捍捌效敉料旁旅時晉晏晃晒晌晅晁書朔朕朗校核案框桓根桂桔栩梳栗桌桑栽柴桐桀格桃株桅栓栘桁殊殉殷氣氧氨氦氤泰浪涕消涇浦浸海浙涓"],["af40","浬涉浮浚浴浩涌涊浹涅浥涔烊烘烤烙烈烏爹特狼狹狽狸狷玆班琉珮珠珪珞畔畝畜畚留疾病症疲疳疽疼疹痂疸皋皰益盍盎眩真眠眨矩砰砧砸砝破砷"],["afa1","砥砭砠砟砲祕祐祠祟祖神祝祗祚秤秣秧租秦秩秘窄窈站笆笑粉紡紗紋紊素索純紐紕級紜納紙紛缺罟羔翅翁耆耘耕耙耗耽耿胱脂胰脅胭胴脆胸胳脈能脊胼胯臭臬舀舐航舫舨般芻茫荒荔荊茸荐草茵茴荏茲茹茶茗荀茱茨荃"],["b040","虔蚊蚪蚓蚤蚩蚌蚣蚜衰衷袁袂衽衹記訐討訌訕訊託訓訖訏訑豈豺豹財貢起躬軒軔軏辱送逆迷退迺迴逃追逅迸邕郡郝郢酒配酌釘針釗釜釙閃院陣陡"],["b0a1","陛陝除陘陞隻飢馬骨高鬥鬲鬼乾偺偽停假偃偌做偉健偶偎偕偵側偷偏倏偯偭兜冕凰剪副勒務勘動匐匏匙匿區匾參曼商啪啦啄啞啡啃啊唱啖問啕唯啤唸售啜唬啣唳啁啗圈國圉域堅堊堆埠埤基堂堵執培夠奢娶婁婉婦婪婀"],["b140","娼婢婚婆婊孰寇寅寄寂宿密尉專將屠屜屝崇崆崎崛崖崢崑崩崔崙崤崧崗巢常帶帳帷康庸庶庵庾張強彗彬彩彫得徙從徘御徠徜恿患悉悠您惋悴惦悽"],["b1a1","情悻悵惜悼惘惕惆惟悸惚惇戚戛扈掠控捲掖探接捷捧掘措捱掩掉掃掛捫推掄授掙採掬排掏掀捻捩捨捺敝敖救教敗啟敏敘敕敔斜斛斬族旋旌旎晝晚晤晨晦晞曹勗望梁梯梢梓梵桿桶梱梧梗械梃棄梭梆梅梔條梨梟梡梂欲殺"],["b240","毫毬氫涎涼淳淙液淡淌淤添淺清淇淋涯淑涮淞淹涸混淵淅淒渚涵淚淫淘淪深淮淨淆淄涪淬涿淦烹焉焊烽烯爽牽犁猜猛猖猓猙率琅琊球理現琍瓠瓶"],["b2a1","瓷甜產略畦畢異疏痔痕疵痊痍皎盔盒盛眷眾眼眶眸眺硫硃硎祥票祭移窒窕笠笨笛第符笙笞笮粒粗粕絆絃統紮紹紼絀細紳組累終紲紱缽羞羚翌翎習耜聊聆脯脖脣脫脩脰脤舂舵舷舶船莎莞莘荸莢莖莽莫莒莊莓莉莠荷荻荼"],["b340","莆莧處彪蛇蛀蚶蛄蚵蛆蛋蚱蚯蛉術袞袈被袒袖袍袋覓規訪訝訣訥許設訟訛訢豉豚販責貫貨貪貧赧赦趾趺軛軟這逍通逗連速逝逐逕逞造透逢逖逛途"],["b3a1","部郭都酗野釵釦釣釧釭釩閉陪陵陳陸陰陴陶陷陬雀雪雩章竟頂頃魚鳥鹵鹿麥麻傢傍傅備傑傀傖傘傚最凱割剴創剩勞勝勛博厥啻喀喧啼喊喝喘喂喜喪喔喇喋喃喳單喟唾喲喚喻喬喱啾喉喫喙圍堯堪場堤堰報堡堝堠壹壺奠"],["b440","婷媚婿媒媛媧孳孱寒富寓寐尊尋就嵌嵐崴嵇巽幅帽幀幃幾廊廁廂廄弼彭復循徨惑惡悲悶惠愜愣惺愕惰惻惴慨惱愎惶愉愀愒戟扉掣掌描揀揩揉揆揍"],["b4a1","插揣提握揖揭揮捶援揪換摒揚揹敞敦敢散斑斐斯普晰晴晶景暑智晾晷曾替期朝棺棕棠棘棗椅棟棵森棧棹棒棲棣棋棍植椒椎棉棚楮棻款欺欽殘殖殼毯氮氯氬港游湔渡渲湧湊渠渥渣減湛湘渤湖湮渭渦湯渴湍渺測湃渝渾滋"],["b540","溉渙湎湣湄湲湩湟焙焚焦焰無然煮焜牌犄犀猶猥猴猩琺琪琳琢琥琵琶琴琯琛琦琨甥甦畫番痢痛痣痙痘痞痠登發皖皓皴盜睏短硝硬硯稍稈程稅稀窘"],["b5a1","窗窖童竣等策筆筐筒答筍筋筏筑粟粥絞結絨絕紫絮絲絡給絢絰絳善翔翕耋聒肅腕腔腋腑腎脹腆脾腌腓腴舒舜菩萃菸萍菠菅萋菁華菱菴著萊菰萌菌菽菲菊萸萎萄菜萇菔菟虛蛟蛙蛭蛔蛛蛤蛐蛞街裁裂袱覃視註詠評詞証詁"],["b640","詔詛詐詆訴診訶詖象貂貯貼貳貽賁費賀貴買貶貿貸越超趁跎距跋跚跑跌跛跆軻軸軼辜逮逵週逸進逶鄂郵鄉郾酣酥量鈔鈕鈣鈉鈞鈍鈐鈇鈑閔閏開閑"],["b6a1","間閒閎隊階隋陽隅隆隍陲隄雁雅雄集雇雯雲韌項順須飧飪飯飩飲飭馮馭黃黍黑亂傭債傲傳僅傾催傷傻傯僇剿剷剽募勦勤勢勣匯嗟嗨嗓嗦嗎嗜嗇嗑嗣嗤嗯嗚嗡嗅嗆嗥嗉園圓塞塑塘塗塚塔填塌塭塊塢塒塋奧嫁嫉嫌媾媽媼"],["b740","媳嫂媲嵩嵯幌幹廉廈弒彙徬微愚意慈感想愛惹愁愈慎慌慄慍愾愴愧愍愆愷戡戢搓搾搞搪搭搽搬搏搜搔損搶搖搗搆敬斟新暗暉暇暈暖暄暘暍會榔業"],["b7a1","楚楷楠楔極椰概楊楨楫楞楓楹榆楝楣楛歇歲毀殿毓毽溢溯滓溶滂源溝滇滅溥溘溼溺溫滑準溜滄滔溪溧溴煎煙煩煤煉照煜煬煦煌煥煞煆煨煖爺牒猷獅猿猾瑯瑚瑕瑟瑞瑁琿瑙瑛瑜當畸瘀痰瘁痲痱痺痿痴痳盞盟睛睫睦睞督"],["b840","睹睪睬睜睥睨睢矮碎碰碗碘碌碉硼碑碓硿祺祿禁萬禽稜稚稠稔稟稞窟窠筷節筠筮筧粱粳粵經絹綑綁綏絛置罩罪署義羨群聖聘肆肄腱腰腸腥腮腳腫"],["b8a1","腹腺腦舅艇蒂葷落萱葵葦葫葉葬葛萼萵葡董葩葭葆虞虜號蛹蜓蜈蜇蜀蛾蛻蜂蜃蜆蜊衙裟裔裙補裘裝裡裊裕裒覜解詫該詳試詩詰誇詼詣誠話誅詭詢詮詬詹詻訾詨豢貊貉賊資賈賄貲賃賂賅跡跟跨路跳跺跪跤跦躲較載軾輊"],["b940","辟農運遊道遂達逼違遐遇遏過遍遑逾遁鄒鄗酬酪酩釉鈷鉗鈸鈽鉀鈾鉛鉋鉤鉑鈴鉉鉍鉅鈹鈿鉚閘隘隔隕雍雋雉雊雷電雹零靖靴靶預頑頓頊頒頌飼飴"],["b9a1","飽飾馳馱馴髡鳩麂鼎鼓鼠僧僮僥僖僭僚僕像僑僱僎僩兢凳劃劂匱厭嗾嘀嘛嘗嗽嘔嘆嘉嘍嘎嗷嘖嘟嘈嘐嗶團圖塵塾境墓墊塹墅塽壽夥夢夤奪奩嫡嫦嫩嫗嫖嫘嫣孵寞寧寡寥實寨寢寤察對屢嶄嶇幛幣幕幗幔廓廖弊彆彰徹慇"],["ba40","愿態慷慢慣慟慚慘慵截撇摘摔撤摸摟摺摑摧搴摭摻敲斡旗旖暢暨暝榜榨榕槁榮槓構榛榷榻榫榴槐槍榭槌榦槃榣歉歌氳漳演滾漓滴漩漾漠漬漏漂漢"],["baa1","滿滯漆漱漸漲漣漕漫漯澈漪滬漁滲滌滷熔熙煽熊熄熒爾犒犖獄獐瑤瑣瑪瑰瑭甄疑瘧瘍瘋瘉瘓盡監瞄睽睿睡磁碟碧碳碩碣禎福禍種稱窪窩竭端管箕箋筵算箝箔箏箸箇箄粹粽精綻綰綜綽綾綠緊綴網綱綺綢綿綵綸維緒緇綬"],["bb40","罰翠翡翟聞聚肇腐膀膏膈膊腿膂臧臺與舔舞艋蓉蒿蓆蓄蒙蒞蒲蒜蓋蒸蓀蓓蒐蒼蓑蓊蜿蜜蜻蜢蜥蜴蜘蝕蜷蜩裳褂裴裹裸製裨褚裯誦誌語誣認誡誓誤"],["bba1","說誥誨誘誑誚誧豪貍貌賓賑賒赫趙趕跼輔輒輕輓辣遠遘遜遣遙遞遢遝遛鄙鄘鄞酵酸酷酴鉸銀銅銘銖鉻銓銜銨鉼銑閡閨閩閣閥閤隙障際雌雒需靼鞅韶頗領颯颱餃餅餌餉駁骯骰髦魁魂鳴鳶鳳麼鼻齊億儀僻僵價儂儈儉儅凜"],["bc40","劇劈劉劍劊勰厲嘮嘻嘹嘲嘿嘴嘩噓噎噗噴嘶嘯嘰墀墟增墳墜墮墩墦奭嬉嫻嬋嫵嬌嬈寮寬審寫層履嶝嶔幢幟幡廢廚廟廝廣廠彈影德徵慶慧慮慝慕憂"],["bca1","慼慰慫慾憧憐憫憎憬憚憤憔憮戮摩摯摹撞撲撈撐撰撥撓撕撩撒撮播撫撚撬撙撢撳敵敷數暮暫暴暱樣樟槨樁樞標槽模樓樊槳樂樅槭樑歐歎殤毅毆漿潼澄潑潦潔澆潭潛潸潮澎潺潰潤澗潘滕潯潠潟熟熬熱熨牖犛獎獗瑩璋璃"],["bd40","瑾璀畿瘠瘩瘟瘤瘦瘡瘢皚皺盤瞎瞇瞌瞑瞋磋磅確磊碾磕碼磐稿稼穀稽稷稻窯窮箭箱範箴篆篇篁箠篌糊締練緯緻緘緬緝編緣線緞緩綞緙緲緹罵罷羯"],["bda1","翩耦膛膜膝膠膚膘蔗蔽蔚蓮蔬蔭蔓蔑蔣蔡蔔蓬蔥蓿蔆螂蝴蝶蝠蝦蝸蝨蝙蝗蝌蝓衛衝褐複褒褓褕褊誼諒談諄誕請諸課諉諂調誰論諍誶誹諛豌豎豬賠賞賦賤賬賭賢賣賜質賡赭趟趣踫踐踝踢踏踩踟踡踞躺輝輛輟輩輦輪輜輞"],["be40","輥適遮遨遭遷鄰鄭鄧鄱醇醉醋醃鋅銻銷鋪銬鋤鋁銳銼鋒鋇鋰銲閭閱霄霆震霉靠鞍鞋鞏頡頫頜颳養餓餒餘駝駐駟駛駑駕駒駙骷髮髯鬧魅魄魷魯鴆鴉"],["bea1","鴃麩麾黎墨齒儒儘儔儐儕冀冪凝劑劓勳噙噫噹噩噤噸噪器噥噱噯噬噢噶壁墾壇壅奮嬝嬴學寰導彊憲憑憩憊懍憶憾懊懈戰擅擁擋撻撼據擄擇擂操撿擒擔撾整曆曉暹曄曇暸樽樸樺橙橫橘樹橄橢橡橋橇樵機橈歙歷氅濂澱澡"],["bf40","濃澤濁澧澳激澹澶澦澠澴熾燉燐燒燈燕熹燎燙燜燃燄獨璜璣璘璟璞瓢甌甍瘴瘸瘺盧盥瞠瞞瞟瞥磨磚磬磧禦積穎穆穌穋窺篙簑築篤篛篡篩篦糕糖縊"],["bfa1","縑縈縛縣縞縝縉縐罹羲翰翱翮耨膳膩膨臻興艘艙蕊蕙蕈蕨蕩蕃蕉蕭蕪蕞螃螟螞螢融衡褪褲褥褫褡親覦諦諺諫諱謀諜諧諮諾謁謂諷諭諳諶諼豫豭貓賴蹄踱踴蹂踹踵輻輯輸輳辨辦遵遴選遲遼遺鄴醒錠錶鋸錳錯錢鋼錫錄錚"],["c040","錐錦錡錕錮錙閻隧隨險雕霎霑霖霍霓霏靛靜靦鞘頰頸頻頷頭頹頤餐館餞餛餡餚駭駢駱骸骼髻髭鬨鮑鴕鴣鴦鴨鴒鴛默黔龍龜優償儡儲勵嚎嚀嚐嚅嚇"],["c0a1","嚏壕壓壑壎嬰嬪嬤孺尷屨嶼嶺嶽嶸幫彌徽應懂懇懦懋戲戴擎擊擘擠擰擦擬擱擢擭斂斃曙曖檀檔檄檢檜櫛檣橾檗檐檠歜殮毚氈濘濱濟濠濛濤濫濯澀濬濡濩濕濮濰燧營燮燦燥燭燬燴燠爵牆獰獲璩環璦璨癆療癌盪瞳瞪瞰瞬"],["c140","瞧瞭矯磷磺磴磯礁禧禪穗窿簇簍篾篷簌篠糠糜糞糢糟糙糝縮績繆縷縲繃縫總縱繅繁縴縹繈縵縿縯罄翳翼聱聲聰聯聳臆臃膺臂臀膿膽臉膾臨舉艱薪"],["c1a1","薄蕾薜薑薔薯薛薇薨薊虧蟀蟑螳蟒蟆螫螻螺蟈蟋褻褶襄褸褽覬謎謗謙講謊謠謝謄謐豁谿豳賺賽購賸賻趨蹉蹋蹈蹊轄輾轂轅輿避遽還邁邂邀鄹醣醞醜鍍鎂錨鍵鍊鍥鍋錘鍾鍬鍛鍰鍚鍔闊闋闌闈闆隱隸雖霜霞鞠韓顆颶餵騁"],["c240","駿鮮鮫鮪鮭鴻鴿麋黏點黜黝黛鼾齋叢嚕嚮壙壘嬸彝懣戳擴擲擾攆擺擻擷斷曜朦檳檬櫃檻檸櫂檮檯歟歸殯瀉瀋濾瀆濺瀑瀏燻燼燾燸獷獵璧璿甕癖癘"],["c2a1","癒瞽瞿瞻瞼礎禮穡穢穠竄竅簫簧簪簞簣簡糧織繕繞繚繡繒繙罈翹翻職聶臍臏舊藏薩藍藐藉薰薺薹薦蟯蟬蟲蟠覆覲觴謨謹謬謫豐贅蹙蹣蹦蹤蹟蹕軀轉轍邇邃邈醫醬釐鎔鎊鎖鎢鎳鎮鎬鎰鎘鎚鎗闔闖闐闕離雜雙雛雞霤鞣鞦"],["c340","鞭韹額顏題顎顓颺餾餿餽餮馥騎髁鬃鬆魏魎魍鯊鯉鯽鯈鯀鵑鵝鵠黠鼕鼬儳嚥壞壟壢寵龐廬懲懷懶懵攀攏曠曝櫥櫝櫚櫓瀛瀟瀨瀚瀝瀕瀘爆爍牘犢獸"],["c3a1","獺璽瓊瓣疇疆癟癡矇礙禱穫穩簾簿簸簽簷籀繫繭繹繩繪羅繳羶羹羸臘藩藝藪藕藤藥藷蟻蠅蠍蟹蟾襠襟襖襞譁譜識證譚譎譏譆譙贈贊蹼蹲躇蹶蹬蹺蹴轔轎辭邊邋醱醮鏡鏑鏟鏃鏈鏜鏝鏖鏢鏍鏘鏤鏗鏨關隴難霪霧靡韜韻類"],["c440","願顛颼饅饉騖騙鬍鯨鯧鯖鯛鶉鵡鵲鵪鵬麒麗麓麴勸嚨嚷嚶嚴嚼壤孀孃孽寶巉懸懺攘攔攙曦朧櫬瀾瀰瀲爐獻瓏癢癥礦礪礬礫竇競籌籃籍糯糰辮繽繼"],["c4a1","纂罌耀臚艦藻藹蘑藺蘆蘋蘇蘊蠔蠕襤覺觸議譬警譯譟譫贏贍躉躁躅躂醴釋鐘鐃鏽闡霰飄饒饑馨騫騰騷騵鰓鰍鹹麵黨鼯齟齣齡儷儸囁囀囂夔屬巍懼懾攝攜斕曩櫻欄櫺殲灌爛犧瓖瓔癩矓籐纏續羼蘗蘭蘚蠣蠢蠡蠟襪襬覽譴"],["c540","護譽贓躊躍躋轟辯醺鐮鐳鐵鐺鐸鐲鐫闢霸霹露響顧顥饗驅驃驀騾髏魔魑鰭鰥鶯鶴鷂鶸麝黯鼙齜齦齧儼儻囈囊囉孿巔巒彎懿攤權歡灑灘玀瓤疊癮癬"],["c5a1","禳籠籟聾聽臟襲襯觼讀贖贗躑躓轡酈鑄鑑鑒霽霾韃韁顫饕驕驍髒鬚鱉鰱鰾鰻鷓鷗鼴齬齪龔囌巖戀攣攫攪曬欐瓚竊籤籣籥纓纖纔臢蘸蘿蠱變邐邏鑣鑠鑤靨顯饜驚驛驗髓體髑鱔鱗鱖鷥麟黴囑壩攬灞癱癲矗罐羈蠶蠹衢讓讒"],["c640","讖艷贛釀鑪靂靈靄韆顰驟鬢魘鱟鷹鷺鹼鹽鼇齷齲廳欖灣籬籮蠻觀躡釁鑲鑰顱饞髖鬣黌灤矚讚鑷韉驢驥纜讜躪釅鑽鑾鑼鱷鱸黷豔鑿鸚爨驪鬱鸛鸞籲"],["c940","乂乜凵匚厂万丌乇亍囗兀屮彳丏冇与丮亓仂仉仈冘勼卬厹圠夃夬尐巿旡殳毌气爿丱丼仨仜仩仡仝仚刌匜卌圢圣夗夯宁宄尒尻屴屳帄庀庂忉戉扐氕"],["c9a1","氶汃氿氻犮犰玊禸肊阞伎优伬仵伔仱伀价伈伝伂伅伢伓伄仴伒冱刓刉刐劦匢匟卍厊吇囡囟圮圪圴夼妀奼妅奻奾奷奿孖尕尥屼屺屻屾巟幵庄异弚彴忕忔忏扜扞扤扡扦扢扙扠扚扥旯旮朾朹朸朻机朿朼朳氘汆汒汜汏汊汔汋"],["ca40","汌灱牞犴犵玎甪癿穵网艸艼芀艽艿虍襾邙邗邘邛邔阢阤阠阣佖伻佢佉体佤伾佧佒佟佁佘伭伳伿佡冏冹刜刞刡劭劮匉卣卲厎厏吰吷吪呔呅吙吜吥吘"],["caa1","吽呏呁吨吤呇囮囧囥坁坅坌坉坋坒夆奀妦妘妠妗妎妢妐妏妧妡宎宒尨尪岍岏岈岋岉岒岊岆岓岕巠帊帎庋庉庌庈庍弅弝彸彶忒忑忐忭忨忮忳忡忤忣忺忯忷忻怀忴戺抃抌抎抏抔抇扱扻扺扰抁抈扷扽扲扴攷旰旴旳旲旵杅杇"],["cb40","杙杕杌杈杝杍杚杋毐氙氚汸汧汫沄沋沏汱汯汩沚汭沇沕沜汦汳汥汻沎灴灺牣犿犽狃狆狁犺狅玕玗玓玔玒町甹疔疕皁礽耴肕肙肐肒肜芐芏芅芎芑芓"],["cba1","芊芃芄豸迉辿邟邡邥邞邧邠阰阨阯阭丳侘佼侅佽侀侇佶佴侉侄佷佌侗佪侚佹侁佸侐侜侔侞侒侂侕佫佮冞冼冾刵刲刳剆刱劼匊匋匼厒厔咇呿咁咑咂咈呫呺呾呥呬呴呦咍呯呡呠咘呣呧呤囷囹坯坲坭坫坱坰坶垀坵坻坳坴坢"],["cc40","坨坽夌奅妵妺姏姎妲姌姁妶妼姃姖妱妽姀姈妴姇孢孥宓宕屄屇岮岤岠岵岯岨岬岟岣岭岢岪岧岝岥岶岰岦帗帔帙弨弢弣弤彔徂彾彽忞忥怭怦怙怲怋"],["cca1","怴怊怗怳怚怞怬怢怍怐怮怓怑怌怉怜戔戽抭抴拑抾抪抶拊抮抳抯抻抩抰抸攽斨斻昉旼昄昒昈旻昃昋昍昅旽昑昐曶朊枅杬枎枒杶杻枘枆构杴枍枌杺枟枑枙枃杽极杸杹枔欥殀歾毞氝沓泬泫泮泙沶泔沭泧沷泐泂沺泃泆泭泲"],["cd40","泒泝沴沊沝沀泞泀洰泍泇沰泹泏泩泑炔炘炅炓炆炄炑炖炂炚炃牪狖狋狘狉狜狒狔狚狌狑玤玡玭玦玢玠玬玝瓝瓨甿畀甾疌疘皯盳盱盰盵矸矼矹矻矺"],["cda1","矷祂礿秅穸穻竻籵糽耵肏肮肣肸肵肭舠芠苀芫芚芘芛芵芧芮芼芞芺芴芨芡芩苂芤苃芶芢虰虯虭虮豖迒迋迓迍迖迕迗邲邴邯邳邰阹阽阼阺陃俍俅俓侲俉俋俁俔俜俙侻侳俛俇俖侺俀侹俬剄剉勀勂匽卼厗厖厙厘咺咡咭咥哏"],["ce40","哃茍咷咮哖咶哅哆咠呰咼咢咾呲哞咰垵垞垟垤垌垗垝垛垔垘垏垙垥垚垕壴复奓姡姞姮娀姱姝姺姽姼姶姤姲姷姛姩姳姵姠姾姴姭宨屌峐峘峌峗峋峛"],["cea1","峞峚峉峇峊峖峓峔峏峈峆峎峟峸巹帡帢帣帠帤庰庤庢庛庣庥弇弮彖徆怷怹恔恲恞恅恓恇恉恛恌恀恂恟怤恄恘恦恮扂扃拏挍挋拵挎挃拫拹挏挌拸拶挀挓挔拺挕拻拰敁敃斪斿昶昡昲昵昜昦昢昳昫昺昝昴昹昮朏朐柁柲柈枺"],["cf40","柜枻柸柘柀枷柅柫柤柟枵柍枳柷柶柮柣柂枹柎柧柰枲柼柆柭柌枮柦柛柺柉柊柃柪柋欨殂殄殶毖毘毠氠氡洨洴洭洟洼洿洒洊泚洳洄洙洺洚洑洀洝浂"],["cfa1","洁洘洷洃洏浀洇洠洬洈洢洉洐炷炟炾炱炰炡炴炵炩牁牉牊牬牰牳牮狊狤狨狫狟狪狦狣玅珌珂珈珅玹玶玵玴珫玿珇玾珃珆玸珋瓬瓮甮畇畈疧疪癹盄眈眃眄眅眊盷盻盺矧矨砆砑砒砅砐砏砎砉砃砓祊祌祋祅祄秕种秏秖秎窀"],["d040","穾竑笀笁籺籸籹籿粀粁紃紈紁罘羑羍羾耇耎耏耔耷胘胇胠胑胈胂胐胅胣胙胜胊胕胉胏胗胦胍臿舡芔苙苾苹茇苨茀苕茺苫苖苴苬苡苲苵茌苻苶苰苪"],["d0a1","苤苠苺苳苭虷虴虼虳衁衎衧衪衩觓訄訇赲迣迡迮迠郱邽邿郕郅邾郇郋郈釔釓陔陏陑陓陊陎倞倅倇倓倢倰倛俵俴倳倷倬俶俷倗倜倠倧倵倯倱倎党冔冓凊凄凅凈凎剡剚剒剞剟剕剢勍匎厞唦哢唗唒哧哳哤唚哿唄唈哫唑唅哱"],["d140","唊哻哷哸哠唎唃唋圁圂埌堲埕埒垺埆垽垼垸垶垿埇埐垹埁夎奊娙娖娭娮娕娏娗娊娞娳孬宧宭宬尃屖屔峬峿峮峱峷崀峹帩帨庨庮庪庬弳弰彧恝恚恧"],["d1a1","恁悢悈悀悒悁悝悃悕悛悗悇悜悎戙扆拲挐捖挬捄捅挶捃揤挹捋捊挼挩捁挴捘捔捙挭捇挳捚捑挸捗捀捈敊敆旆旃旄旂晊晟晇晑朒朓栟栚桉栲栳栻桋桏栖栱栜栵栫栭栯桎桄栴栝栒栔栦栨栮桍栺栥栠欬欯欭欱欴歭肂殈毦毤"],["d240","毨毣毢毧氥浺浣浤浶洍浡涒浘浢浭浯涑涍淯浿涆浞浧浠涗浰浼浟涂涘洯浨涋浾涀涄洖涃浻浽浵涐烜烓烑烝烋缹烢烗烒烞烠烔烍烅烆烇烚烎烡牂牸"],["d2a1","牷牶猀狺狴狾狶狳狻猁珓珙珥珖玼珧珣珩珜珒珛珔珝珚珗珘珨瓞瓟瓴瓵甡畛畟疰痁疻痄痀疿疶疺皊盉眝眛眐眓眒眣眑眕眙眚眢眧砣砬砢砵砯砨砮砫砡砩砳砪砱祔祛祏祜祓祒祑秫秬秠秮秭秪秜秞秝窆窉窅窋窌窊窇竘笐"],["d340","笄笓笅笏笈笊笎笉笒粄粑粊粌粈粍粅紞紝紑紎紘紖紓紟紒紏紌罜罡罞罠罝罛羖羒翃翂翀耖耾耹胺胲胹胵脁胻脀舁舯舥茳茭荄茙荑茥荖茿荁茦茜茢"],["d3a1","荂荎茛茪茈茼荍茖茤茠茷茯茩荇荅荌荓茞茬荋茧荈虓虒蚢蚨蚖蚍蚑蚞蚇蚗蚆蚋蚚蚅蚥蚙蚡蚧蚕蚘蚎蚝蚐蚔衃衄衭衵衶衲袀衱衿衯袃衾衴衼訒豇豗豻貤貣赶赸趵趷趶軑軓迾迵适迿迻逄迼迶郖郠郙郚郣郟郥郘郛郗郜郤酐"],["d440","酎酏釕釢釚陜陟隼飣髟鬯乿偰偪偡偞偠偓偋偝偲偈偍偁偛偊偢倕偅偟偩偫偣偤偆偀偮偳偗偑凐剫剭剬剮勖勓匭厜啵啶唼啍啐唴唪啑啢唶唵唰啒啅"],["d4a1","唌唲啥啎唹啈唭唻啀啋圊圇埻堔埢埶埜埴堀埭埽堈埸堋埳埏堇埮埣埲埥埬埡堎埼堐埧堁堌埱埩埰堍堄奜婠婘婕婧婞娸娵婭婐婟婥婬婓婤婗婃婝婒婄婛婈媎娾婍娹婌婰婩婇婑婖婂婜孲孮寁寀屙崞崋崝崚崠崌崨崍崦崥崏"],["d540","崰崒崣崟崮帾帴庱庴庹庲庳弶弸徛徖徟悊悐悆悾悰悺惓惔惏惤惙惝惈悱惛悷惊悿惃惍惀挲捥掊掂捽掽掞掭掝掗掫掎捯掇掐据掯捵掜捭掮捼掤挻掟"],["d5a1","捸掅掁掑掍捰敓旍晥晡晛晙晜晢朘桹梇梐梜桭桮梮梫楖桯梣梬梩桵桴梲梏桷梒桼桫桲梪梀桱桾梛梖梋梠梉梤桸桻梑梌梊桽欶欳欷欸殑殏殍殎殌氪淀涫涴涳湴涬淩淢涷淶淔渀淈淠淟淖涾淥淜淝淛淴淊涽淭淰涺淕淂淏淉"],["d640","淐淲淓淽淗淍淣涻烺焍烷焗烴焌烰焄烳焐烼烿焆焓焀烸烶焋焂焎牾牻牼牿猝猗猇猑猘猊猈狿猏猞玈珶珸珵琄琁珽琇琀珺珼珿琌琋珴琈畤畣痎痒痏"],["d6a1","痋痌痑痐皏皉盓眹眯眭眱眲眴眳眽眥眻眵硈硒硉硍硊硌砦硅硐祤祧祩祪祣祫祡离秺秸秶秷窏窔窐笵筇笴笥笰笢笤笳笘笪笝笱笫笭笯笲笸笚笣粔粘粖粣紵紽紸紶紺絅紬紩絁絇紾紿絊紻紨罣羕羜羝羛翊翋翍翐翑翇翏翉耟"],["d740","耞耛聇聃聈脘脥脙脛脭脟脬脞脡脕脧脝脢舑舸舳舺舴舲艴莐莣莨莍荺荳莤荴莏莁莕莙荵莔莩荽莃莌莝莛莪莋荾莥莯莈莗莰荿莦莇莮荶莚虙虖蚿蚷"],["d7a1","蛂蛁蛅蚺蚰蛈蚹蚳蚸蛌蚴蚻蚼蛃蚽蚾衒袉袕袨袢袪袚袑袡袟袘袧袙袛袗袤袬袌袓袎覂觖觙觕訰訧訬訞谹谻豜豝豽貥赽赻赹趼跂趹趿跁軘軞軝軜軗軠軡逤逋逑逜逌逡郯郪郰郴郲郳郔郫郬郩酖酘酚酓酕釬釴釱釳釸釤釹釪"],["d840","釫釷釨釮镺閆閈陼陭陫陱陯隿靪頄飥馗傛傕傔傞傋傣傃傌傎傝偨傜傒傂傇兟凔匒匑厤厧喑喨喥喭啷噅喢喓喈喏喵喁喣喒喤啽喌喦啿喕喡喎圌堩堷"],["d8a1","堙堞堧堣堨埵塈堥堜堛堳堿堶堮堹堸堭堬堻奡媯媔媟婺媢媞婸媦婼媥媬媕媮娷媄媊媗媃媋媩婻婽媌媜媏媓媝寪寍寋寔寑寊寎尌尰崷嵃嵫嵁嵋崿崵嵑嵎嵕崳崺嵒崽崱嵙嵂崹嵉崸崼崲崶嵀嵅幄幁彘徦徥徫惉悹惌惢惎惄愔"],["d940","惲愊愖愅惵愓惸惼惾惁愃愘愝愐惿愄愋扊掔掱掰揎揥揨揯揃撝揳揊揠揶揕揲揵摡揟掾揝揜揄揘揓揂揇揌揋揈揰揗揙攲敧敪敤敜敨敥斌斝斞斮旐旒"],["d9a1","晼晬晻暀晱晹晪晲朁椌棓椄棜椪棬棪棱椏棖棷棫棤棶椓椐棳棡椇棌椈楰梴椑棯棆椔棸棐棽棼棨椋椊椗棎棈棝棞棦棴棑椆棔棩椕椥棇欹欻欿欼殔殗殙殕殽毰毲毳氰淼湆湇渟湉溈渼渽湅湢渫渿湁湝湳渜渳湋湀湑渻渃渮湞"],["da40","湨湜湡渱渨湠湱湫渹渢渰湓湥渧湸湤湷湕湹湒湦渵渶湚焠焞焯烻焮焱焣焥焢焲焟焨焺焛牋牚犈犉犆犅犋猒猋猰猢猱猳猧猲猭猦猣猵猌琮琬琰琫琖"],["daa1","琚琡琭琱琤琣琝琩琠琲瓻甯畯畬痧痚痡痦痝痟痤痗皕皒盚睆睇睄睍睅睊睎睋睌矞矬硠硤硥硜硭硱硪确硰硩硨硞硢祴祳祲祰稂稊稃稌稄窙竦竤筊笻筄筈筌筎筀筘筅粢粞粨粡絘絯絣絓絖絧絪絏絭絜絫絒絔絩絑絟絎缾缿罥"],["db40","罦羢羠羡翗聑聏聐胾胔腃腊腒腏腇脽腍脺臦臮臷臸臹舄舼舽舿艵茻菏菹萣菀菨萒菧菤菼菶萐菆菈菫菣莿萁菝菥菘菿菡菋菎菖菵菉萉萏菞萑萆菂菳"],["dba1","菕菺菇菑菪萓菃菬菮菄菻菗菢萛菛菾蛘蛢蛦蛓蛣蛚蛪蛝蛫蛜蛬蛩蛗蛨蛑衈衖衕袺裗袹袸裀袾袶袼袷袽袲褁裉覕覘覗觝觚觛詎詍訹詙詀詗詘詄詅詒詈詑詊詌詏豟貁貀貺貾貰貹貵趄趀趉跘跓跍跇跖跜跏跕跙跈跗跅軯軷軺"],["dc40","軹軦軮軥軵軧軨軶軫軱軬軴軩逭逴逯鄆鄬鄄郿郼鄈郹郻鄁鄀鄇鄅鄃酡酤酟酢酠鈁鈊鈥鈃鈚鈦鈏鈌鈀鈒釿釽鈆鈄鈧鈂鈜鈤鈙鈗鈅鈖镻閍閌閐隇陾隈"],["dca1","隉隃隀雂雈雃雱雰靬靰靮頇颩飫鳦黹亃亄亶傽傿僆傮僄僊傴僈僂傰僁傺傱僋僉傶傸凗剺剸剻剼嗃嗛嗌嗐嗋嗊嗝嗀嗔嗄嗩喿嗒喍嗏嗕嗢嗖嗈嗲嗍嗙嗂圔塓塨塤塏塍塉塯塕塎塝塙塥塛堽塣塱壼嫇嫄嫋媺媸媱媵媰媿嫈媻嫆"],["dd40","媷嫀嫊媴媶嫍媹媐寖寘寙尟尳嵱嵣嵊嵥嵲嵬嵞嵨嵧嵢巰幏幎幊幍幋廅廌廆廋廇彀徯徭惷慉慊愫慅愶愲愮慆愯慏愩慀戠酨戣戥戤揅揱揫搐搒搉搠搤"],["dda1","搳摃搟搕搘搹搷搢搣搌搦搰搨摁搵搯搊搚摀搥搧搋揧搛搮搡搎敯斒旓暆暌暕暐暋暊暙暔晸朠楦楟椸楎楢楱椿楅楪椹楂楗楙楺楈楉椵楬椳椽楥棰楸椴楩楀楯楄楶楘楁楴楌椻楋椷楜楏楑椲楒椯楻椼歆歅歃歂歈歁殛嗀毻毼"],["de40","毹毷毸溛滖滈溏滀溟溓溔溠溱溹滆滒溽滁溞滉溷溰滍溦滏溲溾滃滜滘溙溒溎溍溤溡溿溳滐滊溗溮溣煇煔煒煣煠煁煝煢煲煸煪煡煂煘煃煋煰煟煐煓"],["dea1","煄煍煚牏犍犌犑犐犎猼獂猻猺獀獊獉瑄瑊瑋瑒瑑瑗瑀瑏瑐瑎瑂瑆瑍瑔瓡瓿瓾瓽甝畹畷榃痯瘏瘃痷痾痼痹痸瘐痻痶痭痵痽皙皵盝睕睟睠睒睖睚睩睧睔睙睭矠碇碚碔碏碄碕碅碆碡碃硹碙碀碖硻祼禂祽祹稑稘稙稒稗稕稢稓"],["df40","稛稐窣窢窞竫筦筤筭筴筩筲筥筳筱筰筡筸筶筣粲粴粯綈綆綀綍絿綅絺綎絻綃絼綌綔綄絽綒罭罫罧罨罬羦羥羧翛翜耡腤腠腷腜腩腛腢腲朡腞腶腧腯"],["dfa1","腄腡舝艉艄艀艂艅蓱萿葖葶葹蒏蒍葥葑葀蒆葧萰葍葽葚葙葴葳葝蔇葞萷萺萴葺葃葸萲葅萩菙葋萯葂萭葟葰萹葎葌葒葯蓅蒎萻葇萶萳葨葾葄萫葠葔葮葐蜋蜄蛷蜌蛺蛖蛵蝍蛸蜎蜉蜁蛶蜍蜅裖裋裍裎裞裛裚裌裐覅覛觟觥觤"],["e040","觡觠觢觜触詶誆詿詡訿詷誂誄詵誃誁詴詺谼豋豊豥豤豦貆貄貅賌赨赩趑趌趎趏趍趓趔趐趒跰跠跬跱跮跐跩跣跢跧跲跫跴輆軿輁輀輅輇輈輂輋遒逿"],["e0a1","遄遉逽鄐鄍鄏鄑鄖鄔鄋鄎酮酯鉈鉒鈰鈺鉦鈳鉥鉞銃鈮鉊鉆鉭鉬鉏鉠鉧鉯鈶鉡鉰鈱鉔鉣鉐鉲鉎鉓鉌鉖鈲閟閜閞閛隒隓隑隗雎雺雽雸雵靳靷靸靲頏頍頎颬飶飹馯馲馰馵骭骫魛鳪鳭鳧麀黽僦僔僗僨僳僛僪僝僤僓僬僰僯僣僠"],["e140","凘劀劁勩勫匰厬嘧嘕嘌嘒嗼嘏嘜嘁嘓嘂嗺嘝嘄嗿嗹墉塼墐墘墆墁塿塴墋塺墇墑墎塶墂墈塻墔墏壾奫嫜嫮嫥嫕嫪嫚嫭嫫嫳嫢嫠嫛嫬嫞嫝嫙嫨嫟孷寠"],["e1a1","寣屣嶂嶀嵽嶆嵺嶁嵷嶊嶉嶈嵾嵼嶍嵹嵿幘幙幓廘廑廗廎廜廕廙廒廔彄彃彯徶愬愨慁慞慱慳慒慓慲慬憀慴慔慺慛慥愻慪慡慖戩戧戫搫摍摛摝摴摶摲摳摽摵摦撦摎撂摞摜摋摓摠摐摿搿摬摫摙摥摷敳斠暡暠暟朅朄朢榱榶槉"],["e240","榠槎榖榰榬榼榑榙榎榧榍榩榾榯榿槄榽榤槔榹槊榚槏榳榓榪榡榞槙榗榐槂榵榥槆歊歍歋殞殟殠毃毄毾滎滵滱漃漥滸漷滻漮漉潎漙漚漧漘漻漒滭漊"],["e2a1","漶潳滹滮漭潀漰漼漵滫漇漎潃漅滽滶漹漜滼漺漟漍漞漈漡熇熐熉熀熅熂熏煻熆熁熗牄牓犗犕犓獃獍獑獌瑢瑳瑱瑵瑲瑧瑮甀甂甃畽疐瘖瘈瘌瘕瘑瘊瘔皸瞁睼瞅瞂睮瞀睯睾瞃碲碪碴碭碨硾碫碞碥碠碬碢碤禘禊禋禖禕禔禓"],["e340","禗禈禒禐稫穊稰稯稨稦窨窫窬竮箈箜箊箑箐箖箍箌箛箎箅箘劄箙箤箂粻粿粼粺綧綷緂綣綪緁緀緅綝緎緄緆緋緌綯綹綖綼綟綦綮綩綡緉罳翢翣翥翞"],["e3a1","耤聝聜膉膆膃膇膍膌膋舕蒗蒤蒡蒟蒺蓎蓂蒬蒮蒫蒹蒴蓁蓍蒪蒚蒱蓐蒝蒧蒻蒢蒔蓇蓌蒛蒩蒯蒨蓖蒘蒶蓏蒠蓗蓔蓒蓛蒰蒑虡蜳蜣蜨蝫蝀蜮蜞蜡蜙蜛蝃蜬蝁蜾蝆蜠蜲蜪蜭蜼蜒蜺蜱蜵蝂蜦蜧蜸蜤蜚蜰蜑裷裧裱裲裺裾裮裼裶裻"],["e440","裰裬裫覝覡覟覞觩觫觨誫誙誋誒誏誖谽豨豩賕賏賗趖踉踂跿踍跽踊踃踇踆踅跾踀踄輐輑輎輍鄣鄜鄠鄢鄟鄝鄚鄤鄡鄛酺酲酹酳銥銤鉶銛鉺銠銔銪銍"],["e4a1","銦銚銫鉹銗鉿銣鋮銎銂銕銢鉽銈銡銊銆銌銙銧鉾銇銩銝銋鈭隞隡雿靘靽靺靾鞃鞀鞂靻鞄鞁靿韎韍頖颭颮餂餀餇馝馜駃馹馻馺駂馽駇骱髣髧鬾鬿魠魡魟鳱鳲鳵麧僿儃儰僸儆儇僶僾儋儌僽儊劋劌勱勯噈噂噌嘵噁噊噉噆噘"],["e540","噚噀嘳嘽嘬嘾嘸嘪嘺圚墫墝墱墠墣墯墬墥墡壿嫿嫴嫽嫷嫶嬃嫸嬂嫹嬁嬇嬅嬏屧嶙嶗嶟嶒嶢嶓嶕嶠嶜嶡嶚嶞幩幝幠幜緳廛廞廡彉徲憋憃慹憱憰憢憉"],["e5a1","憛憓憯憭憟憒憪憡憍慦憳戭摮摰撖撠撅撗撜撏撋撊撌撣撟摨撱撘敶敺敹敻斲斳暵暰暩暲暷暪暯樀樆樗槥槸樕槱槤樠槿槬槢樛樝槾樧槲槮樔槷槧橀樈槦槻樍槼槫樉樄樘樥樏槶樦樇槴樖歑殥殣殢殦氁氀毿氂潁漦潾澇濆澒"],["e640","澍澉澌潢潏澅潚澖潶潬澂潕潲潒潐潗澔澓潝漀潡潫潽潧澐潓澋潩潿澕潣潷潪潻熲熯熛熰熠熚熩熵熝熥熞熤熡熪熜熧熳犘犚獘獒獞獟獠獝獛獡獚獙"],["e6a1","獢璇璉璊璆璁瑽璅璈瑼瑹甈甇畾瘥瘞瘙瘝瘜瘣瘚瘨瘛皜皝皞皛瞍瞏瞉瞈磍碻磏磌磑磎磔磈磃磄磉禚禡禠禜禢禛歶稹窲窴窳箷篋箾箬篎箯箹篊箵糅糈糌糋緷緛緪緧緗緡縃緺緦緶緱緰緮緟罶羬羰羭翭翫翪翬翦翨聤聧膣膟"],["e740","膞膕膢膙膗舖艏艓艒艐艎艑蔤蔻蔏蔀蔩蔎蔉蔍蔟蔊蔧蔜蓻蔫蓺蔈蔌蓴蔪蓲蔕蓷蓫蓳蓼蔒蓪蓩蔖蓾蔨蔝蔮蔂蓽蔞蓶蔱蔦蓧蓨蓰蓯蓹蔘蔠蔰蔋蔙蔯虢"],["e7a1","蝖蝣蝤蝷蟡蝳蝘蝔蝛蝒蝡蝚蝑蝞蝭蝪蝐蝎蝟蝝蝯蝬蝺蝮蝜蝥蝏蝻蝵蝢蝧蝩衚褅褌褔褋褗褘褙褆褖褑褎褉覢覤覣觭觰觬諏諆誸諓諑諔諕誻諗誾諀諅諘諃誺誽諙谾豍貏賥賟賙賨賚賝賧趠趜趡趛踠踣踥踤踮踕踛踖踑踙踦踧"],["e840","踔踒踘踓踜踗踚輬輤輘輚輠輣輖輗遳遰遯遧遫鄯鄫鄩鄪鄲鄦鄮醅醆醊醁醂醄醀鋐鋃鋄鋀鋙銶鋏鋱鋟鋘鋩鋗鋝鋌鋯鋂鋨鋊鋈鋎鋦鋍鋕鋉鋠鋞鋧鋑鋓"],["e8a1","銵鋡鋆銴镼閬閫閮閰隤隢雓霅霈霂靚鞊鞎鞈韐韏頞頝頦頩頨頠頛頧颲餈飺餑餔餖餗餕駜駍駏駓駔駎駉駖駘駋駗駌骳髬髫髳髲髱魆魃魧魴魱魦魶魵魰魨魤魬鳼鳺鳽鳿鳷鴇鴀鳹鳻鴈鴅鴄麃黓鼏鼐儜儓儗儚儑凞匴叡噰噠噮"],["e940","噳噦噣噭噲噞噷圜圛壈墽壉墿墺壂墼壆嬗嬙嬛嬡嬔嬓嬐嬖嬨嬚嬠嬞寯嶬嶱嶩嶧嶵嶰嶮嶪嶨嶲嶭嶯嶴幧幨幦幯廩廧廦廨廥彋徼憝憨憖懅憴懆懁懌憺"],["e9a1","憿憸憌擗擖擐擏擉撽撉擃擛擳擙攳敿敼斢曈暾曀曊曋曏暽暻暺曌朣樴橦橉橧樲橨樾橝橭橶橛橑樨橚樻樿橁橪橤橐橏橔橯橩橠樼橞橖橕橍橎橆歕歔歖殧殪殫毈毇氄氃氆澭濋澣濇澼濎濈潞濄澽澞濊澨瀄澥澮澺澬澪濏澿澸"],["ea40","澢濉澫濍澯澲澰燅燂熿熸燖燀燁燋燔燊燇燏熽燘熼燆燚燛犝犞獩獦獧獬獥獫獪瑿璚璠璔璒璕璡甋疀瘯瘭瘱瘽瘳瘼瘵瘲瘰皻盦瞚瞝瞡瞜瞛瞢瞣瞕瞙"],["eaa1","瞗磝磩磥磪磞磣磛磡磢磭磟磠禤穄穈穇窶窸窵窱窷篞篣篧篝篕篥篚篨篹篔篪篢篜篫篘篟糒糔糗糐糑縒縡縗縌縟縠縓縎縜縕縚縢縋縏縖縍縔縥縤罃罻罼罺羱翯耪耩聬膱膦膮膹膵膫膰膬膴膲膷膧臲艕艖艗蕖蕅蕫蕍蕓蕡蕘"],["eb40","蕀蕆蕤蕁蕢蕄蕑蕇蕣蔾蕛蕱蕎蕮蕵蕕蕧蕠薌蕦蕝蕔蕥蕬虣虥虤螛螏螗螓螒螈螁螖螘蝹螇螣螅螐螑螝螄螔螜螚螉褞褦褰褭褮褧褱褢褩褣褯褬褟觱諠"],["eba1","諢諲諴諵諝謔諤諟諰諈諞諡諨諿諯諻貑貒貐賵賮賱賰賳赬赮趥趧踳踾踸蹀蹅踶踼踽蹁踰踿躽輶輮輵輲輹輷輴遶遹遻邆郺鄳鄵鄶醓醐醑醍醏錧錞錈錟錆錏鍺錸錼錛錣錒錁鍆錭錎錍鋋錝鋺錥錓鋹鋷錴錂錤鋿錩錹錵錪錔錌"],["ec40","錋鋾錉錀鋻錖閼闍閾閹閺閶閿閵閽隩雔霋霒霐鞙鞗鞔韰韸頵頯頲餤餟餧餩馞駮駬駥駤駰駣駪駩駧骹骿骴骻髶髺髹髷鬳鮀鮅鮇魼魾魻鮂鮓鮒鮐魺鮕"],["eca1","魽鮈鴥鴗鴠鴞鴔鴩鴝鴘鴢鴐鴙鴟麈麆麇麮麭黕黖黺鼒鼽儦儥儢儤儠儩勴嚓嚌嚍嚆嚄嚃噾嚂噿嚁壖壔壏壒嬭嬥嬲嬣嬬嬧嬦嬯嬮孻寱寲嶷幬幪徾徻懃憵憼懧懠懥懤懨懞擯擩擣擫擤擨斁斀斶旚曒檍檖檁檥檉檟檛檡檞檇檓檎"],["ed40","檕檃檨檤檑橿檦檚檅檌檒歛殭氉濌澩濴濔濣濜濭濧濦濞濲濝濢濨燡燱燨燲燤燰燢獳獮獯璗璲璫璐璪璭璱璥璯甐甑甒甏疄癃癈癉癇皤盩瞵瞫瞲瞷瞶"],["eda1","瞴瞱瞨矰磳磽礂磻磼磲礅磹磾礄禫禨穜穛穖穘穔穚窾竀竁簅簏篲簀篿篻簎篴簋篳簂簉簃簁篸篽簆篰篱簐簊糨縭縼繂縳顈縸縪繉繀繇縩繌縰縻縶繄縺罅罿罾罽翴翲耬膻臄臌臊臅臇膼臩艛艚艜薃薀薏薧薕薠薋薣蕻薤薚薞"],["ee40","蕷蕼薉薡蕺蕸蕗薎薖薆薍薙薝薁薢薂薈薅蕹蕶薘薐薟虨螾螪螭蟅螰螬螹螵螼螮蟉蟃蟂蟌螷螯蟄蟊螴螶螿螸螽蟞螲褵褳褼褾襁襒褷襂覭覯覮觲觳謞"],["eea1","謘謖謑謅謋謢謏謒謕謇謍謈謆謜謓謚豏豰豲豱豯貕貔賹赯蹎蹍蹓蹐蹌蹇轃轀邅遾鄸醚醢醛醙醟醡醝醠鎡鎃鎯鍤鍖鍇鍼鍘鍜鍶鍉鍐鍑鍠鍭鎏鍌鍪鍹鍗鍕鍒鍏鍱鍷鍻鍡鍞鍣鍧鎀鍎鍙闇闀闉闃闅閷隮隰隬霠霟霘霝霙鞚鞡鞜"],["ef40","鞞鞝韕韔韱顁顄顊顉顅顃餥餫餬餪餳餲餯餭餱餰馘馣馡騂駺駴駷駹駸駶駻駽駾駼騃骾髾髽鬁髼魈鮚鮨鮞鮛鮦鮡鮥鮤鮆鮢鮠鮯鴳鵁鵧鴶鴮鴯鴱鴸鴰"],["efa1","鵅鵂鵃鴾鴷鵀鴽翵鴭麊麉麍麰黈黚黻黿鼤鼣鼢齔龠儱儭儮嚘嚜嚗嚚嚝嚙奰嬼屩屪巀幭幮懘懟懭懮懱懪懰懫懖懩擿攄擽擸攁攃擼斔旛曚曛曘櫅檹檽櫡櫆檺檶檷櫇檴檭歞毉氋瀇瀌瀍瀁瀅瀔瀎濿瀀濻瀦濼濷瀊爁燿燹爃燽獶"],["f040","璸瓀璵瓁璾璶璻瓂甔甓癜癤癙癐癓癗癚皦皽盬矂瞺磿礌礓礔礉礐礒礑禭禬穟簜簩簙簠簟簭簝簦簨簢簥簰繜繐繖繣繘繢繟繑繠繗繓羵羳翷翸聵臑臒"],["f0a1","臐艟艞薴藆藀藃藂薳薵薽藇藄薿藋藎藈藅薱薶藒蘤薸薷薾虩蟧蟦蟢蟛蟫蟪蟥蟟蟳蟤蟔蟜蟓蟭蟘蟣螤蟗蟙蠁蟴蟨蟝襓襋襏襌襆襐襑襉謪謧謣謳謰謵譇謯謼謾謱謥謷謦謶謮謤謻謽謺豂豵貙貘貗賾贄贂贀蹜蹢蹠蹗蹖蹞蹥蹧"],["f140","蹛蹚蹡蹝蹩蹔轆轇轈轋鄨鄺鄻鄾醨醥醧醯醪鎵鎌鎒鎷鎛鎝鎉鎧鎎鎪鎞鎦鎕鎈鎙鎟鎍鎱鎑鎲鎤鎨鎴鎣鎥闒闓闑隳雗雚巂雟雘雝霣霢霥鞬鞮鞨鞫鞤鞪"],["f1a1","鞢鞥韗韙韖韘韺顐顑顒颸饁餼餺騏騋騉騍騄騑騊騅騇騆髀髜鬈鬄鬅鬩鬵魊魌魋鯇鯆鯃鮿鯁鮵鮸鯓鮶鯄鮹鮽鵜鵓鵏鵊鵛鵋鵙鵖鵌鵗鵒鵔鵟鵘鵚麎麌黟鼁鼀鼖鼥鼫鼪鼩鼨齌齕儴儵劖勷厴嚫嚭嚦嚧嚪嚬壚壝壛夒嬽嬾嬿巃幰"],["f240","徿懻攇攐攍攉攌攎斄旞旝曞櫧櫠櫌櫑櫙櫋櫟櫜櫐櫫櫏櫍櫞歠殰氌瀙瀧瀠瀖瀫瀡瀢瀣瀩瀗瀤瀜瀪爌爊爇爂爅犥犦犤犣犡瓋瓅璷瓃甖癠矉矊矄矱礝礛"],["f2a1","礡礜礗礞禰穧穨簳簼簹簬簻糬糪繶繵繸繰繷繯繺繲繴繨罋罊羃羆羷翽翾聸臗臕艤艡艣藫藱藭藙藡藨藚藗藬藲藸藘藟藣藜藑藰藦藯藞藢蠀蟺蠃蟶蟷蠉蠌蠋蠆蟼蠈蟿蠊蠂襢襚襛襗襡襜襘襝襙覈覷覶觶譐譈譊譀譓譖譔譋譕"],["f340","譑譂譒譗豃豷豶貚贆贇贉趬趪趭趫蹭蹸蹳蹪蹯蹻軂轒轑轏轐轓辴酀鄿醰醭鏞鏇鏏鏂鏚鏐鏹鏬鏌鏙鎩鏦鏊鏔鏮鏣鏕鏄鏎鏀鏒鏧镽闚闛雡霩霫霬霨霦"],["f3a1","鞳鞷鞶韝韞韟顜顙顝顗颿颽颻颾饈饇饃馦馧騚騕騥騝騤騛騢騠騧騣騞騜騔髂鬋鬊鬎鬌鬷鯪鯫鯠鯞鯤鯦鯢鯰鯔鯗鯬鯜鯙鯥鯕鯡鯚鵷鶁鶊鶄鶈鵱鶀鵸鶆鶋鶌鵽鵫鵴鵵鵰鵩鶅鵳鵻鶂鵯鵹鵿鶇鵨麔麑黀黼鼭齀齁齍齖齗齘匷嚲"],["f440","嚵嚳壣孅巆巇廮廯忀忁懹攗攖攕攓旟曨曣曤櫳櫰櫪櫨櫹櫱櫮櫯瀼瀵瀯瀷瀴瀱灂瀸瀿瀺瀹灀瀻瀳灁爓爔犨獽獼璺皫皪皾盭矌矎矏矍矲礥礣礧礨礤礩"],["f4a1","禲穮穬穭竷籉籈籊籇籅糮繻繾纁纀羺翿聹臛臙舋艨艩蘢藿蘁藾蘛蘀藶蘄蘉蘅蘌藽蠙蠐蠑蠗蠓蠖襣襦覹觷譠譪譝譨譣譥譧譭趮躆躈躄轙轖轗轕轘轚邍酃酁醷醵醲醳鐋鐓鏻鐠鐏鐔鏾鐕鐐鐨鐙鐍鏵鐀鏷鐇鐎鐖鐒鏺鐉鏸鐊鏿"],["f540","鏼鐌鏶鐑鐆闞闠闟霮霯鞹鞻韽韾顠顢顣顟飁飂饐饎饙饌饋饓騲騴騱騬騪騶騩騮騸騭髇髊髆鬐鬒鬑鰋鰈鯷鰅鰒鯸鱀鰇鰎鰆鰗鰔鰉鶟鶙鶤鶝鶒鶘鶐鶛"],["f5a1","鶠鶔鶜鶪鶗鶡鶚鶢鶨鶞鶣鶿鶩鶖鶦鶧麙麛麚黥黤黧黦鼰鼮齛齠齞齝齙龑儺儹劘劗囃嚽嚾孈孇巋巏廱懽攛欂櫼欃櫸欀灃灄灊灈灉灅灆爝爚爙獾甗癪矐礭礱礯籔籓糲纊纇纈纋纆纍罍羻耰臝蘘蘪蘦蘟蘣蘜蘙蘧蘮蘡蘠蘩蘞蘥"],["f640","蠩蠝蠛蠠蠤蠜蠫衊襭襩襮襫觺譹譸譅譺譻贐贔趯躎躌轞轛轝酆酄酅醹鐿鐻鐶鐩鐽鐼鐰鐹鐪鐷鐬鑀鐱闥闤闣霵霺鞿韡顤飉飆飀饘饖騹騽驆驄驂驁騺"],["f6a1","騿髍鬕鬗鬘鬖鬺魒鰫鰝鰜鰬鰣鰨鰩鰤鰡鶷鶶鶼鷁鷇鷊鷏鶾鷅鷃鶻鶵鷎鶹鶺鶬鷈鶱鶭鷌鶳鷍鶲鹺麜黫黮黭鼛鼘鼚鼱齎齥齤龒亹囆囅囋奱孋孌巕巑廲攡攠攦攢欋欈欉氍灕灖灗灒爞爟犩獿瓘瓕瓙瓗癭皭礵禴穰穱籗籜籙籛籚"],["f740","糴糱纑罏羇臞艫蘴蘵蘳蘬蘲蘶蠬蠨蠦蠪蠥襱覿覾觻譾讄讂讆讅譿贕躕躔躚躒躐躖躗轠轢酇鑌鑐鑊鑋鑏鑇鑅鑈鑉鑆霿韣顪顩飋饔饛驎驓驔驌驏驈驊"],["f7a1","驉驒驐髐鬙鬫鬻魖魕鱆鱈鰿鱄鰹鰳鱁鰼鰷鰴鰲鰽鰶鷛鷒鷞鷚鷋鷐鷜鷑鷟鷩鷙鷘鷖鷵鷕鷝麶黰鼵鼳鼲齂齫龕龢儽劙壨壧奲孍巘蠯彏戁戃戄攩攥斖曫欑欒欏毊灛灚爢玂玁玃癰矔籧籦纕艬蘺虀蘹蘼蘱蘻蘾蠰蠲蠮蠳襶襴襳觾"],["f840","讌讎讋讈豅贙躘轤轣醼鑢鑕鑝鑗鑞韄韅頀驖驙鬞鬟鬠鱒鱘鱐鱊鱍鱋鱕鱙鱌鱎鷻鷷鷯鷣鷫鷸鷤鷶鷡鷮鷦鷲鷰鷢鷬鷴鷳鷨鷭黂黐黲黳鼆鼜鼸鼷鼶齃齏"],["f8a1","齱齰齮齯囓囍孎屭攭曭曮欓灟灡灝灠爣瓛瓥矕礸禷禶籪纗羉艭虃蠸蠷蠵衋讔讕躞躟躠躝醾醽釂鑫鑨鑩雥靆靃靇韇韥驞髕魙鱣鱧鱦鱢鱞鱠鸂鷾鸇鸃鸆鸅鸀鸁鸉鷿鷽鸄麠鼞齆齴齵齶囔攮斸欘欙欗欚灢爦犪矘矙礹籩籫糶纚"],["f940","纘纛纙臠臡虆虇虈襹襺襼襻觿讘讙躥躤躣鑮鑭鑯鑱鑳靉顲饟鱨鱮鱭鸋鸍鸐鸏鸒鸑麡黵鼉齇齸齻齺齹圞灦籯蠼趲躦釃鑴鑸鑶鑵驠鱴鱳鱱鱵鸔鸓黶鼊"],["f9a1","龤灨灥糷虪蠾蠽蠿讞貜躩軉靋顳顴飌饡馫驤驦驧鬤鸕鸗齈戇欞爧虌躨钂钀钁驩驨鬮鸙爩虋讟钃鱹麷癵驫鱺鸝灩灪麤齾齉龘碁銹裏墻恒粧嫺╔╦╗╠╬╣╚╩╝╒╤╕╞╪╡╘╧╛╓╥╖╟╫╢╙╨╜║═╭╮╰╯▓"]]'), td = [
   [
     "8740",
     "䏰䰲䘃䖦䕸𧉧䵷䖳𧲱䳢𧳅㮕䜶䝄䱇䱀𤊿𣘗𧍒𦺋𧃒䱗𪍑䝏䗚䲅𧱬䴇䪤䚡𦬣爥𥩔𡩣𣸆𣽡晍囻"
@@ -15782,9 +15782,9 @@ const qh = [
     "𤅟𤩹𨮏孆𨰃𡢞瓈𡦈甎瓩甞𨻙𡩋寗𨺬鎅畍畊畧畮𤾂㼄𤴓疎瑝疞疴瘂瘬癑癏癯癶𦏵皐臯㟸𦤑𦤎皡皥皷盌𦾟葢𥂝𥅽𡸜眞眦着撯𥈠睘𣊬瞯𨥤𨥨𡛁矴砉𡍶𤨒棊碯磇磓隥礮𥗠磗礴碱𧘌辸袄𨬫𦂃𢘜禆褀椂禀𥡗禝𧬹礼禩渪𧄦㺨秆𩄍秔"
   ]
 ];
-var za, sR;
-function ed() {
-  return sR || (sR = 1, za = {
+var za, oR;
+function rd() {
+  return oR || (oR = 1, za = {
     // == Japanese/ShiftJIS ====================================================
     // All japanese encodings are based on JIS X set of standards:
     // JIS X 0201 - Single-byte encoding of ASCII + ¥ + Kana chars at 0xA1-0xDF.
@@ -15818,7 +15818,7 @@ function ed() {
     shiftjis: {
       type: "_dbcs",
       table: function() {
-        return qh;
+        return Jh;
       },
       encodeAdd: { "¥": 92, "‾": 126 },
       encodeSkipVals: [{ from: 60736, to: 63808 }]
@@ -15836,7 +15836,7 @@ function ed() {
     eucjp: {
       type: "_dbcs",
       table: function() {
-        return Kh;
+        return Zh;
       },
       encodeAdd: { "¥": 92, "‾": 126 }
     },
@@ -15867,7 +15867,7 @@ function ed() {
     gbk: {
       type: "_dbcs",
       table: function() {
-        return Ka.concat(aR);
+        return Ka.concat(sR);
       }
     },
     xgbk: "gbk",
@@ -15880,10 +15880,10 @@ function ed() {
     gb18030: {
       type: "_dbcs",
       table: function() {
-        return Ka.concat(aR);
+        return Ka.concat(sR);
       },
       gb18030: function() {
-        return Zh;
+        return ed;
       },
       encodeSkipVals: [128],
       encodeAdd: { "€": 41699 }
@@ -15897,7 +15897,7 @@ function ed() {
     cp949: {
       type: "_dbcs",
       table: function() {
-        return xh;
+        return nd;
       }
     },
     cseuckr: "cp949",
@@ -15936,7 +15936,7 @@ function ed() {
     cp950: {
       type: "_dbcs",
       table: function() {
-        return _R;
+        return uR;
       }
     },
     // Big5 has many variations and is an extension of cp950. We use Encoding Standard's as a consensus.
@@ -15944,7 +15944,7 @@ function ed() {
     big5hkscs: {
       type: "_dbcs",
       table: function() {
-        return _R.concat($h);
+        return uR.concat(td);
       },
       encodeSkipVals: [
         // Although Encoding Standard says we should avoid encoding to HKSCS area (See Step 1 of
@@ -16025,29 +16025,29 @@ function ed() {
     xxbig5: "big5hkscs"
   }), za;
 }
-var uR;
-function nd() {
-  return uR || (uR = 1, (function(e) {
-    for (var c = tT(), o = [
-      Vh(),
-      Yh(),
-      Hh(),
+var cR;
+function id() {
+  return cR || (cR = 1, (function(e) {
+    for (var c = iT(), o = [
       Wh(),
       ph(),
       kh(),
       Xh(),
       jh(),
-      ed()
+      qh(),
+      Kh(),
+      zh(),
+      rd()
     ], i = 0; i < o.length; i++) {
       var s = o[i];
       c(e, s);
     }
   })(Wa)), Wa;
 }
-var Ja, oR;
-function td() {
-  if (oR) return Ja;
-  oR = 1;
+var Ja, AR;
+function Ed() {
+  if (AR) return Ja;
+  AR = 1;
   var e = pn().Buffer;
   return Ja = function(c) {
     var o = c.Transform;
@@ -16114,11 +16114,11 @@ function td() {
     };
   }, Ja;
 }
-Qr.exports;
-var cR;
-function rd() {
-  return cR || (cR = 1, (function(e) {
-    var c = pn().Buffer, o = yh(), i = tT();
+yr.exports;
+var RR;
+function ad() {
+  return RR || (RR = 1, (function(e) {
+    var c = pn().Buffer, o = Hh(), i = iT();
     e.exports.encodings = null, e.exports.defaultCharUnicode = "�", e.exports.defaultCharSingleByte = "?", e.exports.encode = function(E, n, r) {
       E = "" + (E || "");
       var t = e.exports.getEncoder(n, r), a = t.write(E), _ = t.end();
@@ -16135,7 +16135,7 @@ function rd() {
       }
     }, e.exports.toEncoding = e.exports.encode, e.exports.fromEncoding = e.exports.decode, e.exports._codecDataCache = { __proto__: null }, e.exports.getCodec = function(E) {
       if (!e.exports.encodings) {
-        var n = nd();
+        var n = id();
         e.exports.encodings = { __proto__: null }, i(e.exports.encodings, n);
       }
       for (var r = e.exports._canonicalizeEncoding(E), t = {}; ; ) {
@@ -16168,7 +16168,7 @@ function rd() {
       return r.bomAware && !(n && n.stripBOM === !1) && (t = new o.StripBOM(t, n)), t;
     }, e.exports.enableStreamingAPI = function(E) {
       if (!e.exports.supportsStreams) {
-        var n = td()(E);
+        var n = Ed()(E);
         e.exports.IconvLiteEncoderStream = n.IconvLiteEncoderStream, e.exports.IconvLiteDecoderStream = n.IconvLiteDecoderStream, e.exports.encodeStream = function(t, a) {
           return new e.exports.IconvLiteEncoderStream(e.exports.getEncoder(t, a), a);
         }, e.exports.decodeStream = function(t, a) {
@@ -16184,13 +16184,13 @@ function rd() {
     s && s.Transform ? e.exports.enableStreamingAPI(s) : e.exports.encodeStream = e.exports.decodeStream = function() {
       throw new Error("iconv-lite Streaming API is not enabled. Use iconv.enableStreamingAPI(require('stream')); to enable it.");
     };
-  })(Qr)), Qr.exports;
+  })(yr)), yr.exports;
 }
-var AR;
+var lR;
 function xr() {
-  if (AR) return mr;
-  AR = 1;
-  const e = rd(), { createLRU: c } = Zr(), o = c({
+  if (lR) return mr;
+  lR = 1;
+  const e = ad(), { createLRU: c } = Zr(), o = c({
     max: 500
   });
   return mr.decode = function(i, s, u, E, n) {
@@ -16212,9 +16212,9 @@ function xr() {
     return r && r.length > 0 ? Buffer.concat([n, r]) : n;
   }, mr;
 }
-var Ue = { exports: {} }, RR;
+var Ue = { exports: {} }, IR;
 function Pn() {
-  return RR || (RR = 1, Ue.exports = {
+  return IR || (IR = 1, Ue.exports = {
     0: "DECIMAL",
     // aka DECIMAL
     1: "TINY",
@@ -16272,11 +16272,11 @@ function Pn() {
     // aka GEOMETRY
   }, Ue.exports.DECIMAL = 0, Ue.exports.TINY = 1, Ue.exports.SHORT = 2, Ue.exports.LONG = 3, Ue.exports.FLOAT = 4, Ue.exports.DOUBLE = 5, Ue.exports.NULL = 6, Ue.exports.TIMESTAMP = 7, Ue.exports.LONGLONG = 8, Ue.exports.INT24 = 9, Ue.exports.DATE = 10, Ue.exports.TIME = 11, Ue.exports.DATETIME = 12, Ue.exports.YEAR = 13, Ue.exports.NEWDATE = 14, Ue.exports.VARCHAR = 15, Ue.exports.BIT = 16, Ue.exports.VECTOR = 242, Ue.exports.JSON = 245, Ue.exports.NEWDECIMAL = 246, Ue.exports.ENUM = 247, Ue.exports.SET = 248, Ue.exports.TINY_BLOB = 249, Ue.exports.MEDIUM_BLOB = 250, Ue.exports.LONG_BLOB = 251, Ue.exports.BLOB = 252, Ue.exports.VAR_STRING = 253, Ue.exports.STRING = 254, Ue.exports.GEOMETRY = 255), Ue.exports;
 }
-var Za, lR;
+var Za, TR;
 function Ye() {
-  if (lR) return Za;
-  lR = 1;
-  const e = nT(), c = oI.Buffer, o = Qh(), i = xr(), s = Pn(), u = /* @__PURE__ */ new Date(NaN), E = "000000000000";
+  if (TR) return Za;
+  TR = 1;
+  const e = rT(), c = AI.Buffer, o = Yh(), i = xr(), s = Pn(), u = /* @__PURE__ */ new Date(NaN), E = "000000000000";
   function n(N, I) {
     const l = I.toString();
     return l.length >= N ? l : (E + l).slice(-N);
@@ -16421,12 +16421,12 @@ function Ye() {
     }
     readDateTimeString(I, l, T) {
       const f = this.readInt8();
-      let d = 0, O = 0, C = 0, g = 0, M = 0, B = 0, S = 0, y;
-      return f > 3 && (d = this.readInt16(), O = this.readInt8(), C = this.readInt8(), y = [n(4, d), n(2, O), n(2, C)].join("-")), f > 6 ? (g = this.readInt8(), M = this.readInt8(), B = this.readInt8(), y += `${l || " "}${[
+      let d = 0, O = 0, C = 0, g = 0, M = 0, B = 0, S = 0, Q;
+      return f > 3 && (d = this.readInt16(), O = this.readInt8(), C = this.readInt8(), Q = [n(4, d), n(2, O), n(2, C)].join("-")), f > 6 ? (g = this.readInt8(), M = this.readInt8(), B = this.readInt8(), Q += `${l || " "}${[
         n(2, g),
         n(2, M),
         n(2, B)
-      ].join(":")}`) : T === s.DATETIME && (y += " 00:00:00"), f > 10 && (S = this.readInt32(), y += ".", I && (S = n(6, S), S.length > I && (S = S.substring(0, I))), y += S), y;
+      ].join(":")}`) : T === s.DATETIME && (Q += " 00:00:00"), f > 10 && (S = this.readInt32(), Q += ".", I && (S = n(6, S), S.length > I && (S = S.substring(0, I))), Q += S), Q;
     }
     // TIME - value as a string, Can be negative
     readTimeString(I) {
@@ -16518,8 +16518,8 @@ function Ye() {
         let f, d, O, C, g, M, B = null;
         const S = I.readUInt8(l);
         l += 1;
-        const y = S ? I.readUInt32LE(l) : I.readUInt32BE(l);
-        switch (l += 4, y) {
+        const Q = S ? I.readUInt32LE(l) : I.readUInt32BE(l);
+        switch (l += 4, Q) {
           case 1:
             f = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, d = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, B = { x: f, y: d };
             break;
@@ -16528,8 +16528,8 @@ function Ye() {
               f = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, d = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, B.push({ x: f, y: d });
             break;
           case 3:
-            const Q = S ? I.readUInt32LE(l) : I.readUInt32BE(l);
-            for (l += 4, B = [], O = Q; O > 0; O--) {
+            const y = S ? I.readUInt32LE(l) : I.readUInt32BE(l);
+            for (l += 4, B = [], O = y; O > 0; O--) {
               for (g = S ? I.readUInt32LE(l) : I.readUInt32BE(l), l += 4, M = [], C = g; C > 0; C--)
                 f = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, d = S ? I.readDoubleLE(l) : I.readDoubleBE(l), l += 8, M.push({ x: f, y: d });
               B.push(M);
@@ -16711,10 +16711,10 @@ function Ye() {
   }
   return Za = R, Za;
 }
-var xa, IR;
-function rT() {
-  if (IR) return xa;
-  IR = 1;
+var xa, NR;
+function ET() {
+  if (NR) return xa;
+  NR = 1;
   const e = Ye(), c = 16777215;
   function o(s, u) {
     const E = s[u], n = s[u + 1], r = s[u + 2];
@@ -16800,10 +16800,10 @@ function rT() {
   }
   return xa = i, xa;
 }
-var Gr = { exports: {} }, $a, TR;
-function id() {
-  if (TR) return $a;
-  TR = 1;
+var Gr = { exports: {} }, $a, fR;
+function _d() {
+  if (fR) return $a;
+  fR = 1;
   const e = Ye();
   class c {
     constructor(i) {
@@ -16824,10 +16824,10 @@ function id() {
   }
   return $a = c, $a;
 }
-var e_, NR;
-function Ed() {
-  if (NR) return e_;
-  NR = 1;
+var e_, hR;
+function sd() {
+  if (hR) return e_;
+  hR = 1;
   const e = Ye();
   class c {
     constructor(i) {
@@ -16848,10 +16848,10 @@ function Ed() {
   }
   return e_ = c, e_;
 }
-var n_, fR;
-function ad() {
-  if (fR) return n_;
-  fR = 1;
+var n_, dR;
+function ud() {
+  if (dR) return n_;
+  dR = 1;
   const e = Ye();
   class c {
     constructor(i) {
@@ -16872,10 +16872,10 @@ function ad() {
   }
   return n_ = c, n_;
 }
-var t_, hR;
-function _d() {
-  if (hR) return t_;
-  hR = 1;
+var t_, OR;
+function od() {
+  if (OR) return t_;
+  OR = 1;
   const e = Ye();
   class c {
     constructor(i) {
@@ -16892,10 +16892,10 @@ function _d() {
   }
   return t_ = c, t_;
 }
-var r_, dR;
-function sd() {
-  if (dR) return r_;
-  dR = 1;
+var r_, CR;
+function cd() {
+  if (CR) return r_;
+  CR = 1;
   const e = Pn(), c = Ye(), o = new Array(256);
   class i {
     constructor(u) {
@@ -16940,9 +16940,9 @@ function sd() {
   }
   return o[e.DECIMAL] = c.prototype.readLengthCodedString, o[1] = c.prototype.readInt8, o[2] = c.prototype.readInt16, o[3] = c.prototype.readInt32, o[4] = c.prototype.readFloat, o[5] = c.prototype.readDouble, o[6] = c.prototype.assertInvalid, o[7] = c.prototype.readTimestamp, o[8] = c.prototype.readInt64, o[9] = c.prototype.readInt32, o[10] = c.prototype.readTimestamp, o[11] = c.prototype.readTime, o[12] = c.prototype.readDateTime, o[13] = c.prototype.readInt16, o[e.VAR_STRING] = c.prototype.readLengthCodedString, r_ = i, r_;
 }
-var i_, OR;
+var i_, DR;
 function Dn() {
-  return OR || (OR = 1, i_ = {
+  return DR || (DR = 1, i_ = {
     SLEEP: 0,
     // deprecated
     QUIT: 1,
@@ -16984,10 +16984,10 @@ function Dn() {
     // bad!
   }), i_;
 }
-var E_, CR;
-function ud() {
-  if (CR) return E_;
-  CR = 1;
+var E_, SR;
+function Ad() {
+  if (SR) return E_;
+  SR = 1;
   const e = Ye(), c = Dn();
   class o {
     constructor(s) {
@@ -17000,13 +17000,13 @@ function ud() {
   }
   return E_ = o, E_;
 }
-var Pe = {}, DR;
+var Pe = {}, gR;
 function kn() {
-  return DR || (DR = 1, Pe.LONG_PASSWORD = 1, Pe.FOUND_ROWS = 2, Pe.LONG_FLAG = 4, Pe.CONNECT_WITH_DB = 8, Pe.NO_SCHEMA = 16, Pe.COMPRESS = 32, Pe.ODBC = 64, Pe.LOCAL_FILES = 128, Pe.IGNORE_SPACE = 256, Pe.PROTOCOL_41 = 512, Pe.INTERACTIVE = 1024, Pe.SSL = 2048, Pe.IGNORE_SIGPIPE = 4096, Pe.TRANSACTIONS = 8192, Pe.RESERVED = 16384, Pe.SECURE_CONNECTION = 32768, Pe.MULTI_STATEMENTS = 65536, Pe.MULTI_RESULTS = 131072, Pe.PS_MULTI_RESULTS = 262144, Pe.PLUGIN_AUTH = 524288, Pe.CONNECT_ATTRS = 1048576, Pe.PLUGIN_AUTH_LENENC_CLIENT_DATA = 2097152, Pe.CAN_HANDLE_EXPIRED_PASSWORDS = 4194304, Pe.SESSION_TRACK = 8388608, Pe.SSL_VERIFY_SERVER_CERT = 1073741824, Pe.REMEMBER_OPTIONS = 2147483648, Pe.MULTI_FACTOR_AUTHENTICATION = 268435456), Pe;
+  return gR || (gR = 1, Pe.LONG_PASSWORD = 1, Pe.FOUND_ROWS = 2, Pe.LONG_FLAG = 4, Pe.CONNECT_WITH_DB = 8, Pe.NO_SCHEMA = 16, Pe.COMPRESS = 32, Pe.ODBC = 64, Pe.LOCAL_FILES = 128, Pe.IGNORE_SPACE = 256, Pe.PROTOCOL_41 = 512, Pe.INTERACTIVE = 1024, Pe.SSL = 2048, Pe.IGNORE_SIGPIPE = 4096, Pe.TRANSACTIONS = 8192, Pe.RESERVED = 16384, Pe.SECURE_CONNECTION = 32768, Pe.MULTI_STATEMENTS = 65536, Pe.MULTI_RESULTS = 131072, Pe.PS_MULTI_RESULTS = 262144, Pe.PLUGIN_AUTH = 524288, Pe.CONNECT_ATTRS = 1048576, Pe.PLUGIN_AUTH_LENENC_CLIENT_DATA = 2097152, Pe.CAN_HANDLE_EXPIRED_PASSWORDS = 4194304, Pe.SESSION_TRACK = 8388608, Pe.SSL_VERIFY_SERVER_CERT = 1073741824, Pe.REMEMBER_OPTIONS = 2147483648, Pe.MULTI_FACTOR_AUTHENTICATION = 268435456), Pe;
 }
-var a_ = {}, SR;
+var a_ = {}, MR;
 function Dt() {
-  return SR || (SR = 1, (function(e) {
+  return MR || (MR = 1, (function(e) {
     const c = On;
     function o(E, n, r) {
       const t = c.createHash("sha1");
@@ -17043,9 +17043,9 @@ function Dt() {
     e.xorRotating = u;
   })(a_)), a_;
 }
-var __, gR;
+var __, BR;
 function Sn() {
-  return gR || (gR = 1, __ = [
+  return BR || (BR = 1, __ = [
     "utf8",
     "big5",
     "latin2",
@@ -17357,10 +17357,10 @@ function Sn() {
     "utf8"
   ]), __;
 }
-var s_, MR;
-function od() {
-  if (MR) return s_;
-  MR = 1;
+var s_, LR;
+function Rd() {
+  if (LR) return s_;
+  LR = 1;
   const e = Dn(), c = kn(), o = Ye(), i = Dt(), s = Sn();
   class u {
     constructor(n) {
@@ -17411,10 +17411,10 @@ function od() {
   }
   return s_ = u, s_;
 }
-var u_, BR;
-function cd() {
-  if (BR) return u_;
-  BR = 1;
+var u_, UR;
+function ld() {
+  if (UR) return u_;
+  UR = 1;
   const e = Ye(), c = Dn();
   class o {
     constructor(s) {
@@ -17428,14 +17428,14 @@ function cd() {
   }
   return u_ = o, u_;
 }
-var Xe = {}, LR;
-function Hs() {
-  return LR || (LR = 1, Xe.NOT_NULL = 1, Xe.PRI_KEY = 2, Xe.UNIQUE_KEY = 4, Xe.MULTIPLE_KEY = 8, Xe.BLOB = 16, Xe.UNSIGNED = 32, Xe.ZEROFILL = 64, Xe.BINARY = 128, Xe.ENUM = 256, Xe.AUTO_INCREMENT = 512, Xe.TIMESTAMP = 1024, Xe.SET = 2048, Xe.NO_DEFAULT_VALUE = 4096, Xe.ON_UPDATE_NOW = 8192, Xe.NUM = 32768), Xe;
+var Xe = {}, wR;
+function Ws() {
+  return wR || (wR = 1, Xe.NOT_NULL = 1, Xe.PRI_KEY = 2, Xe.UNIQUE_KEY = 4, Xe.MULTIPLE_KEY = 8, Xe.BLOB = 16, Xe.UNSIGNED = 32, Xe.ZEROFILL = 64, Xe.BINARY = 128, Xe.ENUM = 256, Xe.AUTO_INCREMENT = 512, Xe.TIMESTAMP = 1024, Xe.SET = 2048, Xe.NO_DEFAULT_VALUE = 4096, Xe.ON_UPDATE_NOW = 8192, Xe.NUM = 32768), Xe;
 }
-var o_, UR;
-function Ad() {
-  if (UR) return o_;
-  UR = 1;
+var o_, mR;
+function Id() {
+  if (mR) return o_;
+  mR = 1;
   const e = Ye(), c = xr(), o = Sn(), i = ["catalog", "schema", "table", "orgTable", "name", "orgName"];
   class s {
     constructor(n, r) {
@@ -17468,7 +17468,7 @@ function Ad() {
       const a = Pn(), _ = [];
       for (const T in a)
         _[a[T]] = T;
-      const A = Hs(), R = [], N = this.flags;
+      const A = Ws(), R = [], N = this.flags;
       for (const T in A)
         N & A[T] && (T === "PRI_KEY" ? R.push("PRIMARY KEY") : T === "NOT_NULL" ? R.push("NOT NULL") : T === "BINARY" || T === "MULTIPLE_KEY" || T === "NO_DEFAULT_VALUE" || T === "BLOB" || T === "UNSIGNED" || T === "TIMESTAMP" || (T === "ON_UPDATE_NOW" ? R.push("ON UPDATE CURRENT_TIMESTAMP") : R.push(T)));
       if (n > 1)
@@ -17523,20 +17523,20 @@ function Ad() {
   };
   return u("catalog"), u("schema"), u("table"), u("orgTable"), u("orgName"), o_ = s, o_;
 }
-var c_, wR;
-function Rd() {
-  return wR || (wR = 1, c_ = {
+var c_, FR;
+function Td() {
+  return FR || (FR = 1, c_ = {
     NO_CURSOR: 0,
     READ_ONLY: 1,
     FOR_UPDATE: 2,
     SCROLLABLE: 3
   }), c_;
 }
-var A_, mR;
-function ld() {
-  if (mR) return A_;
-  mR = 1;
-  const e = Rd(), c = Dn(), o = Pn(), i = Ye(), s = Sn();
+var A_, PR;
+function Nd() {
+  if (PR) return A_;
+  PR = 1;
+  const e = Td(), c = Dn(), o = Pn(), i = Ye(), s = Sn();
   function u(r) {
     return Array.isArray(r) || r.constructor === Object || typeof r.toJSON == "function" && !Buffer.isBuffer(r);
   }
@@ -17608,10 +17608,10 @@ function ld() {
   }
   return A_ = n, A_;
 }
-var R_, FR;
-function Id() {
-  if (FR) return R_;
-  FR = 1;
+var R_, GR;
+function fd() {
+  if (GR) return R_;
+  GR = 1;
   const e = Ye(), c = kn();
   class o {
     constructor(s) {
@@ -17650,10 +17650,10 @@ function Id() {
   }
   return R_ = o, R_;
 }
-var l_, PR;
-function Td() {
-  if (PR) return l_;
-  PR = 1;
+var l_, bR;
+function hd() {
+  if (bR) return l_;
+  bR = 1;
   const e = kn(), c = Sn(), o = Ye(), i = Dt();
   class s {
     constructor(E) {
@@ -17720,10 +17720,10 @@ function Td() {
   }
   return l_ = s, l_;
 }
-var I_, GR;
-function Nd() {
-  if (GR) return I_;
-  GR = 1;
+var I_, vR;
+function dd() {
+  if (vR) return I_;
+  vR = 1;
   const e = Ye(), c = Dn(), o = xr(), i = Sn();
   class s {
     constructor(E, n) {
@@ -17736,10 +17736,10 @@ function Nd() {
   }
   return I_ = s, I_;
 }
-var T_, bR;
-function fd() {
-  if (bR) return T_;
-  bR = 1;
+var T_, yR;
+function Od() {
+  if (yR) return T_;
+  yR = 1;
   class e {
     constructor(o) {
       o.skip(1), this.id = o.readInt32(), this.fieldCount = o.readInt16(), this.parameterCount = o.readInt16(), o.skip(1), this.warningCount = o.readInt16();
@@ -17747,10 +17747,10 @@ function fd() {
   }
   return T_ = e, T_;
 }
-var N_, vR;
-function hd() {
-  if (vR) return N_;
-  vR = 1;
+var N_, QR;
+function Cd() {
+  if (QR) return N_;
+  QR = 1;
   const e = Ye(), c = Dn(), o = xr(), i = Sn();
   class s {
     constructor(E, n) {
@@ -17763,10 +17763,10 @@ function hd() {
   }
   return N_ = s, N_;
 }
-var f_, QR;
-function dd() {
-  if (QR) return f_;
-  QR = 1;
+var f_, VR;
+function Dd() {
+  if (VR) return f_;
+  VR = 1;
   const e = Ye(), c = Dn();
   class o {
     constructor(s) {
@@ -17780,13 +17780,13 @@ function dd() {
   }
   return f_ = o, f_;
 }
-var ze = {}, yR;
-function iT() {
-  return yR || (yR = 1, ze.SERVER_STATUS_IN_TRANS = 1, ze.SERVER_STATUS_AUTOCOMMIT = 2, ze.SERVER_MORE_RESULTS_EXISTS = 8, ze.SERVER_QUERY_NO_GOOD_INDEX_USED = 16, ze.SERVER_QUERY_NO_INDEX_USED = 32, ze.SERVER_STATUS_CURSOR_EXISTS = 64, ze.SERVER_STATUS_LAST_ROW_SENT = 128, ze.SERVER_STATUS_DB_DROPPED = 256, ze.SERVER_STATUS_NO_BACKSLASH_ESCAPES = 512, ze.SERVER_STATUS_METADATA_CHANGED = 1024, ze.SERVER_QUERY_WAS_SLOW = 2048, ze.SERVER_PS_OUT_PARAMS = 4096, ze.SERVER_STATUS_IN_TRANS_READONLY = 8192, ze.SERVER_SESSION_STATE_CHANGED = 16384), ze;
+var ze = {}, YR;
+function aT() {
+  return YR || (YR = 1, ze.SERVER_STATUS_IN_TRANS = 1, ze.SERVER_STATUS_AUTOCOMMIT = 2, ze.SERVER_MORE_RESULTS_EXISTS = 8, ze.SERVER_QUERY_NO_GOOD_INDEX_USED = 16, ze.SERVER_QUERY_NO_INDEX_USED = 32, ze.SERVER_STATUS_CURSOR_EXISTS = 64, ze.SERVER_STATUS_LAST_ROW_SENT = 128, ze.SERVER_STATUS_DB_DROPPED = 256, ze.SERVER_STATUS_NO_BACKSLASH_ESCAPES = 512, ze.SERVER_STATUS_METADATA_CHANGED = 1024, ze.SERVER_QUERY_WAS_SLOW = 2048, ze.SERVER_PS_OUT_PARAMS = 4096, ze.SERVER_STATUS_IN_TRANS_READONLY = 8192, ze.SERVER_SESSION_STATE_CHANGED = 16384), ze;
 }
-var h_, VR;
-function Od() {
-  return VR || (VR = 1, h_ = {
+var h_, HR;
+function Sd() {
+  return HR || (HR = 1, h_ = {
     big5: 1,
     latin2: 2,
     dec8: 3,
@@ -17832,17 +17832,17 @@ function Od() {
     utf8mb3: 192
   }), h_;
 }
-var d_ = {}, YR;
-function Cd() {
-  return YR || (YR = 1, (function(e) {
+var d_ = {}, WR;
+function gd() {
+  return WR || (WR = 1, (function(e) {
     e.SYSTEM_VARIABLES = 0, e.SCHEMA = 1, e.STATE_CHANGE = 2, e.STATE_GTIDS = 3, e.TRANSACTION_CHARACTERISTICS = 4, e.TRANSACTION_STATE = 5, e.FIRST_KEY = e.SYSTEM_VARIABLES, e.LAST_KEY = e.TRANSACTION_STATE;
   })(d_)), d_;
 }
-var O_, HR;
-function Dd() {
-  if (HR) return O_;
-  HR = 1;
-  const e = Ye(), c = kn(), o = iT(), i = Od(), s = Cd();
+var O_, pR;
+function Md() {
+  if (pR) return O_;
+  pR = 1;
+  const e = Ye(), c = kn(), o = aT(), i = Sd(), s = gd();
   class u {
     constructor(n, r) {
       const t = r.config.bigNumberStrings, a = r.serverEncoding, _ = r._handshakePacket.capabilityFlags, A = function(I) {
@@ -17900,10 +17900,10 @@ function Dd() {
   }
   return O_ = u, O_;
 }
-var C_, WR;
-function Sd() {
-  if (WR) return C_;
-  WR = 1;
+var C_, kR;
+function Bd() {
+  if (kR) return C_;
+  kR = 1;
   const e = kn(), c = Ye();
   class o {
     constructor(s, u) {
@@ -17916,10 +17916,10 @@ function Sd() {
   }
   return C_ = o, C_;
 }
-var D_, pR;
-function gd() {
-  if (pR) return D_;
-  pR = 1;
+var D_, XR;
+function Ld() {
+  if (XR) return D_;
+  XR = 1;
   const e = Ye();
   class c {
     constructor(i) {
@@ -17956,10 +17956,10 @@ function gd() {
   }
   return D_ = c, D_;
 }
-var kR;
-function Tn() {
-  return kR || (kR = 1, (function(e, c) {
-    const o = Hr, i = id(), s = Ed(), u = ad(), E = _d(), n = sd(), r = ud(), t = od(), a = cd(), _ = Ad(), A = ld(), R = Id(), N = Td(), I = Nd(), l = fd(), T = hd(), f = dd(), d = Dd(), O = Sd(), C = gd();
+var jR;
+function Nn() {
+  return jR || (jR = 1, (function(e, c) {
+    const o = Hr, i = _d(), s = sd(), u = ud(), E = od(), n = cd(), r = Ad(), t = Rd(), a = ld(), _ = Id(), A = Nd(), R = fd(), N = hd(), I = dd(), l = Od(), T = Cd(), f = Dd(), d = Md(), O = Bd(), C = Ld();
     Object.entries({
       AuthNextFactor: i,
       AuthSwitchRequest: s,
@@ -17980,12 +17980,12 @@ function Tn() {
       ResultSetHeader: d,
       SSLRequest: O,
       TextRow: C
-    }).forEach(([Q, G]) => {
-      if (e.exports[Q] = G, o.env.NODE_DEBUG && G.prototype.toPacket) {
+    }).forEach(([y, G]) => {
+      if (e.exports[y] = G, o.env.NODE_DEBUG && G.prototype.toPacket) {
         const F = G.prototype.toPacket;
         G.prototype.toPacket = function() {
           const w = F.call(this);
-          return w._name = Q, w;
+          return w._name = y, w;
         };
       }
     });
@@ -18010,7 +18010,7 @@ function Tn() {
       }
     }
     c.EOF = S;
-    class y {
+    class Q {
       static toPacket(G, F) {
         const w = 13 + Buffer.byteLength(G.message, "utf8"), D = new M(0, Buffer.allocUnsafe(w), 0, w);
         return D.offset = 4, D.writeInt8(255), D.writeInt16(G.code), D.writeString("#_____", F), D.writeString(G.message, F), D._name = "Error", D;
@@ -18019,18 +18019,18 @@ function Tn() {
         G.readInt8();
         const F = G.readInt16();
         G.readString(1, "ascii"), G.readString(5, "ascii");
-        const w = G.readNullTerminatedString("utf8"), D = new y();
+        const w = G.readNullTerminatedString("utf8"), D = new Q();
         return D.message = w, D.code = F, D;
       }
     }
-    c.Error = y;
+    c.Error = Q;
   })(Gr, Gr.exports)), Gr.exports;
 }
-var S_, XR;
-function Nn() {
-  if (XR) return S_;
-  XR = 1;
-  const e = on.EventEmitter, c = Cs;
+var S_, qR;
+function fn() {
+  if (qR) return S_;
+  qR = 1;
+  const e = on.EventEmitter, c = Ds;
   class o extends e {
     constructor() {
       super(), this.next = null;
@@ -18053,11 +18053,11 @@ function Nn() {
   }
   return S_ = o, S_;
 }
-var g_, jR;
-function Md() {
-  if (jR) return g_;
-  jR = 1;
-  const e = "sha256_password", c = On, { xorRotating: o } = Dt(), i = uI, s = Buffer.from([1]), u = 0, E = 1, n = -1;
+var g_, KR;
+function Ud() {
+  if (KR) return g_;
+  KR = 1;
+  const e = "sha256_password", c = On, { xorRotating: o } = Dt(), i = cI, s = Buffer.from([1]), u = 0, E = 1, n = -1;
   function r(t, a, _) {
     const A = o(Buffer.from(`${t}\0`, "utf8"), a);
     return c.publicEncrypt(_, A);
@@ -18085,10 +18085,10 @@ function Md() {
     };
   }, g_;
 }
-var M_, qR;
-function Bd() {
-  if (qR) return M_;
-  qR = 1;
+var M_, zR;
+function wd() {
+  if (zR) return M_;
+  zR = 1;
   const e = "caching_sha2_password", c = On, { xor: o, xorRotating: i } = Dt(), s = Buffer.from([2]), u = Buffer.from([3]), E = Buffer.from([4]), n = 0, r = 1, t = 2, a = -1;
   function _(N) {
     const I = c.createHash("sha256");
@@ -18141,10 +18141,10 @@ function Bd() {
     };
   }, M_;
 }
-var B_, KR;
-function Ld() {
-  if (KR) return B_;
-  KR = 1;
+var B_, JR;
+function md() {
+  if (JR) return B_;
+  JR = 1;
   const e = Dt();
   return B_ = (c) => ({ connection: o, command: i }) => {
     const s = i.password || c.password || o.config.password, u = i.passwordSha1 || c.passwordSha1 || o.config.passwordSha1;
@@ -18163,10 +18163,10 @@ function Ld() {
     };
   }, B_;
 }
-var L_, zR;
-function Ud() {
-  if (zR) return L_;
-  zR = 1;
+var L_, ZR;
+function Fd() {
+  if (ZR) return L_;
+  ZR = 1;
   function e(o) {
     return Buffer.from(`${o}\0`);
   }
@@ -18177,11 +18177,11 @@ function Ud() {
     };
   }, L_;
 }
-var U_, JR;
-function wd() {
-  if (JR) return U_;
-  JR = 1;
-  const e = Tn(), c = Md(), o = Bd(), i = Ld(), s = Ud(), u = {
+var U_, xR;
+function Pd() {
+  if (xR) return U_;
+  xR = 1;
+  const e = Nn(), c = Ud(), o = wd(), i = md(), s = Fd(), u = {
     sha256_password: c({}),
     caching_sha2_password: o({}),
     mysql_native_password: i({}),
@@ -18243,9 +18243,9 @@ function wd() {
     authSwitchRequestMoreData: t
   }, U_;
 }
-var w_ = { exports: {} }, ZR;
-function md() {
-  return ZR || (ZR = 1, (function(e) {
+var w_ = { exports: {} }, $R;
+function Gd() {
+  return $R || ($R = 1, (function(e) {
     var c = on.EventEmitter, o = ht, i = 3e3, s = 0, u = "closed", E = "drained", n = function(t) {
       c.call(this), t && t > 0 ? this.timeout = t : this.timeout = i, this.status = r.STATUS_IDLE, this.curId = s, this.queue = [];
     };
@@ -18302,15 +18302,15 @@ function md() {
     };
   })(w_)), w_.exports;
 }
-var m_, xR;
-function Fd() {
-  return xR || (xR = 1, m_ = md()), m_;
+var m_, el;
+function bd() {
+  return el || (el = 1, m_ = Gd()), m_;
 }
-var F_, $R;
-function Pd() {
-  if ($R) return F_;
-  $R = 1;
-  const e = Os, c = rT();
+var F_, nl;
+function vd() {
+  if (nl) return F_;
+  nl = 1;
+  const e = Cs, c = ET();
   function o(u) {
     const E = this, n = u.readInt24(), r = u.readBuffer();
     n !== 0 ? E.inflateQueue.push((t) => {
@@ -18358,18 +18358,18 @@ function Pd() {
     }, 4), u._inflatedPacketsParser._lastPacket = 0, u.packetParser = new c((n) => {
       u._handleCompressedPacket(n);
     }, 7), u.writeUncompressed = u.write, u.write = i;
-    const E = Fd();
+    const E = bd();
     u.inflateQueue = E.createQueue(), u.deflateQueue = E.createQueue();
   }
   return F_ = {
     enableCompression: s
   }, F_;
 }
-var P_, el;
-function ET() {
-  if (el) return P_;
-  el = 1;
-  const e = Nn(), c = Tn(), o = kn(), i = Sn(), s = Dt();
+var P_, tl;
+function _T() {
+  if (tl) return P_;
+  tl = 1;
+  const e = fn(), c = Nn(), o = kn(), i = Sn(), s = Dt();
   function u(n) {
     const r = [];
     for (const t in o)
@@ -18451,7 +18451,7 @@ function ET() {
     handshakeResult(r, t) {
       const a = r.peekByte();
       if (a === 254 || a === 1 || a === 2) {
-        const _ = wd();
+        const _ = Pd();
         try {
           return a === 1 ? _.authSwitchRequestMoreData(r, t, this) : (this.authenticationFactor !== 0 && (t.config.password = this[`password${this.authenticationFactor}`], this.authenticationFactor += 1), _.authSwitchRequest(r, t, this)), E.prototype.handshakeResult;
         } catch (A) {
@@ -18463,7 +18463,7 @@ function ET() {
         return _.code = "HANDSHAKE_UNKNOWN_ERROR", _.fatal = !0, this.onResult ? this.onResult(_) : this.emit("error", _), null;
       }
       if (!t.authorized && (t.authorized = !0, t.config.compress)) {
-        const _ = Pd().enableCompression;
+        const _ = vd().enableCompression;
         _(t);
       }
       return this.onResult && this.onResult(null), null;
@@ -18471,11 +18471,11 @@ function ET() {
   }
   return P_ = E, P_;
 }
-var G_, nl;
-function Gd() {
-  if (nl) return G_;
-  nl = 1;
-  const e = Dn(), c = nT(), o = Nn(), i = Tn();
+var G_, rl;
+function yd() {
+  if (rl) return G_;
+  rl = 1;
+  const e = Dn(), c = rT(), o = fn(), i = Nn();
   class s extends o {
     constructor(E) {
       super(), this.args = E;
@@ -18583,19 +18583,19 @@ function Gd() {
   }
   return G_ = s, G_;
 }
-var b_ = {}, tl;
+var b_ = {}, il;
 function St() {
-  return tl || (tl = 1, (function(e) {
+  return il || (il = 1, (function(e) {
     e.BIG5_CHINESE_CI = 1, e.LATIN2_CZECH_CS = 2, e.DEC8_SWEDISH_CI = 3, e.CP850_GENERAL_CI = 4, e.LATIN1_GERMAN1_CI = 5, e.HP8_ENGLISH_CI = 6, e.KOI8R_GENERAL_CI = 7, e.LATIN1_SWEDISH_CI = 8, e.LATIN2_GENERAL_CI = 9, e.SWE7_SWEDISH_CI = 10, e.ASCII_GENERAL_CI = 11, e.UJIS_JAPANESE_CI = 12, e.SJIS_JAPANESE_CI = 13, e.CP1251_BULGARIAN_CI = 14, e.LATIN1_DANISH_CI = 15, e.HEBREW_GENERAL_CI = 16, e.TIS620_THAI_CI = 18, e.EUCKR_KOREAN_CI = 19, e.LATIN7_ESTONIAN_CS = 20, e.LATIN2_HUNGARIAN_CI = 21, e.KOI8U_GENERAL_CI = 22, e.CP1251_UKRAINIAN_CI = 23, e.GB2312_CHINESE_CI = 24, e.GREEK_GENERAL_CI = 25, e.CP1250_GENERAL_CI = 26, e.LATIN2_CROATIAN_CI = 27, e.GBK_CHINESE_CI = 28, e.CP1257_LITHUANIAN_CI = 29, e.LATIN5_TURKISH_CI = 30, e.LATIN1_GERMAN2_CI = 31, e.ARMSCII8_GENERAL_CI = 32, e.UTF8_GENERAL_CI = 33, e.CP1250_CZECH_CS = 34, e.UCS2_GENERAL_CI = 35, e.CP866_GENERAL_CI = 36, e.KEYBCS2_GENERAL_CI = 37, e.MACCE_GENERAL_CI = 38, e.MACROMAN_GENERAL_CI = 39, e.CP852_GENERAL_CI = 40, e.LATIN7_GENERAL_CI = 41, e.LATIN7_GENERAL_CS = 42, e.MACCE_BIN = 43, e.CP1250_CROATIAN_CI = 44, e.UTF8MB4_GENERAL_CI = 45, e.UTF8MB4_BIN = 46, e.LATIN1_BIN = 47, e.LATIN1_GENERAL_CI = 48, e.LATIN1_GENERAL_CS = 49, e.CP1251_BIN = 50, e.CP1251_GENERAL_CI = 51, e.CP1251_GENERAL_CS = 52, e.MACROMAN_BIN = 53, e.UTF16_GENERAL_CI = 54, e.UTF16_BIN = 55, e.UTF16LE_GENERAL_CI = 56, e.CP1256_GENERAL_CI = 57, e.CP1257_BIN = 58, e.CP1257_GENERAL_CI = 59, e.UTF32_GENERAL_CI = 60, e.UTF32_BIN = 61, e.UTF16LE_BIN = 62, e.BINARY = 63, e.ARMSCII8_BIN = 64, e.ASCII_BIN = 65, e.CP1250_BIN = 66, e.CP1256_BIN = 67, e.CP866_BIN = 68, e.DEC8_BIN = 69, e.GREEK_BIN = 70, e.HEBREW_BIN = 71, e.HP8_BIN = 72, e.KEYBCS2_BIN = 73, e.KOI8R_BIN = 74, e.KOI8U_BIN = 75, e.UTF8_TOLOWER_CI = 76, e.LATIN2_BIN = 77, e.LATIN5_BIN = 78, e.LATIN7_BIN = 79, e.CP850_BIN = 80, e.CP852_BIN = 81, e.SWE7_BIN = 82, e.UTF8_BIN = 83, e.BIG5_BIN = 84, e.EUCKR_BIN = 85, e.GB2312_BIN = 86, e.GBK_BIN = 87, e.SJIS_BIN = 88, e.TIS620_BIN = 89, e.UCS2_BIN = 90, e.UJIS_BIN = 91, e.GEOSTD8_GENERAL_CI = 92, e.GEOSTD8_BIN = 93, e.LATIN1_SPANISH_CI = 94, e.CP932_JAPANESE_CI = 95, e.CP932_BIN = 96, e.EUCJPMS_JAPANESE_CI = 97, e.EUCJPMS_BIN = 98, e.CP1250_POLISH_CI = 99, e.UTF16_UNICODE_CI = 101, e.UTF16_ICELANDIC_CI = 102, e.UTF16_LATVIAN_CI = 103, e.UTF16_ROMANIAN_CI = 104, e.UTF16_SLOVENIAN_CI = 105, e.UTF16_POLISH_CI = 106, e.UTF16_ESTONIAN_CI = 107, e.UTF16_SPANISH_CI = 108, e.UTF16_SWEDISH_CI = 109, e.UTF16_TURKISH_CI = 110, e.UTF16_CZECH_CI = 111, e.UTF16_DANISH_CI = 112, e.UTF16_LITHUANIAN_CI = 113, e.UTF16_SLOVAK_CI = 114, e.UTF16_SPANISH2_CI = 115, e.UTF16_ROMAN_CI = 116, e.UTF16_PERSIAN_CI = 117, e.UTF16_ESPERANTO_CI = 118, e.UTF16_HUNGARIAN_CI = 119, e.UTF16_SINHALA_CI = 120, e.UTF16_GERMAN2_CI = 121, e.UTF16_CROATIAN_CI = 122, e.UTF16_UNICODE_520_CI = 123, e.UTF16_VIETNAMESE_CI = 124, e.UCS2_UNICODE_CI = 128, e.UCS2_ICELANDIC_CI = 129, e.UCS2_LATVIAN_CI = 130, e.UCS2_ROMANIAN_CI = 131, e.UCS2_SLOVENIAN_CI = 132, e.UCS2_POLISH_CI = 133, e.UCS2_ESTONIAN_CI = 134, e.UCS2_SPANISH_CI = 135, e.UCS2_SWEDISH_CI = 136, e.UCS2_TURKISH_CI = 137, e.UCS2_CZECH_CI = 138, e.UCS2_DANISH_CI = 139, e.UCS2_LITHUANIAN_CI = 140, e.UCS2_SLOVAK_CI = 141, e.UCS2_SPANISH2_CI = 142, e.UCS2_ROMAN_CI = 143, e.UCS2_PERSIAN_CI = 144, e.UCS2_ESPERANTO_CI = 145, e.UCS2_HUNGARIAN_CI = 146, e.UCS2_SINHALA_CI = 147, e.UCS2_GERMAN2_CI = 148, e.UCS2_CROATIAN_CI = 149, e.UCS2_UNICODE_520_CI = 150, e.UCS2_VIETNAMESE_CI = 151, e.UCS2_GENERAL_MYSQL500_CI = 159, e.UTF32_UNICODE_CI = 160, e.UTF32_ICELANDIC_CI = 161, e.UTF32_LATVIAN_CI = 162, e.UTF32_ROMANIAN_CI = 163, e.UTF32_SLOVENIAN_CI = 164, e.UTF32_POLISH_CI = 165, e.UTF32_ESTONIAN_CI = 166, e.UTF32_SPANISH_CI = 167, e.UTF32_SWEDISH_CI = 168, e.UTF32_TURKISH_CI = 169, e.UTF32_CZECH_CI = 170, e.UTF32_DANISH_CI = 171, e.UTF32_LITHUANIAN_CI = 172, e.UTF32_SLOVAK_CI = 173, e.UTF32_SPANISH2_CI = 174, e.UTF32_ROMAN_CI = 175, e.UTF32_PERSIAN_CI = 176, e.UTF32_ESPERANTO_CI = 177, e.UTF32_HUNGARIAN_CI = 178, e.UTF32_SINHALA_CI = 179, e.UTF32_GERMAN2_CI = 180, e.UTF32_CROATIAN_CI = 181, e.UTF32_UNICODE_520_CI = 182, e.UTF32_VIETNAMESE_CI = 183, e.UTF8_UNICODE_CI = 192, e.UTF8_ICELANDIC_CI = 193, e.UTF8_LATVIAN_CI = 194, e.UTF8_ROMANIAN_CI = 195, e.UTF8_SLOVENIAN_CI = 196, e.UTF8_POLISH_CI = 197, e.UTF8_ESTONIAN_CI = 198, e.UTF8_SPANISH_CI = 199, e.UTF8_SWEDISH_CI = 200, e.UTF8_TURKISH_CI = 201, e.UTF8_CZECH_CI = 202, e.UTF8_DANISH_CI = 203, e.UTF8_LITHUANIAN_CI = 204, e.UTF8_SLOVAK_CI = 205, e.UTF8_SPANISH2_CI = 206, e.UTF8_ROMAN_CI = 207, e.UTF8_PERSIAN_CI = 208, e.UTF8_ESPERANTO_CI = 209, e.UTF8_HUNGARIAN_CI = 210, e.UTF8_SINHALA_CI = 211, e.UTF8_GERMAN2_CI = 212, e.UTF8_CROATIAN_CI = 213, e.UTF8_UNICODE_520_CI = 214, e.UTF8_VIETNAMESE_CI = 215, e.UTF8_GENERAL_MYSQL500_CI = 223, e.UTF8MB4_UNICODE_CI = 224, e.UTF8MB4_ICELANDIC_CI = 225, e.UTF8MB4_LATVIAN_CI = 226, e.UTF8MB4_ROMANIAN_CI = 227, e.UTF8MB4_SLOVENIAN_CI = 228, e.UTF8MB4_POLISH_CI = 229, e.UTF8MB4_ESTONIAN_CI = 230, e.UTF8MB4_SPANISH_CI = 231, e.UTF8MB4_SWEDISH_CI = 232, e.UTF8MB4_TURKISH_CI = 233, e.UTF8MB4_CZECH_CI = 234, e.UTF8MB4_DANISH_CI = 235, e.UTF8MB4_LITHUANIAN_CI = 236, e.UTF8MB4_SLOVAK_CI = 237, e.UTF8MB4_SPANISH2_CI = 238, e.UTF8MB4_ROMAN_CI = 239, e.UTF8MB4_PERSIAN_CI = 240, e.UTF8MB4_ESPERANTO_CI = 241, e.UTF8MB4_HUNGARIAN_CI = 242, e.UTF8MB4_SINHALA_CI = 243, e.UTF8MB4_GERMAN2_CI = 244, e.UTF8MB4_CROATIAN_CI = 245, e.UTF8MB4_UNICODE_520_CI = 246, e.UTF8MB4_VIETNAMESE_CI = 247, e.GB18030_CHINESE_CI = 248, e.GB18030_BIN = 249, e.GB18030_UNICODE_520_CI = 250, e.UTF8_GENERAL50_CI = 253, e.UTF8MB4_0900_AI_CI = 255, e.UTF8MB4_DE_PB_0900_AI_CI = 256, e.UTF8MB4_IS_0900_AI_CI = 257, e.UTF8MB4_LV_0900_AI_CI = 258, e.UTF8MB4_RO_0900_AI_CI = 259, e.UTF8MB4_SL_0900_AI_CI = 260, e.UTF8MB4_PL_0900_AI_CI = 261, e.UTF8MB4_ET_0900_AI_CI = 262, e.UTF8MB4_ES_0900_AI_CI = 263, e.UTF8MB4_SV_0900_AI_CI = 264, e.UTF8MB4_TR_0900_AI_CI = 265, e.UTF8MB4_CS_0900_AI_CI = 266, e.UTF8MB4_DA_0900_AI_CI = 267, e.UTF8MB4_LT_0900_AI_CI = 268, e.UTF8MB4_SK_0900_AI_CI = 269, e.UTF8MB4_ES_TRAD_0900_AI_CI = 270, e.UTF8MB4_LA_0900_AI_CI = 271, e.UTF8MB4_EO_0900_AI_CI = 273, e.UTF8MB4_HU_0900_AI_CI = 274, e.UTF8MB4_HR_0900_AI_CI = 275, e.UTF8MB4_VI_0900_AI_CI = 277, e.UTF8MB4_0900_AS_CS = 278, e.UTF8MB4_DE_PB_0900_AS_CS = 279, e.UTF8MB4_IS_0900_AS_CS = 280, e.UTF8MB4_LV_0900_AS_CS = 281, e.UTF8MB4_RO_0900_AS_CS = 282, e.UTF8MB4_SL_0900_AS_CS = 283, e.UTF8MB4_PL_0900_AS_CS = 284, e.UTF8MB4_ET_0900_AS_CS = 285, e.UTF8MB4_ES_0900_AS_CS = 286, e.UTF8MB4_SV_0900_AS_CS = 287, e.UTF8MB4_TR_0900_AS_CS = 288, e.UTF8MB4_CS_0900_AS_CS = 289, e.UTF8MB4_DA_0900_AS_CS = 290, e.UTF8MB4_LT_0900_AS_CS = 291, e.UTF8MB4_SK_0900_AS_CS = 292, e.UTF8MB4_ES_TRAD_0900_AS_CS = 293, e.UTF8MB4_LA_0900_AS_CS = 294, e.UTF8MB4_EO_0900_AS_CS = 296, e.UTF8MB4_HU_0900_AS_CS = 297, e.UTF8MB4_HR_0900_AS_CS = 298, e.UTF8MB4_VI_0900_AS_CS = 300, e.UTF8MB4_JA_0900_AS_CS = 303, e.UTF8MB4_JA_0900_AS_CS_KS = 304, e.UTF8MB4_0900_AS_CI = 305, e.UTF8MB4_RU_0900_AI_CI = 306, e.UTF8MB4_RU_0900_AS_CS = 307, e.UTF8MB4_ZH_0900_AS_CS = 308, e.UTF8MB4_0900_BIN = 309, e.BIG5 = e.BIG5_CHINESE_CI, e.DEC8 = e.DEC8_SWEDISH_CI, e.CP850 = e.CP850_GENERAL_CI, e.HP8 = e.HP8_ENGLISH_CI, e.KOI8R = e.KOI8R_GENERAL_CI, e.LATIN1 = e.LATIN1_SWEDISH_CI, e.LATIN2 = e.LATIN2_GENERAL_CI, e.SWE7 = e.SWE7_SWEDISH_CI, e.ASCII = e.ASCII_GENERAL_CI, e.UJIS = e.UJIS_JAPANESE_CI, e.SJIS = e.SJIS_JAPANESE_CI, e.HEBREW = e.HEBREW_GENERAL_CI, e.TIS620 = e.TIS620_THAI_CI, e.EUCKR = e.EUCKR_KOREAN_CI, e.KOI8U = e.KOI8U_GENERAL_CI, e.GB2312 = e.GB2312_CHINESE_CI, e.GREEK = e.GREEK_GENERAL_CI, e.CP1250 = e.CP1250_GENERAL_CI, e.GBK = e.GBK_CHINESE_CI, e.LATIN5 = e.LATIN5_TURKISH_CI, e.ARMSCII8 = e.ARMSCII8_GENERAL_CI, e.UTF8 = e.UTF8_GENERAL_CI, e.UCS2 = e.UCS2_GENERAL_CI, e.CP866 = e.CP866_GENERAL_CI, e.KEYBCS2 = e.KEYBCS2_GENERAL_CI, e.MACCE = e.MACCE_GENERAL_CI, e.MACROMAN = e.MACROMAN_GENERAL_CI, e.CP852 = e.CP852_GENERAL_CI, e.LATIN7 = e.LATIN7_GENERAL_CI, e.UTF8MB4 = e.UTF8MB4_GENERAL_CI, e.CP1251 = e.CP1251_GENERAL_CI, e.UTF16 = e.UTF16_GENERAL_CI, e.UTF16LE = e.UTF16LE_GENERAL_CI, e.CP1256 = e.CP1256_GENERAL_CI, e.CP1257 = e.CP1257_GENERAL_CI, e.UTF32 = e.UTF32_GENERAL_CI, e.CP932 = e.CP932_JAPANESE_CI, e.EUCJPMS = e.EUCJPMS_JAPANESE_CI, e.GB18030 = e.GB18030_CHINESE_CI, e.GEOSTD8 = e.GEOSTD8_GENERAL_CI;
   })(b_)), b_;
 }
-function bd(e) {
+function Qd(e) {
   throw new Error('Could not dynamically require "' + e + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
 }
-var nt = {}, rl;
+var nt = {}, El;
 function $r() {
-  if (rl) return nt;
-  rl = 1;
+  if (El) return nt;
+  El = 1;
   function e(n) {
     return JSON.stringify({
       [n]: 1
@@ -18604,7 +18604,7 @@ function $r() {
   nt.srcEscape = e;
   let c, o = !1;
   try {
-    c = bd("cardinal").highlight;
+    c = Qd("cardinal").highlight;
   } catch {
     c = (n) => (o || (console.log("For nicer debug output consider install cardinal@^2.0.0"), o = !0), n);
   }
@@ -18637,20 +18637,20 @@ ${n}:
   };
   return nt.fieldEscape = E, nt;
 }
-var v_, il;
-function vd() {
-  if (il) return v_;
-  il = 1;
+var v_, al;
+function Vd() {
+  if (al) return v_;
+  al = 1;
   function e(c) {
     return /^[$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc][$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc0-9\u0300-\u036f\u0483-\u0487\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7\u0610-\u061a\u064b-\u0669\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u06f0-\u06f9\u0711\u0730-\u074a\u07a6-\u07b0\u07c0-\u07c9\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0827\u0829-\u082d\u0859-\u085b\u08e4-\u08fe\u0900-\u0903\u093a-\u093c\u093e-\u094f\u0951-\u0957\u0962\u0963\u0966-\u096f\u0981-\u0983\u09bc\u09be-\u09c4\u09c7\u09c8\u09cb-\u09cd\u09d7\u09e2\u09e3\u09e6-\u09ef\u0a01-\u0a03\u0a3c\u0a3e-\u0a42\u0a47\u0a48\u0a4b-\u0a4d\u0a51\u0a66-\u0a71\u0a75\u0a81-\u0a83\u0abc\u0abe-\u0ac5\u0ac7-\u0ac9\u0acb-\u0acd\u0ae2\u0ae3\u0ae6-\u0aef\u0b01-\u0b03\u0b3c\u0b3e-\u0b44\u0b47\u0b48\u0b4b-\u0b4d\u0b56\u0b57\u0b62\u0b63\u0b66-\u0b6f\u0b82\u0bbe-\u0bc2\u0bc6-\u0bc8\u0bca-\u0bcd\u0bd7\u0be6-\u0bef\u0c01-\u0c03\u0c3e-\u0c44\u0c46-\u0c48\u0c4a-\u0c4d\u0c55\u0c56\u0c62\u0c63\u0c66-\u0c6f\u0c82\u0c83\u0cbc\u0cbe-\u0cc4\u0cc6-\u0cc8\u0cca-\u0ccd\u0cd5\u0cd6\u0ce2\u0ce3\u0ce6-\u0cef\u0d02\u0d03\u0d3e-\u0d44\u0d46-\u0d48\u0d4a-\u0d4d\u0d57\u0d62\u0d63\u0d66-\u0d6f\u0d82\u0d83\u0dca\u0dcf-\u0dd4\u0dd6\u0dd8-\u0ddf\u0df2\u0df3\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\u0e50-\u0e59\u0eb1\u0eb4-\u0eb9\u0ebb\u0ebc\u0ec8-\u0ecd\u0ed0-\u0ed9\u0f18\u0f19\u0f20-\u0f29\u0f35\u0f37\u0f39\u0f3e\u0f3f\u0f71-\u0f84\u0f86\u0f87\u0f8d-\u0f97\u0f99-\u0fbc\u0fc6\u102b-\u103e\u1040-\u1049\u1056-\u1059\u105e-\u1060\u1062-\u1064\u1067-\u106d\u1071-\u1074\u1082-\u108d\u108f-\u109d\u135d-\u135f\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17b4-\u17d3\u17dd\u17e0-\u17e9\u180b-\u180d\u1810-\u1819\u18a9\u1920-\u192b\u1930-\u193b\u1946-\u194f\u19b0-\u19c0\u19c8\u19c9\u19d0-\u19d9\u1a17-\u1a1b\u1a55-\u1a5e\u1a60-\u1a7c\u1a7f-\u1a89\u1a90-\u1a99\u1b00-\u1b04\u1b34-\u1b44\u1b50-\u1b59\u1b6b-\u1b73\u1b80-\u1b82\u1ba1-\u1bad\u1bb0-\u1bb9\u1be6-\u1bf3\u1c24-\u1c37\u1c40-\u1c49\u1c50-\u1c59\u1cd0-\u1cd2\u1cd4-\u1ce8\u1ced\u1cf2-\u1cf4\u1dc0-\u1de6\u1dfc-\u1dff\u200c\u200d\u203f\u2040\u2054\u20d0-\u20dc\u20e1\u20e5-\u20f0\u2cef-\u2cf1\u2d7f\u2de0-\u2dff\u302a-\u302f\u3099\u309a\ua620-\ua629\ua66f\ua674-\ua67d\ua69f\ua6f0\ua6f1\ua802\ua806\ua80b\ua823-\ua827\ua880\ua881\ua8b4-\ua8c4\ua8d0-\ua8d9\ua8e0-\ua8f1\ua900-\ua909\ua926-\ua92d\ua947-\ua953\ua980-\ua983\ua9b3-\ua9c0\ua9d0-\ua9d9\uaa29-\uaa36\uaa43\uaa4c\uaa4d\uaa50-\uaa59\uaa7b\uaab0\uaab2-\uaab4\uaab7\uaab8\uaabe\uaabf\uaac1\uaaeb-\uaaef\uaaf5\uaaf6\uabe3-\uabea\uabec\uabed\uabf0-\uabf9\ufb1e\ufe00-\ufe0f\ufe20-\ufe26\ufe33\ufe34\ufe4d-\ufe4f\uff10-\uff19\uff3f]*$/.test(c);
   }
   return v_ = e, v_;
 }
-var Q_, El;
-function aT() {
-  if (El) return Q_;
-  El = 1;
-  for (var e = ht, c = vd(), o = /[\{\[]/, i = /[\}\]]/, s = [
+var y_, _l;
+function sT() {
+  if (_l) return y_;
+  _l = 1;
+  for (var e = ht, c = Vd(), o = /[\{\[]/, i = /[\}\]]/, s = [
     "do",
     "if",
     "in",
@@ -18765,13 +18765,13 @@ function aT() {
       return Function.apply(null, f.concat(T)).apply(null, d);
     }, arguments.length && I.apply(null, arguments), I;
   };
-  return t.formats = r, Q_ = t, Q_;
+  return t.formats = r, y_ = t, y_;
 }
-var y_, al;
-function Qd() {
-  if (al) return y_;
-  al = 1;
-  const e = Pn(), c = St(), o = $r(), i = aT(), s = Ys(), u = [];
+var Q_, sl;
+function Yd() {
+  if (sl) return Q_;
+  sl = 1;
+  const e = Pn(), c = St(), o = $r(), i = sT(), s = Hs(), u = [];
   for (const t in e)
     u[e[t]] = t;
   function E(t, a, _, A, R) {
@@ -18867,12 +18867,12 @@ function Qd() {
   function r(t, a, _) {
     return s.getParser("text", t, a, _, n);
   }
-  return y_ = r, y_;
+  return Q_ = r, Q_;
 }
-var V_, _l;
-function yd() {
-  if (_l) return V_;
-  _l = 1;
+var V_, ul;
+function Hd() {
+  if (ul) return V_;
+  ul = 1;
   const e = Pn(), c = St(), o = $r(), i = [];
   for (const n in e)
     i[e[n]] = n;
@@ -18961,11 +18961,11 @@ function yd() {
   }
   return V_ = E, V_;
 }
-var Y_, sl;
-function _T() {
-  if (sl) return Y_;
-  sl = 1;
-  const e = Hr, c = Cs, o = rt.Readable, i = Nn(), s = Tn(), u = Qd(), E = yd(), n = iT(), r = new s.Packet(0, Buffer.allocUnsafe(4), 0, 4);
+var Y_, ol;
+function uT() {
+  if (ol) return Y_;
+  ol = 1;
+  const e = Hr, c = Ds, o = rt.Readable, i = fn(), s = Nn(), u = Yd(), E = Hd(), n = aT(), r = new s.Packet(0, Buffer.allocUnsafe(4), 0, 4);
   class t extends i {
     constructor(_, A) {
       super(), this.sql = _.sql, this.values = _.values, this._queryOptions = _, this.namedPlaceholders = _.namedPlaceholders || !1, this.onResult = A, this.timeout = _.timeout, this.queryTimeout = null, this._fieldCount = 0, this._rowParser = null, this._fields = [], this._rows = [], this._receivedFieldsCount = 0, this._resultIndex = 0, this._localStream = null, this._unpipeStream = function() {
@@ -19113,11 +19113,11 @@ function _T() {
   }
   return t.prototype.catch = t.prototype.then, Y_ = t, Y_;
 }
-var H_, ul;
-function sT() {
-  if (ul) return H_;
-  ul = 1;
-  const e = Nn(), c = Tn();
+var H_, cl;
+function oT() {
+  if (cl) return H_;
+  cl = 1;
+  const e = fn(), c = Nn();
   class o extends e {
     constructor(s) {
       super(), this.id = s;
@@ -19128,11 +19128,11 @@ function sT() {
   }
   return H_ = o, H_;
 }
-var W_, ol;
-function Vd() {
-  if (ol) return W_;
-  ol = 1;
-  const e = Hs(), c = St(), o = Pn(), i = $r(), s = aT(), u = Ys(), E = [];
+var W_, Al;
+function Wd() {
+  if (Al) return W_;
+  Al = 1;
+  const e = Ws(), c = St(), o = Pn(), i = $r(), s = sT(), u = Hs(), E = [];
   for (const a in o)
     E[o[a]] = a;
   function n(a, _, A, R) {
@@ -19236,11 +19236,11 @@ function Vd() {
   }
   return W_ = t, W_;
 }
-var p_, cl;
-function Yd() {
-  if (cl) return p_;
-  cl = 1;
-  const e = Hs(), c = St(), o = Pn(), i = $r(), s = [];
+var p_, Rl;
+function pd() {
+  if (Rl) return p_;
+  Rl = 1;
+  const e = Ws(), c = St(), o = Pn(), i = $r(), s = [];
   for (const E in o)
     s[o[E]] = E;
   function u(E, n, r) {
@@ -19371,11 +19371,11 @@ function Yd() {
   }
   return p_ = u, p_;
 }
-var k_, Al;
-function uT() {
-  if (Al) return k_;
-  Al = 1;
-  const e = Nn(), c = _T(), o = Tn(), i = Vd(), s = Yd();
+var k_, ll;
+function cT() {
+  if (ll) return k_;
+  ll = 1;
+  const e = fn(), c = uT(), o = Nn(), i = Wd(), s = pd();
   class u extends e {
     constructor(n, r) {
       super(), this.statement = n.statement, this.sql = n.sql, this.values = n.values, this.onResult = r, this.parameters = n.values, this.insertId = 0, this.timeout = n.timeout, this.queryTimeout = null, this._rows = [], this._fields = [], this._result = [], this._fieldCount = 0, this._rowParser = null, this._executeOptions = n, this._resultIndex = 0, this._localStream = null, this._unpipeStream = function() {
@@ -19416,11 +19416,11 @@ function uT() {
   }
   return u.prototype.done = c.prototype.done, u.prototype.doneInsert = c.prototype.doneInsert, u.prototype.resultsetHeader = c.prototype.resultsetHeader, u.prototype._findOrCreateReadStream = c.prototype._findOrCreateReadStream, u.prototype._streamLocalInfile = c.prototype._streamLocalInfile, u.prototype._setTimeout = c.prototype._setTimeout, u.prototype._handleTimeoutError = c.prototype._handleTimeoutError, u.prototype.row = c.prototype.row, u.prototype.stream = c.prototype.stream, k_ = u, k_;
 }
-var X_, Rl;
-function Hd() {
-  if (Rl) return X_;
-  Rl = 1;
-  const e = Tn(), c = Nn(), o = sT(), i = uT();
+var X_, Il;
+function kd() {
+  if (Il) return X_;
+  Il = 1;
+  const e = Nn(), c = fn(), o = oT(), i = cT();
   class s {
     constructor(n, r, t, a, _) {
       this.query = n, this.id = r, this.columns = t, this.parameters = a, this.rowParser = null, this._connection = _;
@@ -19486,11 +19486,11 @@ function Hd() {
   }
   return X_ = u, X_;
 }
-var j_, ll;
-function Wd() {
-  if (ll) return j_;
-  ll = 1;
-  const e = Nn(), c = Dn(), o = Ye();
+var j_, Tl;
+function Xd() {
+  if (Tl) return j_;
+  Tl = 1;
+  const e = fn(), c = Dn(), o = Ye();
   class i extends e {
     constructor(u) {
       super(), this.onResult = u;
@@ -19510,11 +19510,11 @@ function Wd() {
   }
   return j_ = i, j_;
 }
-var q_, Il;
-function pd() {
-  if (Il) return q_;
-  Il = 1;
-  const e = Nn(), c = Tn();
+var q_, Nl;
+function jd() {
+  if (Nl) return q_;
+  Nl = 1;
+  const e = fn(), c = Nn();
   class o extends e {
     constructor(s, u) {
       super(), this.onResult = u, this.opts = s;
@@ -19529,10 +19529,10 @@ function pd() {
   }
   return q_ = o, q_;
 }
-var K_, Tl;
-function kd() {
-  if (Tl) return K_;
-  Tl = 1;
+var K_, fl;
+function qd() {
+  if (fl) return K_;
+  fl = 1;
   const e = {
     FLAGS2: 0,
     SQL_MODE: 1,
@@ -19610,11 +19610,11 @@ function kd() {
     return i;
   }, K_;
 }
-var z_, Nl;
-function Xd() {
-  if (Nl) return z_;
-  Nl = 1;
-  const e = Nn(), c = Tn(), o = [];
+var z_, hl;
+function Kd() {
+  if (hl) return z_;
+  hl = 1;
+  const e = fn(), c = Nn(), o = [];
   class i {
     constructor(a) {
       this.timestamp = a.readInt32(), this.eventType = a.readInt8(), this.serverId = a.readInt32(), this.eventSize = a.readInt32(), this.logPos = a.readInt32(), this.flags = a.readInt16();
@@ -19651,7 +19651,7 @@ function Xd() {
   }
   class n {
     constructor(a) {
-      const _ = kd();
+      const _ = qd();
       this.slaveProxyId = a.readInt32(), this.executionTime = a.readInt32();
       const A = a.readInt8();
       this.errorCode = a.readInt16();
@@ -19666,11 +19666,11 @@ function Xd() {
   }
   return o[2] = n, o[4] = u, o[15] = E, o[16] = r, z_ = s, z_;
 }
-var J_, fl;
-function jd() {
-  if (fl) return J_;
-  fl = 1;
-  const e = Nn(), c = Tn(), o = kn(), i = ET(), s = Sn();
+var J_, dl;
+function zd() {
+  if (dl) return J_;
+  dl = 1;
+  const e = fn(), c = Nn(), o = kn(), i = _T(), s = Sn();
   class u extends e {
     constructor(n, r) {
       super(), this.onResult = r, this.user = n.user, this.password = n.password, this.password1 = n.password, this.password2 = n.password2, this.password3 = n.password3, this.database = n.database, this.passwordSha1 = n.passwordSha1, this.charsetNumber = n.charsetNumber, this.currentConfig = n.currentConfig, this.authenticationFactor = 0;
@@ -19691,11 +19691,11 @@ function jd() {
   }
   return u.prototype.handshakeResult = i.prototype.handshakeResult, u.prototype.calculateNativePasswordAuthToken = i.prototype.calculateNativePasswordAuthToken, J_ = u, J_;
 }
-var Z_, hl;
-function qd() {
-  if (hl) return Z_;
-  hl = 1;
-  const e = Nn(), c = Dn(), o = Ye();
+var Z_, Ol;
+function Jd() {
+  if (Ol) return Z_;
+  Ol = 1;
+  const e = fn(), c = Dn(), o = Ye();
   class i extends e {
     constructor(u) {
       super(), this.onResult = u;
@@ -19713,11 +19713,11 @@ function qd() {
   }
   return Z_ = i, Z_;
 }
-var x_, dl;
-function Kd() {
-  if (dl) return x_;
-  dl = 1;
-  const e = ET(), c = Gd(), o = _T(), i = Hd(), s = sT(), u = uT(), E = Wd(), n = pd(), r = Xd(), t = jd(), a = qd();
+var x_, Cl;
+function Zd() {
+  if (Cl) return x_;
+  Cl = 1;
+  const e = _T(), c = yd(), o = uT(), i = kd(), s = oT(), u = cT(), E = Xd(), n = jd(), r = Kd(), t = zd(), a = Jd();
   return x_ = {
     ClientHandshake: e,
     ServerHandshake: c,
@@ -19732,12 +19732,12 @@ function Kd() {
     Quit: a
   }, x_;
 }
-const zd = "3.16.3", Jd = {
-  version: zd
+const xd = "3.16.3", $d = {
+  version: xd
 };
-var $_ = {}, Tt = { exports: {} }, er = {}, Ol;
-function Zd() {
-  return Ol || (Ol = 1, Object.defineProperty(er, "__esModule", { value: !0 }), er.defaults = void 0, er.defaults = [
+var $_ = {}, Tt = { exports: {} }, er = {}, Dl;
+function eO() {
+  return Dl || (Dl = 1, Object.defineProperty(er, "__esModule", { value: !0 }), er.defaults = void 0, er.defaults = [
     `-----BEGIN CERTIFICATE-----
 MIIEEjCCAvqgAwIBAgIJAM2ZN/+nPi27MA0GCSqGSIb3DQEBCwUAMIGVMQswCQYD
 VQQGEwJVUzEQMA4GA1UEBwwHU2VhdHRsZTETMBEGA1UECAwKV2FzaGluZ3RvbjEi
@@ -22731,9 +22731,9 @@ rM2p0kk=
 `
   ]), er;
 }
-var nr = {}, Cl;
-function xd() {
-  return Cl || (Cl = 1, Object.defineProperty(nr, "__esModule", { value: !0 }), nr.proxies = void 0, nr.proxies = [
+var nr = {}, Sl;
+function nO() {
+  return Sl || (Sl = 1, Object.defineProperty(nr, "__esModule", { value: !0 }), nr.proxies = void 0, nr.proxies = [
     `-----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
 ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
@@ -22841,31 +22841,31 @@ sSi6
 `
   ]), nr;
 }
-var $d = Tt.exports, Dl;
-function eO() {
-  if (Dl) return Tt.exports;
-  Dl = 1, Object.defineProperty($d, "__esModule", { value: !0 });
-  const e = Zd(), c = xd(), o = {
+var tO = Tt.exports, gl;
+function rO() {
+  if (gl) return Tt.exports;
+  gl = 1, Object.defineProperty(tO, "__esModule", { value: !0 });
+  const e = eO(), c = nO(), o = {
     ca: c.proxies
   }, i = {
     ca: [...e.defaults, ...c.proxies]
   };
   return Tt.exports = i, Tt.exports.proxyBundle = o, Tt.exports.default = i, Tt.exports;
 }
-var Sl;
-function nO() {
-  return Sl || (Sl = 1, (function(e) {
-    const c = eO();
+var Ml;
+function iO() {
+  return Ml || (Ml = 1, (function(e) {
+    const c = rO();
     e["Amazon RDS"] = {
       ca: c.ca
     };
   })($_)), $_;
 }
-var es, gl;
-function Ws() {
-  if (gl) return es;
-  gl = 1;
-  const { URL: e } = Fn, c = kn(), o = St(), { version: i } = Jd;
+var es, Bl;
+function ps() {
+  if (Bl) return es;
+  Bl = 1;
+  const { URL: e } = Fn, c = kn(), o = St(), { version: i } = $d;
   let s = null;
   const u = {
     authPlugins: 1,
@@ -22996,7 +22996,7 @@ function Ws() {
       return t;
     }
     static getSSLProfile(r) {
-      s || (s = nO());
+      s || (s = iO());
       const t = s[r];
       if (t === void 0)
         throw new TypeError(`Unknown SSL profile '${r}'`);
@@ -23021,10 +23021,10 @@ function Ws() {
   }
   return es = E, es;
 }
-var br = { exports: {} }, Ml;
-function tO() {
-  if (Ml) return br.exports;
-  Ml = 1;
+var br = { exports: {} }, Ll;
+function EO() {
+  if (Ll) return br.exports;
+  Ll = 1;
   const e = /(?:\?)|(?::(\d+|(?:[a-zA-Z][a-zA-Z0-9_]*)))/g, c = 34, o = 39, i = 92;
   function s(n) {
     let r = e.exec(n), t = 0, a = 0, _;
@@ -23106,11 +23106,11 @@ function tO() {
   }
   return br.exports = u, br.exports.toNumbered = E, br.exports;
 }
-var ns, Bl;
+var ns, Ul;
 function ei() {
-  if (Bl) return ns;
-  Bl = 1;
-  const e = mN, c = uI, o = Cs, i = on.EventEmitter, s = rt.Readable, u = eT(), E = Vs(), { createLRU: n } = Zr(), r = rT(), t = Tn(), a = Kd(), _ = Ws(), A = Sn();
+  if (Ul) return ns;
+  Ul = 1;
+  const e = GN, c = cI, o = Ds, i = on.EventEmitter, s = rt.Readable, u = tT(), E = Ys(), { createLRU: n } = Zr(), r = ET(), t = Nn(), a = Zd(), _ = ps(), A = Sn();
   let R = 0, N = null;
   class I extends i {
     constructor(T) {
@@ -23356,7 +23356,7 @@ function ei() {
       if (this.config.namedPlaceholders || T.namedPlaceholders) {
         if (Array.isArray(T.values))
           return;
-        N === null && (N = tO()()), f = N(T.sql, T.values), T.sql = f[0], T.values = f[1];
+        N === null && (N = EO()()), f = N(T.sql, T.values), T.sql = f[0], T.values = f[1];
       }
     }
     query(T, f, d) {
@@ -23582,10 +23582,10 @@ function ei() {
   }
   return ns = I, ns;
 }
-var ts, Ll;
-function oT() {
-  if (Ll) return ts;
-  Ll = 1;
+var ts, wl;
+function AT() {
+  if (wl) return ts;
+  wl = 1;
   const e = ei();
   class c extends e {
     constructor(i, s) {
@@ -23620,10 +23620,10 @@ function oT() {
   }
   return c.statementKey = e.statementKey, ts = c, c.prototype._realEnd = e.prototype.end, ts;
 }
-var rs, Ul;
+var rs, ml;
 function ur() {
-  if (Ul) return rs;
-  Ul = 1;
+  if (ml) return rs;
+  ml = 1;
   function e(c, o, i) {
     return function(s, u, E) {
       s ? (i.message = s.message, i.code = s.code, i.errno = s.errno, i.sql = s.sql, i.sqlState = s.sqlState, i.sqlMessage = s.sqlMessage, o(i)) : c([u, E]);
@@ -23631,10 +23631,10 @@ function ur() {
   }
   return rs = e, rs;
 }
-var is, wl;
-function rO() {
-  if (wl) return is;
-  wl = 1;
+var is, Fl;
+function aO() {
+  if (Fl) return is;
+  Fl = 1;
   const e = ur();
   class c {
     constructor(i, s) {
@@ -23655,10 +23655,10 @@ function rO() {
   }
   return is = c, is;
 }
-var Es, ml;
-function ps() {
-  if (ml) return Es;
-  ml = 1;
+var Es, Pl;
+function ks() {
+  if (Pl) return Es;
+  Pl = 1;
   function e(c, o, i) {
     const s = {};
     o.on("newListener", (u) => {
@@ -23675,11 +23675,11 @@ function ps() {
   }
   return Es = e, Es;
 }
-var as, Fl;
-function ks() {
-  if (Fl) return as;
-  Fl = 1;
-  const e = on.EventEmitter, c = rO(), o = ur(), i = ps(), s = ei();
+var as, Gl;
+function Xs() {
+  if (Gl) return as;
+  Gl = 1;
+  const e = on.EventEmitter, c = aO(), o = ur(), i = ks(), s = ei();
   class u extends e {
     constructor(n, r) {
       super(), this.connection = n, this.Promise = r || Promise, i(n, this, [
@@ -23814,11 +23814,11 @@ function ks() {
     "unprepare"
   ]), as = u, as;
 }
-var _s, Pl;
+var _s, bl;
 function ni() {
-  if (Pl) return _s;
-  Pl = 1;
-  const e = ks(), c = oT();
+  if (bl) return _s;
+  bl = 1;
+  const e = Xs(), c = AT();
   class o extends e {
     constructor(s, u) {
       super(s, u);
@@ -23832,11 +23832,11 @@ function ni() {
   }
   return _s = o, _s;
 }
-var ss, Gl;
-function iO() {
-  if (Gl) return ss;
-  Gl = 1;
-  const e = oT();
+var ss, vl;
+function _O() {
+  if (vl) return ss;
+  vl = 1;
+  const e = AT();
   class c extends e {
     promise(i) {
       const s = ni();
@@ -23845,11 +23845,11 @@ function iO() {
   }
   return ss = c, ss;
 }
-var us, bl;
-function cT() {
-  if (bl) return us;
-  bl = 1;
-  const e = Hr, c = Vs(), o = on.EventEmitter, i = iO(), s = eT(), u = ei();
+var us, yl;
+function RT() {
+  if (yl) return us;
+  yl = 1;
+  const e = Hr, c = Ys(), o = on.EventEmitter, i = _O(), s = tT(), u = ei();
   function E(r, t) {
     const a = r.length;
     for (let _ = 0; _ < a; _++)
@@ -23961,11 +23961,11 @@ function cT() {
   }
   return us = n, us;
 }
-var os, vl;
-function AT() {
-  if (vl) return os;
-  vl = 1;
-  const e = on.EventEmitter, c = ur(), o = ni(), i = ps(), s = cT();
+var os, Ql;
+function lT() {
+  if (Ql) return os;
+  Ql = 1;
+  const e = on.EventEmitter, c = ur(), o = ni(), i = ks(), s = RT();
   class u extends e {
     constructor(n, r) {
       super(), this.pool = n, this.Promise = r || Promise, i(n, this, ["acquire", "connection", "enqueue", "release"]);
@@ -24028,24 +24028,24 @@ function AT() {
     "format"
   ]), os = u, os;
 }
-var cs, Ql;
-function RT() {
-  if (Ql) return cs;
-  Ql = 1;
-  const e = cT();
+var cs, Vl;
+function IT() {
+  if (Vl) return cs;
+  Vl = 1;
+  const e = RT();
   class c extends e {
     promise(i) {
-      const s = AT();
+      const s = lT();
       return new s(this, i);
     }
   }
   return cs = c, cs;
 }
-var As, yl;
-function lT() {
-  if (yl) return As;
-  yl = 1;
-  const e = Ws();
+var As, Yl;
+function TT() {
+  if (Yl) return As;
+  Yl = 1;
+  const e = ps();
   class c {
     constructor(i) {
       typeof i == "string" && (i = e.parseUrl(i)), this.connectionConfig = new e(i), this.waitForConnections = i.waitForConnections === void 0 ? !0 : !!i.waitForConnections, this.connectionLimit = isNaN(i.connectionLimit) ? 10 : Number(i.connectionLimit), this.maxIdle = isNaN(i.maxIdle) ? this.connectionLimit : Number(i.maxIdle), this.idleTimeout = isNaN(i.idleTimeout) ? 6e4 : Number(i.idleTimeout), this.queueLimit = isNaN(i.queueLimit) ? 0 : Number(i.queueLimit);
@@ -24053,24 +24053,24 @@ function lT() {
   }
   return As = c, As;
 }
-var Rs, Vl;
-function IT() {
-  if (Vl) return Rs;
-  Vl = 1;
+var Rs, Hl;
+function NT() {
+  if (Hl) return Rs;
+  Hl = 1;
   const e = ei();
   class c extends e {
     promise(i) {
-      const s = ks();
+      const s = Xs();
       return new s(this, i);
     }
   }
   return Rs = c, Rs;
 }
-var ls, Yl;
-function TT() {
-  if (Yl) return ls;
-  Yl = 1;
-  const e = Hr, c = RT(), o = lT(), i = IT(), s = on.EventEmitter, u = {
+var ls, Wl;
+function fT() {
+  if (Wl) return ls;
+  Wl = 1;
+  const e = Hr, c = IT(), o = TT(), i = NT(), s = on.EventEmitter, u = {
     RR() {
       let a = 0;
       return (_) => _[a++ % _.length];
@@ -24242,40 +24242,40 @@ function TT() {
   }
   return ls = t, ls;
 }
-var Is, Hl;
-function EO() {
-  if (Hl) return Is;
-  Hl = 1;
-  const e = IT(), c = Ws();
+var Is, pl;
+function sO() {
+  if (pl) return Is;
+  pl = 1;
+  const e = NT(), c = ps();
   function o(i) {
     return new e({ config: new c(i) });
   }
   return Is = o, Is;
 }
-var Ts, Wl;
-function aO() {
-  if (Wl) return Ts;
-  Wl = 1;
-  const e = RT(), c = lT();
+var Ts, kl;
+function uO() {
+  if (kl) return Ts;
+  kl = 1;
+  const e = IT(), c = TT();
   function o(i) {
     return new e({ config: new c(i) });
   }
   return Ts = o, Ts;
 }
-var Ns, pl;
-function _O() {
-  if (pl) return Ns;
-  pl = 1;
-  const e = TT();
+var Ns, Xl;
+function oO() {
+  if (Xl) return Ns;
+  Xl = 1;
+  const e = fT();
   function c(o) {
     return new e(o);
   }
   return Ns = c, Ns;
 }
-var fs, kl;
-function sO() {
-  if (kl) return fs;
-  kl = 1;
+var fs, jl;
+function cO() {
+  if (jl) return fs;
+  jl = 1;
   const e = ni(), c = ur();
   class o {
     constructor(s, u) {
@@ -24314,10 +24314,10 @@ function sO() {
   }
   return fs = o, fs;
 }
-var Xl;
-function uO() {
-  return Xl || (Xl = 1, (function(e) {
-    const c = Vs(), o = on.EventEmitter, i = Ys(), s = TT(), u = EO(), E = aO(), n = _O(), r = ks(), t = AT(), a = ur(), _ = ni(), A = ps(), R = sO();
+var ql;
+function AO() {
+  return ql || (ql = 1, (function(e) {
+    const c = Ys(), o = on.EventEmitter, i = Hs(), s = fT(), u = sO(), E = uO(), n = oO(), r = Xs(), t = lT(), a = ur(), _ = ni(), A = ks(), R = cO();
     function N(f) {
       const d = u(f), O = new Error(), C = f.Promise || Promise;
       if (!C)
@@ -24427,16 +24427,16 @@ function uO() {
     };
   })(Ga)), Ga;
 }
-var oO = uO();
-const cO = /* @__PURE__ */ cI(oO);
-let yr = null;
-function AO() {
+var RO = AO();
+const lO = /* @__PURE__ */ RI(RO);
+let Qr = null;
+function IO() {
   return !!(process.env.MYSQL_HOST && process.env.MYSQL_USER && process.env.MYSQL_DATABASE);
 }
-function RO() {
-  if (!yr) {
+function TO() {
+  if (!Qr) {
     const e = process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306, c = (process.env.MYSQL_SSL || "").toLowerCase(), o = c === "1" || c === "true" || c === "yes", i = (process.env.MYSQL_SSL_REJECT_UNAUTHORIZED || "").toLowerCase(), s = !(i === "0" || i === "false" || i === "no");
-    yr = cO.createPool({
+    Qr = lO.createPool({
       host: process.env.MYSQL_HOST,
       port: Number.isFinite(e) ? e : 3306,
       user: process.env.MYSQL_USER,
@@ -24450,16 +24450,16 @@ function RO() {
       dateStrings: !0
     });
   }
-  return yr;
+  return Qr;
 }
-function lO() {
-  yr = null;
+function NO() {
+  Qr = null;
 }
 async function ge(e) {
-  if (!AO())
+  if (!IO())
     return { ok: !1, error: new Error("MYSQL not configured") };
   try {
-    return { ok: !0, value: await e(RO()) };
+    return { ok: !0, value: await e(TO()) };
   } catch (c) {
     return console.warn("[MySQL] Error:", c), { ok: !1, error: c };
   }
@@ -24470,10 +24470,10 @@ function gt(e) {
     throw new Error("Formato de hora inválido");
   return `${String(c).padStart(2, "0")}:${String(o).padStart(2, "0")}`;
 }
-function NT(e) {
+function hT(e) {
   return (/* @__PURE__ */ new Date(`${e}T00:00:00`)).getDay() === 6;
 }
-async function IO() {
+async function fO() {
   console.log("[Service] Obteniendo horarios base activos...");
   const e = await ge(async (i) => {
     const [s] = await i.execute(`
@@ -24489,7 +24489,7 @@ async function IO() {
     ORDER BY hora
   `).all();
 }
-function TO(e) {
+function hO(e) {
   let o = Se().prepare(`
     SELECT h.hora
     FROM horarios_base h
@@ -24502,9 +24502,9 @@ function TO(e) {
       )
     ORDER BY h.hora
   `).all(e, e);
-  return NT(e) && (o = o.filter((i) => i.hora < "12:00")), o;
+  return hT(e) && (o = o.filter((i) => i.hora < "12:00")), o;
 }
-async function NO(e) {
+async function dO(e) {
   const c = new Date(e).toISOString().split("T")[0], o = await ge(async (i) => {
     const [s] = await i.execute(
       `
@@ -24525,11 +24525,11 @@ async function NO(e) {
   });
   if (o.ok) {
     let i = o.value;
-    return NT(e) && (i = i.filter((s) => s.hora < "12:00")), i;
+    return hT(e) && (i = i.filter((s) => s.hora < "12:00")), i;
   }
-  return TO(c);
+  return hO(c);
 }
-function jl(e) {
+function Kl(e) {
   console.log("[Service] Creando horario:", e);
   const c = Se(), o = gt(e);
   try {
@@ -24547,7 +24547,7 @@ function jl(e) {
     throw console.error("[Service] Error en crearHorario:", i), i;
   }
 }
-async function fO(e) {
+async function OO(e) {
   console.log("[Service] Creando horario:", e);
   const c = gt(e);
   if ((await ge(async (i) => {
@@ -24563,15 +24563,15 @@ async function fO(e) {
     );
   })).ok) {
     try {
-      jl(c);
+      Kl(c);
     } catch (i) {
       console.warn("[Service] Backup SQLite fallo en crearHorario:", i);
     }
     return;
   }
-  return jl(c);
+  return Kl(c);
 }
-function ql(e) {
+function zl(e) {
   console.log("[Service] Desactivando horario:", e);
   const c = Se();
   try {
@@ -24586,27 +24586,27 @@ function ql(e) {
     throw console.error("[Service] Error en desactivarHorario:", o), o;
   }
 }
-async function hO(e) {
+async function CO(e) {
   if (console.log("[Service] Desactivando horario:", e), (await ge(async (o) => {
     await o.execute("UPDATE horarios_base SET activo = 0 WHERE id = ?", [e]);
   })).ok) {
     try {
-      ql(e);
+      zl(e);
     } catch (o) {
       console.warn("[Service] Backup SQLite fallo en desactivarHorario:", o);
     }
     return;
   }
-  return ql(e);
+  return zl(e);
 }
-function dO() {
+function DO() {
   console.log("[Service] Obteniendo horarios inactivos");
   const c = Se().prepare(`
     SELECT id, hora FROM horarios_base WHERE activo = 0 ORDER BY hora
   `).all();
   return console.log("[Service] Horarios inactivos encontrados:", c.length), c;
 }
-async function OO() {
+async function SO() {
   console.log("[Service] Obteniendo horarios inactivos");
   const e = await ge(async (c) => {
     const [o] = await c.execute(
@@ -24614,9 +24614,9 @@ async function OO() {
     );
     return o;
   });
-  return e.ok ? e.value : dO();
+  return e.ok ? e.value : DO();
 }
-function Kl(e) {
+function Jl(e) {
   const c = Se();
   c.transaction(() => {
     c.prepare(`
@@ -24626,20 +24626,20 @@ function Kl(e) {
     `).run(e);
   })();
 }
-async function CO(e) {
+async function gO(e) {
   if ((await ge(async (o) => {
     await o.execute("UPDATE horarios_base SET activo = 1 WHERE id = ?", [e]);
   })).ok) {
     try {
-      Kl(e);
+      Jl(e);
     } catch (o) {
       console.warn("[Service] Backup SQLite fallo en activarHorario:", o);
     }
     return;
   }
-  return Kl(e);
+  return Jl(e);
 }
-function zl(e, c, o) {
+function Zl(e, c, o) {
   console.log("[Service] Bloqueando horario:", { fecha: e, hora: c, motivo: o });
   const i = Se(), s = new Date(e).toISOString().split("T")[0], u = gt(c);
   console.log("[Service] Fecha normalizada:", e, "->", s), console.log("[Service] Hora normalizada:", c, "->", u);
@@ -24661,7 +24661,7 @@ function zl(e, c, o) {
     throw console.error("[Service] Error en bloquearHorario:", E), E;
   }
 }
-async function DO(e, c, o) {
+async function MO(e, c, o) {
   console.log("[Service] Bloqueando horario:", { fecha: e, hora: c, motivo: o });
   const i = new Date(e).toISOString().split("T")[0], s = gt(c);
   if ((await ge(async (E) => {
@@ -24675,15 +24675,15 @@ async function DO(e, c, o) {
     );
   })).ok) {
     try {
-      zl(i, s, o);
+      Zl(i, s, o);
     } catch (E) {
       console.warn("[Service] Backup SQLite fallo en bloquearHorario:", E);
     }
     return;
   }
-  return zl(i, s, o);
+  return Zl(i, s, o);
 }
-function Jl(e, c) {
+function xl(e, c) {
   console.log("[Service] Desbloqueando horario:", { fecha: e, hora: c });
   const o = Se(), i = new Date(e).toISOString().split("T")[0], s = gt(c);
   console.log("[Service] Fecha normalizada:", e, "->", i), console.log("[Service] Hora normalizada:", c, "->", s);
@@ -24698,7 +24698,7 @@ function Jl(e, c) {
     throw console.error("[Service] Error en desbloquearHorario:", u), u;
   }
 }
-async function SO(e, c) {
+async function BO(e, c) {
   console.log("[Service] Desbloqueando horario:", { fecha: e, hora: c });
   const o = new Date(e).toISOString().split("T")[0], i = gt(c);
   if ((await ge(async (u) => {
@@ -24708,15 +24708,15 @@ async function SO(e, c) {
     );
   })).ok) {
     try {
-      Jl(o, i);
+      xl(o, i);
     } catch (u) {
       console.warn("[Service] Backup SQLite fallo en desbloquearHorario:", u);
     }
     return;
   }
-  return Jl(o, i);
+  return xl(o, i);
 }
-function gO(e) {
+function LO(e) {
   console.log("[Service] Obteniendo horarios bloqueados para:", e);
   const c = Se(), o = new Date(e).toISOString().split("T")[0];
   console.log("[Service] Fecha normalizada:", e, "->", o);
@@ -24729,7 +24729,7 @@ function gO(e) {
   const s = c.prepare("SELECT * FROM bloqueos_horarios ORDER BY fecha, hora").all();
   return console.log("[Service] TODOS los bloqueos en BD:", s), i;
 }
-async function MO(e) {
+async function UO(e) {
   console.log("[Service] Obteniendo horarios bloqueados para:", e);
   const c = new Date(e).toISOString().split("T")[0], o = await ge(async (i) => {
     const [s] = await i.execute(
@@ -24738,9 +24738,9 @@ async function MO(e) {
     );
     return s;
   });
-  return o.ok ? o.value : gO(c);
+  return o.ok ? o.value : LO(c);
 }
-function Zl(e) {
+function $l(e) {
   console.log("[Service] Borrando horario permanentemente:", e);
   const c = Se();
   try {
@@ -24758,7 +24758,7 @@ function Zl(e) {
     throw console.error("[Service] Error en borrarHorarioPermanente:", o), o;
   }
 }
-async function BO(e) {
+async function wO(e) {
   if (console.log("[Service] Borrando horario permanentemente:", e), (await ge(async (o) => {
     const [i] = await o.execute("SELECT * FROM horarios_base WHERE id = ?", [e]);
     if (!i[0])
@@ -24766,24 +24766,24 @@ async function BO(e) {
     await o.execute("DELETE FROM horarios_base WHERE id = ?", [e]);
   })).ok) {
     try {
-      Zl(e);
+      $l(e);
     } catch (o) {
       console.warn("[Service] Backup SQLite fallo en borrarHorarioPermanente:", o);
     }
     return;
   }
-  return Zl(e);
+  return $l(e);
 }
 let Vr = !1;
 const tt = [];
-let LO = 0;
+let mO = 0;
 async function He(e) {
   return new Promise((c, o) => {
-    const i = `op_${++LO}`, s = Date.now();
-    tt.push({ id: i, fn: e, resolve: c, reject: o, createdAt: s }), console.log(`[Lock] ${i} encolada. Cola: ${tt.length} operaciones. Locked: ${Vr}`), fT();
+    const i = `op_${++mO}`, s = Date.now();
+    tt.push({ id: i, fn: e, resolve: c, reject: o, createdAt: s }), console.log(`[Lock] ${i} encolada. Cola: ${tt.length} operaciones. Locked: ${Vr}`), dT();
   });
 }
-async function fT() {
+async function dT() {
   if (Vr) {
     console.log("[Lock] Sistema bloqueado, esperando liberación...");
     return;
@@ -24806,55 +24806,65 @@ async function fT() {
   } catch (i) {
     console.error(`[Lock] ${e.id} ERROR:`, i.message || i), e.reject(i instanceof Error ? i : new Error(String(i)));
   } finally {
-    Vr = !1, console.log(`[Lock] ${e.id} liberada. Quedan: ${tt.length}`), tt.length > 0 && (console.log("[Lock] Procesando siguiente..."), setImmediate(() => fT()));
+    Vr = !1, console.log(`[Lock] ${e.id} liberada. Quedan: ${tt.length}`), tt.length > 0 && (console.log("[Lock] Procesando siguiente..."), setImmediate(() => dT()));
   }
 }
-function UO() {
+function FO() {
   Ge("horarios:base", async () => {
     console.log("[IPC] Obteniendo horarios base...");
-    const e = await He(() => IO());
+    const e = await He(() => fO());
     return console.log("[IPC] Horarios base obtenidos:", e), e;
   }), Ge(
     "horarios:disponibles",
-    (e, c) => NO(c)
+    (e, c) => dO(c)
   ), Ge(
     "horarios:crear",
-    async (e, c) => await He(() => fO(c))
+    async (e, c) => await He(() => OO(c))
   ), Ge("horarios:desactivar", async (e, c) => {
     console.log("[IPC] Desactivando horario:", c);
-    const o = await He(() => hO(c));
+    const o = await He(() => CO(c));
     return console.log("[IPC] Horario desactivado exitosamente"), o;
   }), Ge("horarios:activar", async (e, c) => {
     console.log("[IPC] Activando horario:", c);
-    const o = await He(() => CO(c));
+    const o = await He(() => gO(c));
     return console.log("[IPC] Horario activado exitosamente"), o;
   }), Ge("horarios:inactivos", async () => {
     console.log("[IPC] Obteniendo horarios inactivos...");
-    const e = await He(() => OO());
+    const e = await He(() => SO());
     return console.log("[IPC] Horarios inactivos obtenidos:", e), e;
   }), Ge(
     "horarios:bloquear",
     async (e, c) => await He(
-      () => DO(c.fecha, c.hora, c.motivo)
+      () => MO(c.fecha, c.hora, c.motivo)
     )
   ), Ge("horarios:desbloquear", async (e, c) => {
     console.log("[IPC] Desbloqueando horario:", c);
     const o = await He(
-      () => SO(c.fecha, c.hora)
+      () => BO(c.fecha, c.hora)
     );
     return console.log("[IPC] Horario desbloqueado exitosamente"), o;
   }), Ge("horarios:bloqueados", async (e, c) => {
     console.log("[IPC] Obteniendo horarios bloqueados para:", c);
-    const o = await He(() => MO(c));
+    const o = await He(() => UO(c));
     return console.log("[IPC] Horarios bloqueados obtenidos:", o), o;
   }), Ge("horarios:borrar", async (e, c) => {
     console.log("[IPC] Borrando horario permanentemente:", c);
-    const o = await He(() => BO(c));
+    const o = await He(() => wO(c));
     return console.log("[IPC] Horario eliminado exitosamente"), o;
   });
 }
-const xl = 3, $l = 100;
-function wO(e) {
+let hs = {
+  soundEnabled: !0,
+  theme: "dark"
+};
+function PO(e) {
+  hs = { ...hs, ...e };
+}
+function GO() {
+  return hs;
+}
+const eI = 3, nI = 100;
+function bO(e) {
   const c = e.tipo_turno;
   if (c === "Garantía") {
     if (!e.garantia_tipo)
@@ -24876,21 +24886,21 @@ function wO(e) {
       throw new Error("Tipo particular invalido.");
   }
 }
-function mO(e) {
+function vO(e) {
   const c = e.tipo_turno;
   return c !== "Garantía" && (e.garantia_tipo = null, e.garantia_fecha_compra = null, e.garantia_numero_service = null, e.garantia_problema = null), c !== "Particular" && (e.particular_tipo = null), e;
 }
-async function hT(e, c = 0) {
+async function OT(e, c = 0) {
   try {
-    return console.log(`[Service] Intento ${c + 1}/${xl}`), e();
+    return console.log(`[Service] Intento ${c + 1}/${eI}`), e();
   } catch (o) {
-    if (o.code === "SQLITE_BUSY" && c < xl - 1)
-      return console.warn(`[Service] SQLITE_BUSY, reintentando en ${$l}ms...`), await new Promise((i) => setTimeout(i, $l)), hT(e, c + 1);
+    if (o.code === "SQLITE_BUSY" && c < eI - 1)
+      return console.warn(`[Service] SQLITE_BUSY, reintentando en ${nI}ms...`), await new Promise((i) => setTimeout(i, nI)), OT(e, c + 1);
     throw o;
   }
 }
-async function eI(e, c) {
-  return hT(() => {
+async function tI(e, c) {
+  return OT(() => {
     const o = Se(), i = o.transaction(() => {
       console.log("[Service] Dentro de transaction...");
       const u = o.prepare(`
@@ -24978,7 +24988,7 @@ async function eI(e, c) {
     return console.log("[Service] Transaction completada con ID:", s), s;
   });
 }
-async function FO(e, c) {
+async function yO(e, c) {
   const o = await ge(async (i) => {
     var r;
     const [s] = await i.execute(
@@ -25082,23 +25092,23 @@ async function FO(e, c) {
     throw o.error;
   return o.value;
 }
-async function PO(e) {
-  console.log("[Service] Iniciando crearReserva..."), wO(e);
-  const c = mO({ ...e }), o = new Date(c.fecha).toISOString().split("T")[0];
+async function QO(e) {
+  console.log("[Service] Iniciando crearReserva..."), bO(e);
+  const c = vO({ ...e }), o = new Date(c.fecha).toISOString().split("T")[0];
   console.log("[Service] Fecha normalizada:", c.fecha, "->", o);
   try {
-    const i = await FO(c, o);
+    const i = await yO(c, o);
     try {
-      await eI(c, o);
+      await tI(c, o);
     } catch (s) {
       console.warn("[Service] Backup SQLite fallo:", s);
     }
     return i;
   } catch {
-    return console.warn("[Service] MySQL no disponible, usando SQLite local"), await eI(c, o);
+    return console.warn("[Service] MySQL no disponible, usando SQLite local"), await tI(c, o);
   }
 }
-async function nI(e) {
+async function rI(e) {
   console.log("[Service] Obteniendo reserva:", e);
   const c = await ge(async (i) => {
     const [s] = await i.execute("SELECT * FROM reservas WHERE id = ?", [e]);
@@ -25106,7 +25116,7 @@ async function nI(e) {
   });
   return c.ok ? c.value : Se().prepare("SELECT * FROM reservas WHERE id = ?").get(e);
 }
-async function GO(e) {
+async function VO(e) {
   if (console.log("[Service] Borrando reserva:", e), (await ge(async (i) => {
     const [s] = await i.execute("SELECT * FROM reservas WHERE id = ?", [e]), u = s[0];
     if (!u) {
@@ -25155,7 +25165,7 @@ async function GO(e) {
     throw console.error("[Service] Error en borrarReserva:", i), i;
   }
 }
-async function bO(e, c, o) {
+async function YO(e, c, o) {
   if (console.log("[Service] Moviendo reserva:", { id: e, nuevaFecha: c, nuevaHora: o }), (await ge(async (u) => {
     const [E] = await u.execute(
       "SELECT fecha, hora FROM reservas WHERE id = ?",
@@ -25225,7 +25235,7 @@ async function bO(e, c, o) {
     throw console.error("[Service] Error en moverReserva:", u), u;
   }
 }
-async function vO(e, c) {
+async function HO(e, c) {
   if (console.log("[Service] Actualizando reserva:", e, c), (await ge(async (s) => {
     const [u] = await s.execute(
       "SELECT nombre, fecha, hora, estado, detalles FROM reservas WHERE id = ?",
@@ -25326,7 +25336,7 @@ async function vO(e, c) {
     throw console.error("[Service] Error en actualizarReserva:", s), s;
   }
 }
-function dT(e) {
+function CT(e) {
   if (!(!Array.isArray(e) || e.length === 0))
     try {
       const c = Se(), o = c.prepare("SELECT id FROM reservas WHERE id = ?"), i = c.prepare(`
@@ -25400,7 +25410,7 @@ function dT(e) {
       console.warn("[Service] Error sincronizando reservas MySQL -> SQLite:", c);
     }
 }
-async function QO(e, c) {
+async function WO(e, c) {
   console.log("[Service] Obteniendo reservas entre:", e, "y", c);
   const o = new Date(e).toISOString().split("T")[0], i = new Date(c).toISOString().split("T")[0];
   console.log("[Service] Fechas normalizadas:", o, "a", i);
@@ -25415,13 +25425,13 @@ async function QO(e, c) {
     );
     return r;
   });
-  return s.ok ? (dT(s.value), s.value) : Se().prepare(`
+  return s.ok ? (CT(s.value), s.value) : Se().prepare(`
     SELECT * FROM reservas
     WHERE fecha >= ? AND fecha <= ?
     ORDER BY fecha, hora
   `).all(o, i);
 }
-async function yO() {
+async function pO() {
   console.log("[Service] Obteniendo TODAS las reservas");
   const e = await ge(async (i) => {
     const [s] = await i.execute(
@@ -25429,12 +25439,12 @@ async function yO() {
     );
     return s;
   });
-  return e.ok ? (dT(e.value), e.value) : Se().prepare(`
+  return e.ok ? (CT(e.value), e.value) : Se().prepare(`
     SELECT * FROM reservas
     ORDER BY fecha DESC, hora DESC
   `).all();
 }
-async function VO(e, c) {
+async function kO(e, c) {
   if (console.log("[Service] Actualizando notas para reserva:", e), (await ge(async (s) => {
     const [u] = await s.execute(
       "SELECT notas FROM reservas WHERE id = ?",
@@ -25483,7 +25493,7 @@ async function VO(e, c) {
     throw console.error("[Service] Error en actualizarNotasReserva:", s), s;
   }
 }
-async function YO(e, c = 0, o = 200) {
+async function XO(e, c = 0, o = 200) {
   console.log("[Service] Buscando cambios de reservas desde:", e, "id>", c);
   const i = await ge(async (E) => {
     const [n] = await E.execute(
@@ -25512,14 +25522,14 @@ async function YO(e, c = 0, o = 200) {
     `
   ).all(e, e, c, o);
 }
-function HO() {
+function jO() {
   const e = (o, i) => {
-    for (const s of iI.getAllWindows())
+    for (const s of aI.getAllWindows())
       s.isDestroyed() || s.webContents.send(o, i);
   }, c = async (o, i, s) => {
     let u = null;
     try {
-      u = await nI(i);
+      u = await rI(i);
     } catch {
       u = null;
     }
@@ -25529,7 +25539,21 @@ function HO() {
       fecha: u.fecha,
       hora: u.hora,
       tipo_turno: u.tipo_turno
-    } : { id: i, ...s || {} };
+    } : { id: i, ...s || {} }, n = o === "creada" ? "Nueva reserva" : "Reserva modificada", t = [
+      E != null && E.nombre ? String(E.nombre) : "Cliente sin nombre",
+      E != null && E.fecha ? String(E.fecha) : "",
+      E != null && E.hora ? String(E.hora) : "",
+      E != null && E.tipo_turno ? String(E.tipo_turno) : ""
+    ].filter(Boolean).join(" · "), a = GO();
+    if (Eu.isSupported())
+      try {
+        new Eu({
+          title: n,
+          body: t,
+          silent: a.soundEnabled === !1
+        }).show(), a.soundEnabled !== !1 && wN.beep();
+      } catch {
+      }
     e("reservas:notify", {
       accion: o,
       reserva: E
@@ -25539,7 +25563,7 @@ function HO() {
     const s = Date.now();
     console.log(`
 ` + "=".repeat(50)), console.log("[IPC] Recibiendo solicitud de reserva:"), console.log(i), console.log("=".repeat(50)), console.log("[IPC] Esperando lock...");
-    const u = await He(async () => (console.log("[IPC] Lock adquirido, ejecutando crearReserva"), await PO(i))), E = Date.now() - s;
+    const u = await He(async () => (console.log("[IPC] Lock adquirido, ejecutando crearReserva"), await QO(i))), E = Date.now() - s;
     return console.log(`[IPC] Reserva creada exitosamente en ${E}ms, retornando ID:`, u), console.log("=".repeat(50) + `
 `), typeof u == "number" && await c("creada", u, {
       nombre: i == null ? void 0 : i.nombre,
@@ -25547,14 +25571,14 @@ function HO() {
       hora: i == null ? void 0 : i.hora,
       tipo_turno: i == null ? void 0 : i.tipo_turno
     }), u;
-  }), Ge("reservas:obtener", (o, i) => (console.log("[IPC] Obteniendo reserva:", i), nI(i))), Ge("reservas:borrar", async (o, i) => {
+  }), Ge("reservas:obtener", (o, i) => (console.log("[IPC] Obteniendo reserva:", i), rI(i))), Ge("reservas:borrar", async (o, i) => {
     console.log("[IPC] Borrando reserva:", i);
-    const s = await He(() => GO(i));
+    const s = await He(() => VO(i));
     return console.log("[IPC] Reserva borrada exitosamente"), s;
   }), Ge("reservas:mover", async (o, i) => {
     console.log("[IPC] Moviendo reserva:", i);
     const s = await He(
-      () => bO(i.id, i.nuevaFecha, i.nuevaHora)
+      () => YO(i.id, i.nuevaFecha, i.nuevaHora)
     );
     return console.log("[IPC] Reserva movida exitosamente"), i != null && i.id && await c("modificada", i.id, {
       fecha: i.nuevaFecha,
@@ -25563,7 +25587,7 @@ function HO() {
   }), Ge("reservas:actualizar", async (o, i) => {
     console.log("[IPC] Actualizando reserva:", i);
     const s = await He(
-      () => vO(i.id, i)
+      () => HO(i.id, i)
     );
     return console.log("[IPC] Reserva actualizada exitosamente"), i != null && i.id && await c("modificada", i.id, {
       nombre: i == null ? void 0 : i.nombre,
@@ -25574,20 +25598,20 @@ function HO() {
   }), Ge("reservas:semana", async (o, i) => {
     console.log("[IPC] Obteniendo reservas de semana:", i);
     const s = await He(
-      () => QO(i.desde, i.hasta)
+      () => WO(i.desde, i.hasta)
     );
     return console.log("[IPC] Reservas de semana obtenidas:", s.length, "registros"), s;
   }), Ge("reservas:todas", async () => {
     console.log("[IPC] Obteniendo TODAS las reservas");
-    const o = await He(() => yO());
+    const o = await He(() => pO());
     return console.log("[IPC] Total de reservas obtenidas:", o.length), o;
   }), Ge("reservas:actualizar-notas", async (o, i, s) => {
     console.log("[IPC] Actualizando notas para reserva:", i);
-    const u = await He(() => VO(i, s));
+    const u = await He(() => kO(i, s));
     return console.log("[IPC] Notas actualizadas exitosamente"), i && await c("modificada", i), u;
   }), Ge("reservas:cambios", async (o, i) => {
     const s = (i == null ? void 0 : i.since) || (/* @__PURE__ */ new Date(0)).toISOString(), u = Number((i == null ? void 0 : i.lastId) || 0), E = Number((i == null ? void 0 : i.limit) || 200);
-    return YO(s, u, E);
+    return XO(s, u, E);
   });
 }
 function vr(e) {
@@ -25601,10 +25625,10 @@ function vr(e) {
     eliminación: "Eliminación"
   }[e] ?? e;
 }
-function OT(e, c, o) {
+function DT(e, c, o) {
   return e === "creación" ? "Reserva creada" : e === "eliminación" ? "Reserva eliminada" : c === null && o !== null ? `Se estableció ${vr(e)}: ${o}` : c !== null && o === null ? `Se eliminó ${vr(e)}` : c !== o ? `Cambió ${vr(e)} de "${c}" a "${o}"` : `Actualización de ${vr(e)}`;
 }
-function WO(e) {
+function qO(e) {
   if (!Number.isInteger(e))
     throw new Error("ID de reserva inválido");
   return Se().prepare(`
@@ -25621,14 +25645,14 @@ function WO(e) {
     ORDER BY datetime(fecha) DESC, id DESC
   `).all(e).map((i) => ({
     ...i,
-    descripcion: OT(
+    descripcion: DT(
       i.campo,
       i.valor_anterior,
       i.valor_nuevo
     )
   }));
 }
-async function pO(e) {
+async function KO(e) {
   if (!Number.isInteger(e))
     throw new Error("ID de reserva inválido");
   const c = await ge(async (o) => {
@@ -25652,14 +25676,14 @@ async function pO(e) {
   });
   return c.ok ? c.value.map((i) => ({
     ...i,
-    descripcion: OT(
+    descripcion: DT(
       i.campo,
       i.valor_anterior,
       i.valor_nuevo
     )
-  })) : WO(e);
+  })) : qO(e);
 }
-function tI(e, c, o, i, s) {
+function iI(e, c, o, i, s) {
   const u = Se();
   u.transaction(() => {
     u.prepare(`
@@ -25675,7 +25699,7 @@ function tI(e, c, o, i, s) {
     );
   })();
 }
-async function kO(e, c, o, i, s) {
+async function zO(e, c, o, i, s) {
   if ((await ge(async (E) => {
     await E.execute(
       `
@@ -25687,22 +25711,22 @@ async function kO(e, c, o, i, s) {
     );
   })).ok) {
     try {
-      tI(e, c, o, i, s);
+      iI(e, c, o, i, s);
     } catch (E) {
       console.warn("[Service] Backup SQLite fallo en registrarEventoHistorial:", E);
     }
     return;
   }
-  tI(e, c, o, i, s);
+  iI(e, c, o, i, s);
 }
-function XO() {
+function JO() {
   Ge(
     "historial:obtener",
-    (e, c) => pO(c)
+    (e, c) => KO(c)
   ), Ge(
     "historial:registrar",
     async (e, c) => await He(
-      () => kO(
+      () => zO(
         c.reservaId,
         c.campo,
         c.anterior,
@@ -25712,7 +25736,7 @@ function XO() {
     )
   );
 }
-async function jO() {
+async function ZO() {
   const e = await ge(async (o) => {
     const [i] = await o.execute(`
       SELECT
@@ -25753,7 +25777,7 @@ async function jO() {
     ORDER BY v.matricula
   `).all();
 }
-async function qO(e) {
+async function xO(e) {
   const c = await ge(async (i) => {
     const [s] = await i.execute(
       `
@@ -25773,21 +25797,21 @@ async function qO(e) {
     ORDER BY fecha DESC, id DESC
   `).all(e);
 }
-function KO() {
-  Ge("vehiculos:todos", async () => await He(() => jO())), Ge("vehiculos:historial", async (e, c) => await He(() => qO(c)));
+function $O() {
+  Ge("vehiculos:todos", async () => await He(() => ZO())), Ge("vehiculos:historial", async (e, c) => await He(() => xO(c)));
 }
-const zO = "mysql.env", JO = [
+const e0 = "mysql.env", n0 = [
   "MYSQL_HOST",
   "MYSQL_PORT",
   "MYSQL_USER",
   "MYSQL_PASSWORD",
   "MYSQL_DATABASE"
 ];
-function Xs() {
+function js() {
   const e = ft.getPath("userData");
-  return en.join(e, zO);
+  return en.join(e, e0);
 }
-function ZO(e) {
+function t0(e) {
   const c = {}, o = e.split(/\r?\n/);
   for (const i of o) {
     const s = i.trim();
@@ -25800,38 +25824,38 @@ function ZO(e) {
   }
   return c;
 }
-function xO() {
+function r0() {
   const e = [];
-  for (const c of JO) {
+  for (const c of n0) {
     const o = process.env[c];
     o !== void 0 && o !== "" && e.push(`${c}=${o}`);
   }
   return e.join(`
 `);
 }
-function CT() {
-  const e = Xs();
+function ST() {
+  const e = js();
   if (!En.existsSync(e)) {
-    const i = xO();
+    const i = r0();
     if (i)
-      DT(i);
+      gT(i);
     else
       return;
   }
-  const c = En.readFileSync(e, "utf-8"), o = ZO(c);
+  const c = En.readFileSync(e, "utf-8"), o = t0(c);
   for (const [i, s] of Object.entries(o))
     process.env[i] = s;
 }
-function $O() {
-  const e = Xs();
+function i0() {
+  const e = js();
   return En.existsSync(e) ? En.readFileSync(e, "utf-8") : "";
 }
-function DT(e) {
-  const c = Xs(), o = en.dirname(c);
+function gT(e) {
+  const c = js(), o = en.dirname(c);
   En.existsSync(o) || En.mkdirSync(o, { recursive: !0 }), En.writeFileSync(c, e, "utf-8");
 }
-function e0() {
-  Ge("config:env:get", async () => $O()), Ge("config:env:set", async (e, c) => (DT(c || ""), CT(), lO(), { ok: !0 })), Ge("config:db:test", async () => {
+function E0() {
+  Ge("config:env:get", async () => i0()), Ge("config:env:set", async (e, c) => (gT(c || ""), ST(), NO(), { ok: !0 })), Ge("config:db:test", async () => {
     const e = await ge(async (c) => {
       const [o] = await c.query("SELECT 1 as ok");
       return o;
@@ -25839,7 +25863,7 @@ function e0() {
     return e.ok ? { ok: !0 } : { ok: !1, error: e.error instanceof Error ? e.error.message : "Error de conexión" };
   });
 }
-async function ST() {
+async function MT() {
   return ge(async (e) => (await e.query(
     `CREATE TABLE IF NOT EXISTS auditoria_usuarios (
         id INT AUTO_INCREMENT PRIMARY KEY, actor_username VARCHAR(255), actor_role VARCHAR(50), accion VARCHAR(100) NOT NULL,
@@ -25850,7 +25874,7 @@ async function ST() {
   ), !0));
 }
 async function or(e) {
-  await ST();
+  await MT();
   const c = {
     actor_username: e.actor_username ?? null,
     actor_role: e.actor_role ?? null,
@@ -25867,8 +25891,8 @@ async function or(e) {
      VALUES ( ?, ?, ?, ?, ?)`
   ).run(c.actor_username, c.actor_role, c.accion, c.target_username, c.detalle);
 }
-async function n0() {
-  await ST();
+async function a0() {
+  await MT();
   const e = await ge(async (o) => {
     const [i] = await o.query(
       `SELECT id, actor_username, actor_role, accion, target_username, detalle, created_at
@@ -25891,7 +25915,7 @@ async function n0() {
      ORDER BY id DESC`
   ).all();
 }
-const gT = [
+const BT = [
   "agenda",
   "reservas",
   "historial",
@@ -25915,13 +25939,13 @@ async function Xn() {
   ), !0));
 }
 function Nt(e) {
-  return e === "super" ? [...gT] : e === "admin" ? ["agenda", "reservas", "historial", "ajustes", "vehiculos"] : ["reservas", "historial"];
+  return e === "super" ? [...BT] : e === "admin" ? ["agenda", "reservas", "historial", "ajustes", "vehiculos"] : ["reservas", "historial"];
 }
-function js(e) {
+function qs(e) {
   const c = Yr.randomBytes(16), o = Yr.scryptSync(e, c, 32);
   return `scrypt$${c.toString("hex")}$${o.toString("hex")}`;
 }
-function t0(e, c) {
+function _0(e, c) {
   const o = c.split("$");
   if (o.length !== 3 || o[0] !== "scrypt") return !1;
   const i = Buffer.from(o[1], "hex"), s = Buffer.from(o[2], "hex"), u = Yr.scryptSync(e, i, 32);
@@ -25932,10 +25956,10 @@ function cr(e, c) {
     return Nt(e);
   const o = /* @__PURE__ */ new Set();
   for (const i of c)
-    gT.includes(i) && o.add(i);
+    BT.includes(i) && o.add(i);
   return Array.from(o);
 }
-function hs(e, c) {
+function ds(e, c) {
   if (!e) return Nt(c);
   try {
     const o = JSON.parse(e);
@@ -25944,7 +25968,7 @@ function hs(e, c) {
     return Nt(c);
   }
 }
-async function MT(e) {
+async function LT(e) {
   await Xn();
   const c = JSON.stringify(cr(e.role, e.permissions)), o = e.activo ?? 1;
   return ge(async (i) => (await i.query(
@@ -25958,7 +25982,7 @@ async function MT(e) {
     [e.nombre, e.username, e.passwordHash, e.role, c, o]
   ), !0));
 }
-function ds(e) {
+function Os(e) {
   const c = Se(), o = JSON.stringify(cr(e.role, e.permissions)), i = e.activo ?? 1;
   c.prepare(
     `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
@@ -25970,8 +25994,8 @@ function ds(e) {
        permissions_json = excluded.permissions_json, activo = excluded.activo`
   ).run(e.nombre, e.username, e.passwordHash, e.role, o, i);
 }
-async function BT() {
-  const e = process.env.SUPERADMIN_USER || "superadmin", c = process.env.SUPERADMIN_PASS || "rodrigoSayasDev724", o = process.env.SUPERADMIN_NAME || "", i = "super", s = Nt(i), u = js(c);
+async function UT() {
+  const e = process.env.SUPERADMIN_USER || "superadmin", c = process.env.SUPERADMIN_PASS || "rodrigoSayasDev724", o = process.env.SUPERADMIN_NAME || "", i = "super", s = Nt(i), u = qs(c);
   await Xn();
   const E = await ge(async (a) => {
     const [_] = await a.query(
@@ -25987,7 +26011,7 @@ async function BT() {
     n = !1;
   }
   const r = E.ok, t = E.ok && E.value;
-  if (!(!r && n) && (t || await MT({
+  if (!(!r && n) && (t || await LT({
     nombre: o,
     username: e,
     passwordHash: u,
@@ -25996,7 +26020,7 @@ async function BT() {
     activo: 1
   }), !n))
     try {
-      ds({
+      Os({
         nombre: o,
         username: e,
         passwordHash: u,
@@ -26008,7 +26032,7 @@ async function BT() {
       console.warn("[Usuarios] Error sincronizando ? sqlite:", a);
     }
 }
-async function LT() {
+async function wT() {
   await Xn();
   const e = await ge(async (i) => {
     const [s] = await i.query(
@@ -26021,7 +26045,7 @@ async function LT() {
     nombre: i.nombre,
     username: i.username,
     role: i.role,
-    permissions: hs(i.permissions_json, i.role),
+    permissions: ds(i.permissions_json, i.role),
     activo: Number(i.activo) || 0,
     created_at: i.created_at
   })) : Se().prepare(
@@ -26031,13 +26055,13 @@ async function LT() {
     nombre: i.nombre,
     username: i.username,
     role: i.role,
-    permissions: hs(i.permissions_json, i.role),
+    permissions: ds(i.permissions_json, i.role),
     activo: Number(i.activo) || 0,
     created_at: i.created_at
   }));
 }
-async function r0() {
-  return (await LT()).filter((c) => c.activo).map((c) => ({
+async function s0() {
+  return (await wT()).filter((c) => c.activo).map((c) => ({
     id: c.id,
     nombre: c.nombre,
     username: c.username,
@@ -26045,7 +26069,7 @@ async function r0() {
     permissions: c.permissions
   }));
 }
-async function i0(e, c) {
+async function u0(e, c) {
   await Xn();
   const o = await ge(async (s) => {
     const [u] = await s.query(
@@ -26057,7 +26081,7 @@ async function i0(e, c) {
   let i = null;
   return o.ok ? i = o.value : i = Se().prepare(
     "SELECT id, nombre, username, password_hash, role, permissions_json, activo FROM usuarios WHERE username = ? LIMIT 1"
-  ).get(e), !i || !i.password_hash ? { ok: !1, error: "Usuario o contraseña inválida" } : i.activo ? t0(c, i.password_hash) ? (await or({
+  ).get(e), !i || !i.password_hash ? { ok: !1, error: "Usuario o contraseña inválida" } : i.activo ? _0(c, i.password_hash) ? (await or({
     actor_username: i.username,
     actor_role: i.role,
     accion: "LOGIN_OK",
@@ -26070,14 +26094,14 @@ async function i0(e, c) {
       nombre: i.nombre,
       username: i.username,
       role: i.role,
-      permissions: hs(i.permissions_json, i.role)
+      permissions: ds(i.permissions_json, i.role)
     }
   }) : { ok: !1, error: "Usuario o contraseña inválida" } : { ok: !1, error: "Usuario inactivo" };
 }
-async function E0(e) {
+async function o0(e) {
   await Xn();
-  const c = cr(e.role, e.permissions), o = js(e.password);
-  if (!(await MT({
+  const c = cr(e.role, e.permissions), o = qs(e.password);
+  if (!(await LT({
     nombre: e.nombre,
     username: e.username,
     passwordHash: o,
@@ -26085,7 +26109,7 @@ async function E0(e) {
     permissions: c,
     activo: e.activo ?? 1
   })).ok)
-    ds({
+    Os({
       nombre: e.nombre,
       username: e.username,
       passwordHash: o,
@@ -26095,7 +26119,7 @@ async function E0(e) {
     });
   else
     try {
-      ds({
+      Os({
         nombre: e.nombre,
         username: e.username,
         passwordHash: o,
@@ -26114,7 +26138,7 @@ async function E0(e) {
     detalle: `Rol: ${e.role}`
   });
 }
-async function a0(e) {
+async function c0(e) {
   await Xn();
   const c = cr(e.role, e.permissions), o = await ge(async (s) => (await s.query(
     `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
@@ -26132,8 +26156,8 @@ async function a0(e) {
     detalle: `Rol: ${e.role} | activo: ${e.activo ?? 1}`
   });
 }
-async function _0(e, c) {
-  const o = await UT(e);
+async function A0(e, c) {
+  const o = await mT(e);
   await Xn(), await ge(async (s) => (await s.query("DELETE FROM usuarios WHERE id = ?", [e]), !0)), Se().prepare("DELETE FROM usuarios WHERE id = ?").run(e), await or({
     actor_username: c.username || "sistema",
     actor_role: c.role || "system",
@@ -26142,10 +26166,10 @@ async function _0(e, c) {
     detalle: `ID: ${e}`
   });
 }
-async function s0(e, c, o) {
-  const i = await UT(e);
+async function R0(e, c, o) {
+  const i = await mT(e);
   await Xn();
-  const s = js(c);
+  const s = qs(c);
   await ge(async (E) => (await E.query("UPDATE usuarios SET password_hash = ? WHERE id = ?", [s, e]), !0)), Se().prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?").run(s, e), await or({
     actor_username: o.username || "sistema",
     actor_role: o.role || "system",
@@ -26154,7 +26178,7 @@ async function s0(e, c, o) {
     detalle: `ID: ${e}`
   });
 }
-async function UT(e) {
+async function mT(e) {
   const c = await ge(async (s) => {
     var E;
     const [u] = await s.query(
@@ -26165,82 +26189,82 @@ async function UT(e) {
   });
   return c.ok ? c.value || null : Se().prepare("SELECT username FROM usuarios WHERE id = ? LIMIT 1").get(e).username || null;
 }
-function u0() {
-  dn.handle("usuarios:bootstrap", async () => (await BT(), { ok: !0 })), dn.handle("usuarios:login-list", async () => r0()), dn.handle("auth:login", async (e, c, o) => i0(c, o)), dn.handle("usuarios:list", async () => LT()), dn.handle("usuarios:create", async (e, c) => {
+function l0() {
+  Rn.handle("usuarios:bootstrap", async () => (await UT(), { ok: !0 })), Rn.handle("usuarios:login-list", async () => s0()), Rn.handle("auth:login", async (e, c, o) => u0(c, o)), Rn.handle("usuarios:list", async () => wT()), Rn.handle("usuarios:create", async (e, c) => {
     try {
-      return await E0(c), { ok: !0 };
+      return await o0(c), { ok: !0 };
     } catch (o) {
       return { ok: !1, error: o.message || "Error al crear usuario" };
     }
-  }), dn.handle("usuarios:update", async (e, c) => {
+  }), Rn.handle("usuarios:update", async (e, c) => {
     try {
-      return await a0(c), { ok: !0 };
+      return await c0(c), { ok: !0 };
     } catch (o) {
       return { ok: !1, error: o.message || "Error al actualizar usuario" };
     }
-  }), dn.handle("usuarios:delete", async (e, c) => {
+  }), Rn.handle("usuarios:delete", async (e, c) => {
     try {
-      return await _0(c.id, c.actor), { ok: !0 };
+      return await A0(c.id, c.actor), { ok: !0 };
     } catch (o) {
       return { ok: !1, error: o.message || "Error al eliminar usuario" };
     }
-  }), dn.handle("usuarios:password", async (e, c) => {
+  }), Rn.handle("usuarios:password", async (e, c) => {
     try {
-      return await s0(c.id, c.password, c.actor), { ok: !0 };
+      return await R0(c.id, c.password, c.actor), { ok: !0 };
     } catch (o) {
       return { ok: !1, error: o.message || "Error al actualizar contraseña" };
     }
   });
 }
-function o0() {
-  Ge("auditoria:list", async () => n0());
+function I0() {
+  Ge("auditoria:list", async () => a0());
 }
-function c0() {
+function T0() {
   console.log(` 
  Cargando IPC handlers  
-`), UO(), HO(), XO(), KO(), e0(), u0(), o0(), console.log(` 
+`), FO(), jO(), JO(), $O(), E0(), l0(), I0(), console.log(` 
   IPC handlers cargados 
 `);
 }
-function A0() {
+function N0() {
   const e = ft.getPath("userData");
   return en.join(e, "reservas.db");
 }
-function R0() {
+function f0() {
   const e = ft.getPath("userData");
   return en.join(e, "backups");
 }
-function l0() {
+function h0() {
   const e = /* @__PURE__ */ new Date(), c = (o) => String(o).padStart(2, "0");
   return `${e.getFullYear()}-${c(e.getMonth() + 1)}-${c(e.getDate())}_${c(e.getHours())}-${c(e.getMinutes())}-${c(e.getSeconds())}`;
 }
-function rI() {
+function EI() {
   try {
-    const e = A0();
+    const e = N0();
     if (!En.existsSync(e)) {
       console.warn("[Backup] DB file not found:", e);
       return;
     }
-    const c = R0();
+    const c = f0();
     En.existsSync(c) || En.mkdirSync(c, { recursive: !0 });
-    const o = en.join(c, `reservas_${l0()}.db`);
+    const o = en.join(c, `reservas_${h0()}.db`);
     En.copyFileSync(e, o), console.log("[Backup] Copia creada:", o);
   } catch (e) {
     console.error("[Backup] Error al crear backup:", e);
   }
 }
-function I0() {
-  rI(), setInterval(rI, 3600 * 1e3);
+function d0() {
+  EI(), setInterval(EI, 3600 * 1e3);
 }
-const wT = sI(import.meta.url), mT = en.dirname(wT);
-globalThis.__filename = wT;
-globalThis.__dirname = mT;
-process.env.APP_ROOT = en.join(mT, "..");
-const ir = process.env.VITE_DEV_SERVER_URL, T0 = en.join(process.env.APP_ROOT, "dist-electron"), FT = en.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = ir ? en.join(process.env.APP_ROOT, "public") : FT;
+const FT = oI(import.meta.url), PT = en.dirname(FT);
+globalThis.__filename = FT;
+globalThis.__dirname = PT;
+process.env.APP_ROOT = en.join(PT, "..");
+const ir = process.env.VITE_DEV_SERVER_URL, O0 = en.join(process.env.APP_ROOT, "dist-electron"), GT = en.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = ir ? en.join(process.env.APP_ROOT, "public") : GT;
 let wn = null;
-function N0() {
-  wn = new iI({
+function C0() {
+  wn = new aI({
     width: 1366,
     height: 768,
     minWidth: 1024,
@@ -26251,14 +26275,21 @@ function N0() {
     frame: !0,
     // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {
-      preload: en.join(T0, "preload.mjs"),
+      preload: en.join(O0, "preload.mjs"),
       nodeIntegration: !1,
       contextIsolation: !0
     }
-  }), ir && wn.webContents.openDevTools({ mode: "detach" }), wn.maximize(), wn.on("page-title-updated", (e) => e.preventDefault()), ir ? wn.loadURL(ir) : wn.loadFile(en.join(FT, "index.html"));
+  }), ir && wn.webContents.openDevTools({ mode: "detach" }), wn.maximize(), wn.on("page-title-updated", (e) => e.preventDefault()), ir ? wn.loadURL(ir) : wn.loadFile(en.join(GT, "index.html"));
 }
 ft.whenReady().then(() => {
-  if (CT(), Se(), BT(), c0(), I0(), N0(), !ir) {
+  if (ST(), Se(), UT(), T0(), d0(), C0(), Rn.on("settings:update", (e, c) => {
+    if (!c || typeof c != "object") return;
+    const o = c.soundEnabled, i = c.theme;
+    PO({
+      soundEnabled: typeof o == "boolean" ? o : !0,
+      theme: i === "light" ? "light" : "dark"
+    });
+  }), !ir) {
     const e = (c, o) => {
       wn && !wn.isDestroyed() && wn.webContents.send(c, o);
     };
@@ -26270,13 +26301,13 @@ ft.whenReady().then(() => {
       });
     }), Yn.autoUpdater.on("update-downloaded", (c) => e("app:update-downloaded", c)), Yn.autoUpdater.on("error", (c) => {
       e("app:update-error", { message: (c == null ? void 0 : c.message) || String(c) });
-    }), dn.on("app:quit-and-install", () => {
+    }), Rn.on("app:quit-and-install", () => {
       Yn.autoUpdater.quitAndInstall();
-    }), Yn.autoUpdater.logger = Ph, Yn.autoUpdater.autoDownload = !0, Yn.autoUpdater.checkForUpdatesAndNotify();
+    }), Yn.autoUpdater.logger = vh, Yn.autoUpdater.autoDownload = !0, Yn.autoUpdater.checkForUpdatesAndNotify();
   }
 });
 export {
-  T0 as MAIN_DIST,
-  FT as RENDERER_DIST,
+  O0 as MAIN_DIST,
+  GT as RENDERER_DIST,
   ir as VITE_DEV_SERVER_URL
 };

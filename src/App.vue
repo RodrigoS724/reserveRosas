@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
 
 const isDark = ref(true)
+const soundEnabled = ref(true)
+const SETTINGS_KEY = 'rr_settings'
 const session = ref(null)
 const usuariosLogin = ref([])
 const loginUser = ref('')
@@ -15,9 +17,39 @@ const updateMessage = ref('')
 const notifications = ref([])
 let notificationSeq = 0
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value
+const applyTheme = (value) => {
+  isDark.value = value
   document.documentElement.classList.toggle('dark', isDark.value)
+}
+
+const saveSettings = (patch = {}) => {
+  const next = {
+    theme: isDark.value ? 'dark' : 'light',
+    soundEnabled: soundEnabled.value,
+    ...patch
+  }
+  isDark.value = next.theme === 'dark'
+  soundEnabled.value = Boolean(next.soundEnabled)
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
+  window.ipcRenderer?.send?.('settings:update', next)
+  window.dispatchEvent(new CustomEvent('rr:settings', { detail: next }))
+}
+
+const loadSettings = () => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (data && typeof data === 'object') {
+      isDark.value = data.theme !== 'light'
+      soundEnabled.value = data.soundEnabled !== false
+    }
+  } catch {}
+}
+
+const toggleTheme = () => {
+  saveSettings({ theme: isDark.value ? 'light' : 'dark' })
 }
 
 const cargarUsuariosLogin = async () => {
@@ -72,7 +104,12 @@ const pushNotification = (message, variant = 'info') => {
 }
 
 onMounted(() => {
+  loadSettings()
   document.documentElement.classList.toggle('dark', isDark.value)
+  window.ipcRenderer?.send?.('settings:update', {
+    theme: isDark.value ? 'dark' : 'light',
+    soundEnabled: soundEnabled.value
+  })
   session.value = getSession()
   cargarUsuariosLogin()
 
@@ -131,8 +168,19 @@ onMounted(() => {
     }
   }
   window.addEventListener('ui:notify', onUiNotify)
+  const onSettingsEvent = (event) => {
+    const detail = event?.detail || {}
+    if (detail.theme) {
+      applyTheme(detail.theme === 'dark')
+    }
+    if (typeof detail.soundEnabled !== 'undefined') {
+      soundEnabled.value = Boolean(detail.soundEnabled)
+    }
+  }
+  window.addEventListener('rr:settings', onSettingsEvent)
   onUnmounted(() => {
     window.removeEventListener('ui:notify', onUiNotify)
+    window.removeEventListener('rr:settings', onSettingsEvent)
   })
 })
 </script>
@@ -245,6 +293,18 @@ onMounted(() => {
           ]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             <span>Configuración DB</span>
+          </div>
+        </router-link>
+
+        <router-link to="/panel" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V8m6 6a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V8m6 6a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V8"/></svg>
+            <span>Panel Configuracion</span>
           </div>
         </router-link>
 

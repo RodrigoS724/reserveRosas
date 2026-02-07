@@ -1,5 +1,6 @@
 // main/ipc/reservas.handlers.ts
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, Notification, shell } from 'electron'
+import { getSettings } from '../settings'
 import { safeHandle } from './safeHandle'
 import {
   crearReserva,
@@ -42,6 +43,32 @@ export function registrarHandlersReservas() {
           tipo_turno: reserva.tipo_turno,
         }
       : { id, ...(fallback || {}) }
+
+    const title = accion === 'creada' ? 'Nueva reserva' : 'Reserva modificada'
+    const bodyParts = [
+      resumen?.nombre ? String(resumen.nombre) : 'Cliente sin nombre',
+      resumen?.fecha ? String(resumen.fecha) : '',
+      resumen?.hora ? String(resumen.hora) : '',
+      resumen?.tipo_turno ? String(resumen.tipo_turno) : '',
+    ].filter(Boolean)
+    const body = bodyParts.join(' · ')
+
+    const settings = getSettings()
+    if (Notification.isSupported()) {
+      try {
+        const notif = new Notification({
+          title,
+          body,
+          silent: settings.soundEnabled === false,
+        })
+        notif.show()
+        if (settings.soundEnabled !== false) {
+          shell.beep()
+        }
+      } catch {
+        // ignore native notification failures
+      }
+    }
 
     broadcast('reservas:notify', {
       accion,

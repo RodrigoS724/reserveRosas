@@ -9,6 +9,7 @@ import { initDatabase } from './db/database'
 import { startBackupScheduler } from './services/backup.service'
 import { loadUserEnv } from './config/env'
 import { bootstrapSuperAdmin } from './services/users.service'
+import { setSettings } from './settings'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -80,6 +81,16 @@ app.whenReady().then(() => {
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana
+
+  ipcMain.on('settings:update', (_event, payload) => {
+    if (!payload || typeof payload !== 'object') return
+    const soundEnabled = payload.soundEnabled
+    const theme = payload.theme
+    setSettings({
+      soundEnabled: typeof soundEnabled === 'boolean' ? soundEnabled : true,
+      theme: theme === 'light' ? 'light' : 'dark'
+    })
+  })
 
   // Auto-update solo en builds de producción
   if (!VITE_DEV_SERVER_URL) {

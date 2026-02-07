@@ -26,6 +26,7 @@ const router = createRouter({
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },
+    { path: '/panel', component: () => import('./views/panel.vue') },
   ]
 })
 
