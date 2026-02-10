@@ -107,7 +107,7 @@ if (str_starts_with($path, '/api')) {
 
     jsonResponse(['ok' => true, 'data' => $horarios]);
   }
-
+}
   if ($method === 'GET' && $path === '/api/vehiculo') {
     $matricula = normalizeMatricula($_GET['matricula'] ?? '');
     if (!isValidMatriculaUy($matricula)) {
@@ -166,24 +166,27 @@ if (str_starts_with($path, '/api')) {
     }
 
     $pdo = db();
-
-    // Validar disponibilidad del horario
-    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND hora = ?");
-    $stmt->execute([$data['fecha'], $data['hora']]);
-    $exists = (int) ($stmt->fetch()['total'] ?? 0) > 0;
-    if ($exists) {
-      jsonResponse(['ok' => false, 'error' => 'Horario no disponible'], 409);
-    }
-
-    // Evitar duplicado de cedula en el mismo dia
-    if (!empty($cedula)) {
-      $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM reservas WHERE fecha = ? AND cedula = ?");
-      $stmt->execute([$data['fecha'], normalizeCedula($cedula)]);
-      $dup = (int) ($stmt->fetch()['total'] ?? 0) > 0;
-      if ($dup) {
-        jsonResponse(['ok' => false, 'error' => 'La cedula ya tiene una reserva ese dia'], 409);
+    $pdo->beginTransaction();
+    try {
+      // Validar disponibilidad del horario (lock)
+      $stmt = $pdo->prepare("SELECT 1 FROM reservas WHERE fecha = ? AND hora = ? FOR UPDATE");
+      $stmt->execute([$data['fecha'], $data['hora']]);
+      $exists = (bool) $stmt->fetch();
+      if ($exists) {
+        $pdo->rollBack();
+        jsonResponse(['ok' => false, 'error' => 'Horario no disponible'], 409);
       }
-    }
+
+      // Evitar duplicado de cedula en el mismo dia
+      if (!empty($cedula)) {
+        $stmt = $pdo->prepare("SELECT 1 FROM reservas WHERE fecha = ? AND cedula = ? FOR UPDATE");
+        $stmt->execute([$data['fecha'], normalizeCedula($cedula)]);
+        $dup = (bool) $stmt->fetch();
+        if ($dup) {
+          $pdo->rollBack();
+          jsonResponse(['ok' => false, 'error' => 'La cedula ya tiene una reserva ese dia'], 409);
+        }
+      }
 
     $insert = $pdo->prepare("
             INSERT INTO reservas (
@@ -275,8 +278,14 @@ if (str_starts_with($path, '/api')) {
           $data['garantia_problema'] ?? null,
           $data['detalles'] ?? ''
         ]);
-
+    $pdo->commit();
     jsonResponse(['ok' => true, 'id' => $id], 201);
+  } catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+      $pdo->rollBack();
+    }
+    $msg = isDebug() ? ($e->getMessage() ?: 'Error') : 'No se pudo crear la reserva';
+    jsonResponse(['ok' => false, 'error' => $msg], 500);
   }
 
   jsonResponse(['ok' => false, 'error' => 'Endpoint no encontrado'], 404);
