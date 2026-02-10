@@ -11,9 +11,6 @@ const loginUser = ref('')
 const loginPass = ref('')
 const loginError = ref('')
 const cargandoLogin = ref(false)
-const updateState = ref('idle')
-const updateProgress = ref(0)
-const updateMessage = ref('')
 const notifications = ref([])
 let notificationSeq = 0
 
@@ -85,15 +82,6 @@ const cerrarSesion = () => {
 const puede = (perm) => hasPermission(session.value, perm)
 
 const mostrarLogin = computed(() => !session.value)
-const mostrarBannerUpdate = computed(() => updateState.value !== 'idle')
-const updateDescargando = computed(() => updateState.value === 'downloading')
-const updateListo = computed(() => updateState.value === 'downloaded')
-
-const reiniciarParaActualizar = () => {
-  if (window.ipcRenderer?.send) {
-    window.ipcRenderer.send('app:quit-and-install')
-  }
-}
 
 const pushNotification = (message, variant = 'info') => {
   const id = ++notificationSeq
@@ -115,30 +103,6 @@ onMounted(() => {
 
   const ipc = window.ipcRenderer
   if (ipc?.on) {
-    const onAvailable = () => {
-      updateState.value = 'downloading'
-      updateMessage.value = 'Nueva actualizacion disponible. Descargando...'
-    }
-    const onProgress = (_event, payload) => {
-      if (payload && typeof payload.percent === 'number') {
-        updateProgress.value = Math.round(payload.percent)
-      }
-    }
-    const onDownloaded = () => {
-      updateState.value = 'downloaded'
-      updateMessage.value = 'Actualizacion lista. Reinicia para aplicar.'
-    }
-    const onError = (_event, payload) => {
-      updateState.value = 'error'
-      const msg = payload?.message ? String(payload.message) : 'Error al actualizar.'
-      updateMessage.value = `Error al actualizar: ${msg}`
-    }
-
-    ipc.on('app:update-available', onAvailable)
-    ipc.on('app:update-progress', onProgress)
-    ipc.on('app:update-downloaded', onDownloaded)
-    ipc.on('app:update-error', onError)
-
     const onReservaNotify = (_event, payload) => {
       const accion = payload?.accion || 'modificada'
       const r = payload?.reserva || {}
@@ -153,10 +117,6 @@ onMounted(() => {
     ipc.on('reservas:notify', onReservaNotify)
 
     onUnmounted(() => {
-      ipc.off('app:update-available', onAvailable)
-      ipc.off('app:update-progress', onProgress)
-      ipc.off('app:update-downloaded', onDownloaded)
-      ipc.off('app:update-error', onError)
       ipc.off('reservas:notify', onReservaNotify)
     })
   }
@@ -364,25 +324,6 @@ onMounted(() => {
         <router-view />
       </div>
     </main>
-  </div>
-
-  <div v-if="mostrarBannerUpdate" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[520px] max-w-[92vw]">
-    <div class="rounded-2xl border border-blue-500/30 bg-slate-950/90 text-white shadow-2xl backdrop-blur px-5 py-4">
-      <div class="flex items-center gap-3">
-        <div class="h-9 w-9 rounded-xl bg-blue-600/90 flex items-center justify-center font-black">UP</div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-black tracking-tight">{{ updateMessage || 'Actualizacion disponible' }}</p>
-          <p v-if="updateDescargando" class="text-[11px] text-blue-300 mt-1">Descargando: {{ updateProgress }}%</p>
-        </div>
-        <button v-if="updateListo" @click="reiniciarParaActualizar"
-          class="text-[11px] uppercase tracking-widest font-black px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors">
-          Reiniciar
-        </button>
-      </div>
-      <div v-if="updateDescargando" class="mt-3 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-        <div class="h-full bg-blue-500 transition-all" :style="{ width: updateProgress + '%' }"></div>
-      </div>
-    </div>
   </div>
 
   <div class="fixed top-4 right-4 z-[70] w-[360px] max-w-[92vw] space-y-3">

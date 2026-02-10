@@ -1,7 +1,5 @@
 import 'dotenv/config'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { autoUpdater } from 'electron-updater'
-import log from 'electron-log'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
@@ -92,33 +90,4 @@ app.whenReady().then(() => {
     })
   })
 
-  // Auto-update solo en builds de producción
-  if (!VITE_DEV_SERVER_URL) {
-    const sendUpdateStatus = (channel: string, payload?: unknown) => {
-      if (win && !win.isDestroyed()) {
-        win.webContents.send(channel, payload)
-      }
-    }
-
-    autoUpdater.on('update-available', (info) => sendUpdateStatus('app:update-available', info))
-    autoUpdater.on('download-progress', (progress) => {
-      sendUpdateStatus('app:update-progress', {
-        percent: progress.percent,
-        transferred: progress.transferred,
-        total: progress.total,
-      })
-    })
-    autoUpdater.on('update-downloaded', (info) => sendUpdateStatus('app:update-downloaded', info))
-    autoUpdater.on('error', (err) => {
-      sendUpdateStatus('app:update-error', { message: err?.message || String(err) })
-    })
-
-    ipcMain.on('app:quit-and-install', () => {
-      autoUpdater.quitAndInstall()
-    })
-
-    autoUpdater.logger = log
-    autoUpdater.autoDownload = true
-    autoUpdater.checkForUpdatesAndNotify()
-  }
 })
