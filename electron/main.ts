@@ -72,10 +72,10 @@ function createWindow() {
 }
 
 // UN SOLO whenReady para todo
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   loadUserEnv() // Cargar .env guardado por el usuario (si existe)
   initDatabase() // Inicializamos la base de datos
-  bootstrapSuperAdmin()
+  await bootstrapSuperAdmin()
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana

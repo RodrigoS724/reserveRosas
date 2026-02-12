@@ -7,7 +7,7 @@ type UserForm = {
   nombre: string
   username: string
   password?: string
-  role: 'super' | 'admin' | 'user'
+  role: 'superadmin' | 'super' | 'admin' | 'user'
   permissions: string[]
   activo: number
 }
@@ -19,8 +19,9 @@ const statusOk = ref(true)
 const guardando = ref(false)
 
 const roles = [
-  { value: 'super', label: 'Nivel 3', desc: 'Control total' },
-  { value: 'admin', label: 'Nivel 2', desc: 'Acceso amplio sin configuración' },
+  { value: 'superadmin', label: 'Nivel 4', desc: 'Control total + credenciales' },
+  { value: 'super', label: 'Nivel 3', desc: 'Control total operativo' },
+  { value: 'admin', label: 'Nivel 2', desc: 'Acceso amplio sin configuracion' },
   { value: 'user', label: 'Nivel 1', desc: 'Solo reservas e historial' }
 ]
 
@@ -39,13 +40,25 @@ const form = ref<UserForm>({
 })
 
 const isEdit = computed(() => Boolean(form.value.id))
-const isSuper = computed(() => form.value.role === 'super')
+const isRootRole = computed(() => form.value.role === 'superadmin' || form.value.role === 'super')
+
+const allowedPermissionsByRole: Record<UserForm['role'], string[]> = {
+  superadmin: permisosCatalogo.map((p) => p.key),
+  super: permisosCatalogo.map((p) => p.key),
+  admin: ['agenda', 'reservas', 'historial', 'ajustes', 'vehiculos'],
+  user: ['reservas', 'historial']
+}
+
+const permisosDisponibles = computed(() => {
+  const allowed = new Set(allowedPermissionsByRole[form.value.role] || [])
+  return permisosCatalogo.filter((p) => allowed.has(p.key))
+})
 
 const cargarUsuarios = async () => {
   const data = await window.api.listarUsuarios()
   usuarios.value = (data || []).map((u: any) => ({
     ...u,
-    role: (u.role === 'super' || u.role === 'admin' || u.role === 'user') ? u.role : 'user'
+    role: (u.role === 'superadmin' || u.role === 'super' || u.role === 'admin' || u.role === 'user') ? u.role : 'user'
   }))
 }
 
@@ -74,7 +87,8 @@ const seleccionarUsuario = (u: any) => {
 }
 
 const togglePermiso = (perm: string) => {
-  if (isSuper.value) return
+  if (isRootRole.value) return
+  if (!allowedPermissionsByRole[form.value.role].includes(perm)) return
   const set = new Set(form.value.permissions || [])
   if (set.has(perm)) {
     set.delete(perm)
@@ -85,15 +99,7 @@ const togglePermiso = (perm: string) => {
 }
 
 const aplicarPermisosPorRol = () => {
-  if (form.value.role === 'super') {
-    form.value.permissions = permisosCatalogo.map(p => p.key)
-  }
-  if (form.value.role === 'admin') {
-    form.value.permissions = ['agenda', 'reservas', 'historial', 'ajustes', 'vehiculos']
-  }
-  if (form.value.role === 'user') {
-    form.value.permissions = ['reservas', 'historial']
-  }
+  form.value.permissions = [...(allowedPermissionsByRole[form.value.role] || [])]
 }
 
 const guardarUsuario = async () => {
@@ -288,15 +294,15 @@ onMounted(() => {
           <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-3 block">Permisos</label>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <button
-              v-for="p in permisosCatalogo"
+              v-for="p in permisosDisponibles"
               :key="p.key"
               type="button"
               @click="togglePermiso(p.key)"
-              :disabled="isSuper"
+              :disabled="isRootRole"
               :class="[
                 'px-4 py-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all',
                 form.permissions.includes(p.key) ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600' : 'border-gray-200 dark:border-gray-800 text-gray-400',
-                isSuper ? 'opacity-60 cursor-not-allowed' : ''
+                isRootRole ? 'opacity-60 cursor-not-allowed' : ''
               ]"
             >
               {{ p.label }}
