@@ -9,6 +9,7 @@ const session = ref(null)
 const usuariosLogin = ref([])
 const loginUser = ref('')
 const loginPass = ref('')
+const showLoginPass = ref(false)
 const loginError = ref('')
 const cargandoLogin = ref(false)
 const notifications = ref([])
@@ -68,6 +69,7 @@ const iniciarSesion = async () => {
     setSession(result.user)
     session.value = result.user
     loginPass.value = ''
+    showLoginPass.value = false
   } finally {
     cargandoLogin.value = false
   }
@@ -77,6 +79,7 @@ const cerrarSesion = () => {
   clearSession()
   session.value = null
   loginPass.value = ''
+  showLoginPass.value = false
 }
 
 const puede = (perm) => hasPermission(session.value, perm)
@@ -151,19 +154,27 @@ onMounted(() => {
     <aside class="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
       
       <div class="p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
-        <svg viewBox="0 0 350 150" class="w-full h-auto drop-shadow-md hover:scale-[1.02] transition-transform duration-500">
+        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500">
           <defs>
-            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+            <linearGradient id="greenGradientSide" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00ff88"/>
+              <stop offset="50%" stop-color="#00cc66"/>
+              <stop offset="100%" stop-color="#007a3d"/>
             </linearGradient>
+            <filter id="shadowSide" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
+            </filter>
+            <mask id="cutMaskSide">
+              <rect width="100%" height="100%" fill="white"/>
+              <rect x="430" y="200" width="380" height="200" fill="black"/>
+            </mask>
           </defs>
-          <g transform="skewX(-12)">
-            <rect x="10" y="10" width="330" height="130" rx="12" fill="none" stroke="url(#logoGrad)" stroke-width="6"/>
-            <text x="35" y="92" font-family="Impact, sans-serif" font-weight="900" font-size="80" fill="url(#logoGrad)" letter-spacing="-2">ROSAS</text>
-            <text x="175" y="112" font-family="Arial, sans-serif" font-weight="800" font-size="24" fill="#16a34a">ACTITUD</text>
-            <text x="175" y="135" font-family="Arial, sans-serif" font-weight="800" font-size="24" fill="#16a34a">DEPORTIVA</text>
-            <text x="45" y="140" font-family="Impact, sans-serif" font-weight="900" font-size="55" fill="url(#logoGrad)">UY</text>
+          <g transform="skewX(-12)" filter="url(#shadowSide)">
+            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientSide)" stroke-width="14" mask="url(#cutMaskSide)"/>
+            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientSide)" letter-spacing="3">ROSAS</text>
+            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientSide)" letter-spacing="5">UY</text>
+            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
+            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
           </g>
         </svg>
       </div>
@@ -346,10 +357,27 @@ onMounted(() => {
     <div class="relative w-[480px] max-w-full rounded-3xl border border-white/10 bg-[#0f172a]/90 p-10 shadow-2xl text-white">
       
       <div class="flex justify-center mb-8">
-         <svg viewBox="0 0 350 150" class="w-40 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-          <g transform="skewX(-12)">
-            <rect x="10" y="10" width="330" height="130" rx="12" fill="none" stroke="#22c55e" stroke-width="8"/>
-            <text x="35" y="95" font-family="Impact" font-size="85" fill="#22c55e">ROSAS</text>
+        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-52 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+          <defs>
+            <linearGradient id="greenGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00ff88"/>
+              <stop offset="50%" stop-color="#00cc66"/>
+              <stop offset="100%" stop-color="#007a3d"/>
+            </linearGradient>
+            <filter id="shadowLogin" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
+            </filter>
+            <mask id="cutMaskLogin">
+              <rect width="100%" height="100%" fill="white"/>
+              <rect x="430" y="200" width="380" height="200" fill="black"/>
+            </mask>
+          </defs>
+          <g transform="skewX(-12)" filter="url(#shadowLogin)">
+            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientLogin)" stroke-width="14" mask="url(#cutMaskLogin)"/>
+            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientLogin)" letter-spacing="3">ROSAS</text>
+            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientLogin)" letter-spacing="5">UY</text>
+            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
+            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
           </g>
         </svg>
       </div>
@@ -371,9 +399,25 @@ onMounted(() => {
         </div>
 
         <div>
-          <label class="block text-[10px] uppercase tracking-widest text-blue-400 font-black mb-2 px-1">Contraseña</label>
-          <input v-model="loginPass" type="password" placeholder="••••••••"
-            class="w-full rounded-2xl bg-slate-900/50 border border-slate-700 px-5 py-4 text-slate-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600" />
+          <label class="block text-[10px] uppercase tracking-widest text-blue-400 font-black mb-2 px-1">Contrasena</label>
+          <div class="relative">
+            <input v-model="loginPass" :type="showLoginPass ? 'text' : 'password'" placeholder="********"
+              class="w-full rounded-2xl bg-slate-900/50 border border-slate-700 px-5 pr-14 py-4 text-slate-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600" />
+            <button
+              type="button"
+              @click="showLoginPass = !showLoginPass"
+              :aria-label="showLoginPass ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+              class="absolute inset-y-0 right-0 px-4 text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <svg v-if="showLoginPass" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 5.09A10.94 10.94 0 0112 5c5.05 0 9.27 3.11 10.5 7-1.02 3.22-4.17 5.88-8.06 6.72M6.23 6.23C3.69 7.63 1.77 9.68 1.5 12A11.82 11.82 0 005.1 16.94" />
+              </svg>
+              <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.46 12C3.73 7.94 7.52 5 12 5s8.27 2.94 9.54 7c-1.27 4.06-5.06 7-9.54 7s-8.27-2.94-9.54-7z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div v-if="loginError" class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 text-center">

@@ -23,7 +23,7 @@ export function registrarHandlersReservas() {
   }
 
   const notifyReserva = async (
-    accion: 'creada' | 'modificada',
+    accion: 'creada' | 'modificada' | 'eliminada',
     id: number,
     fallback?: Record<string, unknown>
   ) => {
@@ -44,7 +44,11 @@ export function registrarHandlersReservas() {
         }
       : { id, ...(fallback || {}) }
 
-    const title = accion === 'creada' ? 'Nueva reserva' : 'Reserva modificada'
+    const title = accion === 'creada'
+      ? 'Nueva reserva'
+      : accion === 'eliminada'
+        ? 'Reserva eliminada'
+        : 'Reserva modificada'
     const bodyParts = [
       resumen?.nombre ? String(resumen.nombre) : 'Cliente sin nombre',
       resumen?.fecha ? String(resumen.fecha) : '',
@@ -110,8 +114,20 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:borrar', async (_event, id: number) => {
     console.log('[IPC] Borrando reserva:', id)
+    let anterior: any = null
+    try {
+      anterior = await obtenerReserva(id)
+    } catch {
+      anterior = null
+    }
     const result = await withDbLock(() => borrarReserva(id))
     console.log('[IPC] Reserva borrada exitosamente')
+    await notifyReserva('eliminada', id, {
+      nombre: anterior?.nombre,
+      fecha: anterior?.fecha,
+      hora: anterior?.hora,
+      tipo_turno: anterior?.tipo_turno,
+    })
     return result
   })
 

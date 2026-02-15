@@ -74,16 +74,13 @@ function verifyPassword(password: string, stored: string) {
 
 function normalizePermissions(role: UserRole, permissions: string[] | null) {
   const normalizedRole = normalizeRole(role)
-  if (normalizedRole === 'superadmin' || normalizedRole === 'super') {
-    return getDefaultPermissions(normalizedRole)
-  }
-  const allowedForRole = new Set(getDefaultPermissions(normalizedRole))
+  const allowed = new Set(ALL_PERMISSIONS)
   if (!permissions || permissions.length === 0) {
     return getDefaultPermissions(normalizedRole)
   }
   const unique = new Set<string>()
   for (const p of permissions) {
-    if (allowedForRole.has(p)) unique.add(p)
+    if (allowed.has(p)) unique.add(p)
   }
   return Array.from(unique)
 }

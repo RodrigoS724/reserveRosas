@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 
-// CORS bÃ¡sico (ajustar en producciÃ³n)
+// CORS basico (ajustar en produccion)
 if (!empty($_SERVER['HTTP_ORIGIN'])) {
     header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
     header('Vary: Origin');
@@ -91,7 +91,10 @@ if (str_starts_with($path, '/api')) {
             FROM horarios_base h
             WHERE h.activo = 1
               AND h.hora NOT IN (
-                SELECT hora FROM reservas WHERE fecha = ?
+                SELECT hora
+                FROM reservas
+                WHERE fecha = ?
+                  AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
               )
               AND h.hora NOT IN (
                 SELECT hora FROM bloqueos_horarios WHERE fecha = ?
@@ -147,29 +150,52 @@ if (str_starts_with($path, '/api')) {
     $matriculaNorm = normalizeMatricula($data['matricula'] ?? '');
 
     $tipo = $data['tipo_turno'];
+    $garantiaTipo = (string)($data['garantia_tipo'] ?? '');
+    $particularTipo = (string)($data['particular_tipo'] ?? '');
+    $isService = ($tipo === 'Particular' && $particularTipo === 'Service')
+      || ($tipo === 'Garantia' && $garantiaTipo === 'Service');
+
+    $km = preg_replace('/\D+/', '', (string)($data['km'] ?? '')) ?? '';
+    if ($isService && $km === '') {
+      jsonResponse(['ok' => false, 'error' => 'KM requerido para service'], 400);
+    }
+    if (!$isService) {
+      $km = '';
+    }
+
+    $garantiaNumeroService = null;
     if ($tipo === 'Garantia') {
-      if (empty($data['garantia_tipo']) || empty($data['garantia_fecha_compra'])) {
+      if ($garantiaTipo === '') {
         jsonResponse(['ok' => false, 'error' => 'Datos de garantia incompletos'], 400);
       }
-      if ($data['garantia_tipo'] === 'Service' && empty($data['garantia_numero_service'])) {
-        jsonResponse(['ok' => false, 'error' => 'NNumero de service requerido'], 400);
+      if ($garantiaTipo === 'Service') {
+        $numeroService = preg_replace('/\D+/', '', (string)($data['garantia_numero_service'] ?? '')) ?? '';
+        if ($numeroService === '') {
+          jsonResponse(['ok' => false, 'error' => 'Numero de service requerido (solo numerico)'], 400);
+        }
+        $garantiaNumeroService = $numeroService;
       }
-      if ($data['garantia_tipo'] === 'Reparación' && empty($data['garantia_problema'])) {
-        jsonResponse(['ok' => false, 'error' => 'Descripción del problema requerida'], 400);
+      if (in_array($garantiaTipo, ['Reparacion', 'Reparación'], true) && empty($data['garantia_problema'])) {
+        jsonResponse(['ok' => false, 'error' => 'Descripcion del problema requerida'], 400);
       }
     }
 
     if ($tipo === 'Particular') {
-      if (empty($data['particular_tipo'])) {
+      if ($particularTipo === '') {
         jsonResponse(['ok' => false, 'error' => 'Tipo particular requerido'], 400);
       }
     }
-
     $pdo = db();
     $pdo->beginTransaction();
     try {
       // Validar disponibilidad del horario (lock)
-      $stmt = $pdo->prepare("SELECT 1 FROM reservas WHERE fecha = ? AND hora = ? FOR UPDATE");
+      $stmt = $pdo->prepare("
+        SELECT 1
+        FROM reservas
+        WHERE fecha = ? AND hora = ?
+          AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
+        FOR UPDATE
+      ");
       $stmt->execute([$data['fecha'], $data['hora']]);
       $exists = (bool) $stmt->fetch();
       if ($exists) {
@@ -179,7 +205,13 @@ if (str_starts_with($path, '/api')) {
 
       // Evitar duplicado de cedula en el mismo dia
       if (!empty($cedula)) {
-        $stmt = $pdo->prepare("SELECT 1 FROM reservas WHERE fecha = ? AND cedula = ? FOR UPDATE");
+        $stmt = $pdo->prepare("
+          SELECT 1
+          FROM reservas
+          WHERE fecha = ? AND cedula = ?
+            AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
+          FOR UPDATE
+        ");
         $stmt->execute([$data['fecha'], normalizeCedula($cedula)]);
         $dup = (bool) $stmt->fetch();
         if ($dup) {
@@ -205,13 +237,13 @@ if (str_starts_with($path, '/api')) {
       $telefono,
       $data['marca'],
       $data['modelo'],
-      $data['km'] ?? '',
+      $km,
       $matriculaNorm,
       $data['tipo_turno'],
-      $data['particular_tipo'] ?? null,
-      $data['garantia_tipo'] ?? null,
+      $particularTipo !== '' ? $particularTipo : null,
+      $garantiaTipo !== '' ? $garantiaTipo : null,
       $data['garantia_fecha_compra'] ?? null,
-      $data['garantia_numero_service'] ?? null,
+      $garantiaNumeroService,
       $data['garantia_problema'] ?? null,
       $data['fecha'],
       $data['hora'],
@@ -269,12 +301,12 @@ if (str_starts_with($path, '/api')) {
         ")->execute([
           $vehiculoId,
           $data['fecha'],
-          $data['km'] ?? '',
+          $km,
           $data['tipo_turno'],
-          $data['particular_tipo'] ?? null,
-          $data['garantia_tipo'] ?? null,
+          $particularTipo !== '' ? $particularTipo : null,
+          $garantiaTipo !== '' ? $garantiaTipo : null,
           $data['garantia_fecha_compra'] ?? null,
-          $data['garantia_numero_service'] ?? null,
+          $garantiaNumeroService,
           $data['garantia_problema'] ?? null,
           $data['detalles'] ?? ''
         ]);
@@ -322,19 +354,19 @@ $token = apiToken();
           <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 w-full max-w-sm mx-auto">
             <div class="flex items-center justify-between mb-3">
               <button id="calPrev" type="button"
-                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">‹</button>
+                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">&lsaquo;</button>
               <div id="calTitle" class="text-sm font-black text-emerald-900"></div>
               <button id="calNext" type="button"
-                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">›</button>
+                class="h-8 w-8 rounded-full border border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400">&rsaquo;</button>
             </div>
             <div class="grid grid-cols-7 text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">
               <div class="text-center">Dom</div>
               <div class="text-center">Lun</div>
               <div class="text-center">Mar</div>
-              <div class="text-center">Mié</div>
+              <div class="text-center">Mie</div>
               <div class="text-center">Jue</div>
               <div class="text-center">Vie</div>
-              <div class="text-center">Sáb</div>
+              <div class="text-center">Sab</div>
             </div>
             <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
             <input id="fecha" type="hidden" />
@@ -390,19 +422,16 @@ $token = apiToken();
       <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Modelo</label>
       <input id="modelo" type="text" class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
     </div>
-    <div>
-      <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">KM</label>
-      <input id="km" type="number" class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
-    </div>
-    <div>
-      <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Tipo de Turno</label>
-      <input id="tipo_turno" type="hidden" value="" />
-      <div class="grid grid-cols-2 gap-3">
-        <button type="button" id="btnParticular"
-          class="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold uppercase text-xs tracking-widest">Particular</button>
-        <button type="button" id="btnGarantia"
-          class="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold uppercase text-xs tracking-widest">Garantia</button>
-      </div>
+  </div>
+
+  <div class="mt-4">
+    <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Tipo de Turno</label>
+    <input id="tipo_turno" type="hidden" value="" />
+    <div class="grid grid-cols-2 gap-3">
+      <button type="button" id="btnParticular"
+        class="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold uppercase text-xs tracking-widest">Particular</button>
+      <button type="button" id="btnGarantia"
+        class="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold uppercase text-xs tracking-widest">Garantia</button>
     </div>
   </div>
 
@@ -430,15 +459,23 @@ $token = apiToken();
       <button type="button" id="btnGarantiaService"
         class="px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 font-bold uppercase text-xs tracking-widest">Service</button>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <input id="garantia_fecha" type="date"
+    <div id="garantiaProblemaBox" class="mt-4 hidden">
+      <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Descripcion del problema</label>
+      <input id="garantia_problema" type="text" placeholder="Descripcion del problema"
         class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <input id="garantia_numero_service" type="text" placeholder="Numero de service"
-        class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900 hidden" />
-      <input id="garantia_problema" type="text" placeholder="Descripcion del problema"
-        class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900 hidden" />
+  </div>
+
+  <div id="serviceDataRow" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+    <div id="garantiaNumeroServiceBox" class="hidden">
+      <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Numero de service</label>
+      <input id="garantia_numero_service" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Numero de service"
+        class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
+    </div>
+    <div id="kmBox" class="hidden">
+      <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">KM</label>
+      <input id="km" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 45000"
+        class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
     </div>
   </div>
 
@@ -509,6 +546,11 @@ $token = apiToken();
     const btnGarantiaService = $('btnGarantiaService');
     const garantiaNumeroService = $('garantia_numero_service');
     const garantiaProblema = $('garantia_problema');
+    const garantiaNumeroServiceBox = $('garantiaNumeroServiceBox');
+    const garantiaProblemaBox = $('garantiaProblemaBox');
+    const serviceDataRow = $('serviceDataRow');
+    const kmBox = $('kmBox');
+    const kmInput = $('km');
 
     let horaSeleccionada = '';
     let ultimoLookupMatricula = '';
@@ -773,17 +815,21 @@ $token = apiToken();
 
       const garantiaOk = tipoTurno.value !== 'Garantia'
         ? true
-        : $('garantia_fecha').value.trim() !== '' && (
-          $('garantia_tipo').value === 'Service'
-            ? garantiaNumeroService.value.trim() !== ''
-            : garantiaProblema.value.trim() !== ''
+        : (
+          $('garantia_tipo').value !== '' && (
+            $('garantia_tipo').value === 'Service'
+              ? /^\d+$/.test(garantiaNumeroService.value.trim())
+              : garantiaProblema.value.trim() !== ''
+          )
         );
 
       const particularOk = tipoTurno.value !== 'Particular'
         ? true
         : ($('particular_tipo').value === 'Service' ? true : detalles.value.trim() !== '');
 
-      btnReservar.disabled = !(okBase && ciOk && nombreOk && telOk && matOk && garantiaOk && particularOk);
+      const kmOk = kmInput.disabled ? true : /^\d+$/.test(kmInput.value.trim());
+
+      btnReservar.disabled = !(okBase && ciOk && nombreOk && telOk && matOk && garantiaOk && particularOk && kmOk);
       btnContinuar.disabled = !fecha.value || !horaSeleccionada;
     }
 
@@ -818,8 +864,8 @@ $token = apiToken();
 
     function toggleGarantiaInputs() {
       const esService = $('garantia_tipo').value === 'Service';
-      garantiaNumeroService.classList.toggle('hidden', !esService);
-      garantiaProblema.classList.toggle('hidden', esService);
+      garantiaProblemaBox.classList.toggle('hidden', esService);
+      garantiaProblema.disabled = esService;
       if (esService) {
         garantiaProblema.value = '';
       } else {
@@ -827,36 +873,134 @@ $token = apiToken();
       }
     }
 
-    function generarPdfReserva(payload) {
+    function toggleKmInput() {
+      const isParticularService = tipoTurno.value === 'Particular' && particularTipo.value === 'Service';
+      const isGarantiaService = tipoTurno.value === 'Garantia' && $('garantia_tipo').value === 'Service';
+      const showNumeroService = isGarantiaService;
+      const showKm = isParticularService || isGarantiaService;
+
+      serviceDataRow.classList.toggle('hidden', !(showNumeroService || showKm));
+      garantiaNumeroServiceBox.classList.toggle('hidden', !showNumeroService);
+      garantiaNumeroService.disabled = !showNumeroService;
+      kmBox.classList.toggle('hidden', !showKm);
+      kmInput.disabled = !showKm;
+
+      kmBox.classList.toggle('md:col-span-2', showKm && !showNumeroService);
+      garantiaNumeroServiceBox.classList.remove('md:col-span-2');
+
+      if (!showNumeroService) {
+        garantiaNumeroService.value = '';
+      }
+      if (!showKm) {
+        kmInput.value = '';
+      }
+    }
+
+    async function generarPdfReserva(payload) {
       if (!window.jspdf) return;
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const line = (y, text) => doc.text(text, 12, y);
-      let y = 16;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      line(y, 'Taller Rosas - Comprobante de Reserva');
-      y += 10;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      line(y, `Nombre: ${payload.nombre}`); y += 7;
-      line(y, `Telefono: ${payload.telefono}`); y += 7;
-      line(y, `Fecha: ${payload.fecha}  Hora: ${payload.hora}`); y += 7;
-      line(y, `Matricula: ${payload.matricula}`); y += 7;
-      line(y, `Vehiculo: ${payload.marca} ${payload.modelo}`); y += 7;
-      line(y, `Tipo: ${payload.tipo_turno}${payload.particular_tipo ? ' - ' + payload.particular_tipo : ''}`); y += 7;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+      const contentWidth = pageWidth - (margin * 2);
+
+      const colors = {
+        greenDark: [5, 120, 90],
+        greenSoft: [236, 253, 245],
+        text: [0, 0, 0],
+        muted: [0, 0, 0]
+      };
+
+      const drawHeader = () => {
+        doc.setFillColor(...colors.greenDark);
+        doc.rect(0, 0, pageWidth, 42, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('Taller Rosas', 36, 18);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Comprobante de Reserva', 36, 26);
+        doc.setFontSize(9);
+        doc.text('Servicio automotriz', 36, 32);
+      };
+
+      const drawCard = (x, y, w, h, label, value) => {
+        doc.setFillColor(...colors.greenSoft);
+        doc.setDrawColor(209, 250, 229);
+        doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+        doc.setTextColor(...colors.muted);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text(label.toUpperCase(), x + 3, y + 5);
+        doc.setTextColor(...colors.text);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(String(value || '-'), x + 3, y + 10);
+      };
+
+      drawHeader();
+
+      let y = 50;
+      const gap = 4;
+      const colWidth = (contentWidth - gap) / 2;
+      const cardH = 14;
+
+      drawCard(margin, y, colWidth, cardH, 'Cliente', payload.nombre);
+      drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Telefono', payload.telefono);
+      y += cardH + gap;
+
+      drawCard(margin, y, colWidth, cardH, 'Fecha', payload.fecha);
+      drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Hora', payload.hora);
+      y += cardH + gap;
+
+      drawCard(margin, y, colWidth, cardH, 'Matricula', payload.matricula);
+      drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Vehiculo', `${payload.marca} ${payload.modelo}`.trim());
+      y += cardH + gap;
+
+      if (payload.km) {
+        drawCard(margin, y, colWidth, cardH, 'KM', payload.km);
+      }
+      drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Turno', `${payload.tipo_turno}${payload.particular_tipo ? ' - ' + payload.particular_tipo : ''}`);
+      y += cardH + gap;
+
       if (payload.tipo_turno === 'Garantia') {
-        line(y, `Garantia: ${payload.garantia_tipo || ''}`); y += 7;
-        if (payload.garantia_fecha_compra) {
-          line(y, `Fecha compra: ${payload.garantia_fecha_compra}`); y += 7;
-        }
+        drawCard(margin, y, colWidth, cardH, 'Garantia', payload.garantia_tipo || '-');
         if (payload.garantia_numero_service) {
-          line(y, `Nro service: ${payload.garantia_numero_service}`); y += 7;
-        }
-        if (payload.garantia_problema) {
-          line(y, `Problema: ${payload.garantia_problema}`); y += 7;
+          drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Numero de service', payload.garantia_numero_service);
+          y += cardH + gap;
+        } else if (payload.garantia_problema) {
+          drawCard(margin + colWidth + gap, y, colWidth, cardH, 'Motivo', 'Reparacion');
+          y += cardH + gap;
+        } else {
+          y += cardH + gap;
         }
       }
+
+      if (payload.garantia_problema || payload.detalles) {
+        const detailText = payload.garantia_problema || payload.detalles;
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(margin, y, contentWidth, 20, 2, 2, 'FD');
+        doc.setTextColor(...colors.muted);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text('DETALLE', margin + 3, y + 5);
+        doc.setTextColor(...colors.text);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const wrapped = doc.splitTextToSize(String(detailText), contentWidth - 6);
+        doc.text(wrapped, margin + 3, y + 10);
+        y += 24;
+      }
+
+      doc.setTextColor(...colors.muted);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.text('Gracias por confiar en Taller Rosas', margin, 286);
+      doc.text(`Generado: ${new Date().toLocaleString()}`, pageWidth - margin, 286, { align: 'right' });
+
       const file = `reserva-${payload.fecha}-${payload.matricula}.pdf`;
       doc.save(file.replace(/\s+/g, ''));
     }
@@ -870,12 +1014,11 @@ $token = apiToken();
         telefono: normalizarTelefonoUy(telefono.value).local,
         marca: marca.value.trim(),
         modelo: modelo.value.trim(),
-        km: $('km').value.trim(),
+        km: kmInput.disabled ? '' : kmInput.value.replace(/\D/g, '').trim(),
         matricula: normalizarMatricula(matricula.value.trim()),
         tipo_turno: tipoTurno.value,
         particular_tipo: tipoTurno.value === 'Particular' ? particularTipo.value : null,
         garantia_tipo: tipoTurno.value === 'Garantia' ? $('garantia_tipo').value : null,
-        garantia_fecha_compra: tipoTurno.value === 'Garantia' ? $('garantia_fecha').value : null,
         garantia_numero_service: tipoTurno.value === 'Garantia' ? $('garantia_numero_service').value : null,
         garantia_problema: tipoTurno.value === 'Garantia' ? $('garantia_problema').value : null,
         fecha: fecha.value,
@@ -893,7 +1036,11 @@ $token = apiToken();
         if (!json.ok) throw new Error(json.error || 'Error');
         setStatus(formStatus, 'Reserva creada con exito', true);
         successBanner.classList.remove('hidden');
-        generarPdfReserva(payload);
+        try {
+          await generarPdfReserva(payload);
+        } catch (pdfError) {
+          console.error('No se pudo generar el comprobante:', pdfError);
+        }
         fetchHorarios();
       } catch (e) {
         setStatus(formStatus, e.message || 'Error al crear reserva', false);
@@ -926,6 +1073,15 @@ $token = apiToken();
     ['nombre', 'marca', 'modelo', 'km'].forEach(id => {
       $(id).addEventListener('input', validarForm);
     });
+    kmInput.addEventListener('input', () => {
+      kmInput.value = kmInput.value.replace(/\D/g, '');
+      validarForm();
+    });
+    garantiaNumeroService.addEventListener('input', () => {
+      garantiaNumeroService.value = garantiaNumeroService.value.replace(/\D/g, '');
+      validarForm();
+    });
+    garantiaProblema.addEventListener('input', validarForm);
     cedula.addEventListener('input', validarForm);
 
     matricula.addEventListener('blur', buscarVehiculo);
@@ -951,6 +1107,7 @@ $token = apiToken();
       setActive(btnParticular, [btnParticular, btnGarantia]);
       particularBox.classList.remove('hidden');
       garantiaBox.classList.add('hidden');
+      toggleKmInput();
       validarForm();
     });
     btnGarantia.addEventListener('click', () => {
@@ -958,6 +1115,7 @@ $token = apiToken();
       setActive(btnGarantia, [btnParticular, btnGarantia]);
       garantiaBox.classList.remove('hidden');
       particularBox.classList.add('hidden');
+      toggleKmInput();
       validarForm();
     });
 
@@ -965,12 +1123,14 @@ $token = apiToken();
       particularTipo.value = 'Service';
       setActive(btnParticularService, [btnParticularService, btnParticularTaller]);
       toggleDetallesParticular();
+      toggleKmInput();
       validarForm();
     });
     btnParticularTaller.addEventListener('click', () => {
       particularTipo.value = 'Taller';
       setActive(btnParticularTaller, [btnParticularService, btnParticularTaller]);
       toggleDetallesParticular();
+      toggleKmInput();
       validarForm();
     });
 
@@ -978,12 +1138,14 @@ $token = apiToken();
       $('garantia_tipo').value = 'Reparacion';
       setActive(btnGarantiaReparacion, [btnGarantiaReparacion, btnGarantiaService]);
       toggleGarantiaInputs();
+      toggleKmInput();
       validarForm();
     });
     btnGarantiaService.addEventListener('click', () => {
       $('garantia_tipo').value = 'Service';
       setActive(btnGarantiaService, [btnGarantiaReparacion, btnGarantiaService]);
       toggleGarantiaInputs();
+      toggleKmInput();
       validarForm();
     });
 
@@ -1001,6 +1163,7 @@ $token = apiToken();
     btnWhatsapp.href = 'https://wa.me/59894860496';
     toggleDetallesParticular();
     toggleGarantiaInputs();
+    toggleKmInput();
     btnParticular.click();
     btnParticularService.click();
   </script>
