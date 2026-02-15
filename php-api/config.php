@@ -165,21 +165,42 @@ function normalizeTelefonoUy(string $value): string
     if (str_starts_with($digits, '598')) {
         $digits = substr($digits, 3);
     }
-    $digits = substr($digits, 0, 8);
-    if (strlen($digits) !== 8) {
+    if (str_starts_with($digits, '9')) {
+        $digits = '0' . $digits;
+    }
+    if (!str_starts_with($digits, '0')) {
+        $digits = '0' . $digits;
+    }
+    $digits = substr($digits, 0, 9);
+    if (strlen($digits) !== 9) {
         return '';
     }
-    return '+598 ' . substr($digits, 0, 2) . ' ' . substr($digits, 2, 3) . ' ' . substr($digits, 5, 3);
+    // Guardar local con prefijo 09 (9 dígitos)
+    return $digits;
 }
 
 function isValidTelefonoUy(string $value): bool
 {
-    return (bool) preg_match('/^\+598\s\d{2}\s\d{3}\s\d{3}$/', trim($value));
+    $digits = preg_replace('/\D+/', '', $value) ?? '';
+    if (str_starts_with($digits, '598')) {
+        $digits = substr($digits, 3);
+    }
+    if (str_starts_with($digits, '9')) {
+        $digits = '0' . $digits;
+    }
+    if (!str_starts_with($digits, '0')) {
+        $digits = '0' . $digits;
+    }
+    return strlen($digits) === 9 && str_starts_with($digits, '0');
 }
-
 function isValidMatriculaUy(string $value): bool
 {
     return (bool) preg_match('/^[A-Z]{3}\d{3,4}$/', normalizeMatricula($value));
 }
+
+
+
+
+
 
 

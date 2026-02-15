@@ -1,7 +1,5 @@
 import 'dotenv/config'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { autoUpdater } from 'electron-updater'
-import log from 'electron-log'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
@@ -9,6 +7,7 @@ import { initDatabase } from './db/database'
 import { startBackupScheduler } from './services/backup.service'
 import { loadUserEnv } from './config/env'
 import { bootstrapSuperAdmin } from './services/users.service'
+import { setSettings } from './settings'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -73,41 +72,22 @@ function createWindow() {
 }
 
 // UN SOLO whenReady para todo
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   loadUserEnv() // Cargar .env guardado por el usuario (si existe)
   initDatabase() // Inicializamos la base de datos
-  bootstrapSuperAdmin()
+  await bootstrapSuperAdmin()
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
   createWindow()  // Creamos la ventana
 
-  // Auto-update solo en builds de producción
-  if (!VITE_DEV_SERVER_URL) {
-    const sendUpdateStatus = (channel: string, payload?: unknown) => {
-      if (win && !win.isDestroyed()) {
-        win.webContents.send(channel, payload)
-      }
-    }
-
-    autoUpdater.on('update-available', (info) => sendUpdateStatus('app:update-available', info))
-    autoUpdater.on('download-progress', (progress) => {
-      sendUpdateStatus('app:update-progress', {
-        percent: progress.percent,
-        transferred: progress.transferred,
-        total: progress.total,
-      })
+  ipcMain.on('settings:update', (_event, payload) => {
+    if (!payload || typeof payload !== 'object') return
+    const soundEnabled = payload.soundEnabled
+    const theme = payload.theme
+    setSettings({
+      soundEnabled: typeof soundEnabled === 'boolean' ? soundEnabled : true,
+      theme: theme === 'light' ? 'light' : 'dark'
     })
-    autoUpdater.on('update-downloaded', (info) => sendUpdateStatus('app:update-downloaded', info))
-    autoUpdater.on('error', (err) => {
-      sendUpdateStatus('app:update-error', { message: err?.message || String(err) })
-    })
+  })
 
-    ipcMain.on('app:quit-and-install', () => {
-      autoUpdater.quitAndInstall()
-    })
-
-    autoUpdater.logger = log
-    autoUpdater.autoDownload = true
-    autoUpdater.checkForUpdatesAndNotify()
-  }
 })

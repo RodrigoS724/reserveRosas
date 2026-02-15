@@ -1,1 +1,73 @@
-"use strict";const s=require("electron");s.contextBridge.exposeInMainWorld("ipcRenderer",{on(...r){const[o,a]=r;return s.ipcRenderer.on(o,(i,...n)=>a(i,...n))},off(...r){const[o,...a]=r;return s.ipcRenderer.off(o,...a)},send(...r){const[o,...a]=r;return s.ipcRenderer.send(o,...a)},invoke(...r){const[o,...a]=r;return s.ipcRenderer.invoke(o,...a)}});const e=async(...r)=>{const o=await s.ipcRenderer.invoke(...r);if(o&&typeof o=="object"&&o.__ipc_error){const a=new Error(o.message||"IPC error");throw o.stack&&(a.stack=o.stack),a}return o};s.contextBridge.exposeInMainWorld("api",{crearReserva:r=>e("reservas:crear",r),obtenerReserva:r=>e("reservas:obtener",r),borrarReserva:r=>e("reservas:borrar",r),moverReserva:r=>e("reservas:mover",r),actualizarReserva:r=>e("reservas:actualizar",r),obtenerReservasSemana:r=>e("reservas:semana",r),obtenerTodasLasReservas:()=>e("reservas:todas"),actualizarNotasReserva:(r,o)=>e("reservas:actualizar-notas",r,o),obtenerCambiosReservas:r=>e("reservas:cambios",r),obtenerHorariosBase:()=>e("horarios:base"),obtenerHorariosInactivos:()=>e("horarios:inactivos"),obtenerHorariosDisponibles:r=>e("horarios:disponibles",r),crearHorario:r=>e("horarios:crear",r),desactivarHorario:r=>e("horarios:desactivar",r),activarHorario:r=>e("horarios:activar",r),bloquearHorario:r=>e("horarios:bloquear",r),desbloquearHorario:r=>e("horarios:desbloquear",r),obtenerHorariosBloqueados:r=>e("horarios:bloqueados",r),borrarHorarioPermanente:r=>e("horarios:borrar",r),obtenerHistorial:r=>e("historial:obtener",r),obtenerVehiculos:()=>e("vehiculos:todos"),obtenerHistorialVehiculo:r=>e("vehiculos:historial",r),obtenerEnvConfig:()=>e("config:env:get"),guardarEnvConfig:r=>e("config:env:set",r),probarConexionDB:()=>e("config:db:test"),obtenerUsuariosLogin:()=>e("usuarios:login-list"),login:(r,o)=>e("auth:login",r,o),listarUsuarios:()=>e("usuarios:list"),crearUsuario:r=>e("usuarios:create",r),actualizarUsuario:r=>e("usuarios:update",r),borrarUsuario:r=>e("usuarios:delete",r),actualizarPasswordUsuario:r=>e("usuarios:password",r),obtenerAuditoriaUsuarios:()=>e("auditoria:list")});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("ipcRenderer", {
+  on(...args) {
+    const [channel, listener] = args;
+    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+  },
+  off(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.off(channel, ...omit);
+  },
+  send(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.send(channel, ...omit);
+  },
+  invoke(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.invoke(channel, ...omit);
+  }
+});
+const invokeSafe = async (...args) => {
+  const result = await electron.ipcRenderer.invoke(...args);
+  if (result && typeof result === "object" && result.__ipc_error) {
+    const err = new Error(result.message || "IPC error");
+    if (result.stack) {
+      err.stack = result.stack;
+    }
+    throw err;
+  }
+  return result;
+};
+electron.contextBridge.exposeInMainWorld("api", {
+  // Reservas
+  crearReserva: (d) => invokeSafe("reservas:crear", d),
+  obtenerReserva: (id) => invokeSafe("reservas:obtener", id),
+  borrarReserva: (id) => invokeSafe("reservas:borrar", id),
+  moverReserva: (d) => invokeSafe("reservas:mover", d),
+  actualizarReserva: (d) => invokeSafe("reservas:actualizar", d),
+  obtenerReservasSemana: (d) => invokeSafe("reservas:semana", d),
+  obtenerTodasLasReservas: () => invokeSafe("reservas:todas"),
+  actualizarNotasReserva: (id, notas) => invokeSafe("reservas:actualizar-notas", id, notas),
+  obtenerCambiosReservas: (d) => invokeSafe("reservas:cambios", d),
+  // Horarios
+  obtenerHorariosBase: () => invokeSafe("horarios:base"),
+  obtenerHorariosInactivos: () => invokeSafe("horarios:inactivos"),
+  obtenerHorariosDisponibles: (f) => invokeSafe("horarios:disponibles", f),
+  crearHorario: (h) => invokeSafe("horarios:crear", h),
+  desactivarHorario: (id) => invokeSafe("horarios:desactivar", id),
+  activarHorario: (id) => invokeSafe("horarios:activar", id),
+  bloquearHorario: (d) => invokeSafe("horarios:bloquear", d),
+  desbloquearHorario: (d) => invokeSafe("horarios:desbloquear", d),
+  obtenerHorariosBloqueados: (f) => invokeSafe("horarios:bloqueados", f),
+  borrarHorarioPermanente: (id) => invokeSafe("horarios:borrar", id),
+  // Historial
+  obtenerHistorial: (id) => invokeSafe("historial:obtener", id),
+  // Vehiculos
+  obtenerVehiculos: () => invokeSafe("vehiculos:todos"),
+  obtenerHistorialVehiculo: (vehiculoId) => invokeSafe("vehiculos:historial", vehiculoId),
+  // Configuración
+  obtenerEnvConfig: () => invokeSafe("config:env:get"),
+  guardarEnvConfig: (text) => invokeSafe("config:env:set", text),
+  probarConexionDB: () => invokeSafe("config:db:test"),
+  // Usuarios / Auth
+  obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
+  login: (username, password) => invokeSafe("auth:login", username, password),
+  listarUsuarios: () => invokeSafe("usuarios:list"),
+  crearUsuario: (data) => invokeSafe("usuarios:create", data),
+  actualizarUsuario: (data) => invokeSafe("usuarios:update", data),
+  borrarUsuario: (data) => invokeSafe("usuarios:delete", data),
+  actualizarPasswordUsuario: (data) => invokeSafe("usuarios:password", data),
+  // Auditoría
+  obtenerAuditoriaUsuarios: () => invokeSafe("auditoria:list")
+});

@@ -60,7 +60,10 @@ function obtenerHorariosDisponiblesSqlite(fecha: string) {
     FROM horarios_base h
     WHERE h.activo = 1
       AND h.hora NOT IN (
-        SELECT hora FROM reservas WHERE fecha = ?
+        SELECT hora
+        FROM reservas
+        WHERE fecha = ?
+          AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
       )
       AND h.hora NOT IN (
         SELECT hora FROM bloqueos_horarios WHERE fecha = ?
@@ -86,7 +89,10 @@ export async function obtenerHorariosDisponibles(fecha: string) {
         FROM horarios_base h
         WHERE h.activo = 1
           AND h.hora NOT IN (
-            SELECT hora FROM reservas WHERE fecha = ?
+            SELECT hora
+            FROM reservas
+            WHERE fecha = ?
+              AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
           )
           AND h.hora NOT IN (
             SELECT hora FROM bloqueos_horarios WHERE fecha = ?

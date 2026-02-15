@@ -2,7 +2,7 @@ export type SessionUser = {
   id: number
   nombre: string
   username: string
-  role: 'super' | 'admin' | 'user'
+  role: 'superadmin' | 'super' | 'admin' | 'user'
   permissions: string[]
 }
 
@@ -20,6 +20,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 }
 
 const DEFAULT_ROUTES: Record<SessionUser['role'], string> = {
+  superadmin: '/',
   super: '/',
   admin: '/',
   user: '/reservas'

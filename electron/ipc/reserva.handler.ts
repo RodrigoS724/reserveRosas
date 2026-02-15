@@ -1,5 +1,6 @@
 // main/ipc/reservas.handlers.ts
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, Notification, shell } from 'electron'
+import { getSettings } from '../settings'
 import { safeHandle } from './safeHandle'
 import {
   crearReserva,
@@ -22,7 +23,7 @@ export function registrarHandlersReservas() {
   }
 
   const notifyReserva = async (
-    accion: 'creada' | 'modificada',
+    accion: 'creada' | 'modificada' | 'eliminada',
     id: number,
     fallback?: Record<string, unknown>
   ) => {
@@ -42,6 +43,36 @@ export function registrarHandlersReservas() {
           tipo_turno: reserva.tipo_turno,
         }
       : { id, ...(fallback || {}) }
+
+    const title = accion === 'creada'
+      ? 'Nueva reserva'
+      : accion === 'eliminada'
+        ? 'Reserva eliminada'
+        : 'Reserva modificada'
+    const bodyParts = [
+      resumen?.nombre ? String(resumen.nombre) : 'Cliente sin nombre',
+      resumen?.fecha ? String(resumen.fecha) : '',
+      resumen?.hora ? String(resumen.hora) : '',
+      resumen?.tipo_turno ? String(resumen.tipo_turno) : '',
+    ].filter(Boolean)
+    const body = bodyParts.join(' · ')
+
+    const settings = getSettings()
+    if (Notification.isSupported()) {
+      try {
+        const notif = new Notification({
+          title,
+          body,
+          silent: settings.soundEnabled === false,
+        })
+        notif.show()
+        if (settings.soundEnabled !== false) {
+          shell.beep()
+        }
+      } catch {
+        // ignore native notification failures
+      }
+    }
 
     broadcast('reservas:notify', {
       accion,
@@ -83,8 +114,20 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:borrar', async (_event, id: number) => {
     console.log('[IPC] Borrando reserva:', id)
+    let anterior: any = null
+    try {
+      anterior = await obtenerReserva(id)
+    } catch {
+      anterior = null
+    }
     const result = await withDbLock(() => borrarReserva(id))
     console.log('[IPC] Reserva borrada exitosamente')
+    await notifyReserva('eliminada', id, {
+      nombre: anterior?.nombre,
+      fecha: anterior?.fecha,
+      hora: anterior?.hora,
+      tipo_turno: anterior?.tipo_turno,
+    })
     return result
   })
 
