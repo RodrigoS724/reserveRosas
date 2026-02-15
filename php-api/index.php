@@ -922,8 +922,6 @@ $token = apiToken();
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
         doc.text('Comprobante de Reserva', 36, 26);
-        doc.setFontSize(9);
-        doc.text('Servicio automotriz', 36, 32);
       };
 
       const drawCard = (x, y, w, h, label, value) => {
