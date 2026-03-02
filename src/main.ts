@@ -11,6 +11,7 @@ import vehiculos from './views/vehiculos.vue'
 import Config from './views/config.vue'
 import Users from './views/users.vue'
 import Auditoria from './views/auditoria.vue'
+import DailySummary from './views/dailySummary.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -23,6 +24,7 @@ const router = createRouter({
     { path: '/vehiculos', component: vehiculos },
     { path: '/ajustes', component: adminHorarios },
     { path: '/reservas', component: Reservas },
+    { path: '/resumen-diario', component: DailySummary },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },

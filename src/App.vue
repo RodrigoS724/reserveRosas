@@ -209,6 +209,18 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <router-link v-if="puede('reservas')" to="/resumen-diario" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m3 6V7m3 10v-3m2 5H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z"/></svg>
+            <span>Resumen diario</span>
+          </div>
+        </router-link>
+
         <router-link v-if="puede('ajustes')" to="/ajustes" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
