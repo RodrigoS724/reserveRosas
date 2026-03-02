@@ -8,10 +8,16 @@ import {
   borrarReserva,
   moverReserva, actualizarReserva,
   obtenerReservasSemana,
+  obtenerReservasPorFecha,
   obtenerTodasLasReservas, actualizarNotasReserva,
   obtenerCambiosReservas
 } from '../services/reserva.service'
 import { withDbLock } from './withDBLock'
+import {
+  getDailySummaryConfig,
+  setDailySummaryConfig,
+  sendDailySummaryNow
+} from '../services/daily-summary.service'
 
 export function registrarHandlersReservas() {
   const broadcast = (channel: string, payload: unknown) => {
@@ -194,5 +200,28 @@ export function registrarHandlersReservas() {
     const lastId = Number(payload?.lastId || 0)
     const limit = Number(payload?.limit || 200)
     return obtenerCambiosReservas(since, lastId, limit)
+  })
+
+  safeHandle('reservas:dia', async (_event, payload) => {
+    const fecha = String(payload?.fecha || '').trim()
+    if (!fecha) return []
+    return withDbLock(() => obtenerReservasPorFecha(fecha))
+  })
+
+  safeHandle('resumen-diario:config:get', async () => {
+    return getDailySummaryConfig()
+  })
+
+  safeHandle('resumen-diario:config:set', async (_event, payload) => {
+    return setDailySummaryConfig({
+      enabled: typeof payload?.enabled === 'boolean' ? payload.enabled : undefined,
+      sendTime: typeof payload?.sendTime === 'string' ? payload.sendTime : undefined,
+      recipients: Array.isArray(payload?.recipients) ? payload.recipients : undefined
+    })
+  })
+
+  safeHandle('resumen-diario:enviar', async (_event, payload) => {
+    const fecha = String(payload?.fecha || '').trim()
+    return sendDailySummaryNow(fecha)
   })
 }

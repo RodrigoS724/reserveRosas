@@ -37,9 +37,13 @@ electron.contextBridge.exposeInMainWorld("api", {
   moverReserva: (d) => invokeSafe("reservas:mover", d),
   actualizarReserva: (d) => invokeSafe("reservas:actualizar", d),
   obtenerReservasSemana: (d) => invokeSafe("reservas:semana", d),
+  obtenerReservasDia: (d) => invokeSafe("reservas:dia", d),
   obtenerTodasLasReservas: () => invokeSafe("reservas:todas"),
   actualizarNotasReserva: (id, notas) => invokeSafe("reservas:actualizar-notas", id, notas),
   obtenerCambiosReservas: (d) => invokeSafe("reservas:cambios", d),
+  obtenerConfigResumenDiario: () => invokeSafe("resumen-diario:config:get"),
+  guardarConfigResumenDiario: (d) => invokeSafe("resumen-diario:config:set", d),
+  enviarResumenDiario: (d) => invokeSafe("resumen-diario:enviar", d),
   // Horarios
   obtenerHorariosBase: () => invokeSafe("horarios:base"),
   obtenerHorariosInactivos: () => invokeSafe("horarios:inactivos"),

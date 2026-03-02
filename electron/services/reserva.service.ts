@@ -775,6 +775,37 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
 }
 
 /* =========================
+ * RESERVAS POR FECHA
+ * ========================= */
+export async function obtenerReservasPorFecha(fecha: string) {
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT * FROM reservas
+        WHERE fecha = ?
+        ORDER BY hora
+      `,
+      [fechaNormalizada]
+    )
+    return rows
+  })
+
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value)
+    return mysqlResult.value
+  }
+
+  const db = initDatabase()
+  return db.prepare(`
+    SELECT * FROM reservas
+    WHERE fecha = ?
+    ORDER BY hora
+  `).all(fechaNormalizada)
+}
+
+/* =========================
  * OBTENER TODAS LAS RESERVAS
  * ========================= */
 export async function obtenerTodasLasReservas() {

@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
 
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
+const resumenFecha = ref(new Date().toISOString().split('T')[0])
+const resumenReservas = ref<any[]>([])
+const resumenCargando = ref(false)
+const resumenGuardando = ref(false)
+const resumenEnviando = ref(false)
+const resumenConfig = ref({
+  enabled: false,
+  sendTime: '07:30',
+  recipientsText: '',
+  lastSentDate: ''
+})
 
 // Horarios: se cargarán dinámicamente desde la BD
 const horariosDisponibles = ref<string[]>([])
@@ -152,6 +163,90 @@ const cargarReservas = async () => {
   }
 }
 
+const cargarResumenDiario = async () => {
+  if (!resumenFecha.value) return
+  resumenCargando.value = true
+  try {
+    const result = await window.api.obtenerReservasDia({ fecha: resumenFecha.value })
+    resumenReservas.value = Array.isArray(result) ? result : []
+  } catch (error) {
+    console.error('[ResumenDiario] Error cargando reservas del dia:', error)
+    resumenReservas.value = []
+  } finally {
+    resumenCargando.value = false
+  }
+}
+
+const cargarConfigResumenDiario = async () => {
+  try {
+    const cfg = await window.api.obtenerConfigResumenDiario()
+    resumenConfig.value = {
+      enabled: Boolean(cfg?.enabled),
+      sendTime: cfg?.sendTime || '07:30',
+      recipientsText: Array.isArray(cfg?.recipients) ? cfg.recipients.join(', ') : '',
+      lastSentDate: cfg?.lastSentDate || ''
+    }
+  } catch (error) {
+    console.error('[ResumenDiario] Error cargando config:', error)
+  }
+}
+
+const parseRecipientsText = (text: string) => {
+  return String(text || '')
+    .split(/[,\n;]+/)
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
+const guardarConfigResumenDiario = async () => {
+  resumenGuardando.value = true
+  try {
+    const recipients = parseRecipientsText(resumenConfig.value.recipientsText)
+    const cfg = await window.api.guardarConfigResumenDiario({
+      enabled: resumenConfig.value.enabled,
+      sendTime: resumenConfig.value.sendTime,
+      recipients
+    })
+    resumenConfig.value = {
+      enabled: Boolean(cfg?.enabled),
+      sendTime: cfg?.sendTime || '07:30',
+      recipientsText: Array.isArray(cfg?.recipients) ? cfg.recipients.join(', ') : '',
+      lastSentDate: cfg?.lastSentDate || ''
+    }
+    window.dispatchEvent(new CustomEvent('ui:notify', {
+      detail: { message: 'Configuracion de resumen diario guardada', variant: 'success' }
+    }))
+  } catch (error: any) {
+    console.error('[ResumenDiario] Error guardando config:', error)
+    window.dispatchEvent(new CustomEvent('ui:notify', {
+      detail: { message: `No se pudo guardar la configuracion: ${error?.message || 'Error'}`, variant: 'info' }
+    }))
+  } finally {
+    resumenGuardando.value = false
+  }
+}
+
+const enviarResumenDiarioAhora = async () => {
+  resumenEnviando.value = true
+  try {
+    const result = await window.api.enviarResumenDiario({ fecha: resumenFecha.value })
+    if (!result?.ok) {
+      throw new Error(result?.reason || 'No se pudo enviar')
+    }
+    await cargarConfigResumenDiario()
+    window.dispatchEvent(new CustomEvent('ui:notify', {
+      detail: { message: `Resumen enviado (${result.count || 0} reservas)`, variant: 'success' }
+    }))
+  } catch (error: any) {
+    console.error('[ResumenDiario] Error enviando resumen:', error)
+    window.dispatchEvent(new CustomEvent('ui:notify', {
+      detail: { message: `Fallo envio de resumen: ${error?.message || 'Error'}`, variant: 'info' }
+    }))
+  } finally {
+    resumenEnviando.value = false
+  }
+}
+
 const chequearCambiosRemotos = async () => {
   try {
     const cambios = await window.api.obtenerCambiosReservas({
@@ -238,6 +333,8 @@ onMounted(async () => {
   console.log('[Reserve] Inicializando vista...')
   await cargarHorariosBase()
   await cargarReservas()
+  await cargarResumenDiario()
+  await cargarConfigResumenDiario()
   await chequearCambiosRemotos()
 
   const ipc = window.ipcRenderer
@@ -260,6 +357,10 @@ onMounted(async () => {
     await chequearCambiosRemotos()
     await cargarReservas()
   }, 5000) // Recargar cada 5 segundos
+})
+
+watch(resumenFecha, () => {
+  cargarResumenDiario()
 })
 
 onBeforeUnmount(() => {
@@ -408,6 +509,87 @@ const obtenerDetalleResumen = (reserva: any) => {
         <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
     </header>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+      <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/60 p-4 sm:p-5 md:p-6 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h3 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-gray-800 dark:text-gray-100">
+            Resumen diario
+          </h3>
+          <input
+            v-model="resumenFecha"
+            type="date"
+            class="bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold"
+          />
+        </div>
+
+        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+          Total de reservas: {{ resumenReservas.length }}
+        </div>
+
+        <div v-if="resumenCargando" class="text-xs text-gray-500">Cargando resumen...</div>
+        <div v-else-if="resumenReservas.length === 0" class="text-xs text-gray-500">No hay reservas para esa fecha.</div>
+        <div v-else class="max-h-56 overflow-auto custom-scrollbar divide-y divide-gray-100 dark:divide-gray-800">
+          <div v-for="r in resumenReservas" :key="`resumen-${r.id}`" class="py-2.5 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-xs sm:text-sm font-black truncate">{{ r.nombre }}</div>
+              <div class="text-[10px] sm:text-xs text-gray-500 truncate">{{ r.telefono }} · {{ r.matricula }}</div>
+            </div>
+            <div class="text-[11px] sm:text-xs font-black text-cyan-600">{{ r.hora }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/60 p-4 sm:p-5 md:p-6 shadow-sm">
+        <h3 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-gray-800 dark:text-gray-100 mb-4">
+          Envio automatico por correo
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <label class="flex items-center gap-2 text-xs font-bold">
+            <input v-model="resumenConfig.enabled" type="checkbox" />
+            Activar envio diario
+          </label>
+          <label class="text-xs font-bold">
+            Hora de envio
+            <input
+              v-model="resumenConfig.sendTime"
+              type="time"
+              class="mt-1 w-full bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs"
+            />
+          </label>
+        </div>
+
+        <label class="block text-xs font-bold mb-1">Correos (separados por coma, punto y coma o salto de linea)</label>
+        <textarea
+          v-model="resumenConfig.recipientsText"
+          rows="3"
+          placeholder="correo1@dominio.com, correo2@dominio.com"
+          class="w-full bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs"
+        ></textarea>
+
+        <div class="text-[10px] sm:text-xs text-gray-500 mt-2">
+          Ultimo envio automatico: {{ resumenConfig.lastSentDate || 'Sin envios' }}
+        </div>
+
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button
+            @click="guardarConfigResumenDiario"
+            :disabled="resumenGuardando"
+            class="px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-black uppercase tracking-widest disabled:opacity-60"
+          >
+            {{ resumenGuardando ? 'Guardando...' : 'Guardar config' }}
+          </button>
+          <button
+            @click="enviarResumenDiarioAhora"
+            :disabled="resumenEnviando"
+            class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest disabled:opacity-60"
+          >
+            {{ resumenEnviando ? 'Enviando...' : 'Enviar ahora' }}
+          </button>
+        </div>
+      </div>
+    </section>
 
     <div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
       <table class="w-full border-collapse table-fixed">

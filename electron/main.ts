@@ -8,6 +8,7 @@ import { startBackupScheduler } from './services/backup.service'
 import { loadUserEnv } from './config/env'
 import { bootstrapSuperAdmin } from './services/users.service'
 import { setSettings } from './settings'
+import { startDailySummaryScheduler } from './services/daily-summary.service'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -78,6 +79,7 @@ app.whenReady().then(async () => {
   await bootstrapSuperAdmin()
   setupIpcHandlers() // Activamos los cables
   startBackupScheduler() // Backups horarios
+  startDailySummaryScheduler()
   createWindow()  // Creamos la ventana
 
   ipcMain.on('settings:update', (_event, payload) => {

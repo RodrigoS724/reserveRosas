@@ -56,6 +56,10 @@ declare global {
         hasta: string
       }) => Promise<any[]>
 
+      obtenerReservasDia: (data: {
+        fecha: string
+      }) => Promise<any[]>
+
       obtenerCambiosReservas: (data: {
         since: string
         lastId: number
@@ -182,6 +186,30 @@ declare global {
       }[]>
 
       actualizarNotasReserva: (id: number, notas: string) => Promise<void>
+
+      obtenerConfigResumenDiario: () => Promise<{
+        enabled: boolean
+        sendTime: string
+        recipients: string[]
+        lastSentDate: string
+      }>
+      guardarConfigResumenDiario: (data: {
+        enabled: boolean
+        sendTime: string
+        recipients: string[]
+      }) => Promise<{
+        enabled: boolean
+        sendTime: string
+        recipients: string[]
+        lastSentDate: string
+      }>
+      enviarResumenDiario: (data: {
+        fecha: string
+      }) => Promise<{
+        ok: boolean
+        reason?: string
+        count?: number
+      }>
 
       obtenerEnvConfig: () => Promise<string>
       guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>

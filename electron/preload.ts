@@ -39,8 +39,12 @@ contextBridge.exposeInMainWorld('api', {
   borrarReserva: (id: number) => invokeSafe('reservas:borrar', id),
   moverReserva: (d: any) => invokeSafe('reservas:mover', d), actualizarReserva: (d: any) => invokeSafe('reservas:actualizar', d),
   obtenerReservasSemana: (d: any) => invokeSafe('reservas:semana', d),
+  obtenerReservasDia: (d: any) => invokeSafe('reservas:dia', d),
   obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (id: number, notas: string) => invokeSafe('reservas:actualizar-notas', id, notas),
   obtenerCambiosReservas: (d: any) => invokeSafe('reservas:cambios', d),
+  obtenerConfigResumenDiario: () => invokeSafe('resumen-diario:config:get'),
+  guardarConfigResumenDiario: (d: any) => invokeSafe('resumen-diario:config:set', d),
+  enviarResumenDiario: (d: any) => invokeSafe('resumen-diario:enviar', d),
 
   // Horarios
   obtenerHorariosBase: () => invokeSafe('horarios:base'),
