@@ -71,6 +71,47 @@ function normalizarReserva(data: ReservaInput): ReservaInput {
   return data
 }
 
+function validarCondicionesSubtipo(data: ReservaInput) {
+  const tipo = data.tipo_turno
+  const kmNumerico = /^\d+$/.test(String(data.km || '').trim())
+
+  if (tipo === 'Particular') {
+    if (data.particular_tipo === 'Service') {
+      if (!kmNumerico) {
+        throw new Error('KM requerido para Particular Service.')
+      }
+      return
+    }
+    if (data.particular_tipo === 'Taller') {
+      if (!String(data.detalles || '').trim()) {
+        throw new Error('Detalle de reparacion requerido para Particular Taller.')
+      }
+      return
+    }
+  }
+
+  if (tipo === 'GarantÃ­a') {
+    if (data.garantia_tipo === 'Service') {
+      if (!String(data.garantia_fecha_compra || '').trim()) {
+        throw new Error('Fecha de compra requerida para Garantia Service.')
+      }
+      if (!kmNumerico) {
+        throw new Error('KM requerido para Garantia Service.')
+      }
+      if (!/^\d+$/.test(String(data.garantia_numero_service || '').trim())) {
+        throw new Error('Numero de service requerido para Garantia Service.')
+      }
+      return
+    }
+    if (data.garantia_tipo === 'ReparaciÃ³n') {
+      if (!String(data.garantia_problema || '').trim()) {
+        throw new Error('Descripcion del problema requerida para Garantia Reparacion.')
+      }
+      return
+    }
+  }
+}
+
 /**
  * Ejecuta una operación con reintento automático en caso de SQLITE_BUSY
  */
@@ -318,6 +359,7 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
 export async function crearReserva(data: ReservaInput) {
   console.log('[Service] Iniciando crearReserva...')
   validarReserva(data)
+  validarCondicionesSubtipo(data)
   const dataNormalizada = normalizarReserva({ ...data })
   const fechaNormalizada = new Date(dataNormalizada.fecha).toISOString().split('T')[0]
   console.log('[Service] Fecha normalizada:', dataNormalizada.fecha, '->', fechaNormalizada)
@@ -938,6 +980,8 @@ export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 
   ).all(since, since, lastId, limit)
   return rows
 }
+
+
 
 
 

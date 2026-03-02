@@ -64,6 +64,37 @@ if (isDebug() && isset($_GET['__debug'])) {
     ]);
 }
 
+function getReservationCutoffDateTime(): DateTimeImmutable
+{
+    return (new DateTimeImmutable('now'))->modify('+24 hours');
+}
+
+function parseReservationDateTime(string $fecha, string $hora): ?DateTimeImmutable
+{
+    $fecha = trim($fecha);
+    $hora = trim($hora);
+    if ($fecha === '' || $hora === '') {
+        return null;
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+        return null;
+    }
+    if (!preg_match('/^\d{1,2}:\d{2}$/', $hora)) {
+        return null;
+    }
+
+    [$h, $m] = array_map('intval', explode(':', $hora, 2));
+    if ($h < 0 || $h > 23 || $m < 0 || $m > 59) {
+        return null;
+    }
+
+    try {
+        return new DateTimeImmutable(sprintf('%s %02d:%02d:00', $fecha, $h, $m));
+    } catch (Throwable) {
+        return null;
+    }
+}
+
 // ---------- API ----------
 if (str_starts_with($path, '/api')) {
     requireToken();
@@ -108,6 +139,16 @@ if (str_starts_with($path, '/api')) {
       $horarios = array_values(array_filter($horarios, fn($h) => $h['hora'] < '12:00'));
     }
 
+    $cutoff = getReservationCutoffDateTime();
+    $horarios = array_values(array_filter($horarios, function ($h) use ($fecha, $cutoff) {
+      $hora = (string)($h['hora'] ?? '');
+      $reservaDateTime = parseReservationDateTime($fecha, $hora);
+      if (!$reservaDateTime) {
+        return false;
+      }
+      return $reservaDateTime >= $cutoff;
+    }));
+
     jsonResponse(['ok' => true, 'data' => $horarios]);
   }
 }
@@ -132,6 +173,19 @@ if (str_starts_with($path, '/api')) {
       if (empty($data[$field])) {
         jsonResponse(['ok' => false, 'error' => "Campo requerido: {$field}"], 400);
       }
+    }
+
+    $fechaReserva = (string)($data['fecha'] ?? '');
+    $horaReserva = (string)($data['hora'] ?? '');
+    $reservaDateTime = parseReservationDateTime($fechaReserva, $horaReserva);
+    if (!$reservaDateTime) {
+      jsonResponse(['ok' => false, 'error' => 'Fecha/hora de reserva invalida'], 400);
+    }
+    if ($reservaDateTime < getReservationCutoffDateTime()) {
+      jsonResponse([
+        'ok' => false,
+        'error' => 'Las reservas deben agendarse con al menos 24 horas de anticipacion'
+      ], 409);
     }
 
     $cedula = $data['cedula'] ?? '';
@@ -561,10 +615,29 @@ $token = apiToken();
     let lastDisponibilidadKey = '';
 
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate() + 21);
+    const MIN_ADVANCE_HOURS = 24;
+
+    function getReservaMinDateTime() {
+      const d = new Date();
+      d.setHours(d.getHours() + MIN_ADVANCE_HOURS);
+      return d;
+    }
+
+    function startOfDay(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function getMinCalendarDate() {
+      return startOfDay(getReservaMinDateTime());
+    }
+
+    function getMaxCalendarDate() {
+      const d = getMinCalendarDate();
+      d.setDate(d.getDate() + 21);
+      return d;
+    }
 
     function formatFechaISO(d) {
       const y = d.getFullYear();
@@ -596,7 +669,29 @@ $token = apiToken();
     }
 
     function estaEnRango(d) {
-      return d >= today && d <= maxDate;
+      return d >= getMinCalendarDate() && d <= getMaxCalendarDate();
+    }
+
+    function isHorarioPermitido(fechaIso, horaLabel) {
+      const mins = getMinutesFromHora(horaLabel);
+      if (mins === null) return true;
+      const [year, month, day] = fechaIso.split('-').map(Number);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const reservaDateTime = new Date(year, month - 1, day, h, m, 0, 0);
+      return reservaDateTime.getTime() >= getReservaMinDateTime().getTime();
+    }
+
+    async function consultarDisponibilidadFecha(iso) {
+      try {
+        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${iso}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+          headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
+        });
+        const json = await res.json();
+        return !!(json && json.ok && Array.isArray(json.data) && json.data.length);
+      } catch {
+        return false;
+      }
     }
 
     async function cargarDisponibilidadMes(year, month) {
@@ -613,15 +708,7 @@ $token = apiToken();
           }
           const iso = formatFechaISO(d);
           if (availabilityCache[iso] !== undefined) continue;
-          try {
-            const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${iso}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
-              headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
-            });
-            const json = await res.json();
-            availabilityCache[iso] = !!(json && json.ok && Array.isArray(json.data) && json.data.length);
-          } catch {
-            availabilityCache[iso] = false;
-          }
+          availabilityCache[iso] = await consultarDisponibilidadFecha(iso);
         }
       } finally {
         cargandoDisponibilidad = false;
@@ -703,15 +790,7 @@ $token = apiToken();
         }
         if (!json.ok) throw new Error(json.error || 'Error');
         let data = json.data || [];
-        const hoyIso = formatFechaISO(new Date());
-        if (fecha.value === hoyIso) {
-          const now = new Date();
-          const nowMinutes = now.getHours() * 60 + now.getMinutes();
-          data = data.filter(h => {
-            const mins = getMinutesFromHora(h.hora);
-            return mins === null ? true : mins >= nowMinutes;
-          });
-        }
+        data = data.filter(h => isHorarioPermitido(fecha.value, h.hora));
         horariosStatus.textContent = data.length ? '' : 'Sin horarios disponibles';
         data.forEach(h => {
           const btn = document.createElement('button');
@@ -1045,16 +1124,29 @@ $token = apiToken();
       }
     }
 
-    function setFechaInicial() {
-      let d = new Date();
-      while (esDomingo(d)) {
+    async function setFechaInicial() {
+      const maxDate = getMaxCalendarDate();
+      let d = getMinCalendarDate();
+      while (d <= maxDate) {
+        if (!esDomingo(d)) {
+          const iso = formatFechaISO(d);
+          if (availabilityCache[iso] === undefined) {
+            availabilityCache[iso] = await consultarDisponibilidadFecha(iso);
+          }
+          if (availabilityCache[iso]) {
+            break;
+          }
+        }
         d.setDate(d.getDate() + 1);
+      }
+      if (d > maxDate) {
+        d = getMinCalendarDate();
       }
       fecha.value = formatFechaISO(d);
       fechaSeleccion.textContent = `Fecha seleccionada: ${formatFechaLarga(d)}`;
       calendarioMes = new Date(d.getFullYear(), d.getMonth(), 1);
       renderCalendar();
-      fetchHorarios();
+      await fetchHorarios();
     }
 
     calPrev.addEventListener('click', () => {

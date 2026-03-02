@@ -162,6 +162,12 @@ declare global {
         detalles: string | null
         created_at: string
       }[]>
+      obtenerVehiculoMysqlPorMatricula: (matricula: string) => Promise<{
+        id: number
+        matricula: string
+        marca: string
+        modelo: string
+      } | null>
 
       obtenerTodasLasReservas: () => Promise<{
         id: number
