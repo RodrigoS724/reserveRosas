@@ -159,7 +159,7 @@ async function sendDailySummaryEmail(dateIso: string) {
   }
 
   const reservasDia = await obtenerReservasPorFecha(dateIso)
-  const reservas = (reservasDia || []).filter((r) => {
+  const reservas = (Array.isArray(reservasDia) ? reservasDia : []).filter((r: any) => {
     const estado = String(r?.estado || '').trim().toLowerCase()
     return estado !== 'cancelada'
   })
