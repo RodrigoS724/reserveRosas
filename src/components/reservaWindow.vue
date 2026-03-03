@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
-    reserva: any | null
+  reserva: any | null
 }>()
 
 const emit = defineEmits(['cerrar', 'actualizar'])
@@ -10,371 +10,345 @@ const emit = defineEmits(['cerrar', 'actualizar'])
 const editable = ref<any | null>(null)
 const mostrandoConfirmacion = ref(false)
 
+const normalizarMatricula = (value: string) => {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
 watch(
-    () => props.reserva,
-    (nueva) => {
-        editable.value = nueva ? { ...nueva } : null
-    },
-    { immediate: true }
+  () => props.reserva,
+  (nueva) => {
+    editable.value = nueva
+      ? { ...nueva, matricula: String(nueva.matricula || '') }
+      : null
+  },
+  { immediate: true }
 )
 
 const guardar = async () => {
-    if (!editable.value) return
+  if (!editable.value) return
 
-    try {
-        const reservaPlana = JSON.parse(JSON.stringify(editable.value))
-        await window.api.actualizarReserva(reservaPlana)
-
-        emit('actualizar')
-        emit('cerrar')
-    } catch (e) {
-        console.error('Error al guardar reserva', e)
-        alert('No se pudo guardar la reserva')
-    }
+  try {
+    editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
+    const reservaPlana = JSON.parse(JSON.stringify(editable.value))
+    await window.api.actualizarReserva(reservaPlana)
+    emit('actualizar')
+    emit('cerrar')
+  } catch (e) {
+    console.error('Error al guardar reserva', e)
+    alert('No se pudo guardar la reserva')
+  }
 }
 
 const cancelarReserva = async () => {
-    if (!editable.value) return
+  if (!editable.value) return
 
-    try {
-        await window.api.borrarReserva(editable.value.id)
-        alert('Reserva cancelada exitosamente')
-        emit('actualizar')
-        emit('cerrar')
-    } catch (e) {
-        console.error('Error al cancelar reserva', e)
-        alert('No se pudo cancelar la reserva')
-    }
+  try {
+    await window.api.borrarReserva(editable.value.id)
+    alert('Reserva cancelada exitosamente')
+    emit('actualizar')
+    emit('cerrar')
+  } catch (e) {
+    console.error('Error al cancelar reserva', e)
+    alert('No se pudo cancelar la reserva')
+  }
 }
-
-
 </script>
 
 <template>
-    <div v-if="editable" class="overlay" @click.self="$emit('cerrar')">
-        <div class="window">
+  <div v-if="editable" class="overlay" @click.self="$emit('cerrar')">
+    <div class="window">
+      <div class="window-header">
+        <span>Reserva #{{ editable.id }}</span>
+        <button @click="$emit('cerrar')"></button>
+      </div>
 
-            <!-- HEADER -->
-            <div class="window-header">
-                <span>Reserva #{{ editable.id }}</span>
-                <button @click="$emit('cerrar')"></button>
-            </div>
-
-            <!-- BODY -->
-            <div class="window-body">
-
-                <div class="campo">
-                    <label>Nombre</label>
-                    <input v-model="editable.nombre" />
-                </div>
-
-                <div class="campo">
-                    <label>Cédula</label>
-                    <input v-model="editable.cedula" disabled />
-                </div>
-
-                <div class="campo">
-                    <label>Tipo de Turno</label>
-                    <input :value="editable.tipo_turno" disabled />
-                </div>
-
-                <div v-if="editable.tipo_turno === 'Particular'" class="campo">
-                    <label>Tipo Particular</label>
-                    <input :value="editable.particular_tipo || ''" disabled />
-                </div>
-
-                <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
-                    <label>Tipo Garantía</label>
-                    <input :value="editable.garantia_tipo || ''" disabled />
-                </div>
-
-                <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
-                    <label>Fecha de Compra</label>
-                    <input :value="editable.garantia_fecha_compra || ''" disabled />
-                </div>
-
-                <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Service'" class="campo">
-                    <label>Número de Service</label>
-                    <input :value="editable.garantia_numero_service || ''" disabled />
-                </div>
-
-                <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Reparación'" class="campo">
-                    <label>Problema</label>
-                    <textarea :value="editable.garantia_problema || ''" disabled />
-                </div>
-
-                <div class="campo">
-                    <label>Fecha</label>
-                    <input v-model="editable.fecha" type="date" />
-                </div>
-
-                <div class="campo">
-                    <label>Hora</label>
-                    <input v-model="editable.hora" type="time" />
-                </div>
-
-                <div class="campo">
-                    <label>Estado</label>
-                    <select v-model="editable.estado" class="select-estado" :class="editable.estado">
-                        <option value="pendiente">Pendiente</option>
-                        <option value="pendiente_repuestos">Pendiente de repuestos</option>
-                        <option value="revision">En revisión</option>
-                        <option value="pronto">Pronto</option>
-                        <option value="cancelada">Cancelada</option>
-                    </select>
-                </div>
-
-                <div class="campo">
-                    <label>Observaciones</label>
-                    <textarea v-model="editable.detalles" />
-                </div>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div v-if="!mostrandoConfirmacion" class="window-footer">
-                <button class="btn-cancelar" @click="$emit('cerrar')">Cerrar</button>
-                <button class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
-                <button class="btn-guardar" @click="guardar">Guardar</button>
-            </div>
-
-            <!-- CONFIRMACIÓN DE CANCELACIÓN -->
-            <div v-else class="window-footer confirmation-footer">
-                <div class="confirmation-message">
-                    ¿Estás seguro de cancelar esta reserva
-                </div>
-                <div class="confirmation-buttons">
-                    <button class="btn-cancelar" @click="mostrandoConfirmacion = false">No, volver</button>
-                    <button class="btn-confirmar-eliminar" @click="cancelarReserva">Sí, cancelar</button>
-                </div>
-            </div>
-
+      <div class="window-body">
+        <div class="campo">
+          <label>Nombre</label>
+          <input v-model="editable.nombre" />
         </div>
+
+        <div class="campo">
+          <label>Cedula</label>
+          <input v-model="editable.cedula" disabled />
+        </div>
+
+        <div class="campo">
+          <label>Matricula</label>
+          <input
+            v-model="editable.matricula"
+            @input="editable.matricula = normalizarMatricula(editable.matricula).slice(0, 7)"
+            maxlength="7"
+            placeholder="ABC1234"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Tipo de Turno</label>
+          <input :value="editable.tipo_turno" disabled />
+        </div>
+
+        <div v-if="editable.tipo_turno === 'Particular'" class="campo">
+          <label>Tipo Particular</label>
+          <input :value="editable.particular_tipo || ''" disabled />
+        </div>
+
+        <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
+          <label>Tipo Garantía</label>
+          <input :value="editable.garantia_tipo || ''" disabled />
+        </div>
+
+        <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
+          <label>Fecha de Compra</label>
+          <input :value="editable.garantia_fecha_compra || ''" disabled />
+        </div>
+
+        <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Service'" class="campo">
+          <label>Numero de Service</label>
+          <input :value="editable.garantia_numero_service || ''" disabled />
+        </div>
+
+        <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Reparación'" class="campo">
+          <label>Problema</label>
+          <textarea :value="editable.garantia_problema || ''" disabled />
+        </div>
+
+        <div class="campo">
+          <label>Fecha</label>
+          <input v-model="editable.fecha" type="date" />
+        </div>
+
+        <div class="campo">
+          <label>Hora</label>
+          <input v-model="editable.hora" type="time" />
+        </div>
+
+        <div class="campo">
+          <label>Estado</label>
+          <select v-model="editable.estado" class="select-estado" :class="editable.estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="pendiente_repuestos">Pendiente de repuestos</option>
+            <option value="revision">En revisión</option>
+            <option value="pronto">Pronto</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Observaciones</label>
+          <textarea v-model="editable.detalles" />
+        </div>
+      </div>
+
+      <div v-if="!mostrandoConfirmacion" class="window-footer">
+        <button class="btn-cancelar" @click="$emit('cerrar')">Cerrar</button>
+        <button class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
+        <button class="btn-guardar" @click="guardar">Guardar</button>
+      </div>
+
+      <div v-else class="window-footer confirmation-footer">
+        <div class="confirmation-message">
+          ¿Estas seguro de cancelar esta reserva?
+        </div>
+        <div class="confirmation-buttons">
+          <button class="btn-cancelar" @click="mostrandoConfirmacion = false">No, volver</button>
+          <button class="btn-confirmar-eliminar" @click="cancelarReserva">Si, cancelar</button>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
 .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
 }
 
 .window {
-    width: 460px;
-    background: #020617;
-    border-radius: 18px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
-    max-height: 80vh;
-    overflow-y: auto;
+  width: 460px;
+  background: #020617;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .window-header,
 .window-footer {
-    padding: 14px 18px;
-    border-bottom: 1px solid #1e293b;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e293b;
 }
 
 .window-footer {
-    border-top: 1px solid #1e293b;
-    border-bottom: none;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
+  border-top: 1px solid #1e293b;
+  border-bottom: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .confirmation-footer {
-    flex-direction: column;
-    gap: 12px;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .confirmation-message {
-    color: #f87171;
-    font-weight: bold;
-    text-align: center;
-    padding: 8px 0;
+  color: #f87171;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 0;
 }
 
 .confirmation-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 .window-body {
-    padding: 18px;
-    flex: 1;
-    overflow-y: auto;
+  padding: 18px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .campo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
 }
 
 .campo label {
-    color: #94a3b8;
-    font-weight: 600;
-    font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .campo input,
 .campo textarea,
 .campo select {
-    background: #0f172a;
-    border: 1px solid #1e293b;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.9rem;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
 }
 
 .campo input:focus,
 .campo textarea:focus,
 .campo select:focus {
-    outline: none;
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
 }
 
 .campo textarea {
-    resize: vertical;
-    min-height: 60px;
-    font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
 }
 
 .campo input:disabled,
 .campo textarea:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-cancelar {
-    border: 1px solid #475569;
-    background: transparent;
-    color: #94a3b8;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
+  border: 1px solid #475569;
+  background: transparent;
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
 .btn-cancelar:hover {
-    background: #1e293b;
-    border-color: #64748b;
+  background: #1e293b;
+  border-color: #64748b;
 }
 
 .btn-guardar {
-    background: #3b82f6;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    border: none;
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
 }
 
 .btn-guardar:hover {
-    background: #2563eb;
+  background: #2563eb;
 }
 
 .btn-eliminar {
-    background: #ef4444;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    border: none;
+  background: #ef4444;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
 }
 
 .btn-eliminar:hover {
-    background: #dc2626;
+  background: #dc2626;
 }
 
 .btn-confirmar-eliminar {
-    background: #dc2626;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    border: none;
+  background: #dc2626;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
 }
 
 .btn-confirmar-eliminar:hover {
-    background: #b91c1c;
+  background: #b91c1c;
 }
 
 .select-estado {
-    background-color: #0f172a;
-    border: 1px solid #1e293b;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    appearance: none;
-    cursor: pointer;
-}
-
-/* Flecha custom */
-.select-estado {
-    background-image:
-        linear-gradient(45deg, transparent 50%, #94a3b8 50%),
-        linear-gradient(135deg, #94a3b8 50%, transparent 50%);
-    background-position:
-        calc(100% - 18px) calc(50% - 3px),
-        calc(100% - 12px) calc(50% - 3px);
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-}
-
-/* Hover */
-.select-estado:hover {
-    border-color: #38bdf8;
-}
-
-/* Focus */
-.select-estado:focus {
-    outline: none;
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
-}
-
-/* Opciones */
-.select-estado option {
-    background: #020617;
-    color: white;
+  cursor: pointer;
 }
 
 .select-estado.pendiente {
-    border-color: #fbbf24;
-}
-
-.select-estado.pronto {
-    border-color: #4ade80;
-}
-
-.select-estado.revision {
-    border-color: #93c5fd;
+  border-color: #f59e0b;
+  color: #fbbf24;
 }
 
 .select-estado.pendiente_repuestos {
-    border-color: #fb923c;
+  border-color: #f97316;
+  color: #fb923c;
+}
+
+.select-estado.revision {
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.select-estado.pronto {
+  border-color: #10b981;
+  color: #34d399;
 }
 
 .select-estado.cancelada {
-    border-color: #f87171;
+  border-color: #ef4444;
+  color: #f87171;
 }
 </style>

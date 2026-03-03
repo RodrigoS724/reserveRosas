@@ -71,6 +71,10 @@ function normalizarReserva(data: ReservaInput): ReservaInput {
   return data
 }
 
+function normalizarMatriculaReserva(value: string): string {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
 function validarCondicionesSubtipo(data: ReservaInput) {
   const tipo = data.tipo_turno
   const kmNumerico = /^\d+$/.test(String(data.km || '').trim())
@@ -570,10 +574,14 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
  * ========================= */
 export async function actualizarReserva(id: number, reserva: any) {
   console.log('[Service] Actualizando reserva:', id, reserva)
+  const matriculaNormalizada = normalizarMatriculaReserva(reserva?.matricula || '')
+  if (!/^[A-Z]{3}\d{3,4}$/.test(matriculaNormalizada)) {
+    throw new Error('Matricula invalida. Formato esperado: 3 letras y 3 o 4 numeros.')
+  }
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT nombre, fecha, hora, estado, detalles FROM reservas WHERE id = ?`,
+      `SELECT nombre, fecha, hora, estado, detalles, matricula FROM reservas WHERE id = ?`,
       [id]
     )
     const anterior = rows[0]
@@ -583,8 +591,8 @@ export async function actualizarReserva(id: number, reserva: any) {
     }
 
     await pool.execute(
-      `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ? WHERE id = ?`,
-      [reserva.nombre, reserva.fecha, reserva.hora, reserva.estado, reserva.detalles, reserva.id]
+      `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ? WHERE id = ?`,
+      [reserva.nombre, reserva.fecha, reserva.hora, reserva.estado, reserva.detalles, matriculaNormalizada, reserva.id]
     )
 
     for (const campo of Object.keys( anterior)) {
@@ -605,7 +613,7 @@ export async function actualizarReserva(id: number, reserva: any) {
     try {
       const db = initDatabase()
       const anterior = db.prepare(`
-        SELECT nombre, fecha, hora, estado, detalles
+        SELECT nombre, fecha, hora, estado, detalles, matricula
         FROM reservas
         WHERE id = ?
       `).get(id) as Record<string, any>
@@ -613,7 +621,7 @@ export async function actualizarReserva(id: number, reserva: any) {
       const transaction = db.transaction(() => {
         db.prepare(`
           UPDATE reservas
-          SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
+          SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
           WHERE id = ?
         `).run(
           reserva.nombre,
@@ -621,6 +629,7 @@ export async function actualizarReserva(id: number, reserva: any) {
           reserva.hora,
           reserva.estado,
           reserva.detalles,
+          matriculaNormalizada,
           reserva.id
         )
         for (const campo of Object.keys( anterior)) {
@@ -647,7 +656,7 @@ export async function actualizarReserva(id: number, reserva: any) {
   const db = initDatabase()
   try {
     const anterior = db.prepare(`
-      SELECT nombre, fecha, hora, estado, detalles
+      SELECT nombre, fecha, hora, estado, detalles, matricula
       FROM reservas
       WHERE id = ?
     `).get(id) as Record<string, any>
@@ -660,7 +669,7 @@ export async function actualizarReserva(id: number, reserva: any) {
     const transaction = db.transaction(() => {
       db.prepare(`
         UPDATE reservas
-        SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
+        SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
         WHERE id = ?
       `).run(
         reserva.nombre,
@@ -668,6 +677,7 @@ export async function actualizarReserva(id: number, reserva: any) {
         reserva.hora,
         reserva.estado,
         reserva.detalles,
+        matriculaNormalizada,
         reserva.id
       )
 

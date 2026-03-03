@@ -5,6 +5,7 @@ import { clearSession, getSession, setSession, hasPermission } from './auth'
 const isDark = ref(true)
 const soundEnabled = ref(true)
 const SETTINGS_KEY = 'rr_settings'
+const LAST_LOGIN_KEY = 'rr_last_login_user'
 const session = ref(null)
 const usuariosLogin = ref([])
 const loginUser = ref('')
@@ -55,6 +56,17 @@ const cargarUsuariosLogin = async () => {
   if (!loginUser.value && usuariosLogin.value.length) {
     loginUser.value = usuariosLogin.value[0].username
   }
+
+  try {
+    const raw = localStorage.getItem(LAST_LOGIN_KEY)
+    if (!raw) return
+    const last = JSON.parse(raw)
+    if (!last?.username) return
+    const exists = usuariosLogin.value.find((u) => u.username === last.username)
+    if (exists) {
+      loginUser.value = exists.username
+    }
+  } catch {}
 }
 
 const iniciarSesion = async () => {
@@ -67,6 +79,7 @@ const iniciarSesion = async () => {
       return
     }
     setSession(result.user)
+    localStorage.setItem(LAST_LOGIN_KEY, JSON.stringify(result.user))
     session.value = result.user
     loginPass.value = ''
     showLoginPass.value = false
@@ -77,6 +90,7 @@ const iniciarSesion = async () => {
 
 const cerrarSesion = () => {
   clearSession()
+  localStorage.removeItem(LAST_LOGIN_KEY)
   session.value = null
   loginPass.value = ''
   showLoginPass.value = false
@@ -102,6 +116,18 @@ onMounted(() => {
     soundEnabled: soundEnabled.value
   })
   session.value = getSession()
+  if (!session.value) {
+    try {
+      const raw = localStorage.getItem(LAST_LOGIN_KEY)
+      if (raw) {
+        const remembered = JSON.parse(raw)
+        if (remembered && remembered.username) {
+          setSession(remembered)
+          session.value = remembered
+        }
+      }
+    } catch {}
+  }
   cargarUsuariosLogin()
 
   const ipc = window.ipcRenderer

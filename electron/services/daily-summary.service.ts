@@ -107,6 +107,13 @@ function smtpSecureByPort(port: number) {
   return port === 465
 }
 
+function smtpRejectUnauthorized() {
+  const env = (process.env.SMTP_TLS_REJECT_UNAUTHORIZED || '').toLowerCase()
+  if (env === '0' || env === 'false' || env === 'no') return false
+  if (env === '1' || env === 'true' || env === 'yes') return true
+  return true
+}
+
 function getSmtpConfig() {
   const host = String(process.env.SMTP_HOST || '').trim()
   const user = String(process.env.SMTP_USER || '').trim()
@@ -114,7 +121,8 @@ function getSmtpConfig() {
   const from = String(process.env.SMTP_FROM || user).trim()
   const port = parseSmtpPort()
   const secure = smtpSecureByPort(port)
-  return { host, port, secure, user, pass, from }
+  const rejectUnauthorized = smtpRejectUnauthorized()
+  return { host, port, secure, user, pass, from, rejectUnauthorized }
 }
 
 function buildSummaryText(dateIso: string, reservas: any[]) {
@@ -150,7 +158,11 @@ async function sendDailySummaryEmail(dateIso: string) {
     return { ok: false, reason: 'smtp_missing' as const }
   }
 
-  const reservas = await obtenerReservasPorFecha(dateIso)
+  const reservasDia = await obtenerReservasPorFecha(dateIso)
+  const reservas = (reservasDia || []).filter((r) => {
+    const estado = String(r?.estado || '').trim().toLowerCase()
+    return estado !== 'cancelada'
+  })
   const text = buildSummaryText(dateIso, reservas)
 
   const nodemailer = await import('nodemailer')
@@ -158,6 +170,9 @@ async function sendDailySummaryEmail(dateIso: string) {
     host: smtp.host,
     port: smtp.port,
     secure: smtp.secure,
+    tls: {
+      rejectUnauthorized: smtp.rejectUnauthorized
+    },
     auth: {
       user: smtp.user,
       pass: smtp.pass
