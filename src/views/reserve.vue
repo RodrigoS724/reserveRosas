@@ -21,6 +21,13 @@ let lastChangeId = 0
 let isInitialChangesLoad = true
 const suppressUntilByReservaId = new Map<number, number>()
 
+const formatLocalDate = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 // Estructura de semana
 const diasSemana = ref([
   { id: 0, nombre: 'Lunes' },
@@ -74,7 +81,7 @@ const fechasWeek = computed(() => {
   return diasSemana.value.map((dia, index) => {
     const fecha = new Date(lunes)
     fecha.setDate(fecha.getDate() + index)
-    const fechaISO = fecha.toISOString().split('T')[0]
+    const fechaISO = formatLocalDate(fecha)
     return {
       ...dia,
       fecha: fechaISO,
@@ -90,8 +97,8 @@ const cargarReservas = async () => {
     const sabado = new Date(lunes)
     sabado.setDate(sabado.getDate() + 5)
 
-    const desdeStr = lunes.toISOString().split('T')[0]
-    const hastaStr = sabado.toISOString().split('T')[0]
+    const desdeStr = formatLocalDate(lunes)
+    const hastaStr = formatLocalDate(sabado)
     const rangeKey = `${desdeStr}_${hastaStr}`
     if (rangeKey !== currentRangeKey) {
       currentRangeKey = rangeKey

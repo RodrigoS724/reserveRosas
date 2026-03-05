@@ -171,16 +171,16 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:semana', async (_event, payload) => {
     console.log('[IPC] Obteniendo reservas de semana:', payload)
-    const result = await withDbLock(() => 
-      obtenerReservasSemana(payload.desde, payload.hasta)
-    )
+    // Lectura sin lock global para evitar congelar toda la cola
+    // si una consulta remota (MySQL) queda lenta.
+    const result = await obtenerReservasSemana(payload.desde, payload.hasta)
     console.log('[IPC] Reservas de semana obtenidas:', result.length, 'registros')
     return result
   })
 
   safeHandle('reservas:todas', async () => {
     console.log('[IPC] Obteniendo TODAS las reservas')
-    const result = await withDbLock(() => obtenerTodasLasReservas())
+    const result = await obtenerTodasLasReservas()
     console.log('[IPC] Total de reservas obtenidas:', result.length)
     return result
   })
@@ -205,7 +205,7 @@ export function registrarHandlersReservas() {
   safeHandle('reservas:dia', async (_event, payload) => {
     const fecha = String(payload?.fecha || '').trim()
     if (!fecha) return []
-    return withDbLock(() => obtenerReservasPorFecha(fecha))
+    return obtenerReservasPorFecha(fecha)
   })
 
   safeHandle('resumen-diario:config:get', async () => {

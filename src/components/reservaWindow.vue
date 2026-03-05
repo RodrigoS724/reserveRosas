@@ -35,7 +35,7 @@ const guardar = async () => {
     emit('cerrar')
   } catch (e) {
     console.error('Error al guardar reserva', e)
-    alert('No se pudo guardar la reserva')
+    alert(`No se pudo guardar la reserva: ${e instanceof Error ? e.message : 'Error desconocido'}`)
   }
 }
 
@@ -49,7 +49,7 @@ const cancelarReserva = async () => {
     emit('cerrar')
   } catch (e) {
     console.error('Error al cancelar reserva', e)
-    alert('No se pudo cancelar la reserva')
+    alert(`No se pudo cancelar la reserva: ${e instanceof Error ? e.message : 'Error desconocido'}`)
   }
 }
 </script>

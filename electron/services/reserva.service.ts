@@ -574,15 +574,21 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
  * ========================= */
 export async function actualizarReserva(id: number, reserva: any) {
   console.log('[Service] Actualizando reserva:', id, reserva)
-  const matriculaNormalizada = normalizarMatriculaReserva(reserva?.matricula || '')
-  if (!/^[A-Z]{3}\d{3,4}$/.test(matriculaNormalizada)) {
-    throw new Error('Matricula invalida. Formato esperado: 3 letras y 3 o 4 numeros.')
+  const reservaId = Number(id || reserva?.id || 0)
+  if (!reservaId) {
+    throw new Error('ID de reserva invalido.')
   }
+
+  const matriculaNormalizada = normalizarMatriculaReserva(reserva?.matricula || '').slice(0, 10)
+  if (matriculaNormalizada && !/^[A-Z0-9]{3,10}$/.test(matriculaNormalizada)) {
+    throw new Error('Matricula invalida. Usa solo letras y numeros.')
+  }
+  const reservaActualizada = { ...reserva, id: reservaId, matricula: matriculaNormalizada }
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT nombre, fecha, hora, estado, detalles, matricula FROM reservas WHERE id = ?`,
-      [id]
+      [reservaId]
     )
     const anterior = rows[0]
     if (!anterior) {
@@ -592,18 +598,18 @@ export async function actualizarReserva(id: number, reserva: any) {
 
     await pool.execute(
       `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ? WHERE id = ?`,
-      [reserva.nombre, reserva.fecha, reserva.hora, reserva.estado, reserva.detalles, matriculaNormalizada, reserva.id]
+      [reservaActualizada.nombre, reservaActualizada.fecha, reservaActualizada.hora, reservaActualizada.estado, reservaActualizada.detalles, matriculaNormalizada, reservaId]
     )
 
     for (const campo of Object.keys( anterior)) {
-      if ( anterior[campo] !== reserva[campo]) {
+      if ( anterior[campo] !== reservaActualizada[campo]) {
         await pool.execute(
           `
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, NOW())
           `,
-          [reserva.id, campo, anterior[campo], reserva[campo]]
+          [reservaId, campo, anterior[campo], reservaActualizada[campo]]
         )
       }
     }
@@ -616,7 +622,7 @@ export async function actualizarReserva(id: number, reserva: any) {
         SELECT nombre, fecha, hora, estado, detalles, matricula
         FROM reservas
         WHERE id = ?
-      `).get(id) as Record<string, any>
+      `).get(reservaId) as Record<string, any>
       if (!anterior) return
       const transaction = db.transaction(() => {
         db.prepare(`
@@ -624,24 +630,24 @@ export async function actualizarReserva(id: number, reserva: any) {
           SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
           WHERE id = ?
         `).run(
-          reserva.nombre,
-          reserva.fecha,
-          reserva.hora,
-          reserva.estado,
-          reserva.detalles,
+          reservaActualizada.nombre,
+          reservaActualizada.fecha,
+          reservaActualizada.hora,
+          reservaActualizada.estado,
+          reservaActualizada.detalles,
           matriculaNormalizada,
-          reserva.id
+          reservaId
         )
         for (const campo of Object.keys( anterior)) {
-          if ( anterior[campo] !== reserva[campo]) {
+          if ( anterior[campo] !== reservaActualizada[campo]) {
             db.prepare(`
               INSERT INTO historial_reservas
               (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
               VALUES ( ?, ?, ?, ?, datetime('now'))
             `).run(
-              reserva.id,
+              reservaId,
               campo, anterior[campo],
-              reserva[campo]
+              reservaActualizada[campo]
             )
           }
         }
@@ -659,7 +665,7 @@ export async function actualizarReserva(id: number, reserva: any) {
       SELECT nombre, fecha, hora, estado, detalles, matricula
       FROM reservas
       WHERE id = ?
-    `).get(id) as Record<string, any>
+    `).get(reservaId) as Record<string, any>
 
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para actualizar:', id)
@@ -672,25 +678,25 @@ export async function actualizarReserva(id: number, reserva: any) {
         SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
         WHERE id = ?
       `).run(
-        reserva.nombre,
-        reserva.fecha,
-        reserva.hora,
-        reserva.estado,
-        reserva.detalles,
+        reservaActualizada.nombre,
+        reservaActualizada.fecha,
+        reservaActualizada.hora,
+        reservaActualizada.estado,
+        reservaActualizada.detalles,
         matriculaNormalizada,
-        reserva.id
+        reservaId
       )
 
       for (const campo of Object.keys( anterior)) {
-        if ( anterior[campo] !== reserva[campo]) {
+        if ( anterior[campo] !== reservaActualizada[campo]) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, datetime('now'))
           `).run(
-            reserva.id,
+            reservaId,
             campo, anterior[campo],
-            reserva[campo]
+            reservaActualizada[campo]
           )
         }
       }
