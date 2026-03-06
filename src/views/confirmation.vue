@@ -92,7 +92,7 @@ const esValido = computed(() => {
   if (isParticularService.value) return kmValido.value
   if (isParticularTaller.value) return detallesTallerValidos.value
   if (isGarantiaService.value) return garantiaFechaCompraValida.value && kmValido.value && garantiaNumeroServiceValida.value
-  if (isGarantiaReparacion.value) return garantiaProblemaValido.value
+  if (isGarantiaReparacion.value) return garantiaFechaCompraValida.value && garantiaProblemaValido.value
   return false
 })
 
@@ -179,7 +179,7 @@ const confirmarReserva = async () => {
     tipo_turno: tipoTurno.value === 'Garantia' ? 'Garantía' : 'Particular',
     particular_tipo: isParticular.value ? particularTipo.value : null,
     garantia_tipo: isGarantia.value ? (garantiaTipo.value === 'Reparacion' ? 'Reparación' : 'Service') : null,
-    garantia_fecha_compra: isGarantiaService.value ? garantiaFechaCompra.value.trim() : null,
+    garantia_fecha_compra: isGarantia.value ? garantiaFechaCompra.value.trim() : null,
     garantia_numero_service: isGarantiaService.value ? garantiaNumeroService.value.trim() : null,
     garantia_problema: isGarantiaReparacion.value ? garantiaProblema.value.trim() : null,
     fecha,
@@ -267,8 +267,8 @@ const confirmarReserva = async () => {
           <div class="space-y-2 sm:space-y-3">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Tipo de turno</label>
             <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <button type="button" @click="tipoTurno = 'Particular'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'Particular' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Particular</button>
               <button type="button" @click="tipoTurno = 'Garantia'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'Garantia' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Garantia</button>
+              <button type="button" @click="tipoTurno = 'Particular'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'Particular' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Particular</button>
             </div>
           </div>
 
@@ -294,11 +294,11 @@ const confirmarReserva = async () => {
               <button type="button" @click="garantiaTipo = 'Service'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Service' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Service</button>
               <button type="button" @click="garantiaTipo = 'Reparacion'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Reparacion' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Reparacion</button>
             </div>
-            <div v-if="isGarantiaService" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="space-y-2">
-                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Fecha compra</label>
-                <input v-model="garantiaFechaCompra" type="date" :class="[smallInputClass, garantiaFechaCompra && !garantiaFechaCompraValida ? errorClass : (garantiaFechaCompraValida ? successClass : '')]">
-              </div>
+            <div class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Fecha compra</label>
+              <input v-model="garantiaFechaCompra" type="date" :class="[smallInputClass, garantiaFechaCompra && !garantiaFechaCompraValida ? errorClass : (garantiaFechaCompraValida ? successClass : '')]">
+            </div>
+            <div v-if="isGarantiaService" class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="space-y-2">
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">KM</label>
                 <input v-model="km" type="text" inputmode="numeric" :class="[smallInputClass, km && !kmValido ? errorClass : (kmValido ? successClass : '')]">

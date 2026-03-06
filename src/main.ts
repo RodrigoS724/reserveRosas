@@ -4,6 +4,7 @@ import App from './App.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Confirmacion from './views/confirmation.vue'
 import Home from './views/home.vue'
+import Agenda from './views/agenda.vue'
 import Reservas from './views/reserve.vue'
 import adminHorarios from './views/adminHorarios.vue'
 import historial from './views/historial.vue'
@@ -18,6 +19,7 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', component: Home },
+    { path: '/agenda', component: Agenda },
     { path: '/confirmacion', component: Confirmacion },
     { path: '/clientes', component: () => import('./views/client.vue') },
     { path: '/historial', component: historial },

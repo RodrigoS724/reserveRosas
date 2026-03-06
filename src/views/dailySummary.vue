@@ -17,12 +17,26 @@ const resumenConfig = ref({
   lastSentDate: ''
 })
 
+const normalizarEstadoKey = (estado: any) => {
+  return String(estado || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+}
+
 const cargarResumen = async () => {
   if (!fecha.value) return
   cargando.value = true
   try {
     const data = await window.api.obtenerReservasDia({ fecha: fecha.value })
-    reservas.value = Array.isArray(data) ? data : []
+    const lista = Array.isArray(data) ? data : []
+    reservas.value = lista.filter((r: any) => {
+      const estado = normalizarEstadoKey(r?.estado)
+      return estado !== 'cancelada' && estado !== 'cancelado'
+    })
   } catch (error) {
     console.error('[ResumenDiario] Error cargando reservas:', error)
     reservas.value = []

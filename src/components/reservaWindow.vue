@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { getSession } from '../auth'
 
 const props = defineProps<{
   reserva: any | null
@@ -9,30 +10,127 @@ const emit = defineEmits(['cerrar', 'actualizar'])
 
 const editable = ref<any | null>(null)
 const mostrandoConfirmacion = ref(false)
+const session = getSession()
+const puedeEditarTodo = computed(() => {
+  const role = session?.role
+  return role === 'admin' || role === 'super' || role === 'superadmin'
+})
 
 const normalizarMatricula = (value: string) => {
   return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 }
 
+const normalizarTexto = (value: string) => {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+const normalizarTipoTurno = (value: string) => {
+  const v = normalizarTexto(value)
+  if (v === 'particular') return 'Particular'
+  if (v === 'garantia') return 'Garantia'
+  return ''
+}
+
+const normalizarTipoGarantia = (value: string) => {
+  const v = normalizarTexto(value)
+  if (v === 'service') return 'Service'
+  if (v === 'reparacion') return 'Reparacion'
+  return ''
+}
+
+const limpiarFecha = (value: string) => {
+  const v = String(value || '').trim()
+  if (!v) return ''
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  return m ? v : ''
+}
+
+const esGarantia = computed(() => normalizarTipoTurno(editable.value?.tipo_turno) === 'Garantia')
+const esParticular = computed(() => normalizarTipoTurno(editable.value?.tipo_turno) === 'Particular')
+const esService = computed(() => normalizarTipoGarantia(editable.value?.garantia_tipo) === 'Service')
+const esReparacion = computed(() => normalizarTipoGarantia(editable.value?.garantia_tipo) === 'Reparacion')
+
+const cerrar = () => {
+  mostrandoConfirmacion.value = false
+  emit('cerrar')
+}
+
 watch(
   () => props.reserva,
   (nueva) => {
-    editable.value = nueva
-      ? { ...nueva, matricula: String(nueva.matricula || '') }
-      : null
+    mostrandoConfirmacion.value = false
+    if (!nueva) {
+      editable.value = null
+      return
+    }
+
+    const tipoTurnoNormalizado = normalizarTipoTurno(nueva.tipo_turno)
+    const tipoGarantiaNormalizado = normalizarTipoGarantia(nueva.garantia_tipo)
+
+    editable.value = {
+      ...nueva,
+      matricula: String(nueva.matricula || ''),
+      tipo_turno: tipoTurnoNormalizado || String(nueva.tipo_turno || ''),
+      garantia_tipo: tipoGarantiaNormalizado || String(nueva.garantia_tipo || ''),
+      garantia_fecha_compra: limpiarFecha(nueva.garantia_fecha_compra),
+      garantia_numero_service: String(nueva.garantia_numero_service || ''),
+      garantia_problema: String(nueva.garantia_problema || '')
+    }
   },
   { immediate: true }
 )
 
+watch(
+  () => editable.value?.tipo_turno,
+  (tipo) => {
+    if (!editable.value) return
+    const normalizado = normalizarTipoTurno(tipo)
+    if (normalizado && editable.value.tipo_turno !== normalizado) {
+      editable.value.tipo_turno = normalizado
+    }
+    if (normalizado !== 'Garantia') {
+      editable.value.garantia_tipo = ''
+      editable.value.garantia_fecha_compra = ''
+      editable.value.garantia_numero_service = ''
+      editable.value.garantia_problema = ''
+    }
+  }
+)
+
+watch(
+  () => editable.value?.garantia_tipo,
+  (tipo) => {
+    if (!editable.value) return
+    const normalizado = normalizarTipoGarantia(tipo)
+    if (normalizado && editable.value.garantia_tipo !== normalizado) {
+      editable.value.garantia_tipo = normalizado
+    }
+    if (normalizado === 'Service') {
+      editable.value.garantia_problema = ''
+    } else if (normalizado === 'Reparacion') {
+      editable.value.garantia_numero_service = ''
+    }
+  }
+)
+
 const guardar = async () => {
+  if (!puedeEditarTodo.value) return
   if (!editable.value) return
 
   try {
     editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
+    editable.value.tipo_turno = normalizarTipoTurno(editable.value.tipo_turno) || editable.value.tipo_turno
+    editable.value.garantia_tipo = normalizarTipoGarantia(editable.value.garantia_tipo) || editable.value.garantia_tipo
+    editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)
+
     const reservaPlana = JSON.parse(JSON.stringify(editable.value))
     await window.api.actualizarReserva(reservaPlana)
     emit('actualizar')
-    emit('cerrar')
+    cerrar()
   } catch (e) {
     console.error('Error al guardar reserva', e)
     alert(`No se pudo guardar la reserva: ${e instanceof Error ? e.message : 'Error desconocido'}`)
@@ -40,13 +138,14 @@ const guardar = async () => {
 }
 
 const cancelarReserva = async () => {
+  if (!puedeEditarTodo.value) return
   if (!editable.value) return
 
   try {
     await window.api.borrarReserva(editable.value.id)
     alert('Reserva cancelada exitosamente')
     emit('actualizar')
-    emit('cerrar')
+    cerrar()
   } catch (e) {
     console.error('Error al cancelar reserva', e)
     alert(`No se pudo cancelar la reserva: ${e instanceof Error ? e.message : 'Error desconocido'}`)
@@ -55,22 +154,25 @@ const cancelarReserva = async () => {
 </script>
 
 <template>
-  <div v-if="editable" class="overlay" @click.self="$emit('cerrar')">
+  <div v-if="editable" class="overlay" @click.self="cerrar">
     <div class="window">
       <div class="window-header">
-        <span>Reserva #{{ editable.id }}</span>
-        <button @click="$emit('cerrar')"></button>
+        <div>
+          <span class="titulo">Reserva #{{ editable.id }}</span>
+          <div v-if="!puedeEditarTodo" class="read-only">Solo lectura (Nivel 1)</div>
+        </div>
+        <button class="close-btn" @click="cerrar">x</button>
       </div>
 
       <div class="window-body">
         <div class="campo">
           <label>Nombre</label>
-          <input v-model="editable.nombre" />
+          <input v-model="editable.nombre" :disabled="!puedeEditarTodo" />
         </div>
 
         <div class="campo">
           <label>Cedula</label>
-          <input v-model="editable.cedula" disabled />
+          <input v-model="editable.cedula" :disabled="!puedeEditarTodo" />
         </div>
 
         <div class="campo">
@@ -80,75 +182,84 @@ const cancelarReserva = async () => {
             @input="editable.matricula = normalizarMatricula(editable.matricula).slice(0, 7)"
             maxlength="7"
             placeholder="ABC1234"
+            :disabled="!puedeEditarTodo"
           />
         </div>
 
         <div class="campo">
           <label>Tipo de Turno</label>
-          <input :value="editable.tipo_turno" disabled />
+          <select v-model="editable.tipo_turno" :disabled="!puedeEditarTodo">
+            <option value="">Seleccionar</option>
+            <option value="Particular">Particular</option>
+            <option value="Garantia">Garantia</option>
+          </select>
         </div>
 
-        <div v-if="editable.tipo_turno === 'Particular'" class="campo">
+        <div v-if="esParticular" class="campo">
           <label>Tipo Particular</label>
-          <input :value="editable.particular_tipo || ''" disabled />
+          <input v-model="editable.particular_tipo" :disabled="!puedeEditarTodo" placeholder="Ej: Taller" />
         </div>
 
-        <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
-          <label>Tipo Garantía</label>
-          <input :value="editable.garantia_tipo || ''" disabled />
+        <div v-if="esGarantia" class="campo">
+          <label>Servicio</label>
+          <select v-model="editable.garantia_tipo" :disabled="!puedeEditarTodo">
+            <option value="">Seleccionar</option>
+            <option value="Service">Service</option>
+            <option value="Reparacion">Reparacion</option>
+          </select>
         </div>
 
-        <div v-if="editable.tipo_turno === 'Garantía'" class="campo">
+        <div v-if="esGarantia || editable.garantia_fecha_compra" class="campo">
           <label>Fecha de Compra</label>
-          <input :value="editable.garantia_fecha_compra || ''" disabled />
+          <input v-model="editable.garantia_fecha_compra" type="date" :disabled="!puedeEditarTodo" />
         </div>
 
-        <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Service'" class="campo">
+        <div v-if="esGarantia && esService" class="campo">
           <label>Numero de Service</label>
-          <input :value="editable.garantia_numero_service || ''" disabled />
+          <input v-model="editable.garantia_numero_service" :disabled="!puedeEditarTodo" />
         </div>
 
-        <div v-if="editable.tipo_turno === 'Garantía' && editable.garantia_tipo === 'Reparación'" class="campo">
+        <div v-if="esGarantia && esReparacion" class="campo full">
           <label>Problema</label>
-          <textarea :value="editable.garantia_problema || ''" disabled />
+          <textarea v-model="editable.garantia_problema" :disabled="!puedeEditarTodo" />
         </div>
 
         <div class="campo">
           <label>Fecha</label>
-          <input v-model="editable.fecha" type="date" />
+          <input v-model="editable.fecha" type="date" :disabled="!puedeEditarTodo" />
         </div>
 
         <div class="campo">
           <label>Hora</label>
-          <input v-model="editable.hora" type="time" />
+          <input v-model="editable.hora" type="time" :disabled="!puedeEditarTodo" />
         </div>
 
         <div class="campo">
           <label>Estado</label>
-          <select v-model="editable.estado" class="select-estado" :class="editable.estado">
+          <select v-model="editable.estado" class="select-estado" :class="editable.estado" :disabled="!puedeEditarTodo">
             <option value="pendiente">Pendiente</option>
             <option value="pendiente_repuestos">Pendiente de repuestos</option>
-            <option value="revision">En revisión</option>
+            <option value="revision">En revision</option>
             <option value="pronto">Pronto</option>
             <option value="cancelada">Cancelada</option>
           </select>
         </div>
 
-        <div class="campo">
+        <div class="campo full">
           <label>Observaciones</label>
-          <textarea v-model="editable.detalles" />
+          <textarea v-model="editable.detalles" :disabled="!puedeEditarTodo" />
         </div>
       </div>
 
       <div v-if="!mostrandoConfirmacion" class="window-footer">
-        <button class="btn-cancelar" @click="$emit('cerrar')">Cerrar</button>
-        <button class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
-        <button class="btn-guardar" @click="guardar">Guardar</button>
+        <button class="btn-cancelar" @click="cerrar">Cerrar</button>
+        <button v-if="puedeEditarTodo" class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
+        <button v-if="puedeEditarTodo" class="btn-guardar" @click="guardar">Guardar</button>
       </div>
 
       <div v-else class="window-footer confirmation-footer">
         <div class="confirmation-message">
-          ¿Estas seguro de cancelar esta reserva?
+          Estas seguro de cancelar esta reserva?
         </div>
         <div class="confirmation-buttons">
           <button class="btn-cancelar" @click="mostrandoConfirmacion = false">No, volver</button>
@@ -163,28 +274,61 @@ const cancelarReserva = async () => {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .6);
+  background: rgba(0, 0, 0, 0.64);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  padding: 18px;
 }
 
 .window {
-  width: 460px;
+  width: min(900px, 94vw);
   background: #020617;
   border-radius: 18px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
-  max-height: 80vh;
-  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  max-height: 88vh;
+  overflow: hidden;
 }
 
 .window-header,
 .window-footer {
   padding: 14px 18px;
   border-bottom: 1px solid #1e293b;
+}
+
+.window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titulo {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.read-only {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #64748b;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.close-btn {
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 3px 9px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .window-footer {
@@ -202,7 +346,7 @@ const cancelarReserva = async () => {
 
 .confirmation-message {
   color: #f87171;
-  font-weight: bold;
+  font-weight: 700;
   text-align: center;
   padding: 8px 0;
 }
@@ -215,15 +359,20 @@ const cancelarReserva = async () => {
 
 .window-body {
   padding: 18px;
-  flex: 1;
   overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
 }
 
 .campo {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 14px;
+}
+
+.campo.full {
+  grid-column: 1 / -1;
 }
 
 .campo label {
@@ -237,7 +386,7 @@ const cancelarReserva = async () => {
 .campo select {
   background: #0f172a;
   border: 1px solid #1e293b;
-  color: white;
+  color: #fff;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -253,12 +402,13 @@ const cancelarReserva = async () => {
 
 .campo textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 72px;
   font-family: inherit;
 }
 
 .campo input:disabled,
-.campo textarea:disabled {
+.campo textarea:disabled,
+.campo select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -280,10 +430,10 @@ const cancelarReserva = async () => {
 
 .btn-guardar {
   background: #3b82f6;
-  color: white;
+  color: #fff;
   padding: 8px 16px;
   border-radius: 8px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
   border: none;
@@ -295,10 +445,10 @@ const cancelarReserva = async () => {
 
 .btn-eliminar {
   background: #ef4444;
-  color: white;
+  color: #fff;
   padding: 8px 16px;
   border-radius: 8px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
   border: none;
@@ -310,10 +460,10 @@ const cancelarReserva = async () => {
 
 .btn-confirmar-eliminar {
   background: #dc2626;
-  color: white;
+  color: #fff;
   padding: 8px 16px;
   border-radius: 8px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
   border: none;
@@ -350,5 +500,20 @@ const cancelarReserva = async () => {
 .select-estado.cancelada {
   border-color: #ef4444;
   color: #f87171;
+}
+
+@media (max-width: 760px) {
+  .window {
+    width: 96vw;
+  }
+
+  .window-body {
+    grid-template-columns: 1fr;
+  }
+
+  .confirmation-buttons,
+  .window-footer {
+    flex-wrap: wrap;
+  }
 }
 </style>

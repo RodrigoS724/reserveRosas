@@ -6,7 +6,7 @@ const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
 
-// Horarios: se cargarán dinámicamente desde la BD
+// Horarios: se cargarÃƒÂ¡n dinÃƒÂ¡micamente desde la BD
 const horariosDisponibles = ref<string[]>([])
 
 // Intervalo para auto-refresh
@@ -32,10 +32,10 @@ const formatLocalDate = (date: Date) => {
 const diasSemana = ref([
   { id: 0, nombre: 'Lunes' },
   { id: 1, nombre: 'Martes' },
-  { id: 2, nombre: 'Miércoles' },
+  { id: 2, nombre: 'Miercoles' },
   { id: 3, nombre: 'Jueves' },
   { id: 4, nombre: 'Viernes' },
-  { id: 5, nombre: 'Sábado' }
+  { id: 5, nombre: 'Sabado' }
 ])
 
 // Matriz de reservas: [dia][hora] => []
@@ -130,7 +130,7 @@ const cargarReservas = async () => {
       }
     }
 
-    // Inicializar matriz vacía
+    // Inicializar matriz vacÃƒÂ­a
     const nuevaMatriz: Record<string, Record<string, any[]>> = {}
     
     fechasWeek.value.forEach(dia => {
@@ -140,8 +140,19 @@ const cargarReservas = async () => {
       })
     })
 
-    // Llenar la matriz con reservas
+    // Llenar la matriz con reservas (deduplicando por id para evitar tarjetas duplicadas)
+    const reservasUnicas: any[] = []
+    const keysVistas = new Set<string>()
     nuevasReservas.forEach((reserva: any) => {
+      const key = reserva?.id
+        ? `id:${Number(reserva.id)}`
+        : `${reserva?.fecha || ''}|${reserva?.hora || ''}|${reserva?.cedula || ''}|${reserva?.nombre || ''}`
+      if (keysVistas.has(key)) return
+      keysVistas.add(key)
+      reservasUnicas.push(reserva)
+    })
+
+    reservasUnicas.forEach((reserva: any) => {
       if (nuevaMatriz[reserva.fecha] && nuevaMatriz[reserva.fecha][reserva.hora]) {
         nuevaMatriz[reserva.fecha][reserva.hora].push({
           ...reserva,
@@ -198,8 +209,8 @@ const chequearCambiosRemotos = async () => {
 
       const campo = String(c?.campo || '').toLowerCase()
       let accion: 'creada' | 'modificada' | 'eliminada' = 'modificada'
-      if (campo === 'creación' || campo === 'creacion') accion = 'creada'
-      if (campo === 'eliminación' || campo === 'eliminacion') accion = 'eliminada'
+      if (campo === 'creacion') accion = 'creada'
+      if (campo === 'eliminacion') accion = 'eliminada'
 
       const nombre = c?.nombre || 'Reserva'
       const fecha = c?.reserva_fecha ? ` ${c.reserva_fecha}` : ''
@@ -277,7 +288,7 @@ onBeforeUnmount(() => {
   }
 })
 
-// Filtrado por cédula
+// Filtrado por cÃƒÂ©dula
 const normalizarEstadoKey = (estado: string) => {
   if (!estado) return 'PENDIENTE'
   const key = estado
@@ -304,12 +315,12 @@ const obtenerReservasEnCelda = (fecha: string, hora: string) => {
   return filtradas
 }
 
-// Verificar si el horario debe mostrarse para la fecha (sábados solo hasta 12:00)
+// Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
 // const debeRechazoHora = (fecha: string, hora: string) => {
 //   const date = new Date(fecha)
-//   const esSabado = date.getDay() === 6  // 6 es sábado
+//   const esSabado = date.getDay() === 6  // 6 es sÃƒÂ¡bado
 //   if (esSabado && hora >= '12:00') {
-//     return true  // Rechazar horarios >= 12:00 en sábados
+//     return true  // Rechazar horarios >= 12:00 en sÃƒÂ¡bados
 //   }
 //   return false
 // }
@@ -322,20 +333,23 @@ const cambiarSemana = (delta: number) => {
 // VENTANA DE DETALLES
 const mostrarVentana = ref(false)
 const reservaActiva = ref<any>(null)
+const modalKey = ref(0)
 
 const abrirVentana = (reserva: any) => {
   reservaActiva.value = { ...reserva }
+  modalKey.value += 1
   mostrarVentana.value = true
 }
 
 const manejarCierre = async () => {
   mostrarVentana.value = false
+  reservaActiva.value = null
   setTimeout(() => {
     cargarReservas()
   }, 150)
 }
 
-// Función para manejar los estilos dinámicos de las tarjetas
+// FunciÃƒÂ³n para manejar los estilos dinÃƒÂ¡micos de las tarjetas
 const getCardStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400',
@@ -348,26 +362,52 @@ const getCardStyles = (estado: string) => {
   return styles[key as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
 };
 
+const normalizarTipoTurno = (tipo: any) => {
+  const value = String(tipo || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (value === 'garantia') return 'Garantia'
+  if (value === 'particular') return 'Particular'
+  return String(tipo || '')
+}
+
+const normalizarTipoGarantia = (tipo: any) => {
+  const value = String(tipo || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (value === 'service') return 'Service'
+  if (value === 'reparacion') return 'Reparacion'
+  return String(tipo || '')
+}
+
 const obtenerTipoResumen = (reserva: any) => {
-  if (reserva.tipo_turno === 'Garantía') {
-    return `Garantía${reserva.garantia_tipo ? ` - ${reserva.garantia_tipo}` : ''}`
+  const tipoTurno = normalizarTipoTurno(reserva.tipo_turno)
+  const tipoGarantia = normalizarTipoGarantia(reserva.garantia_tipo)
+  if (tipoTurno === 'Garantia') {
+    return `Garantia${tipoGarantia ? ` - ${tipoGarantia}` : ''}`
   }
-  if (reserva.tipo_turno === 'Particular') {
+  if (tipoTurno === 'Particular') {
     return `Particular${reserva.particular_tipo ? ` - ${reserva.particular_tipo}` : ''}`
   }
-  return reserva.tipo_turno || ''
+  return tipoTurno || ''
 }
 
 const obtenerDetalleResumen = (reserva: any) => {
-  if (reserva.tipo_turno === 'Garantía') {
-    if (reserva.garantia_tipo === 'Service') {
+  const tipoTurno = normalizarTipoTurno(reserva.tipo_turno)
+  const tipoGarantia = normalizarTipoGarantia(reserva.garantia_tipo)
+  if (tipoTurno === 'Garantia') {
+    if (tipoGarantia === 'Service') {
       return reserva.garantia_numero_service ? `Service: ${reserva.garantia_numero_service}` : ''
     }
-    if (reserva.garantia_tipo === 'Reparación') {
+    if (tipoGarantia === 'Reparacion') {
       return reserva.garantia_problema || ''
     }
   }
-  if (reserva.tipo_turno === 'Particular') {
+  if (tipoTurno === 'Particular') {
     if (reserva.particular_tipo === 'Taller') {
       return reserva.detalles || ''
     }
@@ -400,7 +440,7 @@ const obtenerDetalleResumen = (reserva: any) => {
               <option value="TODOS">Todos</option>
               <option value="PENDIENTE">Pendiente</option>
               <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
-              <option value="EN REVISION">En revisión</option>
+              <option value="EN REVISION">En revision</option>
               <option value="PRONTO">Pronto</option>
               <option value="EN PROCESO">En proceso</option>
               <option value="CANCELADO">Cancelado</option>
@@ -448,6 +488,9 @@ const obtenerDetalleResumen = (reserva: any) => {
                   <div v-if="obtenerDetalleResumen(r)" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
                     {{ obtenerDetalleResumen(r) }}
                   </div>
+                  <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                    Compra: {{ r.garantia_fecha_compra }}
+                  </div>
                   <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
                     {{ r.marca }} {{ r.modelo }}<br/>
                     <span class="opacity-60">{{ r.cedula }}</span>
@@ -459,11 +502,8 @@ const obtenerDetalleResumen = (reserva: any) => {
         </tbody>
       </table>
     </div>
-    <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
+    <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
   </div>
 </template>
-
-
-
 
 
