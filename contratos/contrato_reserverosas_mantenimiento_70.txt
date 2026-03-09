@@ -1,0 +1,47 @@
+CONTRATO DE SERVICIOS - RESERVAROSAS CON MANTENIMIENTO MENSUAL
+
+Entre: ______________________________________ (en adelante, "EL CLIENTE"), con domicilio en ________________________________, y Rodrigo Sayas (en adelante, "EL DESARROLLADOR").
+
+Objeto
+EL DESARROLLADOR desarrolla, entrega e implementa la aplicacion de gestion de reservas "ReservaRosas" (en adelante, "LA APP") para uso interno de EL CLIENTE.
+
+Descripcion general de la app
+LA APP permite gestionar turnos y reservas del taller, incluyendo:
+1. Agenda semanal de reservas.
+2. Alta, edicion y cancelacion de reservas.
+3. Registro de clientes y vehiculos.
+4. Panel de administracion y configuraciones operativas.
+5. Historial de cambios y seguimiento de informacion.
+
+Alcance incluido en el servicio mensual (USD 70)
+El mantenimiento mensual incluye:
+1. Hosting y disponibilidad del sistema web/backend.
+2. Mantenimiento tecnico general de la aplicacion.
+3. Administracion y mantenimiento de base de datos.
+4. Soporte de funcionamiento de la web.
+5. Correccion de errores (bugs) y ajustes necesarios para mantener estabilidad.
+
+Mejoras y nuevas funcionalidades
+Cualquier mejora, nueva funcionalidad, integracion, cambio de diseno, modulo adicional o cambio de alcance no incluido en mantenimiento se cotizara por separado y su costo sera acordado previamente entre las partes.
+
+Precio y forma de pago
+- Pago inicial por desarrollo e implementacion: USD 2.200.
+- Mantenimiento mensual: USD 70.
+- El mantenimiento se abona por adelantado dentro de los primeros 5 dias de cada mes.
+
+Plazo y vigencia
+- La entrega inicial se realiza en los plazos acordados entre las partes.
+- El mantenimiento mensual es renovable automaticamente mientras EL CLIENTE mantenga los pagos al dia.
+
+Propiedad intelectual y uso
+EL DESARROLLADOR conserva la propiedad intelectual de LA APP. EL CLIENTE recibe licencia de uso para su operacion interna. No esta permitido revender, sublicenciar ni distribuir LA APP sin autorizacion escrita de EL DESARROLLADOR.
+
+Cancelacion
+EL CLIENTE puede cancelar el mantenimiento mensual con aviso escrito de 30 dias. Los importes ya abonados no son reembolsables.
+
+Firmas
+
+_______________________________            _______________________________
+EL CLIENTE                                  Rodrigo Sayas
+
+Fecha: ___ / ___ / ______

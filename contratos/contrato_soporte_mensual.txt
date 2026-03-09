@@ -1,0 +1,39 @@
+ CONTRATO DE SERVICIOS � LICENCIA CON SOPORTE MENSUAL
+
+Entre: ______________________________________ (en adelante, �EL CLIENTE�), con domicilio en ________________________________, y Rodrigo Sayas (en adelante, �EL DESARROLLADOR�).
+
+Objeto
+EL DESARROLLADOR entrega e instala la aplicaci�n de gesti�n de turnos �ReservaRosas� (en adelante, �LA APP�) para uso exclusivo de EL CLIENTE.
+
+Alcance incluido
+1. Instalaci�n de LA APP en los equipos definidos por EL CLIENTE.
+2. Capacitaci�n inicial del personal (1 sesi�n).
+3. Hosting del backend / web incluido en el mantenimiento mensual.
+4. Actualizaciones menores incluidas (correcciones, mejoras visuales, ajustes menores de funcionamiento).
+
+Actualizaciones mayores
+Las actualizaciones mayores (nuevas funcionalidades significativas, integraciones externas, cambios profundos de l�gica o m�dulos nuevos) no est�n incluidas. Se cotizan y se aprueban por separado.
+
+Precio y forma de pago
+- Pago inicial (instalaci�n + capacitaci�n): USD 1.800.
+- Mantenimiento mensual: USD ________ (recomendado: USD 40�80), pagadero por adelantado dentro de los primeros 5 d�as de cada mes.
+
+Plazo
+Contrato mensual renovable autom�ticamente mientras EL CLIENTE mantenga los pagos al d�a.
+
+Soporte
+Incluye soporte remoto b�sico (correo/WhatsApp) en horario laboral. Urgencias fuera de horario se cotizan aparte.
+
+Propiedad y uso
+EL DESARROLLADOR conserva la propiedad intelectual de LA APP. EL CLIENTE recibe licencia de uso para su taller. No est� permitido revender ni distribuir sin autorizaci�n escrita.
+
+Cancelaci�n
+EL CLIENTE puede cancelar el mantenimiento con aviso de 30 d�as. La cancelaci�n no incluye devoluci�n de pagos ya realizados.
+
+Firmas
+
+_______________________________            _______________________________
+EL CLIENTE                                  Rodrigo Sayas
+
+Fecha: ___ / ___ / ______
+

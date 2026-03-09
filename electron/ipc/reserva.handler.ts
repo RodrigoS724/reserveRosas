@@ -1,5 +1,6 @@
 // main/ipc/reservas.handlers.ts
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, Notification, shell } from 'electron'
+import { getSettings } from '../settings'
 import { safeHandle } from './safeHandle'
 import {
   crearReserva,
@@ -7,10 +8,16 @@ import {
   borrarReserva,
   moverReserva, actualizarReserva,
   obtenerReservasSemana,
+  obtenerReservasPorFecha,
   obtenerTodasLasReservas, actualizarNotasReserva,
   obtenerCambiosReservas
 } from '../services/reserva.service'
 import { withDbLock } from './withDBLock'
+import {
+  getDailySummaryConfig,
+  setDailySummaryConfig,
+  sendDailySummaryNow
+} from '../services/daily-summary.service'
 
 export function registrarHandlersReservas() {
   const broadcast = (channel: string, payload: unknown) => {
@@ -22,7 +29,7 @@ export function registrarHandlersReservas() {
   }
 
   const notifyReserva = async (
-    accion: 'creada' | 'modificada',
+    accion: 'creada' | 'modificada' | 'eliminada',
     id: number,
     fallback?: Record<string, unknown>
   ) => {
@@ -42,6 +49,36 @@ export function registrarHandlersReservas() {
           tipo_turno: reserva.tipo_turno,
         }
       : { id, ...(fallback || {}) }
+
+    const title = accion === 'creada'
+      ? 'Nueva reserva'
+      : accion === 'eliminada'
+        ? 'Reserva eliminada'
+        : 'Reserva modificada'
+    const bodyParts = [
+      resumen?.nombre ? String(resumen.nombre) : 'Cliente sin nombre',
+      resumen?.fecha ? String(resumen.fecha) : '',
+      resumen?.hora ? String(resumen.hora) : '',
+      resumen?.tipo_turno ? String(resumen.tipo_turno) : '',
+    ].filter(Boolean)
+    const body = bodyParts.join(' · ')
+
+    const settings = getSettings()
+    if (Notification.isSupported()) {
+      try {
+        const notif = new Notification({
+          title,
+          body,
+          silent: settings.soundEnabled === false,
+        })
+        notif.show()
+        if (settings.soundEnabled !== false) {
+          shell.beep()
+        }
+      } catch {
+        // ignore native notification failures
+      }
+    }
 
     broadcast('reservas:notify', {
       accion,
@@ -83,8 +120,20 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:borrar', async (_event, id: number) => {
     console.log('[IPC] Borrando reserva:', id)
+    let anterior: any = null
+    try {
+      anterior = await obtenerReserva(id)
+    } catch {
+      anterior = null
+    }
     const result = await withDbLock(() => borrarReserva(id))
     console.log('[IPC] Reserva borrada exitosamente')
+    await notifyReserva('eliminada', id, {
+      nombre: anterior?.nombre,
+      fecha: anterior?.fecha,
+      hora: anterior?.hora,
+      tipo_turno: anterior?.tipo_turno,
+    })
     return result
   })
 
@@ -122,16 +171,16 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:semana', async (_event, payload) => {
     console.log('[IPC] Obteniendo reservas de semana:', payload)
-    const result = await withDbLock(() => 
-      obtenerReservasSemana(payload.desde, payload.hasta)
-    )
+    // Lectura sin lock global para evitar congelar toda la cola
+    // si una consulta remota (MySQL) queda lenta.
+    const result = await obtenerReservasSemana(payload.desde, payload.hasta)
     console.log('[IPC] Reservas de semana obtenidas:', result.length, 'registros')
     return result
   })
 
   safeHandle('reservas:todas', async () => {
     console.log('[IPC] Obteniendo TODAS las reservas')
-    const result = await withDbLock(() => obtenerTodasLasReservas())
+    const result = await obtenerTodasLasReservas()
     console.log('[IPC] Total de reservas obtenidas:', result.length)
     return result
   })
@@ -151,5 +200,28 @@ export function registrarHandlersReservas() {
     const lastId = Number(payload?.lastId || 0)
     const limit = Number(payload?.limit || 200)
     return obtenerCambiosReservas(since, lastId, limit)
+  })
+
+  safeHandle('reservas:dia', async (_event, payload) => {
+    const fecha = String(payload?.fecha || '').trim()
+    if (!fecha) return []
+    return obtenerReservasPorFecha(fecha)
+  })
+
+  safeHandle('resumen-diario:config:get', async () => {
+    return getDailySummaryConfig()
+  })
+
+  safeHandle('resumen-diario:config:set', async (_event, payload) => {
+    return setDailySummaryConfig({
+      enabled: typeof payload?.enabled === 'boolean' ? payload.enabled : undefined,
+      sendTime: typeof payload?.sendTime === 'string' ? payload.sendTime : undefined,
+      recipients: Array.isArray(payload?.recipients) ? payload.recipients : undefined
+    })
+  })
+
+  safeHandle('resumen-diario:enviar', async (_event, payload) => {
+    const fecha = String(payload?.fecha || '').trim()
+    return sendDailySummaryNow(fecha)
   })
 }

@@ -71,6 +71,51 @@ function normalizarReserva(data: ReservaInput): ReservaInput {
   return data
 }
 
+function normalizarMatriculaReserva(value: string): string {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
+function validarCondicionesSubtipo(data: ReservaInput) {
+  const tipo = data.tipo_turno
+  const kmNumerico = /^\d+$/.test(String(data.km || '').trim())
+
+  if (tipo === 'Particular') {
+    if (data.particular_tipo === 'Service') {
+      if (!kmNumerico) {
+        throw new Error('KM requerido para Particular Service.')
+      }
+      return
+    }
+    if (data.particular_tipo === 'Taller') {
+      if (!String(data.detalles || '').trim()) {
+        throw new Error('Detalle de reparacion requerido para Particular Taller.')
+      }
+      return
+    }
+  }
+
+  if (tipo === 'GarantÃ­a') {
+    if (data.garantia_tipo === 'Service') {
+      if (!String(data.garantia_fecha_compra || '').trim()) {
+        throw new Error('Fecha de compra requerida para Garantia Service.')
+      }
+      if (!kmNumerico) {
+        throw new Error('KM requerido para Garantia Service.')
+      }
+      if (!/^\d+$/.test(String(data.garantia_numero_service || '').trim())) {
+        throw new Error('Numero de service requerido para Garantia Service.')
+      }
+      return
+    }
+    if (data.garantia_tipo === 'ReparaciÃ³n') {
+      if (!String(data.garantia_problema || '').trim()) {
+        throw new Error('Descripcion del problema requerida para Garantia Reparacion.')
+      }
+      return
+    }
+  }
+}
+
 /**
  * Ejecuta una operación con reintento automático en caso de SQLITE_BUSY
  */
@@ -318,6 +363,7 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
 export async function crearReserva(data: ReservaInput) {
   console.log('[Service] Iniciando crearReserva...')
   validarReserva(data)
+  validarCondicionesSubtipo(data)
   const dataNormalizada = normalizarReserva({ ...data })
   const fechaNormalizada = new Date(dataNormalizada.fecha).toISOString().split('T')[0]
   console.log('[Service] Fecha normalizada:', dataNormalizada.fecha, '->', fechaNormalizada)
@@ -528,11 +574,21 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
  * ========================= */
 export async function actualizarReserva(id: number, reserva: any) {
   console.log('[Service] Actualizando reserva:', id, reserva)
+  const reservaId = Number(id || reserva?.id || 0)
+  if (!reservaId) {
+    throw new Error('ID de reserva invalido.')
+  }
+
+  const matriculaNormalizada = normalizarMatriculaReserva(reserva?.matricula || '').slice(0, 10)
+  if (matriculaNormalizada && !/^[A-Z0-9]{3,10}$/.test(matriculaNormalizada)) {
+    throw new Error('Matricula invalida. Usa solo letras y numeros.')
+  }
+  const reservaActualizada = { ...reserva, id: reservaId, matricula: matriculaNormalizada }
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT nombre, fecha, hora, estado, detalles FROM reservas WHERE id = ?`,
-      [id]
+      `SELECT nombre, fecha, hora, estado, detalles, matricula FROM reservas WHERE id = ?`,
+      [reservaId]
     )
     const anterior = rows[0]
     if (!anterior) {
@@ -541,19 +597,19 @@ export async function actualizarReserva(id: number, reserva: any) {
     }
 
     await pool.execute(
-      `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ? WHERE id = ?`,
-      [reserva.nombre, reserva.fecha, reserva.hora, reserva.estado, reserva.detalles, reserva.id]
+      `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ? WHERE id = ?`,
+      [reservaActualizada.nombre, reservaActualizada.fecha, reservaActualizada.hora, reservaActualizada.estado, reservaActualizada.detalles, matriculaNormalizada, reservaId]
     )
 
     for (const campo of Object.keys( anterior)) {
-      if ( anterior[campo] !== reserva[campo]) {
+      if ( anterior[campo] !== reservaActualizada[campo]) {
         await pool.execute(
           `
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, NOW())
           `,
-          [reserva.id, campo, anterior[campo], reserva[campo]]
+          [reservaId, campo, anterior[campo], reservaActualizada[campo]]
         )
       }
     }
@@ -563,34 +619,35 @@ export async function actualizarReserva(id: number, reserva: any) {
     try {
       const db = initDatabase()
       const anterior = db.prepare(`
-        SELECT nombre, fecha, hora, estado, detalles
+        SELECT nombre, fecha, hora, estado, detalles, matricula
         FROM reservas
         WHERE id = ?
-      `).get(id) as Record<string, any>
+      `).get(reservaId) as Record<string, any>
       if (!anterior) return
       const transaction = db.transaction(() => {
         db.prepare(`
           UPDATE reservas
-          SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
+          SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
           WHERE id = ?
         `).run(
-          reserva.nombre,
-          reserva.fecha,
-          reserva.hora,
-          reserva.estado,
-          reserva.detalles,
-          reserva.id
+          reservaActualizada.nombre,
+          reservaActualizada.fecha,
+          reservaActualizada.hora,
+          reservaActualizada.estado,
+          reservaActualizada.detalles,
+          matriculaNormalizada,
+          reservaId
         )
         for (const campo of Object.keys( anterior)) {
-          if ( anterior[campo] !== reserva[campo]) {
+          if ( anterior[campo] !== reservaActualizada[campo]) {
             db.prepare(`
               INSERT INTO historial_reservas
               (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
               VALUES ( ?, ?, ?, ?, datetime('now'))
             `).run(
-              reserva.id,
+              reservaId,
               campo, anterior[campo],
-              reserva[campo]
+              reservaActualizada[campo]
             )
           }
         }
@@ -605,10 +662,10 @@ export async function actualizarReserva(id: number, reserva: any) {
   const db = initDatabase()
   try {
     const anterior = db.prepare(`
-      SELECT nombre, fecha, hora, estado, detalles
+      SELECT nombre, fecha, hora, estado, detalles, matricula
       FROM reservas
       WHERE id = ?
-    `).get(id) as Record<string, any>
+    `).get(reservaId) as Record<string, any>
 
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para actualizar:', id)
@@ -618,27 +675,28 @@ export async function actualizarReserva(id: number, reserva: any) {
     const transaction = db.transaction(() => {
       db.prepare(`
         UPDATE reservas
-        SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
+        SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
         WHERE id = ?
       `).run(
-        reserva.nombre,
-        reserva.fecha,
-        reserva.hora,
-        reserva.estado,
-        reserva.detalles,
-        reserva.id
+        reservaActualizada.nombre,
+        reservaActualizada.fecha,
+        reservaActualizada.hora,
+        reservaActualizada.estado,
+        reservaActualizada.detalles,
+        matriculaNormalizada,
+        reservaId
       )
 
       for (const campo of Object.keys( anterior)) {
-        if ( anterior[campo] !== reserva[campo]) {
+        if ( anterior[campo] !== reservaActualizada[campo]) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, datetime('now'))
           `).run(
-            reserva.id,
+            reservaId,
             campo, anterior[campo],
-            reserva[campo]
+            reservaActualizada[campo]
           )
         }
       }
@@ -775,6 +833,37 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
 }
 
 /* =========================
+ * RESERVAS POR FECHA
+ * ========================= */
+export async function obtenerReservasPorFecha(fecha: string) {
+  const fechaNormalizada = new Date(fecha).toISOString().split('T')[0]
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT * FROM reservas
+        WHERE fecha = ?
+        ORDER BY hora
+      `,
+      [fechaNormalizada]
+    )
+    return rows
+  })
+
+  if (mysqlResult.ok) {
+    syncReservasToSqlite(mysqlResult.value)
+    return mysqlResult.value
+  }
+
+  const db = initDatabase()
+  return db.prepare(`
+    SELECT * FROM reservas
+    WHERE fecha = ?
+    ORDER BY hora
+  `).all(fechaNormalizada)
+}
+
+/* =========================
  * OBTENER TODAS LAS RESERVAS
  * ========================= */
 export async function obtenerTodasLasReservas() {
@@ -907,6 +996,8 @@ export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 
   ).all(since, since, lastId, limit)
   return rows
 }
+
+
 
 
 

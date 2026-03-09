@@ -6,7 +6,7 @@ const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
 
-// Horarios: se cargarán dinámicamente desde la BD
+// Horarios: se cargarÃƒÂ¡n dinÃƒÂ¡micamente desde la BD
 const horariosDisponibles = ref<string[]>([])
 
 // Intervalo para auto-refresh
@@ -20,15 +20,24 @@ let lastChangeAt = new Date().toISOString()
 let lastChangeId = 0
 let isInitialChangesLoad = true
 const suppressUntilByReservaId = new Map<number, number>()
+let refreshEnCurso = false
+let onVisibilityChangeRef: (() => void) | null = null
+
+const formatLocalDate = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 // Estructura de semana
 const diasSemana = ref([
   { id: 0, nombre: 'Lunes' },
   { id: 1, nombre: 'Martes' },
-  { id: 2, nombre: 'Miércoles' },
+  { id: 2, nombre: 'Miercoles' },
   { id: 3, nombre: 'Jueves' },
   { id: 4, nombre: 'Viernes' },
-  { id: 5, nombre: 'Sábado' }
+  { id: 5, nombre: 'Sabado' }
 ])
 
 // Matriz de reservas: [dia][hora] => []
@@ -39,9 +48,7 @@ const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
  * ========================= */
 const cargarHorariosBase = async () => {
   try {
-    console.log('[Reserve] Cargando horarios base...')
     const result = await window.api.obtenerHorariosBase()
-    console.log('[Reserve] Horarios recibidos:', result)
     
     // Filtrar solo los horarios activos y ordenarlos
     const horariosActivos = result
@@ -50,7 +57,6 @@ const cargarHorariosBase = async () => {
       .sort()
     
     horariosDisponibles.value = horariosActivos
-    console.log('[Reserve] Horarios activos cargados:', horariosActivos)
   } catch (error: any) {
     console.error('[Reserve] Error cargando horarios:', error)
     // Fallback a horarios por defecto si falla
@@ -74,7 +80,7 @@ const fechasWeek = computed(() => {
   return diasSemana.value.map((dia, index) => {
     const fecha = new Date(lunes)
     fecha.setDate(fecha.getDate() + index)
-    const fechaISO = fecha.toISOString().split('T')[0]
+    const fechaISO = formatLocalDate(fecha)
     return {
       ...dia,
       fecha: fechaISO,
@@ -90,8 +96,8 @@ const cargarReservas = async () => {
     const sabado = new Date(lunes)
     sabado.setDate(sabado.getDate() + 5)
 
-    const desdeStr = lunes.toISOString().split('T')[0]
-    const hastaStr = sabado.toISOString().split('T')[0]
+    const desdeStr = formatLocalDate(lunes)
+    const hastaStr = formatLocalDate(sabado)
     const rangeKey = `${desdeStr}_${hastaStr}`
     if (rangeKey !== currentRangeKey) {
       currentRangeKey = rangeKey
@@ -99,10 +105,7 @@ const cargarReservas = async () => {
       knownReservaIds.clear()
     }
 
-    console.log('[Reserve] Cargando reservas desde', desdeStr, 'hasta', hastaStr)
-
     const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
-    console.log('[Reserve] Reservas recibidas:', nuevasReservas)
 
     if (Array.isArray(nuevasReservas)) {
       const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
@@ -123,7 +126,7 @@ const cargarReservas = async () => {
       }
     }
 
-    // Inicializar matriz vacía
+    // Inicializar matriz vacÃƒÂ­a
     const nuevaMatriz: Record<string, Record<string, any[]>> = {}
     
     fechasWeek.value.forEach(dia => {
@@ -133,18 +136,32 @@ const cargarReservas = async () => {
       })
     })
 
-    // Llenar la matriz con reservas
+    // Llenar la matriz con reservas (deduplicando por id para evitar tarjetas duplicadas)
+    const reservasUnicas: any[] = []
+    const keysVistas = new Set<string>()
     nuevasReservas.forEach((reserva: any) => {
+      const key = reserva?.id
+        ? `id:${Number(reserva.id)}`
+        : `${reserva?.fecha || ''}|${reserva?.hora || ''}|${reserva?.cedula || ''}|${reserva?.nombre || ''}`
+      if (keysVistas.has(key)) return
+      keysVistas.add(key)
+      reservasUnicas.push(reserva)
+    })
+
+    reservasUnicas.forEach((reserva: any) => {
       if (nuevaMatriz[reserva.fecha] && nuevaMatriz[reserva.fecha][reserva.hora]) {
+        const tipoResumen = obtenerTipoResumen(reserva)
+        const detalleResumen = obtenerDetalleResumen(reserva)
         nuevaMatriz[reserva.fecha][reserva.hora].push({
           ...reserva,
-          estado: reserva.estado || 'Pendiente'
+          estado: reserva.estado || 'Pendiente',
+          tipo_resumen: tipoResumen,
+          detalle_resumen: detalleResumen
         })
       }
     })
 
     matrizReservas.value = nuevaMatriz
-    console.log('[Reserve] Matriz actualizada')
     isInitialLoad = false
 
   } catch (error: any) {
@@ -191,8 +208,8 @@ const chequearCambiosRemotos = async () => {
 
       const campo = String(c?.campo || '').toLowerCase()
       let accion: 'creada' | 'modificada' | 'eliminada' = 'modificada'
-      if (campo === 'creación' || campo === 'creacion') accion = 'creada'
-      if (campo === 'eliminación' || campo === 'eliminacion') accion = 'eliminada'
+      if (campo === 'creacion') accion = 'creada'
+      if (campo === 'eliminacion') accion = 'eliminada'
 
       const nombre = c?.nombre || 'Reserva'
       const fecha = c?.reserva_fecha ? ` ${c.reserva_fecha}` : ''
@@ -234,11 +251,22 @@ const chequearCambiosRemotos = async () => {
   }
 }
 
+const refrescarDatos = async (force = false) => {
+  if (refreshEnCurso) return
+  if (!force && document.hidden) return
+  if (!force && mostrarVentana.value) return
+  refreshEnCurso = true
+  try {
+    await chequearCambiosRemotos()
+    await cargarReservas()
+  } finally {
+    refreshEnCurso = false
+  }
+}
+
 onMounted(async () => {
-  console.log('[Reserve] Inicializando vista...')
   await cargarHorariosBase()
-  await cargarReservas()
-  await chequearCambiosRemotos()
+  await refrescarDatos(true)
 
   const ipc = window.ipcRenderer
   if (ipc?.on) {
@@ -254,23 +282,30 @@ onMounted(async () => {
     })
   }
   
-  console.log('[Reserve] Iniciando auto-refresh cada 5 segundos...')
-  intervaloRefresco = window.setInterval(async () => {
-    console.log('[Reserve] Auto-refresh: Recargando reservas...')
-    await chequearCambiosRemotos()
-    await cargarReservas()
+  onVisibilityChangeRef = () => {
+    if (!document.hidden) {
+      refrescarDatos(true)
+    }
+  }
+  document.addEventListener('visibilitychange', onVisibilityChangeRef)
+
+  intervaloRefresco = window.setInterval(() => {
+    refrescarDatos()
   }, 5000) // Recargar cada 5 segundos
 })
 
 onBeforeUnmount(() => {
-  console.log('[Reserve] Deteniendo auto-refresh...')
   if (intervaloRefresco) {
     clearInterval(intervaloRefresco)
     intervaloRefresco = null
   }
+  if (onVisibilityChangeRef) {
+    document.removeEventListener('visibilitychange', onVisibilityChangeRef)
+    onVisibilityChangeRef = null
+  }
 })
 
-// Filtrado por cédula
+// Filtrado por cÃƒÂ©dula
 const normalizarEstadoKey = (estado: string) => {
   if (!estado) return 'PENDIENTE'
   const key = estado
@@ -283,26 +318,39 @@ const normalizarEstadoKey = (estado: string) => {
   return key
 }
 
+const matrizReservasFiltrada = computed(() => {
+  const resultado: Record<string, Record<string, any[]>> = {}
+  const filtroCedula = busquedaCedula.value.trim()
+  const filtroEstado = estadoFiltro.value
+
+  for (const [fecha, porHora] of Object.entries(matrizReservas.value)) {
+    resultado[fecha] = {}
+    for (const [hora, reservas] of Object.entries(porHora)) {
+      resultado[fecha][hora] = reservas.filter((r: any) => {
+        if (filtroCedula && !String(r?.cedula || '').includes(filtroCedula)) {
+          return false
+        }
+        if (filtroEstado !== 'TODOS') {
+          return normalizarEstadoKey(r?.estado) === filtroEstado
+        }
+        return true
+      })
+    }
+  }
+
+  return resultado
+})
+
 const obtenerReservasEnCelda = (fecha: string, hora: string) => {
-  const reservas = matrizReservas.value[fecha]?.[hora] || []
-  const filtradas = reservas.filter(r => {
-    if (busquedaCedula.value && !r.cedula.includes(busquedaCedula.value)) {
-      return false
-    }
-    if (estadoFiltro.value !== 'TODOS') {
-      return normalizarEstadoKey(r.estado) === estadoFiltro.value
-    }
-    return true
-  })
-  return filtradas
+  return matrizReservasFiltrada.value[fecha]?.[hora] || []
 }
 
-// Verificar si el horario debe mostrarse para la fecha (sábados solo hasta 12:00)
+// Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
 // const debeRechazoHora = (fecha: string, hora: string) => {
 //   const date = new Date(fecha)
-//   const esSabado = date.getDay() === 6  // 6 es sábado
+//   const esSabado = date.getDay() === 6  // 6 es sÃƒÂ¡bado
 //   if (esSabado && hora >= '12:00') {
-//     return true  // Rechazar horarios >= 12:00 en sábados
+//     return true  // Rechazar horarios >= 12:00 en sÃƒÂ¡bados
 //   }
 //   return false
 // }
@@ -315,20 +363,23 @@ const cambiarSemana = (delta: number) => {
 // VENTANA DE DETALLES
 const mostrarVentana = ref(false)
 const reservaActiva = ref<any>(null)
+const modalKey = ref(0)
 
 const abrirVentana = (reserva: any) => {
   reservaActiva.value = { ...reserva }
+  modalKey.value += 1
   mostrarVentana.value = true
 }
 
 const manejarCierre = async () => {
   mostrarVentana.value = false
+  reservaActiva.value = null
   setTimeout(() => {
     cargarReservas()
   }, 150)
 }
 
-// Función para manejar los estilos dinámicos de las tarjetas
+// FunciÃƒÂ³n para manejar los estilos dinÃƒÂ¡micos de las tarjetas
 const getCardStyles = (estado: string) => {
   const styles = {
     'PENDIENTE': 'bg-amber-50 dark:bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400',
@@ -341,26 +392,52 @@ const getCardStyles = (estado: string) => {
   return styles[key as keyof typeof styles] || 'bg-gray-50 dark:bg-gray-500/10 border-gray-400 text-gray-700 dark:text-gray-400';
 };
 
+const normalizarTipoTurno = (tipo: any) => {
+  const value = String(tipo || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (value === 'garantia') return 'Garantia'
+  if (value === 'particular') return 'Particular'
+  return String(tipo || '')
+}
+
+const normalizarTipoGarantia = (tipo: any) => {
+  const value = String(tipo || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (value === 'service') return 'Service'
+  if (value === 'reparacion') return 'Reparacion'
+  return String(tipo || '')
+}
+
 const obtenerTipoResumen = (reserva: any) => {
-  if (reserva.tipo_turno === 'Garantía') {
-    return `Garantía${reserva.garantia_tipo ? ` - ${reserva.garantia_tipo}` : ''}`
+  const tipoTurno = normalizarTipoTurno(reserva.tipo_turno)
+  const tipoGarantia = normalizarTipoGarantia(reserva.garantia_tipo)
+  if (tipoTurno === 'Garantia') {
+    return `Garantia${tipoGarantia ? ` - ${tipoGarantia}` : ''}`
   }
-  if (reserva.tipo_turno === 'Particular') {
+  if (tipoTurno === 'Particular') {
     return `Particular${reserva.particular_tipo ? ` - ${reserva.particular_tipo}` : ''}`
   }
-  return reserva.tipo_turno || ''
+  return tipoTurno || ''
 }
 
 const obtenerDetalleResumen = (reserva: any) => {
-  if (reserva.tipo_turno === 'Garantía') {
-    if (reserva.garantia_tipo === 'Service') {
+  const tipoTurno = normalizarTipoTurno(reserva.tipo_turno)
+  const tipoGarantia = normalizarTipoGarantia(reserva.garantia_tipo)
+  if (tipoTurno === 'Garantia') {
+    if (tipoGarantia === 'Service') {
       return reserva.garantia_numero_service ? `Service: ${reserva.garantia_numero_service}` : ''
     }
-    if (reserva.garantia_tipo === 'Reparación') {
+    if (tipoGarantia === 'Reparacion') {
       return reserva.garantia_problema || ''
     }
   }
-  if (reserva.tipo_turno === 'Particular') {
+  if (tipoTurno === 'Particular') {
     if (reserva.particular_tipo === 'Taller') {
       return reserva.detalles || ''
     }
@@ -393,7 +470,7 @@ const obtenerDetalleResumen = (reserva: any) => {
               <option value="TODOS">Todos</option>
               <option value="PENDIENTE">Pendiente</option>
               <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
-              <option value="EN REVISION">En revisión</option>
+              <option value="EN REVISION">En revision</option>
               <option value="PRONTO">Pronto</option>
               <option value="EN PROCESO">En proceso</option>
               <option value="CANCELADO">Cancelado</option>
@@ -407,9 +484,7 @@ const obtenerDetalleResumen = (reserva: any) => {
         <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
         <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
-    </header>
-
-    <div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+    </header><div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
       <table class="w-full border-collapse table-fixed">
         <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
@@ -438,10 +513,13 @@ const obtenerDetalleResumen = (reserva: any) => {
                      :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
                   <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
                   <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
-                    {{ obtenerTipoResumen(r) }}
+                    {{ r.tipo_resumen }}
                   </div>
-                  <div v-if="obtenerDetalleResumen(r)" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    {{ obtenerDetalleResumen(r) }}
+                  <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                    {{ r.detalle_resumen }}
+                  </div>
+                  <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                    Compra: {{ r.garantia_fecha_compra }}
                   </div>
                   <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
                     {{ r.marca }} {{ r.modelo }}<br/>
@@ -454,10 +532,8 @@ const obtenerDetalleResumen = (reserva: any) => {
         </tbody>
       </table>
     </div>
-    <ReservaWindow v-if="mostrarVentana" :reserva="reservaActiva" @cerrar="manejarCierre" />
+    <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
   </div>
 </template>
-
-
 
 

@@ -1,223 +1,95 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const now = ref(new Date())
+let timer: number | null = null
 
-// --- ESTADO DEL CALENDARIO ---
-const hoy = new Date() // Fecha real del sistema
-const mesVisual = ref(hoy.getMonth())
-const anioVisual = ref(hoy.getFullYear())
+const dayLabel = computed(() => now.value.toLocaleDateString('es-UY', {
+  weekday: 'long',
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric'
+}))
 
-const nombresMeses = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-]
+const timeLabel = computed(() => now.value.toLocaleTimeString('es-UY', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+}))
 
-// --- LÓGICA DE NAVEGACIÓN ---
-const mesSiguiente = () => {
-  if (mesVisual.value === 11) {
-    mesVisual.value = 0
-    anioVisual.value++
-  } else {
-    mesVisual.value++
-  }
+const irAgenda = () => {
+  router.push('/agenda')
 }
 
-const mesAnterior = () => {
-  if (mesVisual.value === 0) {
-    mesVisual.value = 11
-    anioVisual.value--
-  } else {
-    mesVisual.value--
-  }
-}
-
-// --- GENERACIÓN DE DÍAS (Estilo Windows) ---
-const diasCalendario = computed(() => {
-  const dias = []
-  const primerDiaSemana = new Date(anioVisual.value, mesVisual.value, 1).getDay()
-  const ultimoDiaMesPasado = new Date(anioVisual.value, mesVisual.value, 0).getDate()
-  const diasEnMes = new Date(anioVisual.value, mesVisual.value + 1, 0).getDate()
-
-  // Relleno mes anterior
-  for (let i = primerDiaSemana - 1; i >= 0; i--) {
-    dias.push({ numero: ultimoDiaMesPasado - i, actual: false })
-  }
-  // Mes actual
-  for (let i = 1; i <= diasEnMes; i++) {
-    dias.push({ numero: i, actual: true })
-  }
-  return dias
+onMounted(() => {
+  timer = window.setInterval(() => {
+    now.value = new Date()
+  }, 1000)
 })
 
-// --- LÓGICA DE SELECCIÓN ---
-const diaSeleccionado = ref<number | null>(null)
-const horaSeleccionada = ref<string | null>(null)
-const horariosDisponibles = ref<string[]>([])
-const cargandoHorarios = ref(false)
-
-// Horarios base que se mostrarán si la API falla
-const horariosPorDefecto = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
-
-const esDiaDisponible = (dia: number, esMesActual: boolean) => {
-  if (!esMesActual) return false
-  const fecha = new Date(anioVisual.value, mesVisual.value, dia)
-  const numeroDiaSemana = fecha.getDay()
-  
-  // Limpiar horas de hoy para comparar solo fechas
-  const soloHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
-  if (fecha < soloHoy) return false // No pasados
-  if (numeroDiaSemana === 0) return false // Domingos no
-  
-  return true
-}
-
-const obtenerClasesDia = (diaObj: any) => {
-  const { numero, actual } = diaObj
-  const disponible = esDiaDisponible(numero, actual)
-  const seleccionado = diaSeleccionado.value === numero && actual
-  
-  // Comparar si es hoy exactamente
-  const esHoy = actual && 
-                numero === hoy.getDate() && 
-                mesVisual.value === hoy.getMonth() && 
-                anioVisual.value === hoy.getFullYear()
-
-  return [
-    'aspect-square flex items-center justify-center text-sm rounded-full transition-all mx-1 relative mb-1',
-    seleccionado ? 'bg-cyan-600 text-white font-bold shadow-lg z-10 scale-110' : '',
-    !actual ? 'text-gray-300 dark:text-gray-700 pointer-events-none' : '',
-    actual && disponible ? 'cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30' : '',
-    actual && !disponible ? 'cursor-not-allowed text-gray-300 dark:text-gray-600 opacity-40' : '',
-    esHoy && !seleccionado ? 'ring-2 ring-cyan-500/50' : ''
-  ].join(' ')
-}
-
-// Cargar horarios disponibles cuando cambia el día seleccionado
-watch(diaSeleccionado, async (nuevoDia) => {
-  if (!nuevoDia) {
-    horariosDisponibles.value = []
-    horaSeleccionada.value = null
-    return
-  }
-
-  cargandoHorarios.value = true
-  try {
-    // Construir la fecha en formato ISO
-    const fechaStr = `${anioVisual.value}-${String(mesVisual.value + 1).padStart(2, '0')}-${String(nuevoDia).padStart(2, '0')}`
-    console.log('[Home] Cargando horarios para fecha:', fechaStr)
-
-    const horarios = await window.api.obtenerHorariosDisponibles(fechaStr)
-    console.log('[Home] Horarios disponibles:', horarios)
-
-    // Extraer solo las horas
-    horariosDisponibles.value = horarios.map((h: any) => h.hora)
-
-    // Si no hay horarios, usar los por defecto (para debugging)
-    if (horariosDisponibles.value.length === 0) {
-      console.warn('[Home] No hay horarios disponibles, usando por defecto')
-      horariosDisponibles.value = horariosPorDefecto
-    }
-
-    horaSeleccionada.value = null
-  } catch (error) {
-    console.error('[Home] Error cargando horarios:', error)
-    // Fallback a horarios por defecto
-    horariosDisponibles.value = horariosPorDefecto
-  } finally {
-    cargandoHorarios.value = false
+onBeforeUnmount(() => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
   }
 })
-
-const irAFormulario = () => {
-  if (!horaSeleccionada.value || !diaSeleccionado.value) return
-  router.push({ 
-    path: '/confirmacion', 
-    query: { 
-      fecha: `${anioVisual.value}-${String(mesVisual.value + 1).padStart(2, '0')}-${String(diaSeleccionado.value).padStart(2, '0')}`, 
-      hora: horaSeleccionada.value 
-    } 
-  })
-}
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <div class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 flex overflow-hidden min-h-[500px] sm:min-h-[550px] md:min-h-[600px] lg:min-h-[650px] xl:min-h-[700px]">
-      
-      <div class="w-full lg:w-7/12 p-4 sm:p-6 md:p-8 lg:p-10">
-        <div class="flex items-center justify-between mb-6 sm:mb-8 md:mb-10">
-          <div>
-            <h3 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-gray-800 dark:text-white leading-none">
-              {{ nombresMeses[mesVisual] }}
-            </h3>
-            <p class="text-xs sm:text-sm text-gray-400 font-medium mt-1">{{ anioVisual }}</p>
-          </div>
-          <div class="flex gap-1 sm:gap-2">
-            <button @click="mesAnterior" class="p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg sm:rounded-2xl text-gray-500 transition-colors">‹</button>
-            <button @click="mesSiguiente" class="p-2 sm:p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg sm:rounded-2xl text-gray-500 transition-colors">›</button>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-7 text-center mb-4 sm:mb-5 md:mb-6">
-          <div v-for="d in ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']" :key="d" 
-               class="text-[7px] sm:text-[8px] md:text-[9px] lg:text-[11px] font-black text-gray-400 tracking-widest uppercase">
-            {{ d }}
-          </div>
-        </div>
+  <div class="h-full w-full relative overflow-hidden bg-gradient-to-br from-[#f8fafc] via-[#ecfdf5] to-[#dbeafe] dark:from-[#0b1220] dark:via-[#0f172a] dark:to-[#0a2d26]">
+    <div class="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-emerald-400/20 blur-3xl"></div>
+    <div class="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"></div>
 
-        <div class="grid grid-cols-7 text-center gap-y-1 sm:gap-y-2">
-          <div v-for="(dia, index) in diasCalendario" :key="index" 
-            @click="esDiaDisponible(dia.numero, dia.actual) ? diaSeleccionado = dia.numero : null"
-            :class="obtenerClasesDia(dia)">
-            {{ dia.numero }}
-          </div>
-        </div>
-      </div>
-
-      <div class="w-full lg:w-5/12 bg-gray-50/50 dark:bg-[#0f172a]/20 p-4 sm:p-6 md:p-8 lg:p-10 border-l border-gray-100 dark:border-gray-800 flex flex-col">
-        <div v-if="diaSeleccionado">
-          <h4 class="text-[10px] sm:text-xs md:text-sm font-black text-gray-400 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6">Horarios para el día {{ diaSeleccionado }}</h4>
-          <div v-if="cargandoHorarios" class="flex items-center justify-center py-8">
-            <div class="text-gray-400 text-xs sm:text-sm">Cargando horarios...</div>
-          </div>
-          <div v-else-if="horariosDisponibles.length > 0" class="space-y-2 sm:space-y-3 max-h-[300px] sm:max-h-[350px] md:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            <button v-for="h in horariosDisponibles" :key="h"
-              @click="horaSeleccionada = h"
-              :class="[
-                'w-full p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-2xl md:rounded-3xl border transition-all text-xs sm:text-sm font-bold',
-                horaSeleccionada === h 
-                  ? 'bg-cyan-600 border-transparent text-white shadow-xl scale-[1.03]' 
-                  : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-cyan-400 hover:shadow-sm'
-              ]">
-              {{ h }} hs
-            </button>
-          </div>
-          <div v-else class="text-center py-6 sm:py-8">
-            <p class="text-gray-400 text-xs sm:text-sm">No hay horarios disponibles para este día</p>
-          </div>
-          <button @click="irAFormulario" 
-                  :disabled="!horaSeleccionada"
-                  :class="[!horaSeleccionada ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cyan-700 shadow-cyan-500/20 shadow-xl active:scale-95']"
-                  class="mt-6 sm:mt-7 md:mt-8 w-full bg-cyan-600 text-white font-black py-4 sm:py-4.5 md:py-5 rounded-lg sm:rounded-2xl md:rounded-3xl transition-all uppercase tracking-widest text-xs sm:text-sm">
-            Confirmar Turno
+    <div class="relative h-full flex items-center justify-center px-6">
+      <section class="w-full max-w-5xl rounded-3xl border border-white/40 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl shadow-2xl p-8 sm:p-10 md:p-14">
+        <div class="flex flex-col items-center text-center gap-7">
+          <button
+            type="button"
+            @click="irAgenda"
+            class="group rounded-3xl p-4 sm:p-5 border border-emerald-200/60 dark:border-emerald-700/40 bg-white/80 dark:bg-slate-800/70 hover:scale-[1.02] transition-all shadow-lg"
+            title="Entrar a Agenda"
+          >
+            <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-[220px] sm:w-[280px] md:w-[320px] h-auto drop-shadow-[0_8px_18px_rgba(16,185,129,0.35)]">
+              <defs>
+                <linearGradient id="greenGradientHome" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00ff88"/>
+                  <stop offset="50%" stop-color="#00cc66"/>
+                  <stop offset="100%" stop-color="#007a3d"/>
+                </linearGradient>
+                <filter id="shadowHome" x="-50%" y="-50%" width="200%" height="200%">
+                  <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
+                </filter>
+                <mask id="cutMaskHome">
+                  <rect width="100%" height="100%" fill="white"/>
+                  <rect x="430" y="200" width="380" height="200" fill="black"/>
+                </mask>
+              </defs>
+              <g transform="skewX(-12)" filter="url(#shadowHome)">
+                <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientHome)" stroke-width="14" mask="url(#cutMaskHome)"/>
+                <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientHome)" letter-spacing="3">ROSAS</text>
+                <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientHome)" letter-spacing="5">UY</text>
+                <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
+                <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
+              </g>
+            </svg>
           </button>
+
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-800 dark:text-slate-100">
+            Bienvenido
+          </h1>
+
+          <p class="text-lg sm:text-2xl md:text-3xl font-bold capitalize text-emerald-700 dark:text-emerald-300">
+            {{ dayLabel }}
+          </p>
+
+          <p class="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight text-cyan-700 dark:text-cyan-300 tabular-nums">
+            {{ timeLabel }}
+          </p>
         </div>
-        <div v-else class="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 text-gray-400">
-          <div class="text-3xl sm:text-4xl mb-3 sm:mb-4"></div>
-          <p class="text-xs sm:text-sm font-medium">Seleccione un día disponible para ver los horarios</p>
-        </div>
-      </div>
+      </section>
     </div>
   </div>
-      <div class="bg-white rounded-lg shadow-md p-4 w-full max-w-lg mx-auto flex flex-col items-center">
-        <div class="mb-4">
-          <h2 class="text-2xl font-bold text-gray-800">Agenda</h2>
-        </div>
-        <div class="w-full h-[400px]">
-          <CalendarComponent />
-        </div>
-      </div>
 </template>
-

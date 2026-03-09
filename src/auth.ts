@@ -2,15 +2,16 @@ export type SessionUser = {
   id: number
   nombre: string
   username: string
-  role: 'super' | 'admin' | 'user'
+  role: 'superadmin' | 'super' | 'admin' | 'user'
   permissions: string[]
 }
 
 const STORAGE_KEY = 'rr_session'
 
 const ROUTE_PERMISSIONS: Record<string, string> = {
-  '/': 'agenda',
+  '/agenda': 'agenda',
   '/reservas': 'reservas',
+  '/resumen-diario': 'reservas',
   '/historial': 'historial',
   '/ajustes': 'ajustes',
   '/vehiculos': 'vehiculos',
@@ -20,6 +21,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 }
 
 const DEFAULT_ROUTES: Record<SessionUser['role'], string> = {
+  superadmin: '/',
   super: '/',
   admin: '/',
   user: '/reservas'

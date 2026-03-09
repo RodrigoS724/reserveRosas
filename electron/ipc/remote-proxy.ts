@@ -1,0 +1,91 @@
+const LOCAL_ONLY_CHANNELS = new Set<string>([
+  'config:env:get',
+  'config:env:set'
+])
+
+function getRemoteBaseUrl() {
+  return String(process.env.API_REMOTE_URL || '').trim().replace(/\/+$/, '')
+}
+
+function getRemoteToken() {
+  return String(process.env.API_REMOTE_TOKEN || '').trim()
+}
+
+export function isRemoteBackendEnabled() {
+  return getRemoteBaseUrl().length > 0
+}
+
+export function shouldProxyChannel(channel: string) {
+  if (!isRemoteBackendEnabled()) return false
+  return !LOCAL_ONLY_CHANNELS.has(channel)
+}
+
+export async function proxyIpcToRemote(channel: string, args: any[]) {
+  const baseUrl = getRemoteBaseUrl()
+  if (!baseUrl) {
+    throw new Error('API remota no configurada (API_REMOTE_URL).')
+  }
+
+  const endpoint = `${baseUrl}/api/admin/ipc`
+  const token = getRemoteToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const fetchFn = (globalThis as any).fetch
+  if (typeof fetchFn !== 'function') {
+    throw new Error('Fetch no disponible en este entorno.')
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 20000)
+
+  try {
+    const response = await fetchFn(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ channel, args }),
+      signal: controller.signal
+    })
+
+    const raw = await response.text()
+    let payload: any = null
+    try {
+      payload = raw ? JSON.parse(raw) : null
+    } catch {
+      payload = null
+    }
+
+    if (!response.ok) {
+      const message = payload?.error || payload?.message || raw || `HTTP ${response.status}`
+      throw new Error(`API remota error (${response.status}): ${message}`)
+    }
+
+    if (payload && typeof payload === 'object') {
+      if (payload.__ipc_error) {
+        const err = new Error(payload.message || 'Error remoto')
+        ;(err as any).stack = payload.stack || err.stack
+        throw err
+      }
+      if (payload.ok === false) {
+        throw new Error(payload.error || payload.message || 'Operacion remota rechazada')
+      }
+      if ('data' in payload) {
+        return payload.data
+      }
+    }
+
+    return payload
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error('Timeout llamando API remota (20s)')
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+

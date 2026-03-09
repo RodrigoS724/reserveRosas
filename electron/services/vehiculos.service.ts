@@ -1,6 +1,10 @@
 import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
 
+function normalizarMatricula(value: string) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
 export async function obtenerVehiculos() {
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(`
@@ -44,6 +48,32 @@ export async function obtenerVehiculos() {
       )
     ORDER BY v.matricula
   `).all()
+}
+
+export async function obtenerVehiculoPorMatriculaMysql(matricula: string) {
+  const mat = normalizarMatricula(matricula)
+  if (!mat) {
+    throw new Error('Matricula invalida')
+  }
+
+  const mysqlResult = await tryMysql( async (pool) => {
+    const [rows]: any = await pool.execute(
+      `
+        SELECT id, matricula, marca, modelo
+        FROM vehiculos
+        WHERE matricula = ?
+        LIMIT 1
+      `,
+      [mat]
+    )
+    return rows[0] ?? null
+  })
+
+  if (!mysqlResult.ok) {
+    throw new Error('No se pudo validar la matricula en MySQL')
+  }
+
+  return mysqlResult.value
 }
 
 export async function obtenerHistorialVehiculo(vehiculoId: number) {
