@@ -20,6 +20,8 @@ let lastChangeAt = new Date().toISOString()
 let lastChangeId = 0
 let isInitialChangesLoad = true
 const suppressUntilByReservaId = new Map<number, number>()
+let refreshEnCurso = false
+let onVisibilityChangeRef: (() => void) | null = null
 
 const formatLocalDate = (date: Date) => {
   const y = date.getFullYear()
@@ -46,9 +48,7 @@ const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
  * ========================= */
 const cargarHorariosBase = async () => {
   try {
-    console.log('[Reserve] Cargando horarios base...')
     const result = await window.api.obtenerHorariosBase()
-    console.log('[Reserve] Horarios recibidos:', result)
     
     // Filtrar solo los horarios activos y ordenarlos
     const horariosActivos = result
@@ -57,7 +57,6 @@ const cargarHorariosBase = async () => {
       .sort()
     
     horariosDisponibles.value = horariosActivos
-    console.log('[Reserve] Horarios activos cargados:', horariosActivos)
   } catch (error: any) {
     console.error('[Reserve] Error cargando horarios:', error)
     // Fallback a horarios por defecto si falla
@@ -106,10 +105,7 @@ const cargarReservas = async () => {
       knownReservaIds.clear()
     }
 
-    console.log('[Reserve] Cargando reservas desde', desdeStr, 'hasta', hastaStr)
-
     const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
-    console.log('[Reserve] Reservas recibidas:', nuevasReservas)
 
     if (Array.isArray(nuevasReservas)) {
       const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
@@ -154,15 +150,18 @@ const cargarReservas = async () => {
 
     reservasUnicas.forEach((reserva: any) => {
       if (nuevaMatriz[reserva.fecha] && nuevaMatriz[reserva.fecha][reserva.hora]) {
+        const tipoResumen = obtenerTipoResumen(reserva)
+        const detalleResumen = obtenerDetalleResumen(reserva)
         nuevaMatriz[reserva.fecha][reserva.hora].push({
           ...reserva,
-          estado: reserva.estado || 'Pendiente'
+          estado: reserva.estado || 'Pendiente',
+          tipo_resumen: tipoResumen,
+          detalle_resumen: detalleResumen
         })
       }
     })
 
     matrizReservas.value = nuevaMatriz
-    console.log('[Reserve] Matriz actualizada')
     isInitialLoad = false
 
   } catch (error: any) {
@@ -252,11 +251,22 @@ const chequearCambiosRemotos = async () => {
   }
 }
 
+const refrescarDatos = async (force = false) => {
+  if (refreshEnCurso) return
+  if (!force && document.hidden) return
+  if (!force && mostrarVentana.value) return
+  refreshEnCurso = true
+  try {
+    await chequearCambiosRemotos()
+    await cargarReservas()
+  } finally {
+    refreshEnCurso = false
+  }
+}
+
 onMounted(async () => {
-  console.log('[Reserve] Inicializando vista...')
   await cargarHorariosBase()
-  await cargarReservas()
-  await chequearCambiosRemotos()
+  await refrescarDatos(true)
 
   const ipc = window.ipcRenderer
   if (ipc?.on) {
@@ -272,19 +282,26 @@ onMounted(async () => {
     })
   }
   
-  console.log('[Reserve] Iniciando auto-refresh cada 5 segundos...')
-  intervaloRefresco = window.setInterval(async () => {
-    console.log('[Reserve] Auto-refresh: Recargando reservas...')
-    await chequearCambiosRemotos()
-    await cargarReservas()
+  onVisibilityChangeRef = () => {
+    if (!document.hidden) {
+      refrescarDatos(true)
+    }
+  }
+  document.addEventListener('visibilitychange', onVisibilityChangeRef)
+
+  intervaloRefresco = window.setInterval(() => {
+    refrescarDatos()
   }, 5000) // Recargar cada 5 segundos
 })
 
 onBeforeUnmount(() => {
-  console.log('[Reserve] Deteniendo auto-refresh...')
   if (intervaloRefresco) {
     clearInterval(intervaloRefresco)
     intervaloRefresco = null
+  }
+  if (onVisibilityChangeRef) {
+    document.removeEventListener('visibilitychange', onVisibilityChangeRef)
+    onVisibilityChangeRef = null
   }
 })
 
@@ -301,18 +318,31 @@ const normalizarEstadoKey = (estado: string) => {
   return key
 }
 
+const matrizReservasFiltrada = computed(() => {
+  const resultado: Record<string, Record<string, any[]>> = {}
+  const filtroCedula = busquedaCedula.value.trim()
+  const filtroEstado = estadoFiltro.value
+
+  for (const [fecha, porHora] of Object.entries(matrizReservas.value)) {
+    resultado[fecha] = {}
+    for (const [hora, reservas] of Object.entries(porHora)) {
+      resultado[fecha][hora] = reservas.filter((r: any) => {
+        if (filtroCedula && !String(r?.cedula || '').includes(filtroCedula)) {
+          return false
+        }
+        if (filtroEstado !== 'TODOS') {
+          return normalizarEstadoKey(r?.estado) === filtroEstado
+        }
+        return true
+      })
+    }
+  }
+
+  return resultado
+})
+
 const obtenerReservasEnCelda = (fecha: string, hora: string) => {
-  const reservas = matrizReservas.value[fecha]?.[hora] || []
-  const filtradas = reservas.filter(r => {
-    if (busquedaCedula.value && !r.cedula.includes(busquedaCedula.value)) {
-      return false
-    }
-    if (estadoFiltro.value !== 'TODOS') {
-      return normalizarEstadoKey(r.estado) === estadoFiltro.value
-    }
-    return true
-  })
-  return filtradas
+  return matrizReservasFiltrada.value[fecha]?.[hora] || []
 }
 
 // Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
@@ -483,10 +513,10 @@ const obtenerDetalleResumen = (reserva: any) => {
                      :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
                   <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
                   <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
-                    {{ obtenerTipoResumen(r) }}
+                    {{ r.tipo_resumen }}
                   </div>
-                  <div v-if="obtenerDetalleResumen(r)" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    {{ obtenerDetalleResumen(r) }}
+                  <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                    {{ r.detalle_resumen }}
                   </div>
                   <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
                     Compra: {{ r.garantia_fecha_compra }}

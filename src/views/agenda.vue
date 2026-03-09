@@ -128,6 +128,7 @@ const cargarDisponibilidadMes = async () => {
     const y = anioVisual.value
     const m = mesVisual.value
     const diasEnMes = new Date(y, m + 1, 0).getDate()
+    const pendientes: string[] = []
 
     for (let day = 1; day <= diasEnMes; day++) {
       const d = new Date(y, m, day)
@@ -137,7 +138,16 @@ const cargarDisponibilidadMes = async () => {
         continue
       }
       if (typeof availabilityCache.value[iso] !== 'undefined') continue
-      availabilityCache.value[iso] = await consultarDisponibilidadFecha(iso)
+      pendientes.push(iso)
+    }
+
+    const chunkSize = 5
+    for (let i = 0; i < pendientes.length; i += chunkSize) {
+      const chunk = pendientes.slice(i, i + chunkSize)
+      const results = await Promise.all(chunk.map((iso) => consultarDisponibilidadFecha(iso)))
+      for (let j = 0; j < chunk.length; j++) {
+        availabilityCache.value[chunk[j]] = results[j]
+      }
     }
   } finally {
     cargandoDisponibilidad.value = false
