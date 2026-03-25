@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { api } from '../api'
 
 const vehiculos = ref<any[]>([])
 const historial = ref<any[]>([])
@@ -21,7 +22,7 @@ const vehiculosFiltrados = computed(() => {
 const cargarVehiculos = async () => {
   cargando.value = true
   try {
-    const result = await window.api.obtenerVehiculos()
+    const result = await api.obtenerVehiculos()
     vehiculos.value = result || []
     if (!vehiculoActivo.value && vehiculos.value.length > 0) {
       seleccionarVehiculo(vehiculos.value[0])
@@ -36,7 +37,7 @@ const cargarVehiculos = async () => {
 
 const cargarHistorial = async (vehiculoId: number) => {
   try {
-    const result = await window.api.obtenerHistorialVehiculo(vehiculoId)
+    const result = await api.obtenerHistorialVehiculo(vehiculoId)
     historial.value = result || []
   } catch (error: any) {
     console.error('[Vehiculos] Error cargando historial:', error)

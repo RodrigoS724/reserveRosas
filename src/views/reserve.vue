@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
+import { api, ipc } from '../api'
 
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
@@ -8,6 +9,30 @@ const estadoFiltro = ref('TODOS')
 
 // Horarios: se cargarÃƒÂ¡n dinÃƒÂ¡micamente desde la BD
 const horariosDisponibles = ref<string[]>([])
+
+const obtenerHoraNumero = (hora: string) => {
+  const h = Number(String(hora || '').split(':')[0])
+  return Number.isFinite(h) ? h : -1
+}
+
+const horariosConDivisor = computed(() => {
+  const horas = horariosDisponibles.value || []
+  const tieneManiana = horas.some((h) => obtenerHoraNumero(h) >= 0 && obtenerHoraNumero(h) < 12)
+  const tieneTarde = horas.some((h) => obtenerHoraNumero(h) >= 12)
+  if (!tieneManiana || !tieneTarde) {
+    return horas.map((hora) => ({ tipo: 'hora' as const, hora }))
+  }
+  const items: Array<{ tipo: 'hora'; hora: string } | { tipo: 'divider' }> = []
+  let inserted = false
+  for (const hora of horas) {
+    if (!inserted && obtenerHoraNumero(hora) >= 12) {
+      items.push({ tipo: 'divider' })
+      inserted = true
+    }
+    items.push({ tipo: 'hora', hora })
+  }
+  return items
+})
 
 // Intervalo para auto-refresh
 let intervaloRefresco: number | null = null
@@ -48,7 +73,7 @@ const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
  * ========================= */
 const cargarHorariosBase = async () => {
   try {
-    const result = await window.api.obtenerHorariosBase()
+    const result = await api.obtenerHorariosBase()
     
     // Filtrar solo los horarios activos y ordenarlos
     const horariosActivos = result
@@ -105,7 +130,7 @@ const cargarReservas = async () => {
       knownReservaIds.clear()
     }
 
-    const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
+    const nuevasReservas = await api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
 
     if (Array.isArray(nuevasReservas)) {
       const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
@@ -171,7 +196,7 @@ const cargarReservas = async () => {
 
 const chequearCambiosRemotos = async () => {
   try {
-    const cambios = await window.api.obtenerCambiosReservas({
+    const cambios = await api.obtenerCambiosReservas({
       since: lastChangeAt,
       lastId: lastChangeId,
       limit: 200
@@ -268,7 +293,6 @@ onMounted(async () => {
   await cargarHorariosBase()
   await refrescarDatos(true)
 
-  const ipc = window.ipcRenderer
   if (ipc?.on) {
     const onLocalNotify = (_event: any, payload: any) => {
       const id = Number(payload?.reserva?.id || 0)
@@ -499,36 +523,47 @@ const obtenerDetalleResumen = (reserva: any) => {
         </thead>
 
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/50">
-          <tr v-for="hora in horariosDisponibles" :key="hora">
-            <td class="p-2 sm:p-3 md:p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
-              <span class="text-[7px] sm:text-[8px] md:text-xs font-black text-gray-400 dark:text-gray-500">{{ hora }}</span>
-            </td>
+          <template v-for="item in horariosConDivisor" :key="item.tipo === 'divider' ? 'divider' : item.hora">
+            <tr v-if="item.tipo === 'divider'">
+              <td :colspan="fechasWeek.length + 1" class="px-3 py-2 sm:py-3 bg-white dark:bg-[#1e293b]">
+                <div class="flex items-center justify-center gap-3 text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.35em] text-emerald-600/80">
+                  <span class="h-px w-10 sm:w-16 bg-emerald-500/30"></span>
+                  ROSAS AVENTURAS
+                  <span class="h-px w-10 sm:w-16 bg-emerald-500/30"></span>
+                </div>
+              </td>
+            </tr>
+            <tr v-else>
+              <td class="p-2 sm:p-3 md:p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
+                <span class="text-[7px] sm:text-[8px] md:text-xs font-black text-gray-400 dark:text-gray-500">{{ item.hora }}</span>
+              </td>
 
-            <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" 
-                class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors">
-              
-              <div class="flex flex-col gap-1 sm:gap-2">
-                <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
-                     @click="abrirVentana(r)"
-                     :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
-                  <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
-                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
-                    {{ r.tipo_resumen }}
-                  </div>
-                  <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    {{ r.detalle_resumen }}
-                  </div>
-                  <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    Compra: {{ r.garantia_fecha_compra }}
-                  </div>
-                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
-                    {{ r.marca }} {{ r.modelo }}<br/>
-                    <span class="opacity-60">{{ r.cedula }}</span>
+              <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${item.hora}`" 
+                  class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors">
+                
+                <div class="flex flex-col gap-1 sm:gap-2">
+                  <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
+                       @click="abrirVentana(r)"
+                       :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
+                    <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
+                    <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
+                      {{ r.tipo_resumen }}
+                    </div>
+                    <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                      {{ r.detalle_resumen }}
+                    </div>
+                    <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                      Compra: {{ r.garantia_fecha_compra }}
+                    </div>
+                    <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
+                      {{ r.marca }} {{ r.modelo }}<br/>
+                      <span class="opacity-60">{{ r.cedula }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>

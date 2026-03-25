@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { api } from '../api'
 
 const envText = ref('')
 const status = ref('')
@@ -8,7 +9,7 @@ const statusDetail = ref('')
 const guardando = ref(false)
 
 const cargarEnv = async () => {
-  envText.value = await window.api.obtenerEnvConfig()
+  envText.value = await api.obtenerEnvConfig()
 }
 
 const guardarEnv = async () => {
@@ -17,10 +18,10 @@ const guardarEnv = async () => {
   statusOk.value = true
   statusDetail.value = ''
   try {
-    await window.api.guardarEnvConfig(envText.value)
+    await api.guardarEnvConfig(envText.value)
     status.value = 'Configuración guardada. Forzando reconexión...'
     statusOk.value = true
-    const result = await window.api.probarConexionDB()
+    const result = await api.probarConexionDB()
     if (result.ok) {
       status.value = 'Conexión exitosa a MySQL.'
       statusOk.value = true
@@ -43,7 +44,7 @@ const probarConexion = async () => {
   statusOk.value = true
   statusDetail.value = ''
   try {
-    const result = await window.api.probarConexionDB()
+    const result = await api.probarConexionDB()
     if (result.ok) {
       status.value = 'Conexión exitosa a MySQL.'
       statusOk.value = true

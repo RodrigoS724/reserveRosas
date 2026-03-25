@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { api } from '../api'
 
 const registros = ref<any[]>([])
 const cargando = ref(false)
@@ -8,7 +9,7 @@ const filtroTexto = ref('')
 const cargarAuditoria = async () => {
   cargando.value = true
   try {
-    registros.value = await window.api.obtenerAuditoriaUsuarios()
+    registros.value = await api.obtenerAuditoriaUsuarios()
   } finally {
     cargando.value = false
   }

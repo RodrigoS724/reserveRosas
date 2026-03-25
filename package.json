@@ -10,7 +10,8 @@
     "build:win:publish": "vue-tsc && vite build && electron-builder --win --publish always",
     "release:local": "powershell -ExecutionPolicy Bypass -File scripts/release-local.ps1",
     "release:github": "powershell -ExecutionPolicy Bypass -File scripts/release-github.ps1",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api": "node server/index.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.0",

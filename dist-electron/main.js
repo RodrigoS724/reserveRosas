@@ -1,4 +1,4 @@
-import { M, R, V } from "./main-DCz4KJ4U.js";
+import { M, R, V } from "./main-EwlBYxpd.js";
 import "electron";
 import "node:url";
 import "node:path";

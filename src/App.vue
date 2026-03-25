@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
+import { api, ipc } from './api'
 
 const isDark = ref(true)
 const soundEnabled = ref(true)
@@ -31,7 +32,7 @@ const saveSettings = (patch = {}) => {
   soundEnabled.value = Boolean(next.soundEnabled)
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-  window.ipcRenderer?.send?.('settings:update', next)
+  ipc?.send?.('settings:update', next)
   window.dispatchEvent(new CustomEvent('rr:settings', { detail: next }))
 }
 
@@ -52,7 +53,7 @@ const toggleTheme = () => {
 }
 
 const cargarUsuariosLogin = async () => {
-  usuariosLogin.value = await window.api.obtenerUsuariosLogin()
+  usuariosLogin.value = await api.obtenerUsuariosLogin()
   if (!loginUser.value && usuariosLogin.value.length) {
     loginUser.value = usuariosLogin.value[0].username
   }
@@ -73,7 +74,7 @@ const iniciarSesion = async () => {
   loginError.value = ''
   cargandoLogin.value = true
   try {
-    const result = await window.api.login(loginUser.value, loginPass.value)
+    const result = await api.login(loginUser.value, loginPass.value)
     if (!result.ok || !result.user) {
       loginError.value = result.error || 'No se pudo iniciar sesión'
       return
@@ -111,7 +112,7 @@ const pushNotification = (message, variant = 'info') => {
 onMounted(() => {
   loadSettings()
   document.documentElement.classList.toggle('dark', isDark.value)
-  window.ipcRenderer?.send?.('settings:update', {
+  ipc?.send?.('settings:update', {
     theme: isDark.value ? 'dark' : 'light',
     soundEnabled: soundEnabled.value
   })
@@ -130,7 +131,6 @@ onMounted(() => {
   }
   cargarUsuariosLogin()
 
-  const ipc = window.ipcRenderer
   if (ipc?.on) {
     const onReservaNotify = (_event, payload) => {
       const accion = payload?.accion || 'modificada'
@@ -232,6 +232,18 @@ onMounted(() => {
           ]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
             <span>Panel Reservas</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="puede('aprontes')" to="/aprontes" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v12a2 2 0 01-2 2z"/></svg>
+            <span>Panel Aprontes</span>
           </div>
         </router-link>
 
@@ -498,4 +510,5 @@ onMounted(() => {
     background: rgba(156, 163, 175, 0.5);
 }
 </style>
+
 

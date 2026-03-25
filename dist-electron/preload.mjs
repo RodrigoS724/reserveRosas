@@ -41,6 +41,13 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerTodasLasReservas: () => invokeSafe("reservas:todas"),
   actualizarNotasReserva: (id, notas) => invokeSafe("reservas:actualizar-notas", id, notas),
   obtenerCambiosReservas: (d) => invokeSafe("reservas:cambios", d),
+  // Aprontes
+  crearApronte: (d) => invokeSafe("aprontes:crear", d),
+  obtenerApronte: (id) => invokeSafe("aprontes:obtener", id),
+  borrarApronte: (id) => invokeSafe("aprontes:borrar", id),
+  actualizarApronte: (d) => invokeSafe("aprontes:actualizar", d),
+  obtenerAprontesFecha: (f) => invokeSafe("aprontes:fecha", f),
+  obtenerAprontes: () => invokeSafe("aprontes:todas"),
   obtenerConfigResumenDiario: () => invokeSafe("resumen-diario:config:get"),
   guardarConfigResumenDiario: (d) => invokeSafe("resumen-diario:config:set", d),
   enviarResumenDiario: (d) => invokeSafe("resumen-diario:enviar", d),
@@ -55,6 +62,15 @@ electron.contextBridge.exposeInMainWorld("api", {
   desbloquearHorario: (d) => invokeSafe("horarios:desbloquear", d),
   obtenerHorariosBloqueados: (f) => invokeSafe("horarios:bloqueados", f),
   borrarHorarioPermanente: (id) => invokeSafe("horarios:borrar", id),
+  // Horarios Aprontes
+  obtenerHorariosAprontesBase: () => invokeSafe("horarios-aprontes:base"),
+  obtenerHorariosAprontesInactivos: () => invokeSafe("horarios-aprontes:inactivos"),
+  obtenerHorariosAprontesDisponibles: (f) => invokeSafe("horarios-aprontes:disponibles", f),
+  crearHorarioApronte: (d) => invokeSafe("horarios-aprontes:crear", d),
+  actualizarCupoHorarioApronte: (d) => invokeSafe("horarios-aprontes:actualizar-cupo", d),
+  desactivarHorarioApronte: (id) => invokeSafe("horarios-aprontes:desactivar", id),
+  activarHorarioApronte: (id) => invokeSafe("horarios-aprontes:activar", id),
+  borrarHorarioApronte: (id) => invokeSafe("horarios-aprontes:borrar", id),
   // Historial
   obtenerHistorial: (id) => invokeSafe("historial:obtener", id),
   // Vehiculos

@@ -106,6 +106,39 @@ export function initDatabase() {
   `)
 
   // ===============================
+  // HORARIOS APRONTES
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS horarios_aprontes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      hora TEXT UNIQUE NOT NULL,
+      cupo INTEGER NOT NULL DEFAULT 1,
+      activo INTEGER DEFAULT 1
+    );
+  `)
+
+  // ===============================
+  // APRONTES
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS aprontes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      hora TEXT NOT NULL,
+      telefono TEXT,
+      localidad TEXT,
+      observaciones TEXT,
+      marca TEXT,
+      modelo TEXT,
+      factura TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_aprontes_fecha_hora ON aprontes (fecha, hora)`)
+
+  // ===============================
   // BLOQUEOS PUNTUALES
   // ===============================
   db.exec(`
@@ -304,8 +337,24 @@ export function initDatabase() {
     }
   }
 
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN observaciones TEXT`)
+    console.log(' [DB] Columna "observaciones" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "observaciones" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes observaciones):', err.message)
+    }
+  }
+
+
   return db
   } finally {
     dbConnectionInProgress = false
   }
 }
+
+

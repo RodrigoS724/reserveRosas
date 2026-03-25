@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ipc } from '../api'
 
 const SETTINGS_KEY = 'rr_settings'
 const isDark = ref(true)
@@ -32,7 +33,7 @@ const saveSettings = (patch = {}) => {
   soundEnabled.value = Boolean(next.soundEnabled)
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-  window.ipcRenderer?.send?.('settings:update', next)
+  ipc?.send?.('settings:update', next)
   window.dispatchEvent(new CustomEvent('rr:settings', { detail: next }))
 }
 

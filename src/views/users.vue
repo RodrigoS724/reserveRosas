@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, toRaw } from 'vue'
 import { PermissionsLabels, getSession } from '../auth'
+import { api } from '../api'
 
 type UserForm = {
   id?: number
@@ -43,7 +44,7 @@ const isEdit = computed(() => Boolean(form.value.id))
 const permisosDisponibles = computed(() => permisosCatalogo)
 
 const cargarUsuarios = async () => {
-  const data = await window.api.listarUsuarios()
+  const data = await api.listarUsuarios()
   usuarios.value = (data || []).map((u: any) => ({
     ...u,
     role: (u.role === 'superadmin' || u.role === 'super' || u.role === 'admin' || u.role === 'user') ? u.role : 'user'
@@ -90,7 +91,7 @@ const aplicarPermisosPorRol = () => {
     return
   }
   if (form.value.role === 'admin') {
-    form.value.permissions = ['agenda', 'reservas', 'historial', 'ajustes', 'vehiculos']
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos']
     return
   }
   form.value.permissions = ['reservas', 'historial']
@@ -130,10 +131,10 @@ const guardarUsuario = async () => {
       }
     }
     if (isEdit.value) {
-      const res = await window.api.actualizarUsuario(payloadPlain)
+      const res = await api.actualizarUsuario(payloadPlain)
       if (!res.ok) throw new Error(res.error || 'Error al actualizar usuario')
       if (form.value.password && form.value.id) {
-        const passRes = await window.api.actualizarPasswordUsuario(
+        const passRes = await api.actualizarPasswordUsuario(
           JSON.parse(JSON.stringify({
           id: form.value.id,
           password: form.value.password,
@@ -149,7 +150,7 @@ const guardarUsuario = async () => {
       if (!form.value.password) {
         throw new Error('La contraseña es obligatoria para crear usuario')
       }
-      const res = await window.api.crearUsuario(
+      const res = await api.crearUsuario(
         JSON.parse(JSON.stringify({
           ...payloadPlain,
           password: form.value.password
@@ -175,7 +176,7 @@ const borrarUsuario = async () => {
   status.value = 'Eliminando...'
   statusOk.value = true
   try {
-    const res = await window.api.borrarUsuario(
+    const res = await api.borrarUsuario(
       JSON.parse(JSON.stringify({
       id: form.value.id,
       actor: {
@@ -325,3 +326,4 @@ onMounted(() => {
     </div>
   </div>
 </template>
+

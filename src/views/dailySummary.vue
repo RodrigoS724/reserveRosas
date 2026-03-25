@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
+import { api } from '../api'
 
 const fecha = ref(new Date().toISOString().split('T')[0])
 const cargando = ref(false)
@@ -31,7 +32,7 @@ const cargarResumen = async () => {
   if (!fecha.value) return
   cargando.value = true
   try {
-    const data = await window.api.obtenerReservasDia({ fecha: fecha.value })
+    const data = await api.obtenerReservasDia({ fecha: fecha.value })
     const lista = Array.isArray(data) ? data : []
     reservas.value = lista.filter((r: any) => {
       const estado = normalizarEstadoKey(r?.estado)
@@ -47,7 +48,7 @@ const cargarResumen = async () => {
 
 const cargarConfigResumenDiario = async () => {
   try {
-    const cfg = await window.api.obtenerConfigResumenDiario()
+    const cfg = await api.obtenerConfigResumenDiario()
     resumenConfig.value = {
       enabled: Boolean(cfg?.enabled),
       sendTime: cfg?.sendTime || '07:30',
@@ -70,7 +71,7 @@ const guardarConfigResumenDiario = async () => {
   resumenGuardando.value = true
   try {
     const recipients = parseRecipientsText(resumenConfig.value.recipientsText)
-    const cfg = await window.api.guardarConfigResumenDiario({
+    const cfg = await api.guardarConfigResumenDiario({
       enabled: resumenConfig.value.enabled,
       sendTime: resumenConfig.value.sendTime,
       recipients
@@ -97,7 +98,7 @@ const guardarConfigResumenDiario = async () => {
 const enviarResumenDiarioAhora = async () => {
   resumenEnviando.value = true
   try {
-    const result = await window.api.enviarResumenDiario({ fecha: fecha.value })
+    const result = await api.enviarResumenDiario({ fecha: fecha.value })
     if (!result?.ok) {
       throw new Error(result?.reason || 'No se pudo enviar')
     }

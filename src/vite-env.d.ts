@@ -77,6 +77,67 @@ declare global {
       }[]>
 
       /* =========================
+       * APRONTES
+       * ========================= */
+      crearApronte: (data: {
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+      }) => Promise<number>
+
+      obtenerApronte: (id: number) => Promise<any>
+
+      borrarApronte: (id: number) => Promise<void>
+
+      actualizarApronte: (data: {
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+      }) => Promise<void>
+
+      obtenerAprontesFecha: (fecha: string) => Promise<{
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        created_at: string
+      }[]>
+
+      obtenerAprontes: () => Promise<{
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        created_at: string
+      }[]>
+
+
+      /* =========================
        * HORARIOS
        * ========================= */
       obtenerHorariosBase: () => Promise<{
@@ -119,6 +180,40 @@ declare global {
       }[]>
 
       borrarHorarioPermanente: (id: number) => Promise<void>
+
+      /* =========================
+       * HORARIOS APRONTES
+       * ========================= */
+      obtenerHorariosAprontesBase: () => Promise<{
+        id: number
+        hora: string
+        cupo: number
+        activo: number
+      }[]>
+
+      obtenerHorariosAprontesInactivos: () => Promise<{
+        id: number
+        hora: string
+        cupo: number
+      }[]>
+
+      obtenerHorariosAprontesDisponibles: (fecha: string) => Promise<{
+        id: number
+        hora: string
+        cupo: number
+        usados: number
+        disponibles: number
+      }[]>
+
+      crearHorarioApronte: (data: { hora: string; cupo?: number }) => Promise<void>
+
+      actualizarCupoHorarioApronte: (data: { id: number; cupo: number }) => Promise<void>
+
+      desactivarHorarioApronte: (id: number) => Promise<void>
+
+      activarHorarioApronte: (id: number) => Promise<void>
+
+      borrarHorarioApronte: (id: number) => Promise<void>
 
       /* =========================
        * HISTORIAL
@@ -265,5 +360,7 @@ declare global {
   }
 }
 export {}
+
+
 
 

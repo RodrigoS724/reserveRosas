@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { api } from '../api'
 
 /* =========================
  * ESTADO
@@ -75,7 +76,7 @@ const cargarReservas = async () => {
   cargando.value = true
   try {
     console.log('[Historial] Cargando todas las reservas...')
-    const result = await window.api.obtenerTodasLasReservas()
+    const result = await api.obtenerTodasLasReservas()
     console.log('[Historial] Reservas recibidas:', result)
     
     // Ordenar por fecha descendente (más recientes primero)
@@ -126,7 +127,7 @@ const guardarNotas = async () => {
 
   try {
     console.log('[Historial] Guardando notas para reserva:', reservaActual.value.id)
-    await window.api.actualizarNotasReserva(reservaActual.value.id, notasActuales.value)
+    await api.actualizarNotasReserva(reservaActual.value.id, notasActuales.value)
     console.log('[Historial] Notas guardadas exitosamente')
 
     // Actualizar en la lista local

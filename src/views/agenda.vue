@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from '../api'
 
 const router = useRouter()
 
@@ -111,7 +112,7 @@ const fechaSeleccionadaIso = computed(() => {
 
 const consultarDisponibilidadFecha = async (iso: string) => {
   try {
-    const horarios = await window.api.obtenerHorariosDisponibles(iso)
+    const horarios = await api.obtenerHorariosDisponibles(iso)
     const filtrados = (horarios || [])
       .map((h: any) => h.hora)
       .filter((h: string) => isHoraPermitida(iso, h))
@@ -211,7 +212,7 @@ const cargarHorariosSeleccionados = async () => {
 
   cargandoHorarios.value = true
   try {
-    const horarios = await window.api.obtenerHorariosDisponibles(fechaSeleccionadaIso.value)
+    const horarios = await api.obtenerHorariosDisponibles(fechaSeleccionadaIso.value)
     const horas = (horarios || [])
       .map((h: any) => h.hora)
       .filter((h: string) => isHoraPermitida(fechaSeleccionadaIso.value, h))
