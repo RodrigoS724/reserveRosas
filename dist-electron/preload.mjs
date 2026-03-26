@@ -77,6 +77,9 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerVehiculos: () => invokeSafe("vehiculos:todos"),
   obtenerHistorialVehiculo: (vehiculoId) => invokeSafe("vehiculos:historial", vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula) => invokeSafe("vehiculos:mysql-by-matricula", matricula),
+  // Motos catalogo
+  obtenerMarcasMoto: () => invokeSafe("motos:marcas"),
+  obtenerModelosMoto: (marca) => invokeSafe("motos:modelos", marca),
   // Configuración
   obtenerEnvConfig: () => invokeSafe("config:env:get"),
   guardarEnvConfig: (text) => invokeSafe("config:env:set", text),

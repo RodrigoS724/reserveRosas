@@ -14,7 +14,8 @@ const horaSeleccionada = ref<string | null>(null)
 const horariosDisponibles = ref<string[]>([])
 const cargandoHorarios = ref(false)
 const cargandoDisponibilidad = ref(false)
-const availabilityCache = ref<Record<string, boolean>>({})
+const availabilityCache = ref<Record<string, boolean | null>>({})
+const horariosCache = ref<Record<string, string[]>>({}) // Caché de horarios para evitar parpadeos
 
 const nombresMeses = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -110,7 +111,7 @@ const fechaSeleccionadaIso = computed(() => {
   return `${anioVisual.value}-${String(mesVisual.value + 1).padStart(2, '0')}-${String(diaSeleccionado.value).padStart(2, '0')}`
 })
 
-const consultarDisponibilidadFecha = async (iso: string) => {
+const consultarDisponibilidadFecha = async (iso: string): Promise<boolean | null> => {
   try {
     const horarios = await api.obtenerHorariosDisponibles(iso)
     const filtrados = (horarios || [])
@@ -118,7 +119,7 @@ const consultarDisponibilidadFecha = async (iso: string) => {
       .filter((h: string) => isHoraPermitida(iso, h))
     return filtrados.length > 0
   } catch {
-    return false
+    return null
   }
 }
 
@@ -138,16 +139,29 @@ const cargarDisponibilidadMes = async () => {
         availabilityCache.value[iso] = false
         continue
       }
-      if (typeof availabilityCache.value[iso] !== 'undefined') continue
-      pendientes.push(iso)
+      // Solo cargar si no está cacheado O si fue un fallo anterior (null)
+      if (typeof availabilityCache.value[iso] === 'undefined') {
+        pendientes.push(iso)
+      }
     }
 
     const chunkSize = 5
     for (let i = 0; i < pendientes.length; i += chunkSize) {
       const chunk = pendientes.slice(i, i + chunkSize)
-      const results = await Promise.all(chunk.map((iso) => consultarDisponibilidadFecha(iso)))
+      const results = await Promise.allSettled(chunk.map((iso) => consultarDisponibilidadFecha(iso)))
       for (let j = 0; j < chunk.length; j++) {
-        availabilityCache.value[chunk[j]] = results[j]
+        const resultado = results[j]
+        const iso = chunk[j]
+        if (resultado.status === 'fulfilled') {
+          const valor = resultado.value
+          if (valor !== null) {
+            availabilityCache.value[iso] = valor
+          }
+          // Si es null (error), NO cachear - dejar como undefined para reintentar
+        } else {
+          // Si rejected, tampoco cachear
+          delete availabilityCache.value[iso]
+        }
       }
     }
   } finally {
@@ -163,9 +177,13 @@ const seleccionarPrimerDiaDisponible = async () => {
     if (!isSunday(d)) {
       const iso = formatFechaISO(d)
       if (typeof availabilityCache.value[iso] === 'undefined') {
-        availabilityCache.value[iso] = await consultarDisponibilidadFecha(iso)
+        const result = await consultarDisponibilidadFecha(iso)
+        if (result !== null) {
+          availabilityCache.value[iso] = result
+        }
+        // Si es null (error), no cachear - dejar para reintentar después
       }
-      if (availabilityCache.value[iso]) {
+      if (availabilityCache.value[iso] === true) {
         anioVisual.value = d.getFullYear()
         mesVisual.value = d.getMonth()
         diaSeleccionado.value = d.getDate()
@@ -186,6 +204,8 @@ const esDiaDisponible = (dia: number, esMesActual: boolean) => {
   if (!isDateInRange(fecha)) return false
   if (isSunday(fecha)) return false
   const iso = formatFechaISO(fecha)
+  // Si está explícitamente cacheado como false, no disponible
+  // Si es undefined (no cargado) o null (error), mostrar como potencialmente disponible
   return availabilityCache.value[iso] !== false
 }
 
@@ -216,14 +236,28 @@ const cargarHorariosSeleccionados = async () => {
     const horas = (horarios || [])
       .map((h: any) => h.hora)
       .filter((h: string) => isHoraPermitida(fechaSeleccionadaIso.value, h))
+    
     horariosDisponibles.value = horas
     horaSeleccionada.value = null
-    availabilityCache.value[fechaSeleccionadaIso.value] = horas.length > 0
+    
+    // Cachear horarios exitosos
+    if (horas.length > 0) {
+      horariosCache.value[fechaSeleccionadaIso.value] = horas
+      availabilityCache.value[fechaSeleccionadaIso.value] = true
+    } else {
+      availabilityCache.value[fechaSeleccionadaIso.value] = false
+    }
   } catch (error) {
-    console.error('[Home] Error cargando horarios:', error)
-    horariosDisponibles.value = []
+    console.error('[Agenda] Error cargando horarios:', error)
+    // Si falla, usar horarios cacheados si existen
+    const cached = horariosCache.value[fechaSeleccionadaIso.value]
+    if (cached && cached.length > 0) {
+      horariosDisponibles.value = cached
+    } else {
+      horariosDisponibles.value = []
+    }
     horaSeleccionada.value = null
-    availabilityCache.value[fechaSeleccionadaIso.value] = false
+    // NO borrar del caché de disponibilidad - dejar que se reintente más tarde
   } finally {
     cargandoHorarios.value = false
   }

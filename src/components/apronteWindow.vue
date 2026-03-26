@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { api } from '../api'
 
+const printLogoUrl = new URL('../assets/logo.png', import.meta.url).href
+
 const props = defineProps<{
   apronte: any | null
 }>()
@@ -10,6 +12,7 @@ const emit = defineEmits(['cerrar', 'actualizar'])
 
 const editable = ref<any | null>(null)
 const horarios = ref<any[]>([])
+const marcas = ref<string[]>([])
 const guardando = ref(false)
 const status = ref('')
 const statusOk = ref(true)
@@ -29,6 +32,16 @@ const cargarHorarios = async (fecha: string) => {
   } catch (error) {
     console.error('[ApronteWindow] Error cargando horarios:', error)
     horarios.value = []
+  }
+}
+
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[ApronteWindow] Error cargando marcas:', error)
+    marcas.value = []
   }
 }
 
@@ -55,6 +68,7 @@ watch(
     status.value = ''
     statusOk.value = true
     cargarHorarios(editable.value.fecha)
+    cargarMarcas()
   },
   { immediate: true }
 )
@@ -151,52 +165,195 @@ const escapeHtml = (value: any) => {
 }
 
 const buildPrintHtml = (data: any) => {
-  const rows = [
-    ['Nombre', data.nombre],
-    ['Fecha', data.fecha],
-    ['Hora', data.hora],
-    ['Telefono', data.telefono],
-    ['Localidad', data.localidad],
-    ['Marca', data.marca],
-    ['Modelo', data.modelo],
-    ['Factura', data.factura],
-    ['Observaciones', data.observaciones]
-  ]
-  const rowsHtml = rows
-    .map(([label, value]) => {
-      const safeValue = escapeHtml(value)
-      return `<tr><td class="label">${label}</td><td class="value">${safeValue || '-'}</td></tr>`
-    })
-    .join('')
+  const escapeText = (v: any) => escapeHtml(v || '')
 
   return `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Apronte</title>
+    <title>CONSTANCIA DE ENTREGA DE MOTOS</title>
     <style>
-      * { box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
-      .sheet { border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; }
-      .title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-      .subtitle { font-size: 12px; color: #64748b; margin-bottom: 16px; }
-      table { width: 100%; border-collapse: collapse; }
-      td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-      td.label { width: 160px; font-weight: 700; text-transform: uppercase; font-size: 11px; color: #64748b; }
-      td.value { font-size: 13px; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: Arial, sans-serif; color: #000; line-height: 1.4; }
+      .page { width: 210mm; height: 297mm; padding: 15mm; margin: 0 auto; background: white; }
+      .header { text-align: center; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+      .logo-box { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+      .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+      .header-content { flex: 1; }
+      .header-title { font-size: 14px; font-weight: bold; border: 2px solid #000; padding: 8px; }
+      .section { margin-bottom: 15px; }
+      .section-title { font-size: 10px; font-weight: bold; border: 1px solid #000; padding: 4px 6px; background: #f0f0f0; }
+      table { width: 100%; border-collapse: collapse; font-size: 10px; }
+      td { border: 1px solid #000; padding: 6px; }
+      .label { font-weight: bold; width: 35%; background: #f9f9f9; }
+      .value { vertical-align: top; word-break: break-word; }
+      .row { display: table; width: 100%; margin-bottom: 8px; }
+      .col { display: table-cell; border: 1px solid #000; padding: 6px; vertical-align: top; }
+      .col-label { background: #f9f9f9; font-weight: bold; width: 50%; font-size: 10px; }
+      .col-value { width: 50%; font-size: 10px; }
+      .description-table td { height: 20px; text-align: center; font-size: 9px; }
+      .signature-section { margin-top: 20px; display: flex; justify-content: space-around; }
+      .signature-box { text-align: center; border-top: 1px solid #000; width: 28%; font-size: 9px; padding-top: 30px; }
+      .observaciones { border: 1px solid #000; padding: 8px; min-height: 80px; font-size: 10px; white-space: pre-wrap; word-wrap: break-word; }
       @media print {
-        body { margin: 0; }
-        .sheet { border: none; }
+        body { margin: 0; padding: 0; }
+        .page { margin: 0; box-shadow: none; }
       }
     </style>
   </head>
   <body onload="window.focus();window.print();">
-    <div class="sheet">
-      <div class="title">Apronte</div>
-      <div class="subtitle">Reserva de apronte - imprimible</div>
-      <table>
-        ${rowsHtml}
-      </table>
+    <div class="page">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="logo-box"><img src="${printLogoUrl}" alt="Logo" /></div>
+        <div class="header-content">
+          <div class="header-title">CONSTANCIA DE ENTREGA DE MOTOS</div>
+        </div>
+      </div>
+
+      <!-- DATOS DEL TITULAR -->
+      <div class="section">
+        <div class="section-title">DATOS DEL TITULAR DE LA MOTO</div>
+        <table>
+          <tr>
+            <td class="label">NOMBRE</td>
+            <td class="value">${escapeText(data.nombre)}</td>
+          </tr>
+          <tr>
+            <td class="label">TELEFONO</td>
+            <td class="value">${escapeText(data.telefono)}</td>
+          </tr>
+                    <tr>
+            <td class="label">LOCALIDAD</td>
+            <td class="value">${escapeText(data.localidad)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- DATOS DE LA MOTO -->
+      <div class="section">
+        <div class="section-title">DATOS DE LA MOTO</div>
+        <table>
+          <tr>
+            <td class="label">MARCA</td>
+            <td class="value">${escapeText(data.marca)}</td>
+          </tr>
+          <tr>
+            <td class="label">MODELO</td>
+            <td class="value">${escapeText(data.modelo)}</td>
+          </tr>
+          <tr>
+            <td class="label">N° FACTURA DE COMPRA</td>
+            <td class="value">${escapeText(data.factura)}</td>
+          </tr>
+          <tr>
+            <td class="label">FECHA DE APRONTE</td>
+            <td class="value">${escapeText(data.fecha)} : ${escapeText(data.hora)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- DESCRIPCION -->
+      <div class="section">
+        <div class="section-title">DESCRIPCIÓN DEL ESTADO DE LA MOTO</div>
+        <table class="description-table">
+          <tr>
+            <td style="width: 40%; text-align: left; font-weight: bold;">CONCEPTO</td>
+            <td style="width: 15%; font-weight: bold;">SI</td>
+            <td style="width: 15%; font-weight: bold;">NO</td>
+            <td style="width: 30%; text-align: left; font-weight: bold;">OBSERVACIONES</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">HERRAMIENTAS</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">MANUAL DEL PRODUCTO</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">LUCES</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">SEÑALEROS</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">RAYAS</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+                    <tr>
+            <td style="text-align: left;">ROTURAS DE PARTES</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+                              <tr>
+            <td style="text-align: left;">CONDICION DE GARANTIA</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+                                        <tr>
+            <td style="text-align: left;">FICHA DE SERVICE</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+                                        <tr>
+            <td style="text-align: left;">CORRECTO USO DE BATERIAS</td>
+            <td>☐</td>
+            <td>☐</td>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- OBSERVACIONES -->
+      <div class="section">
+        <div class="section-title">OBSERVACIONES ADICIONALES</div>
+        <div class="observaciones">${escapeText(data.observaciones)}</div>
+      </div>
+
+      <!-- DATOS DE RECEPCION -->
+      <div class="section">
+        <div class="section-title">PERSONA QUE RECIBE LA MOTO</div>
+        <table>
+          <tr>
+            <td class="label">NOMBRE</td>
+            <td class="value">________________</td>
+          </tr>
+          <tr>
+            <td class="label">TELEFONO</td>
+            <td class="value">________________</td>
+          </tr>
+          <tr>
+            <td class="label">FECHA</td>
+            <td class="value">________________</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- FIRMAS -->
+      <div class="signature-section">
+        <div class="signature-box">
+          ___________________<br>Firma Quien Retira
+        </div>
+        <div class="signature-box">
+          ___________________<br>Firma Por Rosas UV
+        </div>
+      </div>
     </div>
   </body>
 </html>`
@@ -260,17 +417,20 @@ const imprimirPdf = () => {
 
         <div class="campo">
           <label>Marca</label>
-          <input v-model="editable.marca" />
+          <input v-model="editable.marca" list="apronte-marcas" />
+          <datalist id="apronte-marcas">
+            <option v-for="m in marcas" :key="m" :value="m"></option>
+          </datalist>
         </div>
 
         <div class="campo">
           <label>Modelo</label>
-          <input v-model="editable.modelo" />
+          <input v-model="editable.modelo" readonly class="read-only-input" />
         </div>
 
         <div class="campo">
           <label>Factura</label>
-          <input v-model="editable.factura" />
+          <input v-model="editable.factura" readonly class="read-only-input" />
         </div>
 
         <div class="campo full">
@@ -396,6 +556,11 @@ const imprimirPdf = () => {
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.9rem;
+}
+
+.read-only-input {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .campo textarea {

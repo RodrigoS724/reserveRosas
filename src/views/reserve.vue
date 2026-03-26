@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
+import ApronteWindow from '../components/apronteWindow.vue'
 import { api, ipc } from '../api'
 
 const semanaOffset = ref(0)
@@ -8,6 +9,7 @@ const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
 
 // Horarios: se cargarÃƒÂ¡n dinÃƒÂ¡micamente desde la BD
+const horariosBase = ref<string[]>([])
 const horariosDisponibles = ref<string[]>([])
 
 const obtenerHoraNumero = (hora: string) => {
@@ -67,25 +69,44 @@ const diasSemana = ref([
 
 // Matriz de reservas: [dia][hora] => []
 const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
+const matrizAprontes = ref<Record<string, Record<string, any[]>>>({})
+// Caché de aprontes para evitar parpadeos cuando el fetch falla
+const cacheAprontes = new Map<string, any[]>()
 
 /* =========================
  * CARGAR HORARIOS BASE ACTIVOS
  * ========================= */
 const cargarHorariosBase = async () => {
   try {
-    const result = await api.obtenerHorariosBase()
-    
-    // Filtrar solo los horarios activos y ordenarlos
-    const horariosActivos = result
-      .filter((h: any) => h.activo === 1)
-      .map((h: any) => h.hora)
+    const [baseResult, aprontesResult] = await Promise.allSettled([
+      api.obtenerHorariosBase(),
+      api.obtenerHorariosAprontesBase()
+    ])
+
+    const baseHorarios = baseResult.status === 'fulfilled'
+      ? (baseResult.value || [])
+          .filter((h: any) => h.activo === 1)
+          .map((h: any) => String(h.hora || '').trim())
+      : []
+
+    const apronteHorarios = aprontesResult.status === 'fulfilled'
+      ? (aprontesResult.value || [])
+          .filter((h: any) => h.activo === 1)
+          .map((h: any) => String(h.hora || '').trim())
+      : []
+
+    const unificados = Array.from(new Set([...baseHorarios, ...apronteHorarios]))
+      .filter(Boolean)
       .sort()
-    
-    horariosDisponibles.value = horariosActivos
+
+    horariosBase.value = unificados
+    horariosDisponibles.value = unificados
   } catch (error: any) {
     console.error('[Reserve] Error cargando horarios:', error)
     // Fallback a horarios por defecto si falla
-    horariosDisponibles.value = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
+    const fallback = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
+    horariosBase.value = fallback
+    horariosDisponibles.value = fallback
   }
 }
 
@@ -130,7 +151,52 @@ const cargarReservas = async () => {
       knownReservaIds.clear()
     }
 
-    const nuevasReservas = await api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
+    const fechas = fechasWeek.value
+    const [nuevasReservas, aprontesResultados] = await Promise.all([
+      api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr }),
+      Promise.allSettled(
+        fechas.map(async (dia) => {
+          try {
+            return await api.obtenerAprontesFecha(dia.fecha)
+          } catch (error) {
+            console.error('[Reserve] Error cargando aprontes:', error)
+            // Retornar aprontes cacheados si el fetch falla
+            return cacheAprontes.get(dia.fecha) || []
+          }
+        })
+      )
+    ])
+
+    // Procesar resultados de aprontes con manejo de fulfilled/rejected
+    const aprontesPorDia = aprontesResultados.map((resultado, index) => {
+      const fecha = fechas[index]?.fecha || ''
+      if (resultado.status === 'fulfilled') {
+        const aprontes = resultado.value || []
+        // Cachear los aprontes obtenidos
+        if (Array.isArray(aprontes) && aprontes.length > 0) {
+          cacheAprontes.set(fecha, aprontes)
+        }
+        return aprontes
+      } else {
+        // Si falla, devolver los aprontes cacheados para esa fecha
+        return cacheAprontes.get(fecha) || []
+      }
+    })
+
+    const horasAprontesSemana = new Set<string>()
+    aprontesPorDia.forEach((lista) => {
+      if (!Array.isArray(lista)) return
+      lista.forEach((apronte: any) => {
+        const hora = String(apronte?.hora || '').trim()
+        if (hora) horasAprontesSemana.add(hora)
+      })
+    })
+
+    const horasSemana = Array.from(new Set([
+      ...horariosBase.value,
+      ...Array.from(horasAprontesSemana)
+    ])).sort()
+    horariosDisponibles.value = horasSemana
 
     if (Array.isArray(nuevasReservas)) {
       const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
@@ -151,13 +217,20 @@ const cargarReservas = async () => {
       }
     }
 
-    // Inicializar matriz vacÃƒÂ­a
+    // Actualizar matriz inteligentemente: solo actualizar celdas que cambiaron
+    const matrizReservasAnterior = JSON.stringify(matrizReservas.value)
+    const matrizAprontesAnterior = JSON.stringify(matrizAprontes.value)
+
+    // Inicializar matriz vacÃ­a
     const nuevaMatriz: Record<string, Record<string, any[]>> = {}
+    const nuevaMatrizAprontes: Record<string, Record<string, any[]>> = {}
     
-    fechasWeek.value.forEach(dia => {
+    fechas.forEach(dia => {
       nuevaMatriz[dia.fecha] = {}
-      horariosDisponibles.value.forEach(hora => {
+      nuevaMatrizAprontes[dia.fecha] = {}
+      horasSemana.forEach(hora => {
         nuevaMatriz[dia.fecha][hora] = []
+        nuevaMatrizAprontes[dia.fecha][hora] = []
       })
     })
 
@@ -186,7 +259,25 @@ const cargarReservas = async () => {
       }
     })
 
-    matrizReservas.value = nuevaMatriz
+    aprontesPorDia.forEach((lista, index) => {
+      const fecha = fechas[index]?.fecha
+      if (!fecha || !Array.isArray(lista)) return
+      lista.forEach((apronte: any) => {
+        const hora = apronte?.hora
+        if (hora && nuevaMatrizAprontes[fecha] && nuevaMatrizAprontes[fecha][hora]) {
+          nuevaMatrizAprontes[fecha][hora].push(apronte)
+        }
+      })
+    })
+
+    // Solo actualizar si realmente cambió (optimización de renders)
+    if (JSON.stringify(nuevaMatriz) !== matrizReservasAnterior) {
+      matrizReservas.value = nuevaMatriz
+    }
+    if (JSON.stringify(nuevaMatrizAprontes) !== matrizAprontesAnterior) {
+      matrizAprontes.value = nuevaMatrizAprontes
+    }
+    
     isInitialLoad = false
 
   } catch (error: any) {
@@ -302,7 +393,7 @@ onMounted(async () => {
     }
     ipc.on('reservas:notify', onLocalNotify)
     onBeforeUnmount(() => {
-      ipc.off('reservas:notify', onLocalNotify)
+      ipc?.off('reservas:notify', onLocalNotify)
     })
   }
   
@@ -315,7 +406,7 @@ onMounted(async () => {
 
   intervaloRefresco = window.setInterval(() => {
     refrescarDatos()
-  }, 5000) // Recargar cada 5 segundos
+  }, 15000) // Recargar cada 15 segundos en lugar de 5 (reduce parpadeos)
 })
 
 onBeforeUnmount(() => {
@@ -369,6 +460,10 @@ const obtenerReservasEnCelda = (fecha: string, hora: string) => {
   return matrizReservasFiltrada.value[fecha]?.[hora] || []
 }
 
+const obtenerAprontesEnCelda = (fecha: string, hora: string) => {
+  return matrizAprontes.value[fecha]?.[hora] || []
+}
+
 // Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
 // const debeRechazoHora = (fecha: string, hora: string) => {
 //   const date = new Date(fecha)
@@ -389,6 +484,10 @@ const mostrarVentana = ref(false)
 const reservaActiva = ref<any>(null)
 const modalKey = ref(0)
 
+const mostrarApronte = ref(false)
+const apronteActivo = ref<any>(null)
+const apronteModalKey = ref(0)
+
 const abrirVentana = (reserva: any) => {
   reservaActiva.value = { ...reserva }
   modalKey.value += 1
@@ -398,6 +497,20 @@ const abrirVentana = (reserva: any) => {
 const manejarCierre = async () => {
   mostrarVentana.value = false
   reservaActiva.value = null
+  setTimeout(() => {
+    cargarReservas()
+  }, 150)
+}
+
+const abrirApronte = (apronte: any) => {
+  apronteActivo.value = { ...apronte }
+  apronteModalKey.value += 1
+  mostrarApronte.value = true
+}
+
+const manejarCierreApronte = async () => {
+  mostrarApronte.value = false
+  apronteActivo.value = null
   setTimeout(() => {
     cargarReservas()
   }, 150)
@@ -541,23 +654,36 @@ const obtenerDetalleResumen = (reserva: any) => {
               <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${item.hora}`" 
                   class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors">
                 
-                <div class="flex flex-col gap-1 sm:gap-2">
-                  <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
-                       @click="abrirVentana(r)"
-                       :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
-                    <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
-                    <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
-                      {{ r.tipo_resumen }}
+                <div class="flex gap-2">
+                  <div class="flex-1 flex flex-col gap-1 sm:gap-2">
+                    <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
+                         @click="abrirVentana(r)"
+                         :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
+                      <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
+                      <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
+                        {{ r.tipo_resumen }}
+                      </div>
+                      <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                        {{ r.detalle_resumen }}
+                      </div>
+                      <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
+                        Compra: {{ r.garantia_fecha_compra }}
+                      </div>
+                      <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
+                        {{ r.marca }} {{ r.modelo }}<br/>
+                        <span class="opacity-60">{{ r.cedula }}</span>
+                      </div>
                     </div>
-                    <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                      {{ r.detalle_resumen }}
-                    </div>
-                    <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                      Compra: {{ r.garantia_fecha_compra }}
-                    </div>
-                    <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
-                      {{ r.marca }} {{ r.modelo }}<br/>
-                      <span class="opacity-60">{{ r.cedula }}</span>
+                  </div>
+
+                  <div v-if="obtenerAprontesEnCelda(dia.fecha, item.hora).length"
+                       class="w-24 sm:w-28 md:w-32 flex flex-col gap-1 sm:gap-2">
+                    <div v-for="a in obtenerAprontesEnCelda(dia.fecha, item.hora)" :key="a.id"
+                         @click="abrirApronte(a)"
+                         class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95">
+                      <div class="text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-wide">Apronte</div>
+                      <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold truncate">{{ a.nombre }}</div>
+                      <div class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate">{{ a.marca }} {{ a.modelo }}</div>
                     </div>
                   </div>
                 </div>
@@ -568,6 +694,13 @@ const obtenerDetalleResumen = (reserva: any) => {
       </table>
     </div>
     <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
+    <ApronteWindow
+      v-if="mostrarApronte"
+      :key="apronteModalKey"
+      :apronte="apronteActivo"
+      @cerrar="manejarCierreApronte"
+      @actualizar="cargarReservas"
+    />
   </div>
 </template>
 

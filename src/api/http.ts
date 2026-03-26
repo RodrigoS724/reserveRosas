@@ -106,6 +106,10 @@ export const api = {
   obtenerHistorialVehiculo: (vehiculoId: number) => invoke('vehiculos:historial', vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula: string) => invoke('vehiculos:mysql-by-matricula', matricula),
 
+  // Motos catalogo
+  obtenerMarcasMoto: () => invoke('motos:marcas'),
+  obtenerModelosMoto: (marca?: string) => invoke('motos:modelos', marca),
+
   // Configuracion
   obtenerEnvConfig: () => invoke('config:env:get'),
   guardarEnvConfig: (text: string) => invoke('config:env:set', text),
@@ -123,5 +127,6 @@ export const api = {
   // Auditoria
   obtenerAuditoriaUsuarios: () => invoke('auditoria:list')
 }
+
 
 

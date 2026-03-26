@@ -17,7 +17,15 @@ if (typeof globalThis !== 'undefined') {
 let db: Database.Database | null = null
 let dbConnectionInProgress = false
 
+export function isLocalDbDisabled() {
+  const raw = String(process.env.DISABLE_LOCAL_DB || process.env.LOCAL_DB_DISABLED || '').trim().toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'yes'
+}
+
 export function initDatabase() {
+  if (isLocalDbDisabled()) {
+    throw new Error('Base de datos local deshabilitada (DISABLE_LOCAL_DB).')
+  }
   // Si ya existe conexión activa, retornarla
   if (db) {
     console.log(' [DB] Reutilizando conexión existente')
@@ -178,6 +186,19 @@ export function initDatabase() {
       nombre TEXT,
       telefono TEXT,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  // ===============================
+  // CATALOGO MARCAS/MODELOS
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS motos_catalogo (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      marca TEXT NOT NULL,
+      modelo TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE (marca, modelo)
     );
   `)
 

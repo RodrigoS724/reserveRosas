@@ -8,6 +8,7 @@ import * as auditoria from './auditoria.js'
 import * as dailySummary from './daily-summary.js'
 import * as aprontes from './aprontes.js'
 import * as horariosAprontes from './horarios-aprontes.js'
+import * as motos from './motos.js'
 
 export async function handleIpc(channel, args) {
   switch (channel) {
@@ -107,6 +108,12 @@ export async function handleIpc(channel, args) {
     case 'vehiculos:mysql-by-matricula':
       return vehiculos.obtenerVehiculoPorMatriculaMysql(args[0])
 
+    // Motos catalogo
+    case 'motos:marcas':
+      return motos.obtenerMarcasMoto()
+    case 'motos:modelos':
+      return motos.obtenerModelosMoto(args[0])
+
     // Config
     case 'config:env:get':
       return config.readEnvText()
@@ -140,5 +147,7 @@ export async function handleIpc(channel, args) {
       throw new Error('Canal no soportado: ' + channel)
   }
 }
+
+
 
 

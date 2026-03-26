@@ -83,6 +83,10 @@ contextBridge.exposeInMainWorld('api', {
   obtenerHistorialVehiculo: (vehiculoId: number) => invokeSafe('vehiculos:historial', vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula: string) => invokeSafe('vehiculos:mysql-by-matricula', matricula),
 
+  // Motos catalogo
+  obtenerMarcasMoto: () => invokeSafe('motos:marcas'),
+  obtenerModelosMoto: (marca?: string) => invokeSafe('motos:modelos', marca),
+
   // Configuración
   obtenerEnvConfig: () => invokeSafe('config:env:get'),
   guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),

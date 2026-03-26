@@ -45,6 +45,8 @@ const statusOk = ref(true)
 const mostrarDetalle = ref(false)
 const apronteActivo = ref<Apronte | null>(null)
 const modalKey = ref(0)
+const marcas = ref<string[]>([])
+const modelos = ref<string[]>([])
 
 const form = ref({
   id: null as number | null,
@@ -125,6 +127,26 @@ const seleccionarApronte = (a: Apronte) => {
   cargarHorarios()
 }
 
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error: any) {
+    console.error('[Aprontes] Error cargando marcas:', error)
+    marcas.value = []
+  }
+}
+
+const cargarModelos = async (marca: string) => {
+  try {
+    const data = await api.obtenerModelosMoto(marca)
+    modelos.value = Array.isArray(data) ? data : []
+  } catch (error: any) {
+    console.error('[Aprontes] Error cargando modelos:', error)
+    modelos.value = []
+  }
+}
+
 const abrirDetalle = (a: Apronte) => {
   seleccionarApronte(a)
   apronteActivo.value = { ...a }
@@ -159,8 +181,7 @@ const guardarApronte = async () => {
 
   try {
     validarForm()
-    const payload = {
-      id: form.value.id || undefined,
+    const basePayload = {
       nombre: String(form.value.nombre || '').trim(),
       fecha: String(form.value.fecha || '').trim(),
       hora: String(form.value.hora || '').trim(),
@@ -173,10 +194,14 @@ const guardarApronte = async () => {
     }
 
     if (isEdit.value) {
+      if (!form.value.id) {
+        throw new Error('ID requerido para actualizar el apronte.')
+      }
+      const payload = { id: Number(form.value.id), ...basePayload }
       await api.actualizarApronte(payload)
       status.value = 'Apronte actualizado.'
     } else {
-      await api.crearApronte(payload)
+      await api.crearApronte(basePayload)
       status.value = 'Apronte creado.'
       resetForm()
     }
@@ -241,6 +266,10 @@ watch(() => form.value.fecha, () => {
   cargarHorarios()
 })
 
+watch(() => form.value.marca, (marca) => {
+  cargarModelos(marca)
+})
+
 watch(fechaFiltro, () => {
   cargarAprontes()
   if (!isEdit.value) {
@@ -252,6 +281,8 @@ watch(fechaFiltro, () => {
 onMounted(async () => {
   await cargarAprontes()
   await cargarHorarios()
+  await cargarMarcas()
+  await cargarModelos(form.value.marca)
 })
 </script>
 
@@ -358,13 +389,19 @@ onMounted(async () => {
           </div>
           <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Marca</label>
-            <input v-model="form.marca" type="text"
+            <input v-model="form.marca" type="text" list="aprontes-marcas"
               class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+            <datalist id="aprontes-marcas">
+              <option v-for="m in marcas" :key="m" :value="m"></option>
+            </datalist>
           </div>
           <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Modelo</label>
-            <input v-model="form.modelo" type="text"
+            <input v-model="form.modelo" type="text" list="aprontes-modelos"
               class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+            <datalist id="aprontes-modelos">
+              <option v-for="m in modelos" :key="m" :value="m"></option>
+            </datalist>
           </div>
           <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Factura</label>

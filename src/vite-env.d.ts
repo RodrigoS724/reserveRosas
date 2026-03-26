@@ -264,6 +264,9 @@ declare global {
         modelo: string
       } | null>
 
+      obtenerMarcasMoto: () => Promise<string[]>
+      obtenerModelosMoto: (marca?: string) => Promise<string[]>
+
       obtenerTodasLasReservas: () => Promise<{
         id: number
         nombre: string
@@ -360,6 +363,7 @@ declare global {
   }
 }
 export {}
+
 
 
 

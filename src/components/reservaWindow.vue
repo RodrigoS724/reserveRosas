@@ -12,6 +12,8 @@ const emit = defineEmits(['cerrar', 'actualizar'])
 const editable = ref<any | null>(null)
 const mostrandoConfirmacion = ref(false)
 const session = getSession()
+const marcas = ref<string[]>([])
+const modelos = ref<string[]>([])
 const puedeEditarTodo = computed(() => {
   const role = session?.role
   return role === 'admin' || role === 'super' || role === 'superadmin'
@@ -61,6 +63,26 @@ const cerrar = () => {
   emit('cerrar')
 }
 
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[ReservaWindow] Error cargando marcas:', error)
+    marcas.value = []
+  }
+}
+
+const cargarModelos = async (marcaValue: string) => {
+  try {
+    const data = await api.obtenerModelosMoto(marcaValue)
+    modelos.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[ReservaWindow] Error cargando modelos:', error)
+    modelos.value = []
+  }
+}
+
 watch(
   () => props.reserva,
   (nueva) => {
@@ -89,8 +111,19 @@ watch(
       garantia_numero_service: String(nueva.garantia_numero_service || ''),
       garantia_problema: String(nueva.garantia_problema || '')
     }
+    cargarMarcas()
+    cargarModelos(String(nueva.marca || ''))
   },
   { immediate: true }
+)
+
+watch(
+  () => editable.value?.marca,
+  (marcaValue) => {
+    if (marcaValue !== undefined) {
+      cargarModelos(String(marcaValue || ''))
+    }
+  }
 )
 
 watch(
@@ -191,12 +224,18 @@ const cancelarReserva = async () => {
 
         <div class="campo">
           <label>Marca</label>
-          <input v-model="editable.marca" :disabled="!puedeEditarTodo" />
+          <input v-model="editable.marca" list="motos-marcas-reserva" :disabled="!puedeEditarTodo" />
+          <datalist id="motos-marcas-reserva">
+            <option v-for="m in marcas" :key="m" :value="m"></option>
+          </datalist>
         </div>
 
         <div class="campo">
           <label>Modelo</label>
-          <input v-model="editable.modelo" :disabled="!puedeEditarTodo" />
+          <input v-model="editable.modelo" list="motos-modelos-reserva" :disabled="!puedeEditarTodo" />
+          <datalist id="motos-modelos-reserva">
+            <option v-for="m in modelos" :key="m" :value="m"></option>
+          </datalist>
         </div>
 
         <div class="campo">

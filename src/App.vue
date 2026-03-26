@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
 import { api, ipc } from './api'
 
+const logoPrincipalUrl = new URL('./assets/Logo_principal.png', import.meta.url).href
+
 const isDark = ref(true)
 const soundEnabled = ref(true)
 const SETTINGS_KEY = 'rr_settings'
@@ -180,29 +182,7 @@ onMounted(() => {
     <aside class="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
       
       <div class="p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
-        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500">
-          <defs>
-            <linearGradient id="greenGradientSide" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00ff88"/>
-              <stop offset="50%" stop-color="#00cc66"/>
-              <stop offset="100%" stop-color="#007a3d"/>
-            </linearGradient>
-            <filter id="shadowSide" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
-            </filter>
-            <mask id="cutMaskSide">
-              <rect width="100%" height="100%" fill="white"/>
-              <rect x="430" y="200" width="380" height="200" fill="black"/>
-            </mask>
-          </defs>
-          <g transform="skewX(-12)" filter="url(#shadowSide)">
-            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientSide)" stroke-width="14" mask="url(#cutMaskSide)"/>
-            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientSide)" letter-spacing="3">ROSAS</text>
-            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientSide)" letter-spacing="5">UY</text>
-            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
-            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
-          </g>
-        </svg>
+        <img :src="logoPrincipalUrl" alt="Logo principal" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500" />
       </div>
 
       <nav class="flex-1 px-4 py-6 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
@@ -407,29 +387,7 @@ onMounted(() => {
     <div class="relative w-[480px] max-w-full rounded-3xl border border-white/10 bg-[#0f172a]/90 p-10 shadow-2xl text-white">
       
       <div class="flex justify-center mb-8">
-        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-52 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-          <defs>
-            <linearGradient id="greenGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00ff88"/>
-              <stop offset="50%" stop-color="#00cc66"/>
-              <stop offset="100%" stop-color="#007a3d"/>
-            </linearGradient>
-            <filter id="shadowLogin" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
-            </filter>
-            <mask id="cutMaskLogin">
-              <rect width="100%" height="100%" fill="white"/>
-              <rect x="430" y="200" width="380" height="200" fill="black"/>
-            </mask>
-          </defs>
-          <g transform="skewX(-12)" filter="url(#shadowLogin)">
-            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientLogin)" stroke-width="14" mask="url(#cutMaskLogin)"/>
-            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientLogin)" letter-spacing="3">ROSAS</text>
-            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientLogin)" letter-spacing="5">UY</text>
-            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
-            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
-          </g>
-        </svg>
+        <img :src="logoPrincipalUrl" alt="Logo principal" class="w-52 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]" />
       </div>
 
       <h3 class="text-2xl font-black tracking-tight text-center">Acceso al Sistema</h3>

@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
-import { initDatabase } from './db/database'
+import { initDatabase, isLocalDbDisabled } from './db/database'
 import { startBackupScheduler } from './services/backup.service'
 import { loadUserEnv } from './config/env'
 import { bootstrapSuperAdmin } from './services/users.service'
@@ -77,15 +77,20 @@ function createWindow() {
 app.whenReady().then(async () => {
   loadUserEnv() // Cargar .env guardado por el usuario (si existe)
   const remoteMode = isRemoteBackendEnabled()
-  if (!remoteMode) {
+  const localDbDisabled = isLocalDbDisabled()
+  if (!remoteMode && !localDbDisabled) {
     initDatabase() // Inicializamos la base de datos local
     await bootstrapSuperAdmin()
+  } else if (localDbDisabled) {
+    console.log('[Main] DB local deshabilitada. Se omite inicialización y backups.')
   } else {
     console.log('[Main] Modo API remota activo. Se omite DB local y schedulers locales.')
   }
   setupIpcHandlers() // Activamos los cables
-  if (!remoteMode) {
+  if (!remoteMode && !localDbDisabled) {
     startBackupScheduler() // Backups horarios locales
+  }
+  if (!remoteMode) {
     startDailySummaryScheduler()
   }
   createWindow()  // Creamos la ventana

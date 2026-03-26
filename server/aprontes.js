@@ -1,4 +1,5 @@
 import { execute, withTransaction } from './db.js'
+import { registrarMarcaModelo } from './motos.js'
 import { normalizeDate, normalizeHora } from './utils.js'
 
 function cleanText(value, maxLen = 255) {
@@ -84,6 +85,12 @@ export async function crearApronte(data) {
       ]
     )
 
+    try {
+      await registrarMarcaModelo(conn, payload.marca, payload.modelo)
+    } catch (error) {
+      console.warn('[Aprontes] No se pudo registrar marca/modelo:', error)
+    }
+
     return Number(result.insertId)
   })
 }
@@ -159,9 +166,19 @@ export async function actualizarApronte(id, data) {
         apronteId
       ]
     )
+
+    try {
+      await registrarMarcaModelo(conn, payload.marca, payload.modelo)
+    } catch (error) {
+      console.warn('[Aprontes] No se pudo registrar marca/modelo:', error)
+    }
   })
 }
 
 export async function borrarApronte(id) {
   await execute('DELETE FROM aprontes WHERE id = ?', [id])
 }
+
+
+
+

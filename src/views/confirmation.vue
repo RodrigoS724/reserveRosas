@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 
@@ -16,6 +16,8 @@ const marca = ref('')
 const modelo = ref('')
 const km = ref('')
 const detalles = ref('')
+const marcas = ref<string[]>([])
+const modelos = ref<string[]>([])
 
 const tipoTurno = ref<'Garantia' | 'Particular' | 'TomaMoto'>('Particular')
 const particularTipo = ref<'Service' | 'Taller'>('Service')
@@ -31,6 +33,26 @@ const baseInputClass = 'w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border
 const smallInputClass = 'w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white'
 const successClass = 'border-blue-500/50 ring-2 ring-blue-500/10 bg-blue-50/30 dark:bg-blue-900/10'
 const errorClass = 'border-red-500/50 ring-2 ring-red-500/10 bg-red-50/30 dark:bg-red-900/10'
+
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[Confirmation] Error cargando marcas:', error)
+    marcas.value = []
+  }
+}
+
+const cargarModelos = async (marcaValue: string) => {
+  try {
+    const data = await api.obtenerModelosMoto(marcaValue)
+    modelos.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[Confirmation] Error cargando modelos:', error)
+    modelos.value = []
+  }
+}
 
 const normalizarCedula = (value: string) => value.replace(/\D/g, '')
 
@@ -132,11 +154,20 @@ watch(garantiaTipo, () => {
   garantiaProblema.value = ''
 })
 
+watch(marca, (value) => {
+  cargarModelos(value)
+})
+
+onMounted(async () => {
+  await cargarMarcas()
+  await cargarModelos(marca.value)
+})
+
 const generarMatriculaGenericaUnica = async () => {
   const prefix = 'TMP'
   try {
     const vehiculos = await api.obtenerVehiculos()
-    const usadas = new Set((vehiculos || []).map(v => String(v.matricula || '').toUpperCase()))
+    const usadas = new Set((vehiculos || []).map((v: { matricula?: string | null }) => String(v.matricula || '').toUpperCase()))
     for (let i = 0; i < 200; i++) {
       const numero = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
       const candidata = `${prefix}${numero}`
@@ -270,11 +301,11 @@ const confirmarReserva = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
               <div class="space-y-2">
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
-                <input v-model="marca" type="text" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
+                <input v-model="marca" type="text" list="motos-marcas" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
               </div>
               <div class="space-y-2">
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
-                <input v-model="modelo" type="text" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
+                <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
               </div>
             </div>
           </div>
@@ -287,11 +318,11 @@ const confirmarReserva = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
               <div class="space-y-2">
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
-                <input v-model="marca" type="text" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
+                <input v-model="marca" type="text" list="motos-marcas" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
               </div>
               <div class="space-y-2">
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
-                <input v-model="modelo" type="text" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
+                <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
               </div>
             </div>
           </div>
@@ -337,6 +368,13 @@ const confirmarReserva = async () => {
               <textarea v-model="garantiaProblema" class="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 dark:text-white h-24" placeholder="Describe el problema..." />
             </div>
           </div>
+
+          <datalist id="motos-marcas">
+            <option v-for="m in marcas" :key="m" :value="m"></option>
+          </datalist>
+          <datalist id="motos-modelos">
+            <option v-for="m in modelos" :key="m" :value="m"></option>
+          </datalist>
 
           <button type="submit" :disabled="!esValido || guardando" :class="['mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl', !esValido ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20']">
             {{ guardando ? 'Guardando...' : 'Confirmar Reserva' }}

@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+const logoPrincipalUrl = new URL('../assets/Logo_principal.png', import.meta.url).href
+
 const router = useRouter()
 const now = ref(new Date())
 let timer: number | null = null
@@ -52,29 +54,7 @@ onBeforeUnmount(() => {
             class="group rounded-3xl p-4 sm:p-5 border border-emerald-200/60 dark:border-emerald-700/40 bg-white/80 dark:bg-slate-800/70 hover:scale-[1.02] transition-all shadow-lg"
             title="Entrar a Agenda"
           >
-            <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-[220px] sm:w-[280px] md:w-[320px] h-auto drop-shadow-[0_8px_18px_rgba(16,185,129,0.35)]">
-              <defs>
-                <linearGradient id="greenGradientHome" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#00ff88"/>
-                  <stop offset="50%" stop-color="#00cc66"/>
-                  <stop offset="100%" stop-color="#007a3d"/>
-                </linearGradient>
-                <filter id="shadowHome" x="-50%" y="-50%" width="200%" height="200%">
-                  <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
-                </filter>
-                <mask id="cutMaskHome">
-                  <rect width="100%" height="100%" fill="white"/>
-                  <rect x="430" y="200" width="380" height="200" fill="black"/>
-                </mask>
-              </defs>
-              <g transform="skewX(-12)" filter="url(#shadowHome)">
-                <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientHome)" stroke-width="14" mask="url(#cutMaskHome)"/>
-                <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientHome)" letter-spacing="3">ROSAS</text>
-                <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientHome)" letter-spacing="5">UY</text>
-                <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
-                <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
-              </g>
-            </svg>
+            <img :src="logoPrincipalUrl" alt="Logo principal" class="w-[220px] sm:w-[280px] md:w-[320px] h-auto drop-shadow-[0_8px_18px_rgba(16,185,129,0.35)]" />
           </button>
 
           <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-800 dark:text-slate-100">

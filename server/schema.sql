@@ -112,3 +112,12 @@ CREATE TABLE IF NOT EXISTS aprontes (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX (fecha, hora)
 );
+
+CREATE TABLE IF NOT EXISTS motos_catalogo (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  marca VARCHAR(100) NOT NULL,
+  modelo VARCHAR(100) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_motos_catalogo (marca, modelo)
+);
+

@@ -18,6 +18,40 @@ function limpiarTexto(value: any, maxLen = 255) {
   return text.length > maxLen ? text.slice(0, maxLen) : text
 }
 
+function normalizarCatalogoTexto(value: any) {
+  return limpiarTexto(value, 100)
+}
+
+async function registrarMarcaModeloMysql(pool: any, marca: any, modelo: any) {
+  const marcaOk = normalizarCatalogoTexto(marca)
+  const modeloOk = normalizarCatalogoTexto(modelo)
+  if (!marcaOk || !modeloOk) return
+  try {
+    await pool.execute(
+      `INSERT INTO motos_catalogo (marca, modelo)
+       VALUES ( ?, ? )
+       ON DUPLICATE KEY UPDATE modelo = modelo`,
+      [marcaOk, modeloOk]
+    )
+  } catch (error) {
+    console.warn('[Aprontes] No se pudo registrar marca/modelo en MySQL:', error)
+  }
+}
+
+function registrarMarcaModeloSqlite(db: any, marca: any, modelo: any) {
+  const marcaOk = normalizarCatalogoTexto(marca)
+  const modeloOk = normalizarCatalogoTexto(modelo)
+  if (!marcaOk || !modeloOk) return
+  try {
+    db.prepare(
+      `INSERT OR IGNORE INTO motos_catalogo (marca, modelo)
+       VALUES ( ?, ? )`
+    ).run(marcaOk, modeloOk)
+  } catch (error) {
+    console.warn('[Aprontes] No se pudo registrar marca/modelo en SQLite:', error)
+  }
+}
+
 function normalizarFecha(value: any) {
   const d = new Date(String(value || ''))
   if (Number.isNaN(d.getTime())) {
@@ -192,6 +226,7 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       dataNormalizada.modelo,
       dataNormalizada.factura
     )
+    registrarMarcaModeloSqlite(db, dataNormalizada.marca, dataNormalizada.modelo)
     return Number(result.lastInsertRowid)
   })
   return tx()
@@ -218,6 +253,7 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
         dataNormalizada.factura
       ]
     )
+    await registrarMarcaModeloMysql(pool, dataNormalizada.marca, dataNormalizada.modelo)
     return Number(result.insertId)
   })
 
@@ -256,6 +292,7 @@ export async function crearApronte(data: ApronteInput) {
         normalized.modelo,
         normalized.factura
       )
+      registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
     } catch (error) {
       console.warn('[Aprontes] Backup SQLite fallo en crear:', error)
     }
@@ -363,6 +400,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         apronteId
       ]
     )
+    await registrarMarcaModeloMysql(pool, normalized.marca, normalized.modelo)
   })
 
   if (mysqlResult.ok) {
@@ -397,6 +435,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         normalized.factura,
         apronteId
       )
+      registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
     } catch (error) {
       console.warn('[Aprontes] Backup SQLite fallo en actualizar:', error)
     }
@@ -434,6 +473,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     normalized.factura,
     apronteId
   )
+  registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
 }
 
 export async function borrarApronte(id: number) {

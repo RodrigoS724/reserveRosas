@@ -1,4 +1,5 @@
 import { execute, withTransaction } from './db.js'
+import { registrarMarcaModelo } from './motos.js'
 import { normalizeDate, normalizeHora, normalizeMatricula, normalizeText } from './utils.js'
 
 function canonicalTipoTurno(value) {
@@ -245,6 +246,12 @@ export async function crearReserva(data) {
       ]
     )
 
+    try {
+      await registrarMarcaModelo(conn, normalized.marca, normalized.modelo)
+    } catch (error) {
+      console.warn('[Reservas] No se pudo registrar marca/modelo:', error)
+    }
+
     return reservaId
   })
 }
@@ -388,6 +395,12 @@ export async function actualizarReserva(id, reserva) {
       ]
     )
 
+    try {
+      await registrarMarcaModelo(conn, payload.marca, payload.modelo)
+    } catch (error) {
+      console.warn('[Reservas] No se pudo registrar marca/modelo:', error)
+    }
+
     const campos = Object.keys(anterior)
     for (const campo of campos) {
       if (anterior[campo] !== payload[campo]) {
@@ -465,3 +478,5 @@ export async function obtenerCambiosReservas(since, lastId, limit) {
   )
   return rows
 }
+
+
