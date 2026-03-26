@@ -295,9 +295,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <div class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-emerald-100 dark:border-gray-800 flex overflow-hidden min-h-[500px] sm:min-h-[550px] md:min-h-[600px] lg:min-h-[650px] xl:min-h-[700px]">
-      <div class="w-full lg:w-7/12 p-4 sm:p-6 md:p-8 lg:p-10">
+  <div class="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-emerald-100 dark:border-gray-800 flex flex-col xl:flex-row overflow-hidden min-h-[500px] sm:min-h-[550px] md:min-h-[600px] xl:min-h-[700px]">
+      <div class="w-full xl:w-7/12 min-w-0 p-4 sm:p-6 md:p-8 lg:p-10">
         <div class="flex items-center justify-between mb-6 sm:mb-8 md:mb-10">
           <div>
             <h3 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-emerald-900 dark:text-emerald-200 leading-none">
@@ -330,7 +330,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="w-full lg:w-5/12 bg-emerald-50/50 dark:bg-[#0f172a]/20 p-4 sm:p-6 md:p-8 lg:p-10 border-l border-emerald-100 dark:border-gray-800 flex flex-col">
+      <div class="w-full xl:w-5/12 min-w-0 bg-emerald-50/50 dark:bg-[#0f172a]/20 p-4 sm:p-6 md:p-8 lg:p-10 border-t xl:border-t-0 xl:border-l border-emerald-100 dark:border-gray-800 flex flex-col">
         <div v-if="diaSeleccionado">
           <h4 class="text-[10px] sm:text-xs md:text-sm font-black text-emerald-700/80 dark:text-emerald-300/70 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6">
             Horarios para el día {{ diaSeleccionado }}

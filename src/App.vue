@@ -177,9 +177,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen w-screen bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
+  <div class="flex h-screen w-screen min-w-0 bg-gray-50 dark:bg-[#0f172a] overflow-x-hidden overflow-y-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
 
-    <aside class="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
+    <aside class="w-64 xl:w-72 shrink-0 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
       
       <div class="p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
         <img :src="logoPrincipalUrl" alt="Logo principal" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500" />
@@ -360,8 +360,8 @@ onMounted(() => {
       </div>
     </aside>
 
-    <main class="flex-1 overflow-hidden h-full w-full bg-white dark:bg-[#0f172a] relative">
-      <div class="w-full h-full overflow-hidden">
+    <main class="flex-1 min-w-0 overflow-hidden h-full w-full bg-white dark:bg-[#0f172a] relative">
+      <div class="w-full h-full overflow-y-auto overflow-x-hidden">
         <router-view />
       </div>
     </main>

@@ -287,7 +287,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-y-auto overflow-x-hidden">
     <header class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">APRONTES</h2>
@@ -299,7 +299,7 @@ onMounted(async () => {
       </button>
     </header>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-0">
+    <div class="grid grid-cols-1 2xl:grid-cols-3 gap-6 flex-1 min-h-0">
       <div class="xl:col-span-2 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-0">
         <div class="p-4 border-b border-gray-100 dark:border-gray-800">
           <div class="flex flex-wrap items-end gap-3">
@@ -324,10 +324,10 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="flex-1 overflow-auto custom-scrollbar">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
           <div v-if="cargando" class="p-6 text-sm text-gray-400">Cargando...</div>
           <div v-else-if="aprontesFiltrados.length === 0" class="p-6 text-sm text-gray-400">Sin aprontes para mostrar.</div>
-          <div v-else class="min-w-[920px]">
+          <div v-else>
             <table class="w-full text-xs">
               <thead class="sticky top-0 bg-white dark:bg-[#1e293b]">
                 <tr class="text-[10px] uppercase tracking-widest text-gray-400">

@@ -239,7 +239,7 @@ const confirmarReserva = async () => {
 </script>
 
 <template>
-  <div class="w-full h-full min-h-0 flex flex-col items-center justify-center">
+  <div class="w-full h-full min-h-0 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 sm:py-6">
     <button
       @click="router.back()"
       class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-4 sm:mb-5 md:mb-6 font-medium group text-sm md:text-base"
@@ -247,7 +247,7 @@ const confirmarReserva = async () => {
       <span class="group-hover:-translate-x-1 transition-transform">←</span> Volver a la agenda
     </button>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 w-full max-w-6xl flex-1 min-h-0">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8 w-full max-w-6xl flex-1 min-h-0 pb-4">
       <div class="space-y-6 min-h-0 flex-1">
         <div class="bg-white dark:bg-[#1e293b] p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
           <h3 class="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest mb-3 sm:mb-4">Resumen de cita</h3>
@@ -329,7 +329,7 @@ const confirmarReserva = async () => {
 
           <div v-if="isParticular" class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Subtipo particular</label>
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <button type="button" @click="particularTipo = 'Service'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', particularTipo === 'Service' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Service</button>
               <button type="button" @click="particularTipo = 'Taller'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', particularTipo === 'Taller' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Taller</button>
             </div>
@@ -345,7 +345,7 @@ const confirmarReserva = async () => {
 
           <div v-if="isGarantia" class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Subtipo garantia</label>
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <button type="button" @click="garantiaTipo = 'Service'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Service' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Service</button>
               <button type="button" @click="garantiaTipo = 'Reparacion'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Reparacion' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Reparacion</button>
             </div>

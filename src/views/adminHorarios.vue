@@ -242,7 +242,7 @@ const confirmarBorradoInterno = async () => {
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <div class="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <header class="mb-6 sm:mb-8 md:mb-10">
       <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-white tracking-tighter">
         Administración de <span class="text-cyan-600">Horarios</span>
@@ -251,10 +251,10 @@ const confirmarBorradoInterno = async () => {
         fecha.</p>
     </header>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 lg:gap-7">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 lg:gap-7">
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           activos</h2>
 
@@ -282,7 +282,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">
           Desactivados</h2>
 
@@ -316,7 +316,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Bloquear
           por fecha</h2>
 
@@ -350,7 +350,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           bloqueados</h2>
 

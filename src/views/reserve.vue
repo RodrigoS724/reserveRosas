@@ -464,6 +464,18 @@ const obtenerAprontesEnCelda = (fecha: string, hora: string) => {
   return matrizAprontes.value[fecha]?.[hora] || []
 }
 
+const obtenerHorasConContenido = (fecha: string) => {
+  return (horariosDisponibles.value || []).filter((hora) => {
+    const reservas = obtenerReservasEnCelda(fecha, hora)
+    const aprontes = obtenerAprontesEnCelda(fecha, hora)
+    return reservas.length > 0 || aprontes.length > 0
+  })
+}
+
+const tieneContenidoEnDia = (fecha: string) => {
+  return obtenerHorasConContenido(fecha).length > 0
+}
+
 // Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
 // const debeRechazoHora = (fecha: string, hora: string) => {
 //   const date = new Date(fecha)
@@ -586,7 +598,7 @@ const obtenerDetalleResumen = (reserva: any) => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
     <header class="flex justify-between items-end">
       <div class="space-y-3 sm:space-y-4 md:space-y-5">
         <h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
@@ -621,8 +633,46 @@ const obtenerDetalleResumen = (reserva: any) => {
         <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
         <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
-    </header><div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
-      <table class="w-full border-collapse table-fixed">
+    </header><div class="flex-1 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+      <div class="2xl:hidden p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5">
+        <div v-for="dia in fechasWeek" :key="`list-${dia.fecha}`" class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0f172a]/35 overflow-hidden">
+          <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-[#1e293b]/80">
+            <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{{ dia.nombre }}</div>
+            <div class="text-sm sm:text-base font-black text-gray-800 dark:text-gray-100">{{ dia.fechaFormato }}</div>
+          </div>
+
+          <div v-if="!tieneContenidoEnDia(dia.fecha)" class="px-3 sm:px-4 py-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
+            Sin reservas ni aprontes para este día.
+          </div>
+
+          <div v-else class="divide-y divide-gray-200/70 dark:divide-gray-800/70">
+            <div v-for="hora in obtenerHorasConContenido(dia.fecha)" :key="`${dia.fecha}-list-${hora}`" class="px-3 sm:px-4 py-3 sm:py-4">
+              <div class="text-[10px] sm:text-xs font-black tracking-widest uppercase text-cyan-600 mb-2">{{ hora }} hs</div>
+
+              <div class="space-y-2">
+                <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="`list-r-${r.id}`"
+                     @click="abrirVentana(r)"
+                     :class="['p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95', getCardStyles(r.estado)]">
+                  <div class="text-[10px] sm:text-[11px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
+                  <div class="text-[9px] sm:text-[10px] font-bold opacity-80">{{ r.tipo_resumen }}</div>
+                  <div v-if="r.detalle_resumen" class="text-[9px] sm:text-[10px] opacity-70 truncate">{{ r.detalle_resumen }}</div>
+                  <div class="text-[9px] sm:text-[10px] font-bold opacity-75">{{ r.marca }} {{ r.modelo }} · {{ r.cedula }}</div>
+                </div>
+
+                <div v-for="a in obtenerAprontesEnCelda(dia.fecha, hora)" :key="`list-a-${a.id}`"
+                     @click="abrirApronte(a)"
+                     class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95">
+                  <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Apronte</div>
+                  <div class="text-[10px] sm:text-[11px] font-bold truncate">{{ a.nombre }}</div>
+                  <div class="text-[9px] sm:text-[10px] opacity-70 truncate">{{ a.marca }} {{ a.modelo }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="hidden 2xl:table w-full border-collapse table-fixed">
         <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
             <th class="w-20 sm:w-24 p-3 sm:p-4 md:p-5 text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
