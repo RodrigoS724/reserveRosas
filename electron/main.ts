@@ -9,10 +9,15 @@ import { loadUserEnv } from './config/env'
 import { bootstrapSuperAdmin } from './services/users.service'
 import { setSettings } from './settings'
 import { startDailySummaryScheduler } from './services/daily-summary.service'
+import { startAprontesGarantiaAlertScheduler } from './services/aprontes-garantia-alert.service'
 import { isRemoteBackendEnabled } from './ipc/remote-proxy'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('disable-direct-composition')
+}
 
 // Hacer disponibles globalmente para módulos que los necesitan
 globalThis.__filename = __filename
@@ -54,7 +59,7 @@ function createWindow() {
       contextIsolation: true,
     },
   })
-  if (VITE_DEV_SERVER_URL) {
+  if (VITE_DEV_SERVER_URL && String(process.env.ELECTRON_OPEN_DEVTOOLS || '') === '1') {
     win.webContents.openDevTools({ mode: 'detach' })
   }
   // 1. ELIMINAR MENÚ DE RAÍZ
@@ -92,6 +97,9 @@ app.whenReady().then(async () => {
   }
   if (!remoteMode) {
     startDailySummaryScheduler()
+  }
+  if (!remoteMode && !localDbDisabled) {
+    startAprontesGarantiaAlertScheduler()
   }
   createWindow()  // Creamos la ventana
 

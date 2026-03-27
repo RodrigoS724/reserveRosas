@@ -109,6 +109,14 @@ CREATE TABLE IF NOT EXISTS aprontes (
   marca VARCHAR(100),
   modelo VARCHAR(100),
   factura VARCHAR(100),
+  estado VARCHAR(60) DEFAULT 'APRONTE',
+  repuestos_garantia TEXT,
+  correo_alerta_garantia VARCHAR(255),
+  dias_alerta_garantia INT DEFAULT 7,
+  fecha_alerta_garantia DATE NULL,
+  garantia_espera_desde DATETIME NULL,
+  garantia_notificada TINYINT DEFAULT 0,
+  garantia_notificada_at DATETIME NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX (fecha, hora)
 );

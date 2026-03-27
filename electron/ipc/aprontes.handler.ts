@@ -9,6 +9,10 @@ import {
   obtenerTodosLosAprontes
 } from '../services/aprontes.service'
 import {
+  getAprontesAlertConfig,
+  setAprontesAlertConfig
+} from '../services/aprontes-alert-config.service'
+import {
   obtenerHorariosAprontesBase,
   obtenerHorariosAprontesInactivos,
   obtenerHorariosAprontesDisponibles,
@@ -42,6 +46,14 @@ export function registrarHandlersAprontes() {
 
   safeHandle('aprontes:todas', () =>
     obtenerTodosLosAprontes()
+  )
+
+  safeHandle('aprontes:alertas:config:get', () =>
+    getAprontesAlertConfig()
+  )
+
+  safeHandle('aprontes:alertas:config:set', (_event, payload) =>
+    setAprontesAlertConfig(payload || {})
   )
 
   safeHandle('horarios-aprontes:base', () =>

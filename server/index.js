@@ -12,9 +12,13 @@ import * as users from './users.js'
 import * as auditoria from './auditoria.js'
 import * as dailySummary from './daily-summary.js'
 import * as aprontes from './aprontes.js'
+import * as aprontesAlertConfig from './aprontes-alert-config.js'
 import * as horariosAprontes from './horarios-aprontes.js'
+import { startAprontesGarantiaAlertScheduler } from './aprontes-garantia-alert.js'
 
 const PORT = Number(process.env.API_PORT || 3005)
+
+startAprontesGarantiaAlertScheduler()
 
 function applyCors(req, res) {
   const origin = req.headers.origin || '*'
@@ -225,6 +229,19 @@ async function handleRest(req, res, url, parts) {
     if (method === 'DELETE' && isNumericId(parts[2])) {
       await aprontes.borrarApronte(Number(parts[2]))
       ok(res, { ok: true })
+      return true
+    }
+
+    if (method === 'GET' && parts[2] === 'alertas' && parts[3] === 'config') {
+      const data = aprontesAlertConfig.getAprontesAlertConfig()
+      ok(res, data)
+      return true
+    }
+
+    if (method === 'POST' && parts[2] === 'alertas' && parts[3] === 'config') {
+      const body = await readJson(req)
+      const data = aprontesAlertConfig.setAprontesAlertConfig(body || {})
+      ok(res, data)
       return true
     }
   }

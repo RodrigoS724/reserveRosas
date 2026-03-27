@@ -7,6 +7,7 @@ import * as users from './users.js'
 import * as auditoria from './auditoria.js'
 import * as dailySummary from './daily-summary.js'
 import * as aprontes from './aprontes.js'
+import * as aprontesAlertConfig from './aprontes-alert-config.js'
 import * as horariosAprontes from './horarios-aprontes.js'
 import * as motos from './motos.js'
 
@@ -47,6 +48,10 @@ export async function handleIpc(channel, args) {
       return aprontes.obtenerAprontesPorFecha(args[0])
     case 'aprontes:todas':
       return aprontes.obtenerTodosLosAprontes()
+    case 'aprontes:alertas:config:get':
+      return aprontesAlertConfig.getAprontesAlertConfig()
+    case 'aprontes:alertas:config:set':
+      return aprontesAlertConfig.setAprontesAlertConfig(args[0] || {})
 
     // Horarios Aprontes
     case 'horarios-aprontes:base':

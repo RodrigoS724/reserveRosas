@@ -89,6 +89,11 @@ declare global {
         marca: string
         modelo: string
         factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
       }) => Promise<number>
 
       obtenerApronte: (id: number) => Promise<any>
@@ -106,6 +111,11 @@ declare global {
         marca: string
         modelo: string
         factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
       }) => Promise<void>
 
       obtenerAprontesFecha: (fecha: string) => Promise<{
@@ -119,6 +129,11 @@ declare global {
         marca: string
         modelo: string
         factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
         created_at: string
       }[]>
 
@@ -133,8 +148,26 @@ declare global {
         marca: string
         modelo: string
         factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
         created_at: string
       }[]>
+
+      obtenerConfigAlertasAprontes: () => Promise<{
+        default_email: string
+        default_dias_alerta: number
+      }>
+
+      guardarConfigAlertasAprontes: (data: {
+        default_email?: string
+        default_dias_alerta?: number
+      }) => Promise<{
+        default_email: string
+        default_dias_alerta: number
+      }>
 
 
       /* =========================

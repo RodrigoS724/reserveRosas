@@ -50,6 +50,8 @@ contextBridge.exposeInMainWorld('api', {
   actualizarApronte: (d: any) => invokeSafe('aprontes:actualizar', d),
   obtenerAprontesFecha: (f: string) => invokeSafe('aprontes:fecha', f),
   obtenerAprontes: () => invokeSafe('aprontes:todas'),
+  obtenerConfigAlertasAprontes: () => invokeSafe('aprontes:alertas:config:get'),
+  guardarConfigAlertasAprontes: (d: any) => invokeSafe('aprontes:alertas:config:set', d),
   obtenerConfigResumenDiario: () => invokeSafe('resumen-diario:config:get'),
   guardarConfigResumenDiario: (d: any) => invokeSafe('resumen-diario:config:set', d),
   enviarResumenDiario: (d: any) => invokeSafe('resumen-diario:enviar', d),
