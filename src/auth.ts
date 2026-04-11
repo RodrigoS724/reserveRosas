@@ -12,7 +12,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/agenda': 'agenda',
   '/reservas': 'reservas',
   '/aprontes': 'aprontes',
-  '/resumen-diario': 'reservas',
+    '/registros': 'reservas',
   '/historial': 'historial',
   '/ajustes': 'ajustes',
   '/vehiculos': 'vehiculos',
@@ -65,6 +65,7 @@ export function getFallbackRoute(session: SessionUser | null) {
 export const PermissionsLabels: Record<string, string> = {
   agenda: 'Agenda',
   reservas: 'Reservas',
+  registros: 'Registros',
   aprontes: 'Aprontes',
   historial: 'Historial',
   ajustes: 'Ajustes horarios',
@@ -73,4 +74,8 @@ export const PermissionsLabels: Record<string, string> = {
   usuarios: 'Usuarios',
   auditoria: 'Auditoria'
 }
+
+
+
+
 

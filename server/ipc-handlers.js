@@ -10,7 +10,7 @@ import * as aprontes from './aprontes.js'
 import * as aprontesAlertConfig from './aprontes-alert-config.js'
 import * as horariosAprontes from './horarios-aprontes.js'
 import * as motos from './motos.js'
-
+import * as registros from './registros.js'
 export async function handleIpc(channel, args) {
   switch (channel) {
     // Reservas
@@ -70,6 +70,10 @@ export async function handleIpc(channel, args) {
       return horariosAprontes.activarHorarioApronte(args[0])
     case 'horarios-aprontes:borrar':
       return horariosAprontes.borrarHorarioApronte(args[0])
+
+    // Registros
+    case 'registros:mensual':
+      return registros.obtenerRegistroMensual(args[0]?.mes || args[0])
 
     // Resumen diario
     case 'resumen-diario:config:get':
@@ -152,6 +156,10 @@ export async function handleIpc(channel, args) {
       throw new Error('Canal no soportado: ' + channel)
   }
 }
+
+
+
+
 
 
 

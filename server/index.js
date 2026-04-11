@@ -15,6 +15,7 @@ import * as aprontes from './aprontes.js'
 import * as aprontesAlertConfig from './aprontes-alert-config.js'
 import * as horariosAprontes from './horarios-aprontes.js'
 import { startAprontesGarantiaAlertScheduler } from './aprontes-garantia-alert.js'
+import * as registros from './registros.js'
 
 const PORT = Number(process.env.API_PORT || 3005)
 
@@ -499,6 +500,15 @@ async function handleRest(req, res, url, parts) {
     }
   }
 
+  if (resource === 'registros') {
+    if (method === 'GET') {
+      const mes = url.searchParams.get('mes') || url.searchParams.get('month') || ''
+      const data = await registros.obtenerRegistroMensual(mes)
+      ok(res, data)
+      return true
+    }
+  }
+
   if (resource === 'resumen-diario') {
     if (method === 'GET' && parts[2] === 'config') {
       const data = await dailySummary.getDailySummaryConfig()
@@ -585,4 +595,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log('[API] listening on port', PORT)
 })
+
+
+
+
 

@@ -65,6 +65,9 @@ export const api = {
   actualizarNotasReserva: (id: number, notas: string) => invoke('reservas:actualizar-notas', id, notas),
   obtenerCambiosReservas: (d: any) => invoke('reservas:cambios', d),
 
+  // Registros
+  obtenerRegistroMensual: (d: any) => invoke('registros:mensual', d),
+
   // Aprontes
   crearApronte: (d: any) => invoke('aprontes:crear', d),
   obtenerApronte: (id: number) => invoke('aprontes:obtener', id),
@@ -129,6 +132,7 @@ export const api = {
   // Auditoria
   obtenerAuditoriaUsuarios: () => invoke('auditoria:list')
 }
+
 
 
 

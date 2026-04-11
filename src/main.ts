@@ -14,6 +14,7 @@ import Config from './views/config.vue'
 import Users from './views/users.vue'
 import Auditoria from './views/auditoria.vue'
 import DailySummary from './views/dailySummary.vue'
+import Registros from './views/registros.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/reservas', component: Reservas },
     { path: '/aprontes', component: Aprontes },
     { path: '/resumen-diario', component: DailySummary },
+    { path: '/registros', component: Registros },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },
@@ -50,4 +52,6 @@ router.beforeEach((to, _from, next) => {
 
 
 createApp(App).use(router).mount('#app')
+
+
 

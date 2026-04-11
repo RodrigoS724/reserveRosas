@@ -256,6 +256,17 @@ onMounted(() => {
             <span class="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500">Gestión</span>
         </div>
 
+        <router-link v-if="puede('reservas')" to="/registros" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13l4 4 6-10"/></svg>
+            <span>Registros</span>
+          </div>
+        </router-link>
         <router-link v-if="puede('historial')" to="/historial" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
@@ -468,5 +479,6 @@ onMounted(() => {
     background: rgba(156, 163, 175, 0.5);
 }
 </style>
+
 
 
