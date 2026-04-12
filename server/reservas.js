@@ -267,13 +267,9 @@ export async function borrarReserva(id) {
     const reserva = rows[0]
     if (!reserva) return
 
+    // Delete history rows first to avoid FK constraint violation
+    await conn.execute('DELETE FROM historial_reservas WHERE reserva_id = ?', [id])
     await conn.execute('DELETE FROM reservas WHERE id = ?', [id])
-    await conn.execute(
-      `INSERT INTO historial_reservas
-       (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-       VALUES ( ?, 'eliminacion', ?, 'reserva eliminada', NOW())`,
-      [id, JSON.stringify(reserva)]
-    )
   })
 }
 

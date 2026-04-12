@@ -440,6 +440,12 @@ async function handleRest(req, res, url, parts) {
       sendJson(res, 200, data)
       return true
     }
+    if (method === 'POST' && parts[2] === 'change-password') {
+      const body = await readJson(req)
+      const data = await users.cambiarPasswordPropia(body || {})
+      sendResult(res, data)
+      return true
+    }
   }
 
   if (resource === 'usuarios') {
@@ -597,7 +603,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (parts[0] === 'api') {
-    if (!isAuthorized(req, url)) {
+    const isPublicRoute =
+      (req.method === 'GET' && url.pathname === '/api/horarios') ||
+      (req.method === 'GET' && url.pathname.startsWith('/api/vehiculos')) ||
+      (req.method === 'POST' && url.pathname === '/api/reservas')
+
+    if (!isPublicRoute && !isAuthorized(req, url)) {
       fail(res, 401, 'Token requerido o invalido')
       return
     }

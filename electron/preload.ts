@@ -98,6 +98,7 @@ contextBridge.exposeInMainWorld('api', {
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe('usuarios:login-list'),
   login: (username: string, password: string) => invokeSafe('auth:login', username, password),
+  cambiarPasswordPropia: (data: { username: string; currentPassword: string; newPassword: string }) => invokeSafe('auth:change-password', data),
   listarUsuarios: () => invokeSafe('usuarios:list'),
   crearUsuario: (data: any) => invokeSafe('usuarios:create', data), actualizarUsuario: (data: any) => invokeSafe('usuarios:update', data),
   borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => invokeSafe('usuarios:delete', data), actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => invokeSafe('usuarios:password', data),

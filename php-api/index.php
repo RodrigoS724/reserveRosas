@@ -98,7 +98,9 @@ function parseReservationDateTime(string $fecha, string $hora): ?DateTimeImmutab
 
 // ---------- API ----------
 if (str_starts_with($path, '/api')) {
-    requireToken();
+  if (!rateLimitCheck('api_global', 180, 60)) {
+    jsonResponse(['ok' => false, 'error' => 'Demasiadas solicitudes. Intenta nuevamente.'], 429);
+  }
 
     // Obtener cliente remoto
     $remoteUrl = remoteApiUrl();
@@ -148,7 +150,27 @@ if (str_starts_with($path, '/api')) {
     }
 
     if ($method === 'POST' && $path === '/api/reservas') {
+      if (!rateLimitCheck('api_reservas_post', 8, 900)) {
+        jsonResponse(['ok' => false, 'error' => 'Demasiadas reservas desde esta IP. Espera unos minutos.'], 429);
+      }
+
+      $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+      if (!isOriginAllowed($origin)) {
+        jsonResponse(['ok' => false, 'error' => 'Origen no permitido'], 403);
+      }
+
         $data = readJsonBody();
+
+      // Honeypot anti-bot: si viene con contenido, se rechaza.
+      if (!empty($data['website'])) {
+        jsonResponse(['ok' => false, 'error' => 'Solicitud rechazada'], 400);
+      }
+
+      // Si el cliente reporta envio demasiado rapido, bloquear.
+      $elapsedMs = isset($data['client_elapsed_ms']) ? (int)$data['client_elapsed_ms'] : 0;
+      if ($elapsedMs > 0 && $elapsedMs < 2500) {
+        jsonResponse(['ok' => false, 'error' => 'Solicitud rechazada'], 400);
+      }
         
         // Validar campos requeridos localmente
         $required = ['nombre', 'telefono', 'marca', 'modelo', 'matricula', 'tipo_turno', 'fecha', 'hora'];
@@ -170,127 +192,7 @@ if (str_starts_with($path, '/api')) {
     jsonResponse(['ok' => false, 'error' => 'Endpoint no encontrado'], 404);
 }
 
-      if (!empty($cedula)) {
-        $stmt = $pdo->prepare("
-          SELECT 1
-          FROM reservas
-          WHERE fecha = ? AND cedula = ?
-            AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
-          FOR UPDATE
-        ");
-        $stmt->execute([$data['fecha'], normalizeCedula($cedula)]);
-        $dup = (bool) $stmt->fetch();
-        if ($dup) {
-          $pdo->rollBack();
-          jsonResponse(['ok' => false, 'error' => 'La cedula ya tiene una reserva ese dia'], 409);
-        }
-      }
-
-    $insert = $pdo->prepare("
-            INSERT INTO reservas (
-              nombre, cedula, telefono,
-              marca, modelo, km, matricula,
-              tipo_turno, particular_tipo, garantia_tipo,
-              garantia_fecha_compra, garantia_numero_service, garantia_problema,
-              fecha, hora, detalles
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-
-    $insert->execute([
-      $data['nombre'],
-      normalizeCedula($cedula),
-      $telefono,
-      $data['marca'],
-      $data['modelo'],
-      $km,
-      $matriculaNorm,
-      $data['tipo_turno'],
-      $particularTipo !== '' ? $particularTipo : null,
-      $garantiaTipo !== '' ? $garantiaTipo : null,
-      $data['garantia_fecha_compra'] ?? null,
-      $garantiaNumeroService,
-      $data['garantia_problema'] ?? null,
-      $data['fecha'],
-      $data['hora'],
-      $data['detalles'] ?? ''
-    ]);
-
-    $id = (int) $pdo->lastInsertId();
-
-    $pdo->prepare("
-            INSERT INTO historial_reservas
-            (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
-            VALUES (?, 'creacion', '', 'reserva creada', NOW())
-        ")->execute([$id]);
-
-    // Guardar/actualizar vehiculo
-     $matricula = $matriculaNorm;
-
-    $stmt = $pdo->prepare("SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1");
-    $stmt->execute([$matricula]);
-    $vehiculo = $stmt->fetch();
-    if (!$vehiculo) {
-      $pdo->prepare("
-                INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-                VALUES (?, ?, ?, ?, ?)
-            ")->execute([
-            $matricula,
-            $data['marca'],
-            $data['modelo'],
-            $data['nombre'],
-            $telefono
-          ]);
-      $vehiculoId = (int) $pdo->lastInsertId();
-    } else {
-      $vehiculoId = (int) $vehiculo['id'];
-      $pdo->prepare("
-                UPDATE vehiculos
-                SET marca = ?, modelo = ?, nombre = ?, telefono = ?
-                WHERE id = ?
-            ")->execute([
-            $data['marca'],
-            $data['modelo'],
-            $data['nombre'],
-            $telefono,
-            $vehiculoId
-          ]);
-    }
-
-    $pdo->prepare("
-            INSERT INTO vehiculos_historial (
-              vehiculo_id, fecha, km, tipo_turno,
-              particular_tipo, garantia_tipo, garantia_fecha_compra,
-              garantia_numero_service, garantia_problema, detalles
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ")->execute([
-          $vehiculoId,
-          $data['fecha'],
-          $km,
-          $data['tipo_turno'],
-          $particularTipo !== '' ? $particularTipo : null,
-          $garantiaTipo !== '' ? $garantiaTipo : null,
-          $data['garantia_fecha_compra'] ?? null,
-          $garantiaNumeroService,
-          $data['garantia_problema'] ?? null,
-          $data['detalles'] ?? ''
-        ]);
-    $pdo->commit();
-    jsonResponse(['ok' => true, 'id' => $id], 201);
-  } catch (Throwable $e) {
-    if ($pdo->inTransaction()) {
-      $pdo->rollBack();
-    }
-    $msg = isDebug() ? ($e->getMessage() ?: 'Error') : 'No se pudo crear la reserva';
-    jsonResponse(['ok' => false, 'error' => $msg], 500);
-  }
-
-  jsonResponse(['ok' => false, 'error' => 'Endpoint no encontrado'], 404);
-}
-
 // ---------- WEB ----------
-$token = apiToken();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -388,6 +290,10 @@ $token = apiToken();
       <label class="block text-[10px] uppercase tracking-widest text-emerald-700 font-black mb-2">Modelo</label>
       <input id="modelo" type="text" class="w-full rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-900" />
     </div>
+    <div style="position:absolute;left:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+      <label for="website">No completar</label>
+      <input id="website" type="text" autocomplete="off" tabindex="-1" />
+    </div>
   </div>
 
   <div class="mt-4">
@@ -467,10 +373,10 @@ $token = apiToken();
     </svg>
   </a>
     <script>
-    const API_TOKEN = <?php echo json_encode($token); ?>;
     const BASE_PATH = <?php echo json_encode($basePath); ?>;
     const API_BASE = (BASE_PATH === '/' ? '' : BASE_PATH);
     const API_ORIGIN = window.location.origin + API_BASE;
+    const PAGE_LOADED_AT = Date.now();
     const $ = (id) => document.getElementById(id);
 
     const fecha = $('fecha');
@@ -596,9 +502,7 @@ $token = apiToken();
 
     async function consultarDisponibilidadFecha(iso) {
       try {
-        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${iso}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
-          headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
-        });
+        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${iso}`);
         const json = await res.json();
         return !!(json && json.ok && Array.isArray(json.data) && json.data.length);
       } catch {
@@ -692,9 +596,7 @@ $token = apiToken();
       }
       horariosStatus.textContent = 'Cargando...';
       try {
-        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${fecha.value}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
-          headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
-        });
+        const res = await fetch(`${API_ORIGIN}/api/horarios?fecha=${fecha.value}`);
         const json = await res.json();
         if (!res.ok && res.status === 401) {
           setStatus(horariosStatus, 'Token invalido o faltante', false);
@@ -830,9 +732,7 @@ $token = apiToken();
       if (mat === ultimoLookupMatricula) return;
       ultimoLookupMatricula = mat;
       try {
-        const res = await fetch(`${API_ORIGIN}/api/vehiculo?matricula=${encodeURIComponent(mat)}${API_TOKEN ? `&token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
-          headers: API_TOKEN ? { 'X-API-KEY': API_TOKEN } : {}
-        });
+        const res = await fetch(`${API_ORIGIN}/api/vehiculo?matricula=${encodeURIComponent(mat)}`);
         const json = await res.json();
         if (json.ok && json.data) {
           marca.value = json.data.marca || marca.value;
@@ -1012,13 +912,15 @@ $token = apiToken();
         garantia_problema: tipoTurno.value === 'Garantia' ? $('garantia_problema').value : null,
         fecha: fecha.value,
         hora: horaSeleccionada,
-        detalles: particularTipo.value === 'Service' ? '' : detalles.value.trim()
+        detalles: particularTipo.value === 'Service' ? '' : detalles.value.trim(),
+        website: ($('website')?.value || '').trim(),
+        client_elapsed_ms: Math.max(0, Date.now() - PAGE_LOADED_AT)
       };
 
       try {
-        const res = await fetch(`${API_ORIGIN}/api/reservas${API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : ''}`, {
+        const res = await fetch(`${API_ORIGIN}/api/reservas`, {
           method: 'POST',
-          headers: API_TOKEN ? { 'Content-Type': 'application/json', 'X-API-KEY': API_TOKEN } : { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const json = await res.json();

@@ -2,6 +2,11 @@ import crypto from 'node:crypto'
 import { execute } from './db.js'
 import { registrarAuditoria } from './auditoria.js'
 
+const LOGIN_WINDOW_MS = Number(process.env.AUTH_LOGIN_WINDOW_MS || 10 * 60 * 1000)
+const LOGIN_LOCK_MS = Number(process.env.AUTH_LOGIN_LOCK_MS || 15 * 60 * 1000)
+const LOGIN_MAX_ATTEMPTS = Number(process.env.AUTH_LOGIN_MAX_ATTEMPTS || 5)
+const loginAttempts = new Map()
+
 const ALL_PERMISSIONS = [
   'agenda',
   'reservas',
@@ -61,6 +66,77 @@ function hashPassword(password) {
   return 'scrypt$' + salt.toString('hex') + '$' + hash.toString('hex')
 }
 
+const DUMMY_PASSWORD_HASH = hashPassword('reserve-rosas-auth-dummy')
+
+function normalizeUsername(username) {
+  return String(username || '').trim()
+}
+
+function normalizePassword(password) {
+  return String(password || '')
+}
+
+function validatePasswordStrength(password) {
+  if (password.length < 8) {
+    return 'La contrasena debe tener al menos 8 caracteres'
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'La contrasena debe incluir al menos una letra minuscula'
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'La contrasena debe incluir al menos una letra mayuscula'
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'La contrasena debe incluir al menos un numero'
+  }
+  return ''
+}
+
+function assertValidNewPassword(password) {
+  const normalized = normalizePassword(password)
+  const error = validatePasswordStrength(normalized)
+  if (error) {
+    throw new Error(error)
+  }
+  return normalized
+}
+
+function pruneOldAttempts(state, now) {
+  state.attempts = state.attempts.filter((ts) => now - ts <= LOGIN_WINDOW_MS)
+}
+
+function isLoginTemporarilyBlocked(username) {
+  const key = normalizeUsername(username).toLowerCase()
+  if (!key) return false
+  const now = Date.now()
+  const state = loginAttempts.get(key)
+  if (!state) return false
+  if (state.lockUntil && state.lockUntil > now) return true
+  if (state.lockUntil && state.lockUntil <= now) {
+    loginAttempts.delete(key)
+  }
+  return false
+}
+
+function registerFailedLogin(username) {
+  const key = normalizeUsername(username).toLowerCase()
+  if (!key) return
+  const now = Date.now()
+  const state = loginAttempts.get(key) || { attempts: [], lockUntil: 0 }
+  pruneOldAttempts(state, now)
+  state.attempts.push(now)
+  if (state.attempts.length >= LOGIN_MAX_ATTEMPTS) {
+    state.lockUntil = now + LOGIN_LOCK_MS
+  }
+  loginAttempts.set(key, state)
+}
+
+function clearFailedLogins(username) {
+  const key = normalizeUsername(username).toLowerCase()
+  if (!key) return
+  loginAttempts.delete(key)
+}
+
 function verifyPassword(password, stored) {
   const parts = String(stored || '').split('$')
   if (parts.length !== 3 || parts[0] !== 'scrypt') return false
@@ -115,20 +191,57 @@ export async function listarUsuariosLogin() {
 
 export async function validarLogin(username, password) {
   await ensureUsersTable()
+  const normalizedUsername = normalizeUsername(username)
+  const normalizedPassword = normalizePassword(password)
+
+  if (!normalizedUsername || !normalizedPassword) {
+    return { ok: false, error: 'Usuario o contrasena invalida' }
+  }
+
+  if (isLoginTemporarilyBlocked(normalizedUsername)) {
+    await registrarAuditoria({
+      actor_username: normalizedUsername,
+      actor_role: 'anon',
+      accion: 'LOGIN_BLOQUEADO',
+      target_username: normalizedUsername,
+      detalle: 'Demasiados intentos fallidos'
+    })
+    return { ok: false, error: 'Acceso temporalmente bloqueado por intentos fallidos' }
+  }
+
   const rows = await execute(
     'SELECT id, nombre, username, password_hash, role, permissions_json, activo FROM usuarios WHERE username = ? LIMIT 1',
-    [username]
+    [normalizedUsername]
   )
   const row = rows[0]
-  if (!row || !row.password_hash) {
+
+  const storedHash = row?.password_hash || DUMMY_PASSWORD_HASH
+  const passwordOk = verifyPassword(normalizedPassword, storedHash)
+
+  if (!row || !row.password_hash || !passwordOk) {
+    registerFailedLogin(normalizedUsername)
+    await registrarAuditoria({
+      actor_username: normalizedUsername,
+      actor_role: 'anon',
+      accion: 'LOGIN_FAIL',
+      target_username: normalizedUsername,
+      detalle: 'Credenciales invalidas'
+    })
     return { ok: false, error: 'Usuario o contrasena invalida' }
   }
+
   if (!Number(row.activo)) {
+    await registrarAuditoria({
+      actor_username: row.username,
+      actor_role: row.role,
+      accion: 'LOGIN_FAIL',
+      target_username: row.username,
+      detalle: 'Usuario inactivo'
+    })
     return { ok: false, error: 'Usuario inactivo' }
   }
-  if (!verifyPassword(password, row.password_hash)) {
-    return { ok: false, error: 'Usuario o contrasena invalida' }
-  }
+
+  clearFailedLogins(normalizedUsername)
 
   await registrarAuditoria({
     actor_username: row.username,
@@ -152,9 +265,17 @@ export async function validarLogin(username, password) {
 
 export async function crearUsuario(data) {
   await ensureUsersTable()
+  const nombre = String(data.nombre || '').trim()
+  const username = normalizeUsername(data.username)
+  if (!nombre) {
+    throw new Error('El nombre es obligatorio')
+  }
+  if (!username) {
+    throw new Error('El usuario es obligatorio')
+  }
   const role = normalizeRole(data.role)
   const permissions = normalizePermissions(role, data.permissions)
-  const passwordHash = hashPassword(data.password)
+  const passwordHash = hashPassword(assertValidNewPassword(data.password))
   const activo = data.activo ?? 1
 
   await execute(
@@ -166,14 +287,14 @@ export async function crearUsuario(data) {
        role = VALUES(role),
        permissions_json = VALUES(permissions_json),
        activo = VALUES(activo)`,
-    [data.nombre, data.username, passwordHash, role, JSON.stringify(permissions), activo]
+    [nombre, username, passwordHash, role, JSON.stringify(permissions), activo]
   )
 
   await registrarAuditoria({
     actor_username: data.actor_username || 'sistema',
     actor_role: data.actor_role || 'system',
     accion: 'USUARIO_CREADO',
-    target_username: data.username,
+    target_username: username,
     detalle: 'Rol: ' + role
   })
 }
@@ -216,7 +337,7 @@ export async function eliminarUsuario(id, actor) {
 export async function actualizarPassword(id, password, actor) {
   const username = await obtenerUsernamePorId(id)
   await ensureUsersTable()
-  const passwordHash = hashPassword(password)
+  const passwordHash = hashPassword(assertValidNewPassword(password))
   await execute('UPDATE usuarios SET password_hash = ? WHERE id = ?', [passwordHash, id])
 
   await registrarAuditoria({
@@ -226,6 +347,55 @@ export async function actualizarPassword(id, password, actor) {
     target_username: username,
     detalle: 'ID: ' + id
   })
+}
+
+export async function cambiarPasswordPropia(data) {
+  await ensureUsersTable()
+  const username = normalizeUsername(data?.username)
+  const currentPassword = normalizePassword(data?.currentPassword)
+  const newPassword = assertValidNewPassword(data?.newPassword)
+
+  if (!username || !currentPassword) {
+    throw new Error('Datos incompletos para cambiar contrasena')
+  }
+  if (currentPassword === newPassword) {
+    throw new Error('La nueva contrasena debe ser distinta a la actual')
+  }
+
+  const rows = await execute(
+    'SELECT id, username, role, password_hash, activo FROM usuarios WHERE username = ? LIMIT 1',
+    [username]
+  )
+  const row = rows[0]
+  if (!row || !row.password_hash) {
+    throw new Error('Usuario no encontrado')
+  }
+  if (!Number(row.activo)) {
+    throw new Error('Usuario inactivo')
+  }
+  if (!verifyPassword(currentPassword, row.password_hash)) {
+    await registrarAuditoria({
+      actor_username: row.username,
+      actor_role: row.role,
+      accion: 'PASSWORD_CAMBIO_FAIL',
+      target_username: row.username,
+      detalle: 'Contrasena actual incorrecta'
+    })
+    throw new Error('La contrasena actual no es correcta')
+  }
+
+  const newPasswordHash = hashPassword(newPassword)
+  await execute('UPDATE usuarios SET password_hash = ? WHERE id = ?', [newPasswordHash, row.id])
+
+  await registrarAuditoria({
+    actor_username: row.username,
+    actor_role: row.role,
+    accion: 'PASSWORD_CAMBIO_PROPIO',
+    target_username: row.username,
+    detalle: 'Cambio de contrasena desde configuracion'
+  })
+
+  return { ok: true }
 }
 
 export const PermissionsCatalog = ALL_PERMISSIONS

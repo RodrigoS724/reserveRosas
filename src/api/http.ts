@@ -151,6 +151,7 @@ export const api = {
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invoke('usuarios:login-list'),
   login: (username: string, password: string) => invoke('auth:login', username, password),
+  cambiarPasswordPropia: (data: { username: string; currentPassword: string; newPassword: string }) => invoke('auth:change-password', data),
   listarUsuarios: () => invoke('usuarios:list'),
   crearUsuario: (data: any) => invoke('usuarios:create', data),
   actualizarUsuario: (data: any) => invoke('usuarios:update', data),

@@ -371,6 +371,7 @@ declare global {
           permissions: string[]
         }
       }>
+      cambiarPasswordPropia: (data: { username: string; currentPassword: string; newPassword: string }) => Promise<{ ok: boolean; error?: string }>
       listarUsuarios: () => Promise<{
         id: number
         nombre: string

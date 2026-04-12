@@ -208,6 +208,79 @@ function isValidMatriculaUy(string $value): bool
     return (bool) preg_match('/^[A-Z]{3}\d{3,4}$/', normalizeMatricula($value));
 }
 
+function allowedOrigins(): array
+{
+    $raw = trim((string)(env('ALLOWED_ORIGINS', '') ?? ''));
+    if ($raw === '') {
+        return [];
+    }
+    $parts = array_map('trim', explode(',', $raw));
+    return array_values(array_filter($parts, fn($v) => $v !== ''));
+}
+
+function isOriginAllowed(string $origin): bool
+{
+    $origin = trim($origin);
+    if ($origin === '') {
+        return true;
+    }
+    $allowed = allowedOrigins();
+    if (count($allowed) === 0) {
+        return true;
+    }
+    return in_array($origin, $allowed, true);
+}
+
+function getClientIp(): string
+{
+    $xff = trim((string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
+    if ($xff !== '') {
+        $first = trim(explode(',', $xff)[0]);
+        if ($first !== '') {
+            return $first;
+        }
+    }
+    $realIp = trim((string)($_SERVER['HTTP_X_REAL_IP'] ?? ''));
+    if ($realIp !== '') {
+        return $realIp;
+    }
+    return trim((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+}
+
+function rateLimitCheck(string $scope, int $maxRequests, int $windowSeconds): bool
+{
+    $ip = getClientIp();
+    $ua = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 180);
+    $key = hash('sha256', $scope . '|' . $ip . '|' . $ua);
+    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'reservas_rate_limit';
+
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    $file = $dir . DIRECTORY_SEPARATOR . $key . '.json';
+    $now = time();
+    $data = ['start' => $now, 'count' => 0];
+
+    if (is_file($file)) {
+        $raw = @file_get_contents($file);
+        $parsed = is_string($raw) ? json_decode($raw, true) : null;
+        if (is_array($parsed) && isset($parsed['start'], $parsed['count'])) {
+            $data['start'] = (int)$parsed['start'];
+            $data['count'] = (int)$parsed['count'];
+        }
+    }
+
+    if (($now - $data['start']) >= $windowSeconds) {
+        $data = ['start' => $now, 'count' => 0];
+    }
+
+    $data['count']++;
+    @file_put_contents($file, json_encode($data));
+
+    return $data['count'] <= $maxRequests;
+}
+
 
 
 

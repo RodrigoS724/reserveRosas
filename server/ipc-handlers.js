@@ -137,16 +137,22 @@ export async function handleIpc(channel, args) {
       return users.listarUsuariosLogin()
     case 'auth:login':
       return users.validarLogin(args[0], args[1])
+    case 'auth:change-password':
+      return users.cambiarPasswordPropia(args[0] || {})
     case 'usuarios:list':
       return users.listarUsuarios()
     case 'usuarios:create':
-      return users.crearUsuario(args[0] || {})
+      await users.crearUsuario(args[0] || {})
+      return { ok: true }
     case 'usuarios:update':
-      return users.actualizarUsuario(args[0] || {})
+      await users.actualizarUsuario(args[0] || {})
+      return { ok: true }
     case 'usuarios:delete':
-      return users.eliminarUsuario(args[0]?.id, args[0]?.actor)
+      await users.eliminarUsuario(args[0]?.id, args[0]?.actor)
+      return { ok: true }
     case 'usuarios:password':
-      return users.actualizarPassword(args[0]?.id, args[0]?.password, args[0]?.actor)
+      await users.actualizarPassword(args[0]?.id, args[0]?.password, args[0]?.actor)
+      return { ok: true }
 
     // Auditoria
     case 'auditoria:list':

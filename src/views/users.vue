@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, toRaw } from 'vue'
-import { PermissionsLabels, getSession } from '../auth'
+import { PermissionsLabels, getSession, setSession } from '../auth'
 import { api } from '../api'
 
 type UserForm = {
@@ -161,6 +161,12 @@ const guardarUsuario = async () => {
     status.value = 'Usuario guardado.'
     statusOk.value = true
     await cargarUsuarios()
+    // If the updated user is the currently logged-in user, refresh their session
+    const currentSession = getSession()
+    if (currentSession && payloadPlain.username === currentSession.username) {
+      setSession({ ...currentSession, permissions: payloadPlain.permissions, role: payloadPlain.role })
+      window.location.reload()
+    }
     if (!isEdit.value) resetForm()
   } catch (error: any) {
     status.value = error.message || 'Error al guardar'

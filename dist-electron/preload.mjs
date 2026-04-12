@@ -90,6 +90,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
   login: (username, password) => invokeSafe("auth:login", username, password),
+  cambiarPasswordPropia: (data) => invokeSafe("auth:change-password", data),
   listarUsuarios: () => invokeSafe("usuarios:list"),
   crearUsuario: (data) => invokeSafe("usuarios:create", data),
   actualizarUsuario: (data) => invokeSafe("usuarios:update", data),
