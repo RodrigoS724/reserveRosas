@@ -2,6 +2,8 @@
 
 Standalone Node server that exposes /api/admin/ipc and REST endpoints for external clients.
 
+Deployment guide for HostingMontevideo: see `DEPLOY-HOSTINGMONTEVIDEO.md`.
+
 ## Quick start
 1. Copy .env.example to .env and set MYSQL_ credentials.
 2. Create tables using schema.sql (see note below).

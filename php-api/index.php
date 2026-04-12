@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/api-client.php';
 
 // CORS basico (ajustar en produccion)
 if (!empty($_SERVER['HTTP_ORIGIN'])) {
@@ -99,165 +100,76 @@ function parseReservationDateTime(string $fecha, string $hora): ?DateTimeImmutab
 if (str_starts_with($path, '/api')) {
     requireToken();
 
+    // Obtener cliente remoto
+    $remoteUrl = remoteApiUrl();
+    $remoteToken = remoteApiToken();
+    
+    if ($remoteUrl === '' || $remoteToken === '') {
+        jsonResponse(['ok' => false, 'error' => 'API remota no configurada'], 500);
+    }
+
+    $client = new RemoteApiClient($remoteUrl, $remoteToken);
+
     if ($method === 'GET' && $path === '/api/debug') {
         jsonResponse([
             'ok' => true,
             'debug' => isDebug(),
             'base_path' => $basePath,
             'token_loaded' => apiToken() !== '' ? 'yes' : 'no',
-            'mysql_host' => $_ENV['MYSQL_HOST'] ?? null,
-            'mysql_db' => $_ENV['MYSQL_DATABASE'] ?? null
+            'remote_api_url' => $remoteUrl,
+            'remote_api_configured' => $remoteToken !== '' ? 'yes' : 'no'
         ]);
     }
 
-  if ($method === 'GET' && $path === '/api/horarios') {
-    $fecha = $_GET['fecha'] ?? '';
-    if ($fecha === '') {
-      jsonResponse(['ok' => false, 'error' => 'Fecha requerida'], 400);
-    }
-
-    $pdo = db();
-    $stmt = $pdo->prepare("
-            SELECT h.hora
-            FROM horarios_base h
-            WHERE h.activo = 1
-              AND h.hora NOT IN (
-                SELECT hora
-                FROM reservas
-                WHERE fecha = ?
-                  AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
-              )
-              AND h.hora NOT IN (
-                SELECT hora FROM bloqueos_horarios WHERE fecha = ?
-              )
-            ORDER BY h.hora
-        ");
-    $stmt->execute([$fecha, $fecha]);
-    $horarios = $stmt->fetchAll();
-
-    if (isSaturday($fecha)) {
-      $horarios = array_values(array_filter($horarios, fn($h) => $h['hora'] < '12:00'));
-    }
-
-    $cutoff = getReservationCutoffDateTime();
-    $horarios = array_values(array_filter($horarios, function ($h) use ($fecha, $cutoff) {
-      $hora = (string)($h['hora'] ?? '');
-      $reservaDateTime = parseReservationDateTime($fecha, $hora);
-      if (!$reservaDateTime) {
-        return false;
-      }
-      return $reservaDateTime >= $cutoff;
-    }));
-
-    jsonResponse(['ok' => true, 'data' => $horarios]);
-  }
-}
-  if ($method === 'GET' && $path === '/api/vehiculo') {
-    $matricula = normalizeMatricula($_GET['matricula'] ?? '');
-    if (!isValidMatriculaUy($matricula)) {
-      jsonResponse(['ok' => false, 'error' => 'Matricula invalida'], 400);
-    }
-
-    $pdo = db();
-    $stmt = $pdo->prepare("SELECT marca, modelo FROM vehiculos WHERE matricula = ? LIMIT 1");
-    $stmt->execute([$matricula]);
-    $row = $stmt->fetch() ?:  null;
-    jsonResponse(['ok' => true, 'data' => $row]);
-  }
-
-  if ($method === 'POST' && $path === '/api/reservas') {
-    $data = readJsonBody();
-
-    $required = ['nombre', 'telefono', 'marca', 'modelo', 'matricula', 'tipo_turno', 'fecha', 'hora'];
-    foreach ($required as $field) {
-      if (empty($data[$field])) {
-        jsonResponse(['ok' => false, 'error' => "Campo requerido: {$field}"], 400);
-      }
-    }
-
-    $fechaReserva = (string)($data['fecha'] ?? '');
-    $horaReserva = (string)($data['hora'] ?? '');
-    $reservaDateTime = parseReservationDateTime($fechaReserva, $horaReserva);
-    if (!$reservaDateTime) {
-      jsonResponse(['ok' => false, 'error' => 'Fecha/hora de reserva invalida'], 400);
-    }
-    if ($reservaDateTime < getReservationCutoffDateTime()) {
-      jsonResponse([
-        'ok' => false,
-        'error' => 'Las reservas deben agendarse con al menos 24 horas de anticipacion'
-      ], 409);
-    }
-
-    $cedula = $data['cedula'] ?? '';
-    if ($cedula !== '' && !isValidCedulaUy($cedula)) {
-      jsonResponse(['ok' => false, 'error' => 'Cedula invalida'], 400);
-    }
-    $telefono = $data['telefono'] ?? '';
-    if (!isValidTelefonoUy($telefono)) {
-      jsonResponse(['ok' => false, 'error' => 'Telefono invalido'], 400);
-    }
-    $telefono = normalizeTelefonoUy($telefono);
-
-    if (!isValidMatriculaUy($data['matricula'] ?? '')) {
-      jsonResponse(['ok' => false, 'error' => 'Matricula invalida'], 400);
-    }
-    $matriculaNorm = normalizeMatricula($data['matricula'] ?? '');
-
-    $tipo = $data['tipo_turno'];
-    $garantiaTipo = (string)($data['garantia_tipo'] ?? '');
-    $particularTipo = (string)($data['particular_tipo'] ?? '');
-    $isService = ($tipo === 'Particular' && $particularTipo === 'Service')
-      || ($tipo === 'Garantia' && $garantiaTipo === 'Service');
-
-    $km = preg_replace('/\D+/', '', (string)($data['km'] ?? '')) ?? '';
-    if ($isService && $km === '') {
-      jsonResponse(['ok' => false, 'error' => 'KM requerido para service'], 400);
-    }
-    if (!$isService) {
-      $km = '';
-    }
-
-    $garantiaNumeroService = null;
-    if ($tipo === 'Garantia') {
-      if ($garantiaTipo === '') {
-        jsonResponse(['ok' => false, 'error' => 'Datos de garantia incompletos'], 400);
-      }
-      if ($garantiaTipo === 'Service') {
-        $numeroService = preg_replace('/\D+/', '', (string)($data['garantia_numero_service'] ?? '')) ?? '';
-        if ($numeroService === '') {
-          jsonResponse(['ok' => false, 'error' => 'Numero de service requerido (solo numerico)'], 400);
+    if ($method === 'GET' && $path === '/api/horarios') {
+        $fecha = $_GET['fecha'] ?? '';
+        if ($fecha === '') {
+            jsonResponse(['ok' => false, 'error' => 'Fecha requerida'], 400);
         }
-        $garantiaNumeroService = $numeroService;
-      }
-      if (in_array($garantiaTipo, ['Reparacion', 'Reparación'], true) && empty($data['garantia_problema'])) {
-        jsonResponse(['ok' => false, 'error' => 'Descripcion del problema requerida'], 400);
-      }
+        // Proxy hacia la API remota
+        $result = $client->obtenerHorarios($fecha);
+        if (!$result['ok'] ?? false) {
+            jsonResponse($result, 400);
+        }
+        jsonResponse($result);
     }
 
-    if ($tipo === 'Particular') {
-      if ($particularTipo === '') {
-        jsonResponse(['ok' => false, 'error' => 'Tipo particular requerido'], 400);
-      }
+    if ($method === 'GET' && $path === '/api/vehiculo') {
+        $matricula = $_GET['matricula'] ?? '';
+        if ($matricula === '') {
+            jsonResponse(['ok' => false, 'error' => 'Matricula requerida'], 400);
+        }
+        // Proxy hacia la API remota
+        $result = $client->obtenerVehiculo($matricula);
+        if (!$result['ok'] ?? false) {
+            jsonResponse($result, 400);
+        }
+        jsonResponse($result);
     }
-    $pdo = db();
-    $pdo->beginTransaction();
-    try {
-      // Validar disponibilidad del horario (lock)
-      $stmt = $pdo->prepare("
-        SELECT 1
-        FROM reservas
-        WHERE fecha = ? AND hora = ?
-          AND LOWER(IFNULL(estado, 'pendiente')) NOT IN ('cancelada', 'cancelado')
-        FOR UPDATE
-      ");
-      $stmt->execute([$data['fecha'], $data['hora']]);
-      $exists = (bool) $stmt->fetch();
-      if ($exists) {
-        $pdo->rollBack();
-        jsonResponse(['ok' => false, 'error' => 'Horario no disponible'], 409);
-      }
 
-      // Evitar duplicado de cedula en el mismo dia
+    if ($method === 'POST' && $path === '/api/reservas') {
+        $data = readJsonBody();
+        
+        // Validar campos requeridos localmente
+        $required = ['nombre', 'telefono', 'marca', 'modelo', 'matricula', 'tipo_turno', 'fecha', 'hora'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                jsonResponse(['ok' => false, 'error' => "Campo requerido: {$field}"], 400);
+            }
+        }
+
+        // Proxy hacia la API remota
+        $result = $client->crearReserva($data);
+        if (!$result['ok'] ?? false) {
+            $status = $result['status'] ?? 400;
+            jsonResponse(['ok' => false, 'error' => $result['error'] ?? 'Error creando reserva'], $status);
+        }
+        jsonResponse($result, 201);
+    }
+
+    jsonResponse(['ok' => false, 'error' => 'Endpoint no encontrado'], 404);
+}
+
       if (!empty($cedula)) {
         $stmt = $pdo->prepare("
           SELECT 1

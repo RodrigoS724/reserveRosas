@@ -1,7 +1,7 @@
-import 'dotenv/config'
 import http from 'node:http'
 import { URL } from 'node:url'
 import crypto from 'node:crypto'
+import dotenv from 'dotenv'
 import { handleIpc } from './ipc-handlers.js'
 import * as reservas from './reservas.js'
 import * as horarios from './horarios.js'
@@ -16,10 +16,18 @@ import * as aprontesAlertConfig from './aprontes-alert-config.js'
 import * as horariosAprontes from './horarios-aprontes.js'
 import { startAprontesGarantiaAlertScheduler } from './aprontes-garantia-alert.js'
 import * as registros from './registros.js'
+import { SERVER_ENV_PATH } from './paths.js'
+import { isMysqlConfigured } from './db.js'
+
+dotenv.config({ path: SERVER_ENV_PATH })
 
 const PORT = Number(process.env.API_PORT || 3005)
 
-startAprontesGarantiaAlertScheduler()
+if (isMysqlConfigured()) {
+  startAprontesGarantiaAlertScheduler()
+} else {
+  console.warn('[AprontesGarantia] Scheduler deshabilitado: MYSQL no configurado.')
+}
 
 function applyCors(req, res) {
   const origin = req.headers.origin || '*'
@@ -33,6 +41,12 @@ function sendJson(res, status, payload) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   res.end(JSON.stringify(payload))
+}
+
+function sendHtml(res, status, html) {
+  res.statusCode = status
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.end(String(html || ''))
 }
 
 function ok(res, data, status = 200) {
@@ -543,6 +557,15 @@ const server = http.createServer(async (req, res) => {
 
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
   const parts = url.pathname.split('/').filter(Boolean)
+
+  if (req.method === 'GET' && url.pathname === '/') {
+    sendHtml(
+      res,
+      200,
+      '<!doctype html><html><head><meta charset="utf-8"><title>reserveRosas API</title></head><body><h1>reserveRosas API</h1><p>Servicio activo.</p><p>Health: <a href="/api/health">/api/health</a></p></body></html>'
+    )
+    return
+  }
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
     sendJson(res, 200, { ok: true })

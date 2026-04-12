@@ -86,6 +86,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerEnvConfig: () => invokeSafe("config:env:get"),
   guardarEnvConfig: (text) => invokeSafe("config:env:set", text),
   probarConexionDB: () => invokeSafe("config:db:test"),
+  probarConexionApi: () => invokeSafe("config:api:test"),
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
   login: (username, password) => invokeSafe("auth:login", username, password),

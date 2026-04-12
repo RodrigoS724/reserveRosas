@@ -93,6 +93,7 @@ contextBridge.exposeInMainWorld('api', {
   obtenerEnvConfig: () => invokeSafe('config:env:get'),
   guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),
   probarConexionDB: () => invokeSafe('config:db:test'),
+  probarConexionApi: () => invokeSafe('config:api:test'),
 
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe('usuarios:login-list'),
@@ -101,7 +102,7 @@ contextBridge.exposeInMainWorld('api', {
   crearUsuario: (data: any) => invokeSafe('usuarios:create', data), actualizarUsuario: (data: any) => invokeSafe('usuarios:update', data),
   borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => invokeSafe('usuarios:delete', data), actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => invokeSafe('usuarios:password', data),
 
-  // Auditoría
+  // Auditorï¿½a
   obtenerAuditoriaUsuarios: () => invokeSafe('auditoria:list'),
 
   // Registros

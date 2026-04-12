@@ -407,13 +407,24 @@ function requireConfig() {
 requireConfig();
 const LOCAL_ONLY_CHANNELS = /* @__PURE__ */ new Set([
   "config:env:get",
-  "config:env:set"
+  "config:env:set",
+  "config:api:test"
 ]);
 function getRemoteBaseUrl() {
   return String(process.env.API_REMOTE_URL || "").trim().replace(/\/+$/, "");
 }
 function getRemoteToken() {
   return String(process.env.API_REMOTE_TOKEN || "").trim();
+}
+function buildAuthHeaders(token) {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    headers["X-API-KEY"] = token;
+  }
+  return headers;
 }
 function isRemoteBackendEnabled() {
   return getRemoteBaseUrl().length > 0;
@@ -429,12 +440,7 @@ async function proxyIpcToRemote(channel, args) {
   }
   const endpoint = `${baseUrl}/api/admin/ipc`;
   const token = getRemoteToken();
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = buildAuthHeaders(token);
   const fetchFn = globalThis.fetch;
   if (typeof fetchFn !== "function") {
     throw new Error("Fetch no disponible en este entorno.");
@@ -478,6 +484,72 @@ async function proxyIpcToRemote(channel, args) {
       throw new Error("Timeout llamando API remota (20s)");
     }
     throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+async function testRemoteApiConnection() {
+  const baseUrl = getRemoteBaseUrl();
+  if (!baseUrl) {
+    return {
+      ok: false,
+      error: "API remota no configurada (API_REMOTE_URL)."
+    };
+  }
+  const token = getRemoteToken();
+  const fetchFn = globalThis.fetch;
+  if (typeof fetchFn !== "function") {
+    return {
+      ok: false,
+      error: "Fetch no disponible en este entorno."
+    };
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15e3);
+  try {
+    const healthResponse = await fetchFn(`${baseUrl}/api/health`, {
+      method: "GET",
+      signal: controller.signal
+    });
+    if (!healthResponse.ok) {
+      return {
+        ok: false,
+        error: `Health check fallo (${healthResponse.status}).`
+      };
+    }
+    const authResponse = await fetchFn(`${baseUrl}/api/admin/ipc`, {
+      method: "POST",
+      headers: buildAuthHeaders(token),
+      body: JSON.stringify({ channel: "__ping__", args: [] }),
+      signal: controller.signal
+    });
+    if (authResponse.status === 401) {
+      return {
+        ok: false,
+        error: "Token API faltante o invalido (401)."
+      };
+    }
+    if (!authResponse.ok) {
+      return {
+        ok: false,
+        error: `API admin IPC no disponible (${authResponse.status}).`
+      };
+    }
+    return {
+      ok: true,
+      error: ""
+    };
+  } catch (error) {
+    if ((error == null ? void 0 : error.name) === "AbortError") {
+      return {
+        ok: false,
+        error: "Timeout validando API remota (15s)."
+      };
+    }
+    return {
+      ok: false,
+      error: (error == null ? void 0 : error.message) || "Error validando API remota."
+    };
   } finally {
     clearTimeout(timeout);
   }
@@ -21593,7 +21665,9 @@ const ENV_KEYS = [
   "MYSQL_USER",
   "MYSQL_PASSWORD",
   "MYSQL_DATABASE",
-  "DISABLE_LOCAL_DB"
+  "DISABLE_LOCAL_DB",
+  "API_REMOTE_URL",
+  "API_REMOTE_TOKEN"
 ];
 function getEnvFilePath() {
   const userDataPath = app.getPath("userData");
@@ -21679,6 +21753,13 @@ function registrarHandlersConfig() {
       return { ok: false, error: message };
     }
     return { ok: true };
+  });
+  safeHandle("config:api:test", async () => {
+    const result = await testRemoteApiConnection();
+    return {
+      ok: result.ok,
+      error: result.error || ""
+    };
   });
 }
 async function ensureAuditTableMysql() {

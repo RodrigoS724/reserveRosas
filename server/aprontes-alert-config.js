@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { SERVER_DATA_DIR } from './paths.js'
 
 const DEFAULT_CONFIG = {
   default_email: '',
@@ -11,7 +12,7 @@ function getConfigPath() {
   if (custom && String(custom).trim()) {
     return custom
   }
-  return path.join(process.cwd(), 'data', 'aprontes-alert-config.json')
+  return path.join(SERVER_DATA_DIR, 'aprontes-alert-config.json')
 }
 
 function normalizeEmail(value) {

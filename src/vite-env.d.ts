@@ -351,6 +351,7 @@ declare global {
       obtenerEnvConfig: () => Promise<string>
       guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
       probarConexionDB: () => Promise<{ ok: boolean; error: string }>
+      probarConexionApi: () => Promise<{ ok: boolean; error: string }>
 
       obtenerUsuariosLogin: () => Promise<{
         id: number
@@ -392,12 +393,11 @@ declare global {
         detalle: string | null
         created_at: string
       }[]>
+      obtenerRegistroMensual: (d: { mes: string }) => Promise<any>
     }
   }
 }
 export {}
-
-
 
 
 

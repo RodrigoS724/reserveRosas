@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { obtenerReservasPorFecha } from './reservas.js'
 import nodemailer from 'nodemailer'
+import { SERVER_DATA_DIR } from './paths.js'
 
 const DEFAULT_CONFIG = {
   enabled: false,
@@ -15,7 +16,7 @@ function getConfigPath() {
   if (custom && String(custom).trim()) {
     return custom
   }
-  return path.join(process.cwd(), 'data', 'daily-summary.json')
+  return path.join(SERVER_DATA_DIR, 'daily-summary.json')
 }
 
 function normalizeTime(raw) {

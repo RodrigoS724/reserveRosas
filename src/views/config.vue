@@ -40,7 +40,7 @@ const guardarEnv = async () => {
 }
 
 const probarConexion = async () => {
-  status.value = 'Probando conexión...'
+  status.value = 'Probando conexión a MySQL...'
   statusOk.value = true
   statusDetail.value = ''
   try {
@@ -55,6 +55,27 @@ const probarConexion = async () => {
     }
   } catch (error: any) {
     status.value = error.message || 'Error al probar conexión'
+    statusOk.value = false
+    statusDetail.value = error.stack || ''
+  }
+}
+
+const probarApiRemota = async () => {
+  status.value = 'Probando API remota...'
+  statusOk.value = true
+  statusDetail.value = ''
+  try {
+    const result = await api.probarConexionApi()
+    if (result.ok) {
+      status.value = 'Conexión exitosa a API remota.'
+      statusOk.value = true
+    } else {
+      status.value = result.error || 'No se pudo conectar a la API remota.'
+      statusOk.value = false
+      statusDetail.value = result.error || ''
+    }
+  } catch (error: any) {
+    status.value = error.message || 'Error al probar API remota'
     statusOk.value = false
     statusDetail.value = error.stack || ''
   }
@@ -85,7 +106,7 @@ onMounted(() => {
         <textarea
           v-model="envText"
           class="w-full h-full p-4 bg-transparent text-gray-800 dark:text-gray-100 font-mono text-xs outline-none resize-none"
-          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=..."
+          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=...\n\nAPI_REMOTE_URL=http://rosas.uy/reserva\nAPI_REMOTE_TOKEN=tu_token_api"
         ></textarea>
       </div>
 
@@ -96,7 +117,13 @@ onMounted(() => {
             @click="probarConexion"
             class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
           >
-            Probar Conexión
+            Probar MySQL
+          </button>
+          <button
+            @click="probarApiRemota"
+            class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          >
+            Probar API Remota
           </button>
           <button
             @click="guardarEnv"

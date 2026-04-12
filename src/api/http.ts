@@ -14,6 +14,7 @@ async function invoke(channel: string, ...args: any[]) {
   }
   if (API_TOKEN) {
     headers.Authorization = `Bearer ${API_TOKEN}`
+    headers['X-API-KEY'] = API_TOKEN
   }
 
   const response = await fetchFn(IPC_ENDPOINT, {
@@ -119,6 +120,33 @@ export const api = {
   obtenerEnvConfig: () => invoke('config:env:get'),
   guardarEnvConfig: (text: string) => invoke('config:env:set', text),
   probarConexionDB: () => invoke('config:db:test'),
+  probarConexionApi: async () => {
+    if (!BASE_URL) {
+      return { ok: false, error: 'VITE_API_URL no configurada' }
+    }
+
+    const fetchFn = globalThis.fetch
+    if (typeof fetchFn !== 'function') {
+      return { ok: false, error: 'Fetch no disponible' }
+    }
+
+    const headers: Record<string, string> = {}
+    if (API_TOKEN) {
+      headers.Authorization = `Bearer ${API_TOKEN}`
+      headers['X-API-KEY'] = API_TOKEN
+    }
+
+    const response = await fetchFn(`${BASE_URL}/api/health`, {
+      method: 'GET',
+      headers
+    })
+
+    if (!response.ok) {
+      return { ok: false, error: `Health check fallo (${response.status})` }
+    }
+
+    return { ok: true, error: '' }
+  },
 
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invoke('usuarios:login-list'),

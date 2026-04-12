@@ -2,8 +2,12 @@ import mysql from 'mysql2/promise'
 
 let pool = null
 
+export function isMysqlConfigured() {
+  return Boolean(process.env.MYSQL_HOST && process.env.MYSQL_USER && process.env.MYSQL_DATABASE)
+}
+
 function ensureConfigured() {
-  if (!process.env.MYSQL_HOST || !process.env.MYSQL_USER || !process.env.MYSQL_DATABASE) {
+  if (!isMysqlConfigured()) {
     throw new Error('MYSQL not configured')
   }
 }

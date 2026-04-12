@@ -1,27 +1,67 @@
-# API PHP (Reservas)
+# Web PHP (Reservas)
 
-Este mini-proyecto expone una API simple para:
+Esta web expone una interfaz HTML + API simple para:
 - Obtener horarios disponibles
 - Crear reservas
+- Consultar datos de vehículos
 
-## Requisitos
+## Modos de operación
+
+### 1. Con API Remota (Recomendado)
+La web hace proxy a una API Node.js remota. No requiere MySQL local.
+
+**Requisitos:**
+- PHP 8.0+
+- Acceso HTTP a la API remota (ej: `http://rosas.uy/reserva`)
+
+**Configuración:**
+1. Copia `.env.example` a `.env`
+2. Completa:
+   ```env
+   API_REMOTE_URL=http://rosas.uy/reserva
+   API_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4
+   ```
+
+### 2. Con MySQL Local (Legado)
+La web consulta una base de datos MySQL local.
+
+**Requisitos:**
 - PHP 8.0+
 - Extensión `pdo_mysql` habilitada
+- MySQL/MariaDB
 
-## Configuración
-1. Copia `php-api/.env.example` a `php-api/.env`
-2. Completa las credenciales de MySQL
+**Configuración:**
+1. Copia `.env.example` a `.env`
+2. Completa credenciales de MySQL:
+   ```env
+   MYSQL_HOST=127.0.0.1
+   MYSQL_PORT=3306
+   MYSQL_USER=tu_usuario
+   MYSQL_PASSWORD=tu_password
+   MYSQL_DATABASE=reservas_rosas
+   ```
 
 ## Endpoints
 
-Todos requieren token en `X-API-KEY` o `atoken=...`.
+Todos requieren token en `X-API-KEY` header o query param `token=...`.
 
-### `GET /api/horariosafecha=YYYY-MM-DD`
-Devuelve los horarios disponibles para la fecha indicada.
+### GET `/api/horarios?fecha=YYYY-MM-DD`
+Devuelve horarios disponibles para la fecha.
 
-### `POST /api/reservas`
-Body JSON:
-```
+**Con API Remota:** Proxy transparente a la API Node remota.  
+**Con MySQL:** Consulta la BD local.
+
+### GET `/api/vehiculo?matricula=ABC1234`
+Devuelve marca/modelo si el vehículo existe.
+
+**Con API Remota:** Proxy transparente.  
+**Con MySQL:** Consulta la BD local.
+
+### POST `/api/reservas`
+Crea una nueva reserva.
+
+**Body JSON:**
+```json
 {
   "nombre": "Juan Perez",
   "cedula": "12345678",
@@ -32,22 +72,17 @@ Body JSON:
   "matricula": "ABC1234",
   "tipo_turno": "Particular",
   "particular_tipo": "Service",
-  "garantia_tipo": null,
-  "garantia_fecha_compra": null,
-  "garantia_numero_service": null,
-  "garantia_problema": null,
   "fecha": "2026-02-04",
   "hora": "10:00",
   "detalles": ""
 }
 ```
 
-### `GET /api/vehiculoamatricula=ABC1234`
-Devuelve marca/modelo si la matrícula existe.
+## Debug
 
-## Nota
-La lógica de horarios respeta:
-- Horarios base activos
-- Bloqueos
-- Reservas existentes
-- Sábados sólo hasta las 12:00
+Para ver configuración actual:
+```
+GET /api/debug?token=tu_token
+```
+
+Mostrará si está usando API remota o MySQL local.

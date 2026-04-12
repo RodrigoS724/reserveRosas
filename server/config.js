@@ -1,13 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execute } from './db.js'
+import { SERVER_ENV_PATH } from './paths.js'
 
 function getEnvPath() {
   const envPath = process.env.API_ENV_PATH
   if (envPath && String(envPath).trim()) {
     return envPath
   }
-  return path.join(process.cwd(), '.env')
+  return SERVER_ENV_PATH
 }
 
 export function readEnvText() {

@@ -1,6 +1,7 @@
 import { safeHandle } from './safeHandle'
 import { loadUserEnv, readUserEnvText, writeUserEnvText } from '../config/env'
 import { resetMysqlPool, tryMysql } from '../db/mysql'
+import { testRemoteApiConnection } from './remote-proxy'
 
 export function registrarHandlersConfig() {
   safeHandle('config:env:get', async () => {
@@ -26,5 +27,13 @@ export function registrarHandlersConfig() {
       return { ok: false, error: message }
     }
     return { ok: true }
+  })
+
+  safeHandle('config:api:test', async () => {
+    const result = await testRemoteApiConnection()
+    return {
+      ok: result.ok,
+      error: result.error || ''
+    }
   })
 }

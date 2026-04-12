@@ -79,6 +79,16 @@ function hashToken(string $token): string
     return hash('sha256', $token);
 }
 
+function remoteApiUrl(): string
+{
+    return env('API_REMOTE_URL', '') ?? '';
+}
+
+function remoteApiToken(): string
+{
+    return env('API_REMOTE_TOKEN', '') ?? '';
+}
+
 function requireToken(): void
 {
     $token = apiToken();
@@ -175,7 +185,7 @@ function normalizeTelefonoUy(string $value): string
     if (strlen($digits) !== 9) {
         return '';
     }
-    // Guardar local con prefijo 09 (9 dígitos)
+    // Guardar local con prefijo 09 (9 dï¿½gitos)
     return $digits;
 }
 
