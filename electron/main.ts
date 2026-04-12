@@ -11,6 +11,7 @@ import { setSettings } from './settings'
 import { startDailySummaryScheduler } from './services/daily-summary.service'
 import { startAprontesGarantiaAlertScheduler } from './services/aprontes-garantia-alert.service'
 import { isRemoteBackendEnabled } from './ipc/remote-proxy'
+import { startAutoUpdateFlow } from './services/updater.service'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -102,6 +103,7 @@ app.whenReady().then(async () => {
     startAprontesGarantiaAlertScheduler()
   }
   createWindow()  // Creamos la ventana
+  startAutoUpdateFlow(() => win)
 
   ipcMain.on('settings:update', (_event, payload) => {
     if (!payload || typeof payload !== 'object') return
