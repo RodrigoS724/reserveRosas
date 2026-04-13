@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { api } from '../api'
 
 const vehiculos = ref<any[]>([])
 const historial = ref<any[]>([])
@@ -21,7 +22,7 @@ const vehiculosFiltrados = computed(() => {
 const cargarVehiculos = async () => {
   cargando.value = true
   try {
-    const result = await window.api.obtenerVehiculos()
+    const result = await api.obtenerVehiculos()
     vehiculos.value = result || []
     if (!vehiculoActivo.value && vehiculos.value.length > 0) {
       seleccionarVehiculo(vehiculos.value[0])
@@ -36,7 +37,7 @@ const cargarVehiculos = async () => {
 
 const cargarHistorial = async (vehiculoId: number) => {
   try {
-    const result = await window.api.obtenerHistorialVehiculo(vehiculoId)
+    const result = await api.obtenerHistorialVehiculo(vehiculoId)
     historial.value = result || []
   } catch (error: any) {
     console.error('[Vehiculos] Error cargando historial:', error)
@@ -88,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
     <header class="flex justify-between items-center">
       <div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-800 dark:text-white tracking-tighter">Historial Base de Datos Gestor</h1>

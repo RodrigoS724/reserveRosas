@@ -42,6 +42,16 @@ contextBridge.exposeInMainWorld('api', {
   obtenerReservasDia: (d: any) => invokeSafe('reservas:dia', d),
   obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (id: number, notas: string) => invokeSafe('reservas:actualizar-notas', id, notas),
   obtenerCambiosReservas: (d: any) => invokeSafe('reservas:cambios', d),
+
+  // Aprontes
+  crearApronte: (d: any) => invokeSafe('aprontes:crear', d),
+  obtenerApronte: (id: number) => invokeSafe('aprontes:obtener', id),
+  borrarApronte: (id: number) => invokeSafe('aprontes:borrar', id),
+  actualizarApronte: (d: any) => invokeSafe('aprontes:actualizar', d),
+  obtenerAprontesFecha: (f: string) => invokeSafe('aprontes:fecha', f),
+  obtenerAprontes: () => invokeSafe('aprontes:todas'),
+  obtenerConfigAlertasAprontes: () => invokeSafe('aprontes:alertas:config:get'),
+  guardarConfigAlertasAprontes: (d: any) => invokeSafe('aprontes:alertas:config:set', d),
   obtenerConfigResumenDiario: () => invokeSafe('resumen-diario:config:get'),
   guardarConfigResumenDiario: (d: any) => invokeSafe('resumen-diario:config:set', d),
   enviarResumenDiario: (d: any) => invokeSafe('resumen-diario:enviar', d),
@@ -57,6 +67,16 @@ contextBridge.exposeInMainWorld('api', {
   obtenerHorariosBloqueados: (f: string) => invokeSafe('horarios:bloqueados', f),
   borrarHorarioPermanente: (id: number) => invokeSafe('horarios:borrar', id),
 
+  // Horarios Aprontes
+  obtenerHorariosAprontesBase: () => invokeSafe('horarios-aprontes:base'),
+  obtenerHorariosAprontesInactivos: () => invokeSafe('horarios-aprontes:inactivos'),
+  obtenerHorariosAprontesDisponibles: (f: string) => invokeSafe('horarios-aprontes:disponibles', f),
+  crearHorarioApronte: (d: { hora: string; cupo?: number }) => invokeSafe('horarios-aprontes:crear', d),
+  actualizarCupoHorarioApronte: (d: { id: number; cupo: number }) => invokeSafe('horarios-aprontes:actualizar-cupo', d),
+  desactivarHorarioApronte: (id: number) => invokeSafe('horarios-aprontes:desactivar', id),
+  activarHorarioApronte: (id: number) => invokeSafe('horarios-aprontes:activar', id),
+  borrarHorarioApronte: (id: number) => invokeSafe('horarios-aprontes:borrar', id),
+
   // Historial
   obtenerHistorial: (id: number) => invokeSafe('historial:obtener', id),
 
@@ -65,18 +85,27 @@ contextBridge.exposeInMainWorld('api', {
   obtenerHistorialVehiculo: (vehiculoId: number) => invokeSafe('vehiculos:historial', vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula: string) => invokeSafe('vehiculos:mysql-by-matricula', matricula),
 
+  // Motos catalogo
+  obtenerMarcasMoto: () => invokeSafe('motos:marcas'),
+  obtenerModelosMoto: (marca?: string) => invokeSafe('motos:modelos', marca),
+
   // Configuración
   obtenerEnvConfig: () => invokeSafe('config:env:get'),
   guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),
   probarConexionDB: () => invokeSafe('config:db:test'),
+  probarConexionApi: () => invokeSafe('config:api:test'),
 
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe('usuarios:login-list'),
   login: (username: string, password: string) => invokeSafe('auth:login', username, password),
+  cambiarPasswordPropia: (data: { username: string; currentPassword: string; newPassword: string }) => invokeSafe('auth:change-password', data),
   listarUsuarios: () => invokeSafe('usuarios:list'),
   crearUsuario: (data: any) => invokeSafe('usuarios:create', data), actualizarUsuario: (data: any) => invokeSafe('usuarios:update', data),
   borrarUsuario: (data: { id: number; actor: { username: string; role: string } }) => invokeSafe('usuarios:delete', data), actualizarPasswordUsuario: (data: { id: number; password: string; actor: { username: string; role: string } }) => invokeSafe('usuarios:password', data),
 
-  // Auditoría
-  obtenerAuditoriaUsuarios: () => invokeSafe('auditoria:list')
+  // Auditor�a
+  obtenerAuditoriaUsuarios: () => invokeSafe('auditoria:list'),
+
+  // Registros
+  obtenerRegistroMensual: (d: any) => invokeSafe('registros:mensual', d)
 })

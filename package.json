@@ -1,7 +1,13 @@
 {
   "name": "reserverosas",
   "private": true,
-  "version": "0.14.0",
+  "version": "1.0.0",
+  "description": "App de escritorio ReserveRosas para gestion de taller de motos.",
+  "author": "RosasUy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RodrigoS724/reserveRosas.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +16,8 @@
     "build:win:publish": "vue-tsc && vite build && electron-builder --win --publish always",
     "release:local": "powershell -ExecutionPolicy Bypass -File scripts/release-local.ps1",
     "release:github": "powershell -ExecutionPolicy Bypass -File scripts/release-github.ps1",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api": "node ..\\reserveRosas-server\\index.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.0",

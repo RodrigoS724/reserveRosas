@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { api } from '../api'
 
 /* =========================
  * ESTADO
@@ -7,6 +8,10 @@ import { ref, onMounted } from 'vue'
 const horariosBase = ref<any[]>([])
 const horariosInactivos = ref<any[]>([])
 const horariosBloqueados = ref<any[]>([])
+const horariosAprontes = ref<any[]>([])
+const horariosAprontesInactivos = ref<any[]>([])
+const nuevaHoraApronte = ref('')
+const nuevoCupoApronte = ref(1)
 const nuevaHora = ref('')
 
 const fechaBloqueo = ref('')
@@ -19,7 +24,7 @@ const motivoBloqueo = ref('')
 const cargarHorariosBase = async () => {
   try {
     console.log('[AdminHorarios] Cargando horarios base...')
-    const result = await window.api.obtenerHorariosBase()
+    const result = await api.obtenerHorariosBase()
     console.log('[AdminHorarios] Horarios activos recibidos:', result)
     horariosBase.value = result || []
     console.log('[AdminHorarios] Vista actualizada con', horariosBase.value.length, 'horarios activos')
@@ -32,7 +37,7 @@ const cargarHorariosBase = async () => {
 const cargarHorariosInactivos = async () => {
   try {
     console.log('[AdminHorarios] Cargando horarios inactivos...')
-    const result = await window.api.obtenerHorariosInactivos()
+    const result = await api.obtenerHorariosInactivos()
     console.log('[AdminHorarios] Horarios inactivos recibidos:', result)
     horariosInactivos.value = result || []
     console.log('[AdminHorarios] Vista actualizada con', horariosInactivos.value.length, 'horarios inactivos')
@@ -41,13 +46,33 @@ const cargarHorariosInactivos = async () => {
     horariosInactivos.value = []
   }
 }
+const cargarHorariosAprontes = async () => {
+  try {
+    console.log('[AdminHorarios] Cargando horarios aprontes...')
+    const result = await api.obtenerHorariosAprontesBase()
+    horariosAprontes.value = result || []
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error cargando horarios aprontes:', error)
+    horariosAprontes.value = []
+  }
+}
 
+const cargarHorariosAprontesInactivos = async () => {
+  try {
+    console.log('[AdminHorarios] Cargando horarios aprontes inactivos...')
+    const result = await api.obtenerHorariosAprontesInactivos()
+    horariosAprontesInactivos.value = result || []
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error cargando horarios aprontes inactivos:', error)
+    horariosAprontesInactivos.value = []
+  }
+}
 const cargarHorariosBloqueados = async () => {
   if (!fechaBloqueo.value) return
 
   try {
     console.log('[AdminHorarios] Cargando horarios bloqueados para:', fechaBloqueo.value)
-    const result = await window.api.obtenerHorariosBloqueados(fechaBloqueo.value)
+    const result = await api.obtenerHorariosBloqueados(fechaBloqueo.value)
     console.log('[AdminHorarios] Horarios bloqueados recibidos:', result)
     horariosBloqueados.value = result || []
   } catch (error: any) {
@@ -59,6 +84,8 @@ const cargarHorariosBloqueados = async () => {
 onMounted(() => {
   cargarHorariosBase()
   cargarHorariosInactivos()
+  cargarHorariosAprontes()
+  cargarHorariosAprontesInactivos()
 })
 
 /* =========================
@@ -69,7 +96,7 @@ const crearHorario = async () => {
 
   try {
     console.log('[AdminHorarios] Creando horario:', nuevaHora.value)
-    await window.api.crearHorario(nuevaHora.value)
+    await api.crearHorario(nuevaHora.value)
     console.log('[AdminHorarios] Horario creado exitosamente')
     nuevaHora.value = ''
     await cargarHorariosBase()
@@ -78,11 +105,62 @@ const crearHorario = async () => {
     console.error('[AdminHorarios] Error creando horario:', error)
   }
 }
+const crearHorarioApronte = async () => {
+  if (!nuevaHoraApronte.value) return
 
+  try {
+    console.log('[AdminHorarios] Creando horario apronte:', nuevaHoraApronte.value)
+    await api.crearHorarioApronte({
+      hora: nuevaHoraApronte.value,
+      cupo: nuevoCupoApronte.value
+    })
+    console.log('[AdminHorarios] Horario apronte creado exitosamente')
+    nuevaHoraApronte.value = ''
+    nuevoCupoApronte.value = 1
+    await cargarHorariosAprontes()
+    await cargarHorariosAprontesInactivos()
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error creando horario apronte:', error)
+  }
+}
+
+const desactivarHorarioApronte = async (id: number) => {
+  try {
+    console.log('[AdminHorarios] Desactivando horario apronte:', id)
+    await api.desactivarHorarioApronte(id)
+    await new Promise(resolve => setTimeout(resolve, 150))
+    await cargarHorariosAprontes()
+    await cargarHorariosAprontesInactivos()
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error desactivando horario apronte:', error)
+  }
+}
+
+const activarHorarioApronte = async (id: number) => {
+  try {
+    console.log('[AdminHorarios] Activando horario apronte:', id)
+    await api.activarHorarioApronte(id)
+    await new Promise(resolve => setTimeout(resolve, 150))
+    await cargarHorariosAprontes()
+    await cargarHorariosAprontesInactivos()
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error activando horario apronte:', error)
+  }
+}
+
+const actualizarCupoApronte = async (id: number, cupo: number) => {
+  try {
+    await api.actualizarCupoHorarioApronte({ id, cupo })
+    await cargarHorariosAprontes()
+    await cargarHorariosAprontesInactivos()
+  } catch (error: any) {
+    console.error('[AdminHorarios] Error actualizando cupo apronte:', error)
+  }
+}
 const desactivarHorario = async (id: number) => {
   try {
     console.log('[AdminHorarios] Desactivando horario:', id)
-    await window.api.desactivarHorario(id)
+    await api.desactivarHorario(id)
     console.log('[AdminHorarios] Horario desactivado exitosamente')
     await new Promise(resolve => setTimeout(resolve, 150))
     await cargarHorariosBase()
@@ -95,7 +173,7 @@ const desactivarHorario = async (id: number) => {
 const activarHorario = async (id: number) => {
   try {
     console.log('[AdminHorarios] Activando horario:', id)
-    await window.api.activarHorario(id)
+    await api.activarHorario(id)
     console.log('[AdminHorarios] Horario activado exitosamente')
     await new Promise(resolve => setTimeout(resolve, 150))
     await cargarHorariosBase()
@@ -110,7 +188,7 @@ const bloquearHorario = async () => {
 
   try {
     console.log('[AdminHorarios] Bloqueando horario:', { fecha: fechaBloqueo.value, hora: horaBloqueo.value })
-    await window.api.bloquearHorario({
+    await api.bloquearHorario({
       fecha: fechaBloqueo.value,
       hora: horaBloqueo.value,
       motivo: motivoBloqueo.value
@@ -127,7 +205,7 @@ const bloquearHorario = async () => {
 const desbloquearHorario = async (fecha: string, hora: string) => {
   try {
     console.log('[AdminHorarios] Desbloqueando horario:', { fecha, hora })
-    await window.api.desbloquearHorario({
+    await api.desbloquearHorario({
       fecha,
       hora
     })
@@ -147,7 +225,7 @@ const confirmarBorradoInterno = async () => {
   try {
     console.log('[AdminHorarios] Eliminando horario permanentemente:', idABorrar.value)
     if (idABorrar.value === null) return
-    await window.api.borrarHorarioPermanente(idABorrar.value)
+    await api.borrarHorarioPermanente(idABorrar.value)
     console.log('[AdminHorarios] Horario eliminado exitosamente')
     
     // Recargar datos después de eliminar
@@ -164,7 +242,7 @@ const confirmarBorradoInterno = async () => {
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <div class="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar max-w-full 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <header class="mb-6 sm:mb-8 md:mb-10">
       <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-white tracking-tighter">
         Administración de <span class="text-cyan-600">Horarios</span>
@@ -173,10 +251,10 @@ const confirmarBorradoInterno = async () => {
         fecha.</p>
     </header>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 lg:gap-7">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 lg:gap-7">
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           activos</h2>
 
@@ -204,7 +282,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">
           Desactivados</h2>
 
@@ -238,7 +316,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Bloquear
           por fecha</h2>
 
@@ -272,7 +350,7 @@ const confirmarBorradoInterno = async () => {
       </div>
 
       <div
-        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[400px] sm:min-h-[500px] md:h-[550px] lg:h-[600px] xl:h-[650px]">
+        class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[380px] sm:min-h-[440px] xl:min-h-[520px]">
         <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios
           bloqueados</h2>
 
@@ -298,6 +376,68 @@ const confirmarBorradoInterno = async () => {
         </div>
       </div>
 
+    </div>
+
+    <div class="mt-8 sm:mt-10">
+      <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-gray-800 dark:text-white tracking-tight">
+        Horarios <span class="text-cyan-600">Aprontes</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">Configura los cupos por horario para aprontes.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-7 mt-4 sm:mt-6">
+      <div class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[320px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios aprontes activos</h2>
+
+        <div class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+          <div v-for="h in horariosAprontes" :key="h.id"
+            class="flex items-center justify-between bg-gray-50 dark:bg-[#0f172a] rounded-2xl px-5 py-4 border border-transparent hover:border-cyan-500/30 transition-all group">
+            <div class="flex items-center gap-3">
+              <span class="text-gray-800 dark:text-white font-black text-sm">{{ h.hora }}</span>
+              <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Cupo</span>
+              <input type="number" min="1" v-model.number="h.cupo" @change="actualizarCupoApronte(h.id, h.cupo)"
+                class="w-16 rounded-lg bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-2 py-1 text-xs font-bold" />
+            </div>
+            <button @click="desactivarHorarioApronte(h.id)"
+              class="text-[10px] font-black uppercase text-rose-500 opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
+              Desactivar
+            </button>
+          </div>
+          <div v-if="horariosAprontes.length === 0" class="text-gray-400 text-center py-10 text-xs italic">Sin horarios
+            activos</div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 flex gap-2">
+          <input v-model="nuevaHoraApronte" type="time"
+            class="flex-1 rounded-xl bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500/20 outline-none" />
+          <input v-model.number="nuevoCupoApronte" type="number" min="1"
+            class="w-24 rounded-xl bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-white px-3 py-3 text-sm focus:ring-2 focus:ring-cyan-500/20 outline-none" />
+          <button @click="crearHorarioApronte"
+            class="bg-cyan-600 hover:bg-cyan-500 px-5 rounded-xl font-black text-white transition-all shadow-lg shadow-cyan-600/20 active:scale-90">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-[#1e293b] rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-800 shadow-lg md:shadow-xl flex flex-col min-h-[320px]">
+        <h2 class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 sm:mb-5 md:mb-6 px-2">Horarios aprontes inactivos</h2>
+
+        <div class="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+          <div v-for="h in horariosAprontesInactivos" :key="h.id"
+            class="flex items-center justify-between bg-gray-50 dark:bg-[#0f172a] rounded-2xl px-5 py-4 border border-dashed border-gray-200 dark:border-gray-800 opacity-70 hover:opacity-100 transition-all group">
+            <div class="flex items-center gap-3">
+              <span class="text-gray-500 dark:text-gray-400 font-bold text-sm line-through">{{ h.hora }}</span>
+              <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Cupo: {{ h.cupo }}</span>
+            </div>
+            <button @click="activarHorarioApronte(h.id)"
+              class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase text-emerald-500 hover:text-emerald-400 transition-all">
+              Activar
+            </button>
+          </div>
+          <div v-if="horariosAprontesInactivos.length === 0" class="text-gray-400 text-center py-10 text-xs italic">Nada
+            desactivado</div>
+        </div>
+      </div>
     </div>
   </div>
   <div v-if="idABorrar !== null" 
@@ -367,3 +507,7 @@ const confirmarBorradoInterno = async () => {
   scrollbar-color: #334155 transparent;
 }
 </style>
+
+
+
+

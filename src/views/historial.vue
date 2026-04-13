@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { api } from '../api'
 
 /* =========================
  * ESTADO
@@ -75,7 +76,7 @@ const cargarReservas = async () => {
   cargando.value = true
   try {
     console.log('[Historial] Cargando todas las reservas...')
-    const result = await window.api.obtenerTodasLasReservas()
+    const result = await api.obtenerTodasLasReservas()
     console.log('[Historial] Reservas recibidas:', result)
     
     // Ordenar por fecha descendente (más recientes primero)
@@ -126,7 +127,7 @@ const guardarNotas = async () => {
 
   try {
     console.log('[Historial] Guardando notas para reserva:', reservaActual.value.id)
-    await window.api.actualizarNotasReserva(reservaActual.value.id, notasActuales.value)
+    await api.actualizarNotasReserva(reservaActual.value.id, notasActuales.value)
     console.log('[Historial] Notas guardadas exitosamente')
 
     // Actualizar en la lista local
@@ -255,7 +256,7 @@ const getBadgeStyles = (estado: string) => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
     <header class="flex justify-between items-center">
       <div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-800 dark:text-white tracking-tighter">Historial</h1>
@@ -296,7 +297,7 @@ const getBadgeStyles = (estado: string) => {
     </div>
 
     <div class="flex-1 overflow-hidden bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl sm:rounded-3xl md:rounded-4xl flex flex-col shadow-sm">
-      <div class="overflow-auto flex-1 custom-scrollbar">
+      <div class="overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
         <table class="w-full text-left border-separate border-spacing-0">
           <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-[#1e293b] border-b border-gray-200 dark:border-gray-800">
             <tr>

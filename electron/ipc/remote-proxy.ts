@@ -1,6 +1,7 @@
 const LOCAL_ONLY_CHANNELS = new Set<string>([
   'config:env:get',
-  'config:env:set'
+  'config:env:set',
+  'config:api:test'
 ])
 
 function getRemoteBaseUrl() {
@@ -9,6 +10,17 @@ function getRemoteBaseUrl() {
 
 function getRemoteToken() {
   return String(process.env.API_REMOTE_TOKEN || '').trim()
+}
+
+function buildAuthHeaders(token: string) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+    headers['X-API-KEY'] = token
+  }
+  return headers
 }
 
 export function isRemoteBackendEnabled() {
@@ -28,12 +40,7 @@ export async function proxyIpcToRemote(channel: string, args: any[]) {
 
   const endpoint = `${baseUrl}/api/admin/ipc`
   const token = getRemoteToken()
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
+  const headers = buildAuthHeaders(token)
 
   const fetchFn = (globalThis as any).fetch
   if (typeof fetchFn !== 'function') {
@@ -84,6 +91,80 @@ export async function proxyIpcToRemote(channel: string, args: any[]) {
       throw new Error('Timeout llamando API remota (20s)')
     }
     throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+export async function testRemoteApiConnection() {
+  const baseUrl = getRemoteBaseUrl()
+  if (!baseUrl) {
+    return {
+      ok: false,
+      error: 'API remota no configurada (API_REMOTE_URL).'
+    }
+  }
+
+  const token = getRemoteToken()
+  const fetchFn = (globalThis as any).fetch
+  if (typeof fetchFn !== 'function') {
+    return {
+      ok: false,
+      error: 'Fetch no disponible en este entorno.'
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000)
+
+  try {
+    const healthResponse = await fetchFn(`${baseUrl}/api/health`, {
+      method: 'GET',
+      signal: controller.signal
+    })
+    if (!healthResponse.ok) {
+      return {
+        ok: false,
+        error: `Health check fallo (${healthResponse.status}).`
+      }
+    }
+
+    const authResponse = await fetchFn(`${baseUrl}/api/admin/ipc`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+      body: JSON.stringify({ channel: '__ping__', args: [] }),
+      signal: controller.signal
+    })
+
+    if (authResponse.status === 401) {
+      return {
+        ok: false,
+        error: 'Token API faltante o invalido (401).'
+      }
+    }
+
+    if (!authResponse.ok) {
+      return {
+        ok: false,
+        error: `API admin IPC no disponible (${authResponse.status}).`
+      }
+    }
+
+    return {
+      ok: true,
+      error: ''
+    }
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      return {
+        ok: false,
+        error: 'Timeout validando API remota (15s).'
+      }
+    }
+    return {
+      ok: false,
+      error: error?.message || 'Error validando API remota.'
+    }
   } finally {
     clearTimeout(timeout)
   }

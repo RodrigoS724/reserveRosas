@@ -17,7 +17,15 @@ if (typeof globalThis !== 'undefined') {
 let db: Database.Database | null = null
 let dbConnectionInProgress = false
 
+export function isLocalDbDisabled() {
+  const raw = String(process.env.DISABLE_LOCAL_DB || process.env.LOCAL_DB_DISABLED || '').trim().toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'yes'
+}
+
 export function initDatabase() {
+  if (isLocalDbDisabled()) {
+    throw new Error('Base de datos local deshabilitada (DISABLE_LOCAL_DB).')
+  }
   // Si ya existe conexión activa, retornarla
   if (db) {
     console.log(' [DB] Reutilizando conexión existente')
@@ -106,6 +114,47 @@ export function initDatabase() {
   `)
 
   // ===============================
+  // HORARIOS APRONTES
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS horarios_aprontes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      hora TEXT UNIQUE NOT NULL,
+      cupo INTEGER NOT NULL DEFAULT 1,
+      activo INTEGER DEFAULT 1
+    );
+  `)
+
+  // ===============================
+  // APRONTES
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS aprontes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      hora TEXT NOT NULL,
+      telefono TEXT,
+      localidad TEXT,
+      observaciones TEXT,
+      marca TEXT,
+      modelo TEXT,
+      factura TEXT,
+      estado TEXT DEFAULT 'APRONTE',
+      repuestos_garantia TEXT,
+      correo_alerta_garantia TEXT,
+      dias_alerta_garantia INTEGER DEFAULT 7,
+      fecha_alerta_garantia TEXT,
+      garantia_espera_desde TEXT,
+      garantia_notificada INTEGER DEFAULT 0,
+      garantia_notificada_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_aprontes_fecha_hora ON aprontes (fecha, hora)`)
+
+  // ===============================
   // BLOQUEOS PUNTUALES
   // ===============================
   db.exec(`
@@ -145,6 +194,19 @@ export function initDatabase() {
       nombre TEXT,
       telefono TEXT,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  // ===============================
+  // CATALOGO MARCAS/MODELOS
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS motos_catalogo (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      marca TEXT NOT NULL,
+      modelo TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE (marca, modelo)
     );
   `)
 
@@ -304,8 +366,128 @@ export function initDatabase() {
     }
   }
 
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN observaciones TEXT`)
+    console.log(' [DB] Columna "observaciones" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "observaciones" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes observaciones):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN estado TEXT DEFAULT 'APRONTE'`)
+    console.log(' [DB] Columna "estado" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "estado" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes estado):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN repuestos_garantia TEXT`)
+    console.log(' [DB] Columna "repuestos_garantia" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "repuestos_garantia" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes repuestos_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN correo_alerta_garantia TEXT`)
+    console.log(' [DB] Columna "correo_alerta_garantia" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "correo_alerta_garantia" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes correo_alerta_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN dias_alerta_garantia INTEGER DEFAULT 7`)
+    console.log(' [DB] Columna "dias_alerta_garantia" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "dias_alerta_garantia" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes dias_alerta_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN fecha_alerta_garantia TEXT`)
+    console.log(' [DB] Columna "fecha_alerta_garantia" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "fecha_alerta_garantia" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes fecha_alerta_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN garantia_espera_desde TEXT`)
+    console.log(' [DB] Columna "garantia_espera_desde" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "garantia_espera_desde" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes garantia_espera_desde):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN garantia_notificada INTEGER DEFAULT 0`)
+    console.log(' [DB] Columna "garantia_notificada" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "garantia_notificada" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes garantia_notificada):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN garantia_notificada_at TEXT`)
+    console.log(' [DB] Columna "garantia_notificada_at" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "garantia_notificada_at" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes garantia_notificada_at):', err.message)
+    }
+  }
+
+
   return db
   } finally {
     dbConnectionInProgress = false
   }
 }
+
+

@@ -35,6 +35,36 @@ CREATE TABLE IF NOT EXISTS bloqueos_horarios (
   motivo TEXT
 );
 
+CREATE TABLE IF NOT EXISTS horarios_aprontes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hora VARCHAR(10) UNIQUE NOT NULL,
+  cupo INT NOT NULL DEFAULT 1,
+  activo TINYINT DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS aprontes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  fecha DATE NOT NULL,
+  hora VARCHAR(10) NOT NULL,
+  telefono VARCHAR(50),
+  localidad VARCHAR(100),
+  observaciones TEXT,
+  marca VARCHAR(100),
+  modelo VARCHAR(100),
+  factura VARCHAR(100),
+  estado VARCHAR(60) DEFAULT 'APRONTE',
+  repuestos_garantia TEXT,
+  correo_alerta_garantia VARCHAR(255),
+  dias_alerta_garantia INT DEFAULT 7,
+  fecha_alerta_garantia DATE NULL,
+  garantia_espera_desde DATETIME NULL,
+  garantia_notificada TINYINT DEFAULT 0,
+  garantia_notificada_at DATETIME NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_aprontes_fecha_hora (fecha, hora)
+);
+
 CREATE TABLE IF NOT EXISTS historial_reservas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   reserva_id INT NOT NULL,

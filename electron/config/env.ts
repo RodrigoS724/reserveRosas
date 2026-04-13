@@ -8,7 +8,10 @@ const ENV_KEYS = [
   'MYSQL_PORT',
   'MYSQL_USER',
   'MYSQL_PASSWORD',
-  'MYSQL_DATABASE'
+  'MYSQL_DATABASE',
+  'DISABLE_LOCAL_DB',
+  'API_REMOTE_URL',
+  'API_REMOTE_TOKEN'
 ]
 
 export function getEnvFilePath() {

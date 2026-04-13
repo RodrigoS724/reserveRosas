@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
+import { api, ipc } from './api'
+
+const logoPrincipalUrl = new URL('./assets/Logo_principal.png', import.meta.url).href
 
 const isDark = ref(true)
 const soundEnabled = ref(true)
@@ -31,7 +34,7 @@ const saveSettings = (patch = {}) => {
   soundEnabled.value = Boolean(next.soundEnabled)
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
-  window.ipcRenderer?.send?.('settings:update', next)
+  ipc?.send?.('settings:update', next)
   window.dispatchEvent(new CustomEvent('rr:settings', { detail: next }))
 }
 
@@ -52,7 +55,7 @@ const toggleTheme = () => {
 }
 
 const cargarUsuariosLogin = async () => {
-  usuariosLogin.value = await window.api.obtenerUsuariosLogin()
+  usuariosLogin.value = await api.obtenerUsuariosLogin()
   if (!loginUser.value && usuariosLogin.value.length) {
     loginUser.value = usuariosLogin.value[0].username
   }
@@ -73,7 +76,7 @@ const iniciarSesion = async () => {
   loginError.value = ''
   cargandoLogin.value = true
   try {
-    const result = await window.api.login(loginUser.value, loginPass.value)
+    const result = await api.login(loginUser.value, loginPass.value)
     if (!result.ok || !result.user) {
       loginError.value = result.error || 'No se pudo iniciar sesión'
       return
@@ -111,7 +114,7 @@ const pushNotification = (message, variant = 'info') => {
 onMounted(() => {
   loadSettings()
   document.documentElement.classList.toggle('dark', isDark.value)
-  window.ipcRenderer?.send?.('settings:update', {
+  ipc?.send?.('settings:update', {
     theme: isDark.value ? 'dark' : 'light',
     soundEnabled: soundEnabled.value
   })
@@ -130,7 +133,6 @@ onMounted(() => {
   }
   cargarUsuariosLogin()
 
-  const ipc = window.ipcRenderer
   if (ipc?.on) {
     const onReservaNotify = (_event, payload) => {
       const accion = payload?.accion || 'modificada'
@@ -175,34 +177,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen w-screen bg-gray-50 dark:bg-[#0f172a] overflow-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
+  <div class="flex h-screen w-screen min-w-0 bg-gray-50 dark:bg-[#0f172a] overflow-x-hidden overflow-y-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
 
-    <aside class="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
+    <aside class="w-64 xl:w-72 shrink-0 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
       
       <div class="p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
-        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500">
-          <defs>
-            <linearGradient id="greenGradientSide" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00ff88"/>
-              <stop offset="50%" stop-color="#00cc66"/>
-              <stop offset="100%" stop-color="#007a3d"/>
-            </linearGradient>
-            <filter id="shadowSide" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
-            </filter>
-            <mask id="cutMaskSide">
-              <rect width="100%" height="100%" fill="white"/>
-              <rect x="430" y="200" width="380" height="200" fill="black"/>
-            </mask>
-          </defs>
-          <g transform="skewX(-12)" filter="url(#shadowSide)">
-            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientSide)" stroke-width="14" mask="url(#cutMaskSide)"/>
-            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientSide)" letter-spacing="3">ROSAS</text>
-            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientSide)" letter-spacing="5">UY</text>
-            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
-            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
-          </g>
-        </svg>
+        <img :src="logoPrincipalUrl" alt="Logo principal" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500" />
       </div>
 
       <nav class="flex-1 px-4 py-6 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
@@ -235,6 +215,18 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <router-link v-if="puede('aprontes')" to="/aprontes" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v12a2 2 0 01-2 2z"/></svg>
+            <span>Panel Aprontes</span>
+          </div>
+        </router-link>
+
         <router-link v-if="puede('reservas')" to="/resumen-diario" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
@@ -264,6 +256,17 @@ onMounted(() => {
             <span class="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500">Gestión</span>
         </div>
 
+        <router-link v-if="puede('reservas')" to="/registros" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13l4 4 6-10"/></svg>
+            <span>Registros</span>
+          </div>
+        </router-link>
         <router-link v-if="puede('historial')" to="/historial" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
@@ -368,8 +371,8 @@ onMounted(() => {
       </div>
     </aside>
 
-    <main class="flex-1 overflow-hidden h-full w-full bg-white dark:bg-[#0f172a] relative">
-      <div class="w-full h-full overflow-hidden">
+    <main class="flex-1 min-w-0 overflow-hidden h-full w-full bg-white dark:bg-[#0f172a] relative">
+      <div class="w-full h-full overflow-y-auto overflow-x-hidden">
         <router-view />
       </div>
     </main>
@@ -395,29 +398,7 @@ onMounted(() => {
     <div class="relative w-[480px] max-w-full rounded-3xl border border-white/10 bg-[#0f172a]/90 p-10 shadow-2xl text-white">
       
       <div class="flex justify-center mb-8">
-        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" class="w-52 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-          <defs>
-            <linearGradient id="greenGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00ff88"/>
-              <stop offset="50%" stop-color="#00cc66"/>
-              <stop offset="100%" stop-color="#007a3d"/>
-            </linearGradient>
-            <filter id="shadowLogin" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="6" dy="8" stdDeviation="8" flood-color="#002b1a" flood-opacity="0.9"/>
-            </filter>
-            <mask id="cutMaskLogin">
-              <rect width="100%" height="100%" fill="white"/>
-              <rect x="430" y="200" width="380" height="200" fill="black"/>
-            </mask>
-          </defs>
-          <g transform="skewX(-12)" filter="url(#shadowLogin)">
-            <rect x="120" y="110" width="660" height="300" rx="25" fill="none" stroke="url(#greenGradientLogin)" stroke-width="14" mask="url(#cutMaskLogin)"/>
-            <text x="180" y="230" font-family="Impact, Arial Black, sans-serif" font-size="130" fill="url(#greenGradientLogin)" letter-spacing="3">ROSAS</text>
-            <text x="200" y="360" font-family="Impact, Arial Black, sans-serif" font-size="160" fill="url(#greenGradientLogin)" letter-spacing="5">UY</text>
-            <text x="470" y="270" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">ACTITUD</text>
-            <text x="470" y="340" font-family="Arial Black, sans-serif" font-size="65" fill="#c8ffe6" letter-spacing="2">DEPORTIVA</text>
-          </g>
-        </svg>
+        <img :src="logoPrincipalUrl" alt="Logo principal" class="w-52 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]" />
       </div>
 
       <h3 class="text-2xl font-black tracking-tight text-center">Acceso al Sistema</h3>
@@ -498,4 +479,6 @@ onMounted(() => {
     background: rgba(156, 163, 175, 0.5);
 }
 </style>
+
+
 

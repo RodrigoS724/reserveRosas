@@ -23,6 +23,45 @@ type ReservaInput = {
   detalles: string
 }
 
+type ReservaSnapshot = ReservaInput & {
+  estado: string
+}
+
+function normalizarCatalogoTexto(value: any) {
+  const text = String(value || '').trim()
+  return text.length > 100 ? text.slice(0, 100) : text
+}
+
+async function registrarMarcaModeloMysql(pool: any, marca: any, modelo: any) {
+  const marcaOk = normalizarCatalogoTexto(marca)
+  const modeloOk = normalizarCatalogoTexto(modelo)
+  if (!marcaOk || !modeloOk) return
+  try {
+    await pool.execute(
+      `INSERT INTO motos_catalogo (marca, modelo)
+       VALUES ( ?, ? )
+       ON DUPLICATE KEY UPDATE modelo = modelo`,
+      [marcaOk, modeloOk]
+    )
+  } catch (error) {
+    console.warn('[Service] No se pudo registrar marca/modelo en MySQL:', error)
+  }
+}
+
+function registrarMarcaModeloSqlite(db: any, marca: any, modelo: any) {
+  const marcaOk = normalizarCatalogoTexto(marca)
+  const modeloOk = normalizarCatalogoTexto(modelo)
+  if (!marcaOk || !modeloOk) return
+  try {
+    db.prepare(
+      `INSERT OR IGNORE INTO motos_catalogo (marca, modelo)
+       VALUES ( ?, ? )`
+    ).run(marcaOk, modeloOk)
+  } catch (error) {
+    console.warn('[Service] No se pudo registrar marca/modelo en SQLite:', error)
+  }
+}
+
 function validarReserva(data: ReservaInput) {
   const tipo = data.tipo_turno
 
@@ -227,6 +266,8 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
         dataNormalizada.detalles ?? ''
       )
 
+      registrarMarcaModeloSqlite(db, dataNormalizada.marca, dataNormalizada.modelo)
+
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
@@ -349,6 +390,8 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
         dataNormalizada.detalles ?? ''
       ]
     )
+
+    await registrarMarcaModeloMysql(pool, dataNormalizada.marca, dataNormalizada.modelo)
 
     return reservaId
   })
@@ -583,33 +626,81 @@ export async function actualizarReserva(id: number, reserva: any) {
   if (matriculaNormalizada && !/^[A-Z0-9]{3,10}$/.test(matriculaNormalizada)) {
     throw new Error('Matricula invalida. Usa solo letras y numeros.')
   }
-  const reservaActualizada = { ...reserva, id: reservaId, matricula: matriculaNormalizada }
+  const reservaActualizada = normalizarReserva({
+    nombre: String(reserva?.nombre ?? ''),
+    cedula: String(reserva?.cedula ?? ''),
+    telefono: String(reserva?.telefono ?? ''),
+    marca: String(reserva?.marca ?? ''),
+    modelo: String(reserva?.modelo ?? ''),
+    km: String(reserva?.km ?? ''),
+    matricula: matriculaNormalizada,
+    tipo_turno: String(reserva?.tipo_turno ?? ''),
+    particular_tipo: reserva?.particular_tipo ?? null,
+    garantia_tipo: reserva?.garantia_tipo ?? null,
+    garantia_fecha_compra: reserva?.garantia_fecha_compra ?? null,
+    garantia_numero_service: reserva?.garantia_numero_service ?? null,
+    garantia_problema: reserva?.garantia_problema ?? null,
+    fecha: String(reserva?.fecha ?? ''),
+    hora: String(reserva?.hora ?? ''),
+    detalles: String(reserva?.detalles ?? '')
+  } as ReservaInput)
+  const estadoActual = String(reserva?.estado ?? 'pendiente')
+  const payload: ReservaSnapshot = { ...reservaActualizada, estado: estadoActual }
+  const campos = Object.keys(payload) as (keyof ReservaSnapshot)[]
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT nombre, fecha, hora, estado, detalles, matricula FROM reservas WHERE id = ?`,
+      `SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
+              tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+              garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
+       FROM reservas WHERE id = ?`,
       [reservaId]
     )
-    const anterior = rows[0]
+    const anterior = rows[0] as Partial<ReservaSnapshot>
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para actualizar (MySQL):', id)
       return
     }
 
     await pool.execute(
-      `UPDATE reservas SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ? WHERE id = ?`,
-      [reservaActualizada.nombre, reservaActualizada.fecha, reservaActualizada.hora, reservaActualizada.estado, reservaActualizada.detalles, matriculaNormalizada, reservaId]
+      `UPDATE reservas
+       SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+           tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
+           garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
+       WHERE id = ?`,
+      [
+        payload.nombre,
+        payload.cedula,
+        payload.telefono,
+        payload.marca,
+        payload.modelo,
+        payload.km,
+        payload.matricula,
+        payload.tipo_turno,
+        payload.particular_tipo ?? null,
+        payload.garantia_tipo ?? null,
+        payload.garantia_fecha_compra ?? null,
+        payload.garantia_numero_service ?? null,
+        payload.garantia_problema ?? null,
+        payload.fecha,
+        payload.hora,
+        payload.estado,
+        payload.detalles,
+        reservaId
+      ]
     )
 
-    for (const campo of Object.keys( anterior)) {
-      if ( anterior[campo] !== reservaActualizada[campo]) {
+    await registrarMarcaModeloMysql(pool, payload.marca, payload.modelo)
+
+    for (const campo of campos) {
+      if ( anterior[campo] !== payload[campo]) {
         await pool.execute(
           `
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, NOW())
           `,
-          [reservaId, campo, anterior[campo], reservaActualizada[campo]]
+          [reservaId, campo, anterior[campo], payload[campo]]
         )
       }
     }
@@ -619,27 +710,43 @@ export async function actualizarReserva(id: number, reserva: any) {
     try {
       const db = initDatabase()
       const anterior = db.prepare(`
-        SELECT nombre, fecha, hora, estado, detalles, matricula
+        SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
+               tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+               garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
         FROM reservas
         WHERE id = ?
-      `).get(reservaId) as Record<string, any>
+      `).get(reservaId) as Partial<ReservaSnapshot>
       if (!anterior) return
       const transaction = db.transaction(() => {
         db.prepare(`
           UPDATE reservas
-          SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
+          SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+              tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
+              garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
           WHERE id = ?
         `).run(
-          reservaActualizada.nombre,
-          reservaActualizada.fecha,
-          reservaActualizada.hora,
-          reservaActualizada.estado,
-          reservaActualizada.detalles,
-          matriculaNormalizada,
+          payload.nombre,
+          payload.cedula,
+          payload.telefono,
+          payload.marca,
+          payload.modelo,
+          payload.km,
+          payload.matricula,
+          payload.tipo_turno,
+          payload.particular_tipo ?? null,
+          payload.garantia_tipo ?? null,
+          payload.garantia_fecha_compra ?? null,
+          payload.garantia_numero_service ?? null,
+          payload.garantia_problema ?? null,
+          payload.fecha,
+          payload.hora,
+          payload.estado,
+          payload.detalles,
           reservaId
         )
-        for (const campo of Object.keys( anterior)) {
-          if ( anterior[campo] !== reservaActualizada[campo]) {
+        registrarMarcaModeloSqlite(db, payload.marca, payload.modelo)
+        for (const campo of campos) {
+          if ( anterior[campo] !== payload[campo]) {
             db.prepare(`
               INSERT INTO historial_reservas
               (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
@@ -647,7 +754,7 @@ export async function actualizarReserva(id: number, reserva: any) {
             `).run(
               reservaId,
               campo, anterior[campo],
-              reservaActualizada[campo]
+              payload[campo]
             )
           }
         }
@@ -662,10 +769,12 @@ export async function actualizarReserva(id: number, reserva: any) {
   const db = initDatabase()
   try {
     const anterior = db.prepare(`
-      SELECT nombre, fecha, hora, estado, detalles, matricula
+      SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
+             tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+             garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
       FROM reservas
       WHERE id = ?
-    `).get(reservaId) as Record<string, any>
+    `).get(reservaId) as Partial<ReservaSnapshot>
 
     if (!anterior) {
       console.log('[Service] Reserva no encontrada para actualizar:', id)
@@ -675,20 +784,34 @@ export async function actualizarReserva(id: number, reserva: any) {
     const transaction = db.transaction(() => {
       db.prepare(`
         UPDATE reservas
-        SET nombre = ?, fecha = ?, hora = ?, estado = ?, detalles = ?, matricula = ?
+        SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+            tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
+            garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
         WHERE id = ?
       `).run(
-        reservaActualizada.nombre,
-        reservaActualizada.fecha,
-        reservaActualizada.hora,
-        reservaActualizada.estado,
-        reservaActualizada.detalles,
-        matriculaNormalizada,
+        payload.nombre,
+        payload.cedula,
+        payload.telefono,
+        payload.marca,
+        payload.modelo,
+        payload.km,
+        payload.matricula,
+        payload.tipo_turno,
+        payload.particular_tipo ?? null,
+        payload.garantia_tipo ?? null,
+        payload.garantia_fecha_compra ?? null,
+        payload.garantia_numero_service ?? null,
+        payload.garantia_problema ?? null,
+        payload.fecha,
+        payload.hora,
+        payload.estado,
+        payload.detalles,
         reservaId
       )
+      registrarMarcaModeloSqlite(db, payload.marca, payload.modelo)
 
-      for (const campo of Object.keys( anterior)) {
-        if ( anterior[campo] !== reservaActualizada[campo]) {
+      for (const campo of campos) {
+        if ( anterior[campo] !== payload[campo]) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
@@ -696,7 +819,7 @@ export async function actualizarReserva(id: number, reserva: any) {
           `).run(
             reservaId,
             campo, anterior[campo],
-            reservaActualizada[campo]
+            payload[campo]
           )
         }
       }

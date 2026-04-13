@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { api } from '../api'
 
 const envText = ref('')
 const status = ref('')
@@ -8,7 +9,7 @@ const statusDetail = ref('')
 const guardando = ref(false)
 
 const cargarEnv = async () => {
-  envText.value = await window.api.obtenerEnvConfig()
+  envText.value = await api.obtenerEnvConfig()
 }
 
 const guardarEnv = async () => {
@@ -17,10 +18,10 @@ const guardarEnv = async () => {
   statusOk.value = true
   statusDetail.value = ''
   try {
-    await window.api.guardarEnvConfig(envText.value)
+    await api.guardarEnvConfig(envText.value)
     status.value = 'Configuración guardada. Forzando reconexión...'
     statusOk.value = true
-    const result = await window.api.probarConexionDB()
+    const result = await api.probarConexionDB()
     if (result.ok) {
       status.value = 'Conexión exitosa a MySQL.'
       statusOk.value = true
@@ -39,11 +40,11 @@ const guardarEnv = async () => {
 }
 
 const probarConexion = async () => {
-  status.value = 'Probando conexión...'
+  status.value = 'Probando conexión a MySQL...'
   statusOk.value = true
   statusDetail.value = ''
   try {
-    const result = await window.api.probarConexionDB()
+    const result = await api.probarConexionDB()
     if (result.ok) {
       status.value = 'Conexión exitosa a MySQL.'
       statusOk.value = true
@@ -59,13 +60,34 @@ const probarConexion = async () => {
   }
 }
 
+const probarApiRemota = async () => {
+  status.value = 'Probando API remota...'
+  statusOk.value = true
+  statusDetail.value = ''
+  try {
+    const result = await api.probarConexionApi()
+    if (result.ok) {
+      status.value = 'Conexión exitosa a API remota.'
+      statusOk.value = true
+    } else {
+      status.value = result.error || 'No se pudo conectar a la API remota.'
+      statusOk.value = false
+      statusDetail.value = result.error || ''
+    }
+  } catch (error: any) {
+    status.value = error.message || 'Error al probar API remota'
+    statusOk.value = false
+    statusDetail.value = error.stack || ''
+  }
+}
+
 onMounted(() => {
   cargarEnv()
 })
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-y-auto overflow-x-hidden">
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">CONFIGURACIÓN</h2>
@@ -84,7 +106,7 @@ onMounted(() => {
         <textarea
           v-model="envText"
           class="w-full h-full p-4 bg-transparent text-gray-800 dark:text-gray-100 font-mono text-xs outline-none resize-none"
-          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=..."
+          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=...\n\nAPI_REMOTE_URL=http://rosas.uy/reserva\nAPI_REMOTE_TOKEN=tu_token_api"
         ></textarea>
       </div>
 
@@ -95,7 +117,13 @@ onMounted(() => {
             @click="probarConexion"
             class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
           >
-            Probar Conexión
+            Probar MySQL
+          </button>
+          <button
+            @click="probarApiRemota"
+            class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          >
+            Probar API Remota
           </button>
           <button
             @click="guardarEnv"

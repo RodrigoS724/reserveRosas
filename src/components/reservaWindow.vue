@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getSession } from '../auth'
+import { api } from '../api'
 
 const props = defineProps<{
   reserva: any | null
@@ -11,6 +12,8 @@ const emit = defineEmits(['cerrar', 'actualizar'])
 const editable = ref<any | null>(null)
 const mostrandoConfirmacion = ref(false)
 const session = getSession()
+const marcas = ref<string[]>([])
+const modelos = ref<string[]>([])
 const puedeEditarTodo = computed(() => {
   const role = session?.role
   return role === 'admin' || role === 'super' || role === 'superadmin'
@@ -32,6 +35,7 @@ const normalizarTipoTurno = (value: string) => {
   const v = normalizarTexto(value)
   if (v === 'particular') return 'Particular'
   if (v === 'garantia') return 'Garantia'
+  if (v === 'toma de moto' || v === 'toma moto') return 'Toma de moto'
   return ''
 }
 
@@ -59,6 +63,26 @@ const cerrar = () => {
   emit('cerrar')
 }
 
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[ReservaWindow] Error cargando marcas:', error)
+    marcas.value = []
+  }
+}
+
+const cargarModelos = async (marcaValue: string) => {
+  try {
+    const data = await api.obtenerModelosMoto(marcaValue)
+    modelos.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[ReservaWindow] Error cargando modelos:', error)
+    modelos.value = []
+  }
+}
+
 watch(
   () => props.reserva,
   (nueva) => {
@@ -73,15 +97,33 @@ watch(
 
     editable.value = {
       ...nueva,
+      nombre: String(nueva.nombre || ''),
+      cedula: String(nueva.cedula || ''),
+      telefono: String(nueva.telefono || ''),
+      marca: String(nueva.marca || ''),
+      modelo: String(nueva.modelo || ''),
+      km: String(nueva.km || ''),
       matricula: String(nueva.matricula || ''),
       tipo_turno: tipoTurnoNormalizado || String(nueva.tipo_turno || ''),
+      particular_tipo: String(nueva.particular_tipo || ''),
       garantia_tipo: tipoGarantiaNormalizado || String(nueva.garantia_tipo || ''),
       garantia_fecha_compra: limpiarFecha(nueva.garantia_fecha_compra),
       garantia_numero_service: String(nueva.garantia_numero_service || ''),
       garantia_problema: String(nueva.garantia_problema || '')
     }
+    cargarMarcas()
+    cargarModelos(String(nueva.marca || ''))
   },
   { immediate: true }
+)
+
+watch(
+  () => editable.value?.marca,
+  (marcaValue) => {
+    if (marcaValue !== undefined) {
+      cargarModelos(String(marcaValue || ''))
+    }
+  }
 )
 
 watch(
@@ -128,7 +170,7 @@ const guardar = async () => {
     editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)
 
     const reservaPlana = JSON.parse(JSON.stringify(editable.value))
-    await window.api.actualizarReserva(reservaPlana)
+    await api.actualizarReserva(reservaPlana)
     emit('actualizar')
     cerrar()
   } catch (e) {
@@ -142,7 +184,7 @@ const cancelarReserva = async () => {
   if (!editable.value) return
 
   try {
-    await window.api.borrarReserva(editable.value.id)
+    await api.borrarReserva(editable.value.id)
     alert('Reserva cancelada exitosamente')
     emit('actualizar')
     cerrar()
@@ -176,6 +218,32 @@ const cancelarReserva = async () => {
         </div>
 
         <div class="campo">
+          <label>Telefono</label>
+          <input v-model="editable.telefono" type="tel" :disabled="!puedeEditarTodo" />
+        </div>
+
+        <div class="campo">
+          <label>Marca</label>
+          <input v-model="editable.marca" list="motos-marcas-reserva" :disabled="!puedeEditarTodo" />
+          <datalist id="motos-marcas-reserva">
+            <option v-for="m in marcas" :key="m" :value="m"></option>
+          </datalist>
+        </div>
+
+        <div class="campo">
+          <label>Modelo</label>
+          <input v-model="editable.modelo" list="motos-modelos-reserva" :disabled="!puedeEditarTodo" />
+          <datalist id="motos-modelos-reserva">
+            <option v-for="m in modelos" :key="m" :value="m"></option>
+          </datalist>
+        </div>
+
+        <div class="campo">
+          <label>KM</label>
+          <input v-model="editable.km" inputmode="numeric" :disabled="!puedeEditarTodo" />
+        </div>
+
+        <div class="campo">
           <label>Matricula</label>
           <input
             v-model="editable.matricula"
@@ -192,12 +260,17 @@ const cancelarReserva = async () => {
             <option value="">Seleccionar</option>
             <option value="Particular">Particular</option>
             <option value="Garantia">Garantia</option>
+            <option value="Toma de moto">Toma de moto</option>
           </select>
         </div>
 
         <div v-if="esParticular" class="campo">
           <label>Tipo Particular</label>
-          <input v-model="editable.particular_tipo" :disabled="!puedeEditarTodo" placeholder="Ej: Taller" />
+          <select v-model="editable.particular_tipo" :disabled="!puedeEditarTodo">
+            <option value="">Seleccionar</option>
+            <option value="Service">Service</option>
+            <option value="Taller">Taller</option>
+          </select>
         </div>
 
         <div v-if="esGarantia" class="campo">

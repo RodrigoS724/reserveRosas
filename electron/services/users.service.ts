@@ -18,6 +18,7 @@ export type UserRecord = {
 const ALL_PERMISSIONS = [
   'agenda',
   'reservas',
+  'aprontes',
   'historial',
   'ajustes',
   'vehiculos',
@@ -46,7 +47,7 @@ async function ensureUsersTableMysql() {
 export function getDefaultPermissions(role: UserRole) {
   if (role === 'superadmin') return [...ALL_PERMISSIONS]
   if (role === 'super') return [...ALL_PERMISSIONS]
-  if (role === 'admin') return ['agenda', 'reservas', 'historial', 'ajustes', 'vehiculos']
+  if (role === 'admin') return ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos']
   return ['reservas', 'historial']
 }
 
@@ -97,6 +98,16 @@ function parsePermissions(raw: any, role: UserRole) {
   } catch {
     return getDefaultPermissions(normalizedRole)
   }
+}
+
+function isUniqueUsernameError(error: any) {
+  const message = String(error?.message || '')
+  return (
+    error?.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+    error?.code === 'ER_DUP_ENTRY' ||
+    message.includes('UNIQUE constraint failed: usuarios.username') ||
+    message.toLowerCase().includes('duplicate entry')
+  )
 }
 
 async function ensureUserMysql(data: {
@@ -399,11 +410,25 @@ export async function actualizarUsuario(data: {
     return true
   })
 
+  if (!mysqlResult.ok && isUniqueUsernameError(mysqlResult.error)) {
+    throw new Error('El usuario ya existe')
+  }
+
   const db = initDatabase()
-  db.prepare(
-    `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
-     WHERE id = ?`
-  ).run(data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, data.id)
+  try {
+    db.prepare(
+      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
+       WHERE id = ?`
+    ).run(data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, data.id)
+  } catch (error: any) {
+    if (!mysqlResult.ok) {
+      if (isUniqueUsernameError(error)) {
+        throw new Error('El usuario ya existe')
+      }
+      throw error
+    }
+    console.warn('[Usuarios] Error sincronizando SQLite al actualizar usuario:', error)
+  }
 
   if (!mysqlResult.ok) {
     console.warn('[Usuarios] MySQL no disponible, actualizado solo en SQLite')

@@ -5,6 +5,9 @@ import { registrarHandlersVehiculos } from './vehiculos.handler'
 import { registrarHandlersConfig } from './config.handler'
 import { registrarHandlersUsuarios } from './users.handler'
 import { registrarHandlersAuditoria } from './auditoria.handler'
+import { registrarHandlersAprontes } from './aprontes.handler'
+import { registrarHandlersMotos } from './motos.handler'
+import { registrarHandlersRegistros } from './registros.handler'
 
 export function setupIpcHandlers() {
   console.log(' \n Cargando IPC handlers  \n')
@@ -16,6 +19,9 @@ export function setupIpcHandlers() {
   registrarHandlersConfig()
   registrarHandlersUsuarios()
   registrarHandlersAuditoria()
+  registrarHandlersAprontes()
+  registrarHandlersMotos()
+  registrarHandlersRegistros()
 
   console.log(' \n  IPC handlers cargados \n')
 }

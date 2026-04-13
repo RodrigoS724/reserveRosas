@@ -1,13 +1,53 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
+import ApronteWindow from '../components/apronteWindow.vue'
+import { api, ipc } from '../api'
 
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
+const soloHoyEnLista = ref(false)
+const reservasSeleccionadas = ref<number[]>([])
+const estadoMasivo = ref('PENDIENTE')
+const aplicandoEstadoMasivo = ref(false)
+
+const OPCIONES_ESTADO = [
+  { value: 'PENDIENTE', label: 'Pendiente' },
+  { value: 'PENDIENTE REPUESTOS', label: 'Pendiente repuestos' },
+  { value: 'EN REVISION', label: 'En revision' },
+  { value: 'PRONTO', label: 'Pronto' },
+  { value: 'EN PROCESO', label: 'En proceso' },
+  { value: 'CANCELADO', label: 'Cancelado' }
+]
 
 // Horarios: se cargarÃƒÂ¡n dinÃƒÂ¡micamente desde la BD
+const horariosBase = ref<string[]>([])
 const horariosDisponibles = ref<string[]>([])
+
+const obtenerHoraNumero = (hora: string) => {
+  const h = Number(String(hora || '').split(':')[0])
+  return Number.isFinite(h) ? h : -1
+}
+
+const horariosConDivisor = computed(() => {
+  const horas = horariosDisponibles.value || []
+  const tieneManiana = horas.some((h) => obtenerHoraNumero(h) >= 0 && obtenerHoraNumero(h) < 12)
+  const tieneTarde = horas.some((h) => obtenerHoraNumero(h) >= 12)
+  if (!tieneManiana || !tieneTarde) {
+    return horas.map((hora) => ({ tipo: 'hora' as const, hora }))
+  }
+  const items: Array<{ tipo: 'hora'; hora: string } | { tipo: 'divider' }> = []
+  let inserted = false
+  for (const hora of horas) {
+    if (!inserted && obtenerHoraNumero(hora) >= 12) {
+      items.push({ tipo: 'divider' })
+      inserted = true
+    }
+    items.push({ tipo: 'hora', hora })
+  }
+  return items
+})
 
 // Intervalo para auto-refresh
 let intervaloRefresco: number | null = null
@@ -42,25 +82,44 @@ const diasSemana = ref([
 
 // Matriz de reservas: [dia][hora] => []
 const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
+const matrizAprontes = ref<Record<string, Record<string, any[]>>>({})
+// Caché de aprontes para evitar parpadeos cuando el fetch falla
+const cacheAprontes = new Map<string, any[]>()
 
 /* =========================
  * CARGAR HORARIOS BASE ACTIVOS
  * ========================= */
 const cargarHorariosBase = async () => {
   try {
-    const result = await window.api.obtenerHorariosBase()
-    
-    // Filtrar solo los horarios activos y ordenarlos
-    const horariosActivos = result
-      .filter((h: any) => h.activo === 1)
-      .map((h: any) => h.hora)
+    const [baseResult, aprontesResult] = await Promise.allSettled([
+      api.obtenerHorariosBase(),
+      api.obtenerHorariosAprontesBase()
+    ])
+
+    const baseHorarios = baseResult.status === 'fulfilled'
+      ? (baseResult.value || [])
+          .filter((h: any) => h.activo === 1)
+          .map((h: any) => String(h.hora || '').trim())
+      : []
+
+    const apronteHorarios = aprontesResult.status === 'fulfilled'
+      ? (aprontesResult.value || [])
+          .filter((h: any) => h.activo === 1)
+          .map((h: any) => String(h.hora || '').trim())
+      : []
+
+    const unificados = Array.from(new Set([...baseHorarios, ...apronteHorarios]))
+      .filter(Boolean)
       .sort()
-    
-    horariosDisponibles.value = horariosActivos
+
+    horariosBase.value = unificados
+    horariosDisponibles.value = unificados
   } catch (error: any) {
     console.error('[Reserve] Error cargando horarios:', error)
     // Fallback a horarios por defecto si falla
-    horariosDisponibles.value = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
+    const fallback = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']
+    horariosBase.value = fallback
+    horariosDisponibles.value = fallback
   }
 }
 
@@ -105,7 +164,52 @@ const cargarReservas = async () => {
       knownReservaIds.clear()
     }
 
-    const nuevasReservas = await window.api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr })
+    const fechas = fechasWeek.value
+    const [nuevasReservas, aprontesResultados] = await Promise.all([
+      api.obtenerReservasSemana({ desde: desdeStr, hasta: hastaStr }),
+      Promise.allSettled(
+        fechas.map(async (dia) => {
+          try {
+            return await api.obtenerAprontesFecha(dia.fecha)
+          } catch (error) {
+            console.error('[Reserve] Error cargando aprontes:', error)
+            // Retornar aprontes cacheados si el fetch falla
+            return cacheAprontes.get(dia.fecha) || []
+          }
+        })
+      )
+    ])
+
+    // Procesar resultados de aprontes con manejo de fulfilled/rejected
+    const aprontesPorDia = aprontesResultados.map((resultado, index) => {
+      const fecha = fechas[index]?.fecha || ''
+      if (resultado.status === 'fulfilled') {
+        const aprontes = resultado.value || []
+        // Cachear los aprontes obtenidos
+        if (Array.isArray(aprontes) && aprontes.length > 0) {
+          cacheAprontes.set(fecha, aprontes)
+        }
+        return aprontes
+      } else {
+        // Si falla, devolver los aprontes cacheados para esa fecha
+        return cacheAprontes.get(fecha) || []
+      }
+    })
+
+    const horasAprontesSemana = new Set<string>()
+    aprontesPorDia.forEach((lista) => {
+      if (!Array.isArray(lista)) return
+      lista.forEach((apronte: any) => {
+        const hora = String(apronte?.hora || '').trim()
+        if (hora) horasAprontesSemana.add(hora)
+      })
+    })
+
+    const horasSemana = Array.from(new Set([
+      ...horariosBase.value,
+      ...Array.from(horasAprontesSemana)
+    ])).sort()
+    horariosDisponibles.value = horasSemana
 
     if (Array.isArray(nuevasReservas)) {
       const nuevas = nuevasReservas.filter((r: any) => r?.id && !knownReservaIds.has(Number(r.id)))
@@ -126,13 +230,20 @@ const cargarReservas = async () => {
       }
     }
 
-    // Inicializar matriz vacÃƒÂ­a
+    // Actualizar matriz inteligentemente: solo actualizar celdas que cambiaron
+    const matrizReservasAnterior = JSON.stringify(matrizReservas.value)
+    const matrizAprontesAnterior = JSON.stringify(matrizAprontes.value)
+
+    // Inicializar matriz vacÃ­a
     const nuevaMatriz: Record<string, Record<string, any[]>> = {}
+    const nuevaMatrizAprontes: Record<string, Record<string, any[]>> = {}
     
-    fechasWeek.value.forEach(dia => {
+    fechas.forEach(dia => {
       nuevaMatriz[dia.fecha] = {}
-      horariosDisponibles.value.forEach(hora => {
+      nuevaMatrizAprontes[dia.fecha] = {}
+      horasSemana.forEach(hora => {
         nuevaMatriz[dia.fecha][hora] = []
+        nuevaMatrizAprontes[dia.fecha][hora] = []
       })
     })
 
@@ -161,7 +272,25 @@ const cargarReservas = async () => {
       }
     })
 
-    matrizReservas.value = nuevaMatriz
+    aprontesPorDia.forEach((lista, index) => {
+      const fecha = fechas[index]?.fecha
+      if (!fecha || !Array.isArray(lista)) return
+      lista.forEach((apronte: any) => {
+        const hora = apronte?.hora
+        if (hora && nuevaMatrizAprontes[fecha] && nuevaMatrizAprontes[fecha][hora]) {
+          nuevaMatrizAprontes[fecha][hora].push(apronte)
+        }
+      })
+    })
+
+    // Solo actualizar si realmente cambió (optimización de renders)
+    if (JSON.stringify(nuevaMatriz) !== matrizReservasAnterior) {
+      matrizReservas.value = nuevaMatriz
+    }
+    if (JSON.stringify(nuevaMatrizAprontes) !== matrizAprontesAnterior) {
+      matrizAprontes.value = nuevaMatrizAprontes
+    }
+    
     isInitialLoad = false
 
   } catch (error: any) {
@@ -171,7 +300,7 @@ const cargarReservas = async () => {
 
 const chequearCambiosRemotos = async () => {
   try {
-    const cambios = await window.api.obtenerCambiosReservas({
+    const cambios = await api.obtenerCambiosReservas({
       since: lastChangeAt,
       lastId: lastChangeId,
       limit: 200
@@ -268,7 +397,6 @@ onMounted(async () => {
   await cargarHorariosBase()
   await refrescarDatos(true)
 
-  const ipc = window.ipcRenderer
   if (ipc?.on) {
     const onLocalNotify = (_event: any, payload: any) => {
       const id = Number(payload?.reserva?.id || 0)
@@ -278,7 +406,7 @@ onMounted(async () => {
     }
     ipc.on('reservas:notify', onLocalNotify)
     onBeforeUnmount(() => {
-      ipc.off('reservas:notify', onLocalNotify)
+      ipc?.off('reservas:notify', onLocalNotify)
     })
   }
   
@@ -291,7 +419,7 @@ onMounted(async () => {
 
   intervaloRefresco = window.setInterval(() => {
     refrescarDatos()
-  }, 5000) // Recargar cada 5 segundos
+  }, 15000) // Recargar cada 15 segundos en lugar de 5 (reduce parpadeos)
 })
 
 onBeforeUnmount(() => {
@@ -341,8 +469,163 @@ const matrizReservasFiltrada = computed(() => {
   return resultado
 })
 
+const fechaHoyIso = computed(() => formatLocalDate(new Date()))
+
+const reservasHoyLista = computed(() => {
+  const fecha = fechaHoyIso.value
+  const porHora = matrizReservasFiltrada.value[fecha] || {}
+  const horas = [...(horariosDisponibles.value || [])].sort()
+  const lista: any[] = []
+
+  for (const hora of horas) {
+    const reservas = porHora[hora] || []
+    for (const r of reservas) {
+      lista.push({ ...r, _hora_lista: hora })
+    }
+  }
+
+  return lista
+})
+
+const aprontesHoyLista = computed(() => {
+  const fecha = fechaHoyIso.value
+  const porHora = matrizAprontes.value[fecha] || {}
+  const horas = [...(horariosDisponibles.value || [])].sort()
+  const lista: any[] = []
+
+  for (const hora of horas) {
+    const aprontes = porHora[hora] || []
+    for (const a of aprontes) {
+      lista.push({ ...a, _hora_lista: hora })
+    }
+  }
+
+  return lista
+})
+
+const idsReservasVisibles = computed(() => {
+  const ids = new Set<number>()
+
+  if (soloHoyEnLista.value) {
+    for (const r of reservasHoyLista.value) {
+      const id = Number(r?.id || 0)
+      if (id) ids.add(id)
+    }
+    return ids
+  }
+
+  for (const porHora of Object.values(matrizReservasFiltrada.value)) {
+    for (const reservas of Object.values(porHora)) {
+      for (const r of reservas as any[]) {
+        const id = Number(r?.id || 0)
+        if (id) ids.add(id)
+      }
+    }
+  }
+  return ids
+})
+
+watch(idsReservasVisibles, (visibles) => {
+  reservasSeleccionadas.value = reservasSeleccionadas.value.filter((id) => visibles.has(id))
+})
+
+watch(soloHoyEnLista, async (activo) => {
+  if (!activo) return
+  if (semanaOffset.value !== 0) {
+    semanaOffset.value = 0
+    await cargarReservas()
+  }
+})
+
 const obtenerReservasEnCelda = (fecha: string, hora: string) => {
   return matrizReservasFiltrada.value[fecha]?.[hora] || []
+}
+
+const reservaSeleccionada = (id: number) => {
+  return reservasSeleccionadas.value.includes(Number(id))
+}
+
+const toggleReservaSeleccionada = (id: number) => {
+  const idNum = Number(id)
+  if (!idNum) return
+  if (reservaSeleccionada(idNum)) {
+    reservasSeleccionadas.value = reservasSeleccionadas.value.filter((x) => x !== idNum)
+    return
+  }
+  reservasSeleccionadas.value = [...reservasSeleccionadas.value, idNum]
+}
+
+const limpiarSeleccion = () => {
+  reservasSeleccionadas.value = []
+}
+
+const seleccionarVisibles = () => {
+  reservasSeleccionadas.value = Array.from(idsReservasVisibles.value)
+}
+
+const aplicarEstadoMasivo = async () => {
+  const ids = [...reservasSeleccionadas.value]
+  if (!ids.length) {
+    alert('Selecciona al menos una reserva')
+    return
+  }
+
+  const estadoDestino = estadoMasivo.value
+  const ok = window.confirm(`Cambiar estado a "${estadoDestino}" para ${ids.length} reserva(s)?`)
+  if (!ok) return
+
+  aplicandoEstadoMasivo.value = true
+  let exitos = 0
+  let fallos = 0
+
+  try {
+    const resultados = await Promise.allSettled(
+      ids.map(async (id) => {
+        const reservaActual = await api.obtenerReserva(id)
+        if (!reservaActual?.id) {
+          throw new Error(`No se encontro la reserva ${id}`)
+        }
+        await api.actualizarReserva({
+          ...reservaActual,
+          estado: estadoDestino
+        })
+      })
+    )
+
+    resultados.forEach((r) => {
+      if (r.status === 'fulfilled') exitos += 1
+      else fallos += 1
+    })
+
+    if (fallos > 0) {
+      alert(`Estado masivo aplicado parcialmente. Exitosas: ${exitos}. Fallidas: ${fallos}.`)
+    } else {
+      alert(`Estado actualizado en ${exitos} reserva(s).`)
+    }
+
+    limpiarSeleccion()
+    await cargarReservas()
+  } catch (error: any) {
+    alert(error?.message || 'No se pudo aplicar el cambio masivo de estado')
+  } finally {
+    aplicandoEstadoMasivo.value = false
+  }
+}
+
+const obtenerAprontesEnCelda = (fecha: string, hora: string) => {
+  return matrizAprontes.value[fecha]?.[hora] || []
+}
+
+const obtenerHorasConContenido = (fecha: string) => {
+  return (horariosDisponibles.value || []).filter((hora) => {
+    const reservas = obtenerReservasEnCelda(fecha, hora)
+    const aprontes = obtenerAprontesEnCelda(fecha, hora)
+    return reservas.length > 0 || aprontes.length > 0
+  })
+}
+
+const tieneContenidoEnDia = (fecha: string) => {
+  return obtenerHorasConContenido(fecha).length > 0
 }
 
 // Verificar si el horario debe mostrarse para la fecha (sÃƒÂ¡bados solo hasta 12:00)
@@ -365,6 +648,10 @@ const mostrarVentana = ref(false)
 const reservaActiva = ref<any>(null)
 const modalKey = ref(0)
 
+const mostrarApronte = ref(false)
+const apronteActivo = ref<any>(null)
+const apronteModalKey = ref(0)
+
 const abrirVentana = (reserva: any) => {
   reservaActiva.value = { ...reserva }
   modalKey.value += 1
@@ -374,6 +661,20 @@ const abrirVentana = (reserva: any) => {
 const manejarCierre = async () => {
   mostrarVentana.value = false
   reservaActiva.value = null
+  setTimeout(() => {
+    cargarReservas()
+  }, 150)
+}
+
+const abrirApronte = (apronte: any) => {
+  apronteActivo.value = { ...apronte }
+  apronteModalKey.value += 1
+  mostrarApronte.value = true
+}
+
+const manejarCierreApronte = async () => {
+  mostrarApronte.value = false
+  apronteActivo.value = null
   setTimeout(() => {
     cargarReservas()
   }, 150)
@@ -449,7 +750,7 @@ const obtenerDetalleResumen = (reserva: any) => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-hidden">
+  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
     <header class="flex justify-between items-end">
       <div class="space-y-3 sm:space-y-4 md:space-y-5">
         <h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
@@ -476,6 +777,13 @@ const obtenerDetalleResumen = (reserva: any) => {
               <option value="CANCELADO">Cancelado</option>
             </select>
           </div>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Solo hoy en lista</span>
+            <input v-model="soloHoyEnLista" type="checkbox" class="sr-only peer" />
+            <span class="relative h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors peer-checked:bg-cyan-600">
+              <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></span>
+            </span>
+          </label>
         </div>
       </div>
 
@@ -484,55 +792,230 @@ const obtenerDetalleResumen = (reserva: any) => {
         <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
         <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
-    </header><div class="flex-1 overflow-auto rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
-      <table class="w-full border-collapse table-fixed">
+    </header>
+
+    <div class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
+      <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+        Seleccionadas: {{ reservasSeleccionadas.length }}
+      </span>
+      <button
+        @click="seleccionarVisibles"
+        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      >
+        Seleccionar visibles
+      </button>
+      <button
+        @click="limpiarSeleccion"
+        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      >
+        Limpiar
+      </button>
+      <select
+        v-model="estadoMasivo"
+        class="bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-200"
+      >
+        <option v-for="estado in OPCIONES_ESTADO" :key="estado.value" :value="estado.value">
+          {{ estado.label }}
+        </option>
+      </select>
+      <button
+        :disabled="aplicandoEstadoMasivo || reservasSeleccionadas.length === 0"
+        @click="aplicarEstadoMasivo"
+        class="px-3 sm:px-4 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-700 transition-colors"
+      >
+        {{ aplicandoEstadoMasivo ? 'Aplicando...' : 'Cambiar estado' }}
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+      <div v-if="soloHoyEnLista" class="p-3 sm:p-4 md:p-5">
+        <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-[#0f172a]/40 overflow-hidden">
+          <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#1e293b]/85 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Agenda del dia</div>
+              <div class="text-sm sm:text-base font-black text-gray-800 dark:text-gray-100">{{ new Date(fechaHoyIso).toLocaleDateString('es-UY', { weekday: 'long', day: '2-digit', month: 'short' }) }}</div>
+            </div>
+            <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-cyan-600">Reservas: {{ reservasHoyLista.length }} · Aprontes: {{ aprontesHoyLista.length }}</div>
+          </div>
+
+          <div v-if="reservasHoyLista.length === 0 && aprontesHoyLista.length === 0" class="px-3 sm:px-4 py-6 text-sm text-gray-500 dark:text-gray-400 italic">
+            No hay reservas ni aprontes para hoy.
+          </div>
+
+          <div v-else class="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+            <div
+              v-for="r in reservasHoyLista"
+              :key="`hoy-${r.id}`"
+              @click="abrirVentana(r)"
+              :class="['p-3 sm:p-3.5 rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]"
+            >
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <div class="text-sm sm:text-base font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
+                <input
+                  :checked="reservaSeleccionada(r.id)"
+                  @click.stop
+                  @change="toggleReservaSeleccionada(r.id)"
+                  type="checkbox"
+                  class="h-4 w-4 accent-cyan-600 shrink-0"
+                />
+              </div>
+              <div class="text-[11px] sm:text-xs font-bold opacity-80">{{ r._hora_lista || r.hora }} hs · {{ r.tipo_resumen }}</div>
+              <div v-if="r.detalle_resumen" class="text-[11px] sm:text-xs opacity-75 break-words leading-tight mt-0.5">{{ r.detalle_resumen }}</div>
+              <div class="text-[11px] sm:text-xs font-bold opacity-80 break-words leading-tight mt-1">{{ r.marca }} {{ r.modelo }} · CI {{ r.cedula }}</div>
+            </div>
+
+            <div
+              v-for="a in aprontesHoyLista"
+              :key="`hoy-apronte-${a.id}`"
+              @click="abrirApronte(a)"
+              class="p-3 sm:p-3.5 rounded-xl border shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0 border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/85 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200"
+            >
+              <div class="text-sm sm:text-base font-black uppercase break-words leading-tight">{{ a.nombre }}</div>
+              <div class="text-[11px] sm:text-xs font-bold opacity-90 mt-1">{{ a._hora_lista || a.hora }} hs · Apronte</div>
+              <div class="text-[11px] sm:text-xs opacity-80 break-words leading-tight mt-0.5">{{ a.marca }} {{ a.modelo }}</div>
+              <div v-if="a.telefono" class="text-[11px] sm:text-xs opacity-75 break-words leading-tight mt-1">Tel: {{ a.telefono }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template v-else>
+      <div class="lg:hidden p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5">
+        <div v-for="dia in fechasWeek" :key="`list-${dia.fecha}`" class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0f172a]/35 overflow-hidden">
+          <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-[#1e293b]/80">
+            <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{{ dia.nombre }}</div>
+            <div class="text-sm sm:text-base font-black text-gray-800 dark:text-gray-100">{{ dia.fechaFormato }}</div>
+          </div>
+
+          <div v-if="!tieneContenidoEnDia(dia.fecha)" class="px-3 sm:px-4 py-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
+            Sin reservas ni aprontes para este día.
+          </div>
+
+          <div v-else class="divide-y divide-gray-200/70 dark:divide-gray-800/70">
+            <div v-for="hora in obtenerHorasConContenido(dia.fecha)" :key="`${dia.fecha}-list-${hora}`" class="px-3 sm:px-4 py-3 sm:py-4">
+              <div class="text-[10px] sm:text-xs font-black tracking-widest uppercase text-cyan-600 mb-2">{{ hora }} hs</div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="`list-r-${r.id}`"
+                     @click="abrirVentana(r)"
+                     :class="['p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]">
+                  <div class="flex items-start justify-between gap-2 mb-1">
+                    <div class="text-[10px] sm:text-[11px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
+                    <input
+                      :checked="reservaSeleccionada(r.id)"
+                      @click.stop
+                      @change="toggleReservaSeleccionada(r.id)"
+                      type="checkbox"
+                      class="h-4 w-4 accent-cyan-600 shrink-0"
+                    />
+                  </div>
+                  <div class="text-[9px] sm:text-[10px] font-bold opacity-80">{{ r.tipo_resumen }}</div>
+                  <div v-if="r.detalle_resumen" class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ r.detalle_resumen }}</div>
+                  <div class="text-[9px] sm:text-[10px] font-bold opacity-75 break-words leading-tight">{{ r.marca }} {{ r.modelo }} · {{ r.cedula }}</div>
+                </div>
+
+                <div v-for="a in obtenerAprontesEnCelda(dia.fecha, hora)" :key="`list-a-${a.id}`"
+                     @click="abrirApronte(a)"
+                     class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0">
+                  <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Apronte</div>
+                  <div class="text-[10px] sm:text-[11px] font-bold break-words leading-tight">{{ a.nombre }}</div>
+                  <div class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="hidden lg:table w-full border-collapse table-fixed">
         <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
-            <th class="w-20 sm:w-24 p-3 sm:p-4 md:p-5 text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
-            <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
+            <th class="w-16 xl:w-20 p-2 xl:p-3 text-[8px] xl:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
+            <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-2 xl:p-3 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
               <div class="flex flex-col items-center">
-                <span class="text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
-                <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha?.split('-')[2] }}</span>
+                <span class="text-[8px] xl:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
+                <span class="text-base xl:text-xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha?.split('-')[2] }}</span>
               </div>
             </th>
           </tr>
         </thead>
 
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/50">
-          <tr v-for="hora in horariosDisponibles" :key="hora">
-            <td class="p-2 sm:p-3 md:p-4 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
-              <span class="text-[7px] sm:text-[8px] md:text-xs font-black text-gray-400 dark:text-gray-500">{{ hora }}</span>
-            </td>
+          <template v-for="item in horariosConDivisor" :key="item.tipo === 'divider' ? 'divider' : item.hora">
+            <tr v-if="item.tipo === 'divider'">
+              <td :colspan="fechasWeek.length + 1" class="px-3 py-2 bg-white dark:bg-[#1e293b]">
+                <div class="flex items-center justify-center gap-3 text-[8px] xl:text-[10px] font-black uppercase tracking-[0.32em] text-emerald-600/80">
+                  <span class="h-px w-10 xl:w-16 bg-emerald-500/30"></span>
+                  ROSAS UY
+                  <span class="h-px w-10 xl:w-16 bg-emerald-500/30"></span>
+                </div>
+              </td>
+            </tr>
+            <tr v-else>
+              <td class="p-2 xl:p-3 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
+                <span class="text-[8px] xl:text-xs font-black text-gray-400 dark:text-gray-500">{{ item.hora }}</span>
+              </td>
 
-            <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${hora}`" 
-                class="p-1 sm:p-2 md:p-3 border-l border-gray-100 dark:border-gray-800/30 min-h-[80px] sm:min-h-[100px] md:min-h-[120px] align-top hover:bg-cyan-500/5 transition-colors">
-              
-              <div class="flex flex-col gap-1 sm:gap-2">
-                <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="r.id"
-                     @click="abrirVentana(r)"
-                     :class="['p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95', getCardStyles(r.estado)]">
-                  <div class="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase truncate mb-1">{{ r.nombre }}</div>
-                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 mb-1">
-                    {{ r.tipo_resumen }}
+              <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${item.hora}`" 
+                  class="p-1.5 xl:p-2.5 border-l border-gray-100 dark:border-gray-800/30 min-h-[84px] xl:min-h-[112px] align-top hover:bg-cyan-500/5 transition-colors">
+                
+                <div class="flex gap-1.5 xl:gap-2">
+                  <div class="flex-1 flex flex-col gap-1.5">
+                    <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
+                         @click="abrirVentana(r)"
+                         :class="['p-2 xl:p-2.5 rounded-lg xl:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0', getCardStyles(r.estado)]">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <div class="text-[8px] xl:text-[10px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
+                        <input
+                          :checked="reservaSeleccionada(r.id)"
+                          @click.stop
+                          @change="toggleReservaSeleccionada(r.id)"
+                          type="checkbox"
+                          class="h-3.5 w-3.5 xl:h-4 xl:w-4 accent-cyan-600 shrink-0"
+                        />
+                      </div>
+                      <div class="text-[7px] xl:text-[9px] font-bold opacity-80 mb-1 break-words leading-tight">
+                        {{ r.tipo_resumen }}
+                      </div>
+                      <div v-if="r.detalle_resumen" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                        {{ r.detalle_resumen }}
+                      </div>
+                      <div v-if="r.garantia_fecha_compra" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                        Compra: {{ r.garantia_fecha_compra }}
+                      </div>
+                      <div class="text-[7px] xl:text-[9px] font-bold opacity-80 leading-tight break-words">
+                        {{ r.marca }} {{ r.modelo }}<br/>
+                        <span class="opacity-60">{{ r.cedula }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div v-if="r.detalle_resumen" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    {{ r.detalle_resumen }}
-                  </div>
-                  <div v-if="r.garantia_fecha_compra" class="text-[7px] sm:text-[8px] md:text-[9px] opacity-70 truncate mb-1">
-                    Compra: {{ r.garantia_fecha_compra }}
-                  </div>
-                  <div class="text-[7px] sm:text-[8px] md:text-[9px] font-bold opacity-80 leading-tight">
-                    {{ r.marca }} {{ r.modelo }}<br/>
-                    <span class="opacity-60">{{ r.cedula }}</span>
+
+                  <div v-if="obtenerAprontesEnCelda(dia.fecha, item.hora).length"
+                       class="w-20 xl:w-28 flex flex-col gap-1.5">
+                    <div v-for="a in obtenerAprontesEnCelda(dia.fecha, item.hora)" :key="a.id"
+                         @click="abrirApronte(a)"
+                         class="p-2 rounded-lg xl:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0">
+                      <div class="text-[7px] xl:text-[9px] font-black uppercase tracking-wide">Apronte</div>
+                      <div class="text-[7px] xl:text-[9px] font-bold break-words leading-tight">{{ a.nombre }}</div>
+                      <div class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
+      </template>
     </div>
     <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
+    <ApronteWindow
+      v-if="mostrarApronte"
+      :key="apronteModalKey"
+      :apronte="apronteActivo"
+      @cerrar="manejarCierreApronte"
+      @actualizar="cargarReservas"
+    />
   </div>
 </template>
 

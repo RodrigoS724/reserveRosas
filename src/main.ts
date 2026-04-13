@@ -6,6 +6,7 @@ import Confirmacion from './views/confirmation.vue'
 import Home from './views/home.vue'
 import Agenda from './views/agenda.vue'
 import Reservas from './views/reserve.vue'
+import Aprontes from './views/aprontes.vue'
 import adminHorarios from './views/adminHorarios.vue'
 import historial from './views/historial.vue'
 import vehiculos from './views/vehiculos.vue'
@@ -13,6 +14,7 @@ import Config from './views/config.vue'
 import Users from './views/users.vue'
 import Auditoria from './views/auditoria.vue'
 import DailySummary from './views/dailySummary.vue'
+import Registros from './views/registros.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -26,7 +28,9 @@ const router = createRouter({
     { path: '/vehiculos', component: vehiculos },
     { path: '/ajustes', component: adminHorarios },
     { path: '/reservas', component: Reservas },
+    { path: '/aprontes', component: Aprontes },
     { path: '/resumen-diario', component: DailySummary },
+    { path: '/registros', component: Registros },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },
@@ -48,3 +52,6 @@ router.beforeEach((to, _from, next) => {
 
 
 createApp(App).use(router).mount('#app')
+
+
+

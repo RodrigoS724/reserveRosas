@@ -77,6 +77,100 @@ declare global {
       }[]>
 
       /* =========================
+       * APRONTES
+       * ========================= */
+      crearApronte: (data: {
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
+      }) => Promise<number>
+
+      obtenerApronte: (id: number) => Promise<any>
+
+      borrarApronte: (id: number) => Promise<void>
+
+      actualizarApronte: (data: {
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
+      }) => Promise<void>
+
+      obtenerAprontesFecha: (fecha: string) => Promise<{
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
+        created_at: string
+      }[]>
+
+      obtenerAprontes: () => Promise<{
+        id: number
+        nombre: string
+        fecha: string
+        hora: string
+        telefono: string
+        localidad: string
+        observaciones: string
+        marca: string
+        modelo: string
+        factura: string
+        estado?: string
+        repuestos_garantia?: string
+        correo_alerta_garantia?: string
+        dias_alerta_garantia?: number
+        fecha_alerta_garantia?: string
+        created_at: string
+      }[]>
+
+      obtenerConfigAlertasAprontes: () => Promise<{
+        default_email: string
+        default_dias_alerta: number
+      }>
+
+      guardarConfigAlertasAprontes: (data: {
+        default_email?: string
+        default_dias_alerta?: number
+      }) => Promise<{
+        default_email: string
+        default_dias_alerta: number
+      }>
+
+
+      /* =========================
        * HORARIOS
        * ========================= */
       obtenerHorariosBase: () => Promise<{
@@ -119,6 +213,40 @@ declare global {
       }[]>
 
       borrarHorarioPermanente: (id: number) => Promise<void>
+
+      /* =========================
+       * HORARIOS APRONTES
+       * ========================= */
+      obtenerHorariosAprontesBase: () => Promise<{
+        id: number
+        hora: string
+        cupo: number
+        activo: number
+      }[]>
+
+      obtenerHorariosAprontesInactivos: () => Promise<{
+        id: number
+        hora: string
+        cupo: number
+      }[]>
+
+      obtenerHorariosAprontesDisponibles: (fecha: string) => Promise<{
+        id: number
+        hora: string
+        cupo: number
+        usados: number
+        disponibles: number
+      }[]>
+
+      crearHorarioApronte: (data: { hora: string; cupo?: number }) => Promise<void>
+
+      actualizarCupoHorarioApronte: (data: { id: number; cupo: number }) => Promise<void>
+
+      desactivarHorarioApronte: (id: number) => Promise<void>
+
+      activarHorarioApronte: (id: number) => Promise<void>
+
+      borrarHorarioApronte: (id: number) => Promise<void>
 
       /* =========================
        * HISTORIAL
@@ -168,6 +296,9 @@ declare global {
         marca: string
         modelo: string
       } | null>
+
+      obtenerMarcasMoto: () => Promise<string[]>
+      obtenerModelosMoto: (marca?: string) => Promise<string[]>
 
       obtenerTodasLasReservas: () => Promise<{
         id: number
@@ -220,6 +351,7 @@ declare global {
       obtenerEnvConfig: () => Promise<string>
       guardarEnvConfig: (text: string) => Promise<{ ok: boolean }>
       probarConexionDB: () => Promise<{ ok: boolean; error: string }>
+      probarConexionApi: () => Promise<{ ok: boolean; error: string }>
 
       obtenerUsuariosLogin: () => Promise<{
         id: number
@@ -239,6 +371,7 @@ declare global {
           permissions: string[]
         }
       }>
+      cambiarPasswordPropia: (data: { username: string; currentPassword: string; newPassword: string }) => Promise<{ ok: boolean; error?: string }>
       listarUsuarios: () => Promise<{
         id: number
         nombre: string
@@ -261,9 +394,11 @@ declare global {
         detalle: string | null
         created_at: string
       }[]>
+      obtenerRegistroMensual: (d: { mes: string }) => Promise<any>
     }
   }
 }
 export {}
+
 
 
