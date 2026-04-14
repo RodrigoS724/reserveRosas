@@ -62,6 +62,7 @@ let isInitialChangesLoad = true
 const suppressUntilByReservaId = new Map<number, number>()
 let refreshEnCurso = false
 let onVisibilityChangeRef: (() => void) | null = null
+let onRealtimeSyncRef: ((event: Event) => void) | null = null
 
 const formatLocalDate = (date: Date) => {
   const y = date.getFullYear()
@@ -417,9 +418,17 @@ onMounted(async () => {
   }
   document.addEventListener('visibilitychange', onVisibilityChangeRef)
 
+  onRealtimeSyncRef = (event: Event) => {
+    const detail = (event as CustomEvent).detail || {}
+    const scope = String(detail?.scope || '')
+    if (!['reservas', 'aprontes', 'horarios', 'horarios-aprontes'].includes(scope)) return
+    refrescarDatos(true)
+  }
+  window.addEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+
   intervaloRefresco = window.setInterval(() => {
     refrescarDatos()
-  }, 15000) // Recargar cada 15 segundos en lugar de 5 (reduce parpadeos)
+  }, 15000) // Fallback si el socket remoto no responde
 })
 
 onBeforeUnmount(() => {
@@ -430,6 +439,10 @@ onBeforeUnmount(() => {
   if (onVisibilityChangeRef) {
     document.removeEventListener('visibilitychange', onVisibilityChangeRef)
     onVisibilityChangeRef = null
+  }
+  if (onRealtimeSyncRef) {
+    window.removeEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+    onRealtimeSyncRef = null
   }
 })
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { api } from '../api'
 import ApronteWindow from '../components/apronteWindow.vue'
 
@@ -56,6 +56,8 @@ const apronteActivo = ref<Apronte | null>(null)
 const modalKey = ref(0)
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
+let onRealtimeSyncRef: ((event: Event) => void) | null = null
+let intervaloFallbackRefresco: number | null = null
 
 const ESTADOS_APRONTE = [
   'APRONTE',
@@ -489,6 +491,29 @@ onMounted(async () => {
   await cargarHorariosNuevo()
   await cargarMarcas()
   await cargarModelos(form.value.marca)
+
+  onRealtimeSyncRef = (event: Event) => {
+    const detail = (event as CustomEvent).detail || {}
+    const scope = String(detail?.scope || '')
+    if (!['aprontes', 'horarios-aprontes'].includes(scope)) return
+    void refrescarAprontes()
+  }
+  window.addEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+
+  intervaloFallbackRefresco = window.setInterval(() => {
+    void refrescarAprontes()
+  }, 15000)
+})
+
+onBeforeUnmount(() => {
+  if (onRealtimeSyncRef) {
+    window.removeEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+    onRealtimeSyncRef = null
+  }
+  if (intervaloFallbackRefresco) {
+    clearInterval(intervaloFallbackRefresco)
+    intervaloFallbackRefresco = null
+  }
 })
 </script>
 

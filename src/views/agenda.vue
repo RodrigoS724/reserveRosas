@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 
@@ -16,6 +16,7 @@ const cargandoHorarios = ref(false)
 const cargandoDisponibilidad = ref(false)
 const availabilityCache = ref<Record<string, boolean | null>>({})
 const horariosCache = ref<Record<string, string[]>>({}) // Caché de horarios para evitar parpadeos
+let onRealtimeSyncRef: ((event: Event) => void) | null = null
 
 const nombresMeses = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -291,6 +292,24 @@ onMounted(async () => {
   await seleccionarPrimerDiaDisponible()
   await cargarDisponibilidadMes()
   await cargarHorariosSeleccionados()
+
+  onRealtimeSyncRef = (event: Event) => {
+    const detail = (event as CustomEvent).detail || {}
+    const scope = String(detail?.scope || '')
+    if (!['reservas', 'horarios'].includes(scope)) return
+    availabilityCache.value = {}
+    horariosCache.value = {}
+    void cargarDisponibilidadMes()
+    void cargarHorariosSeleccionados()
+  }
+  window.addEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+})
+
+onBeforeUnmount(() => {
+  if (onRealtimeSyncRef) {
+    window.removeEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+    onRealtimeSyncRef = null
+  }
 })
 </script>
 

@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
 import { api, ipc } from './api'
+import { initRealtime } from './services/realtime'
 
 const logoPrincipalUrl = new URL('./assets/Logo_principal.png', import.meta.url).href
 
@@ -113,6 +114,7 @@ const pushNotification = (message, variant = 'info') => {
 
 onMounted(() => {
   loadSettings()
+  initRealtime()
   document.documentElement.classList.toggle('dark', isDark.value)
   ipc?.send?.('settings:update', {
     theme: isDark.value ? 'dark' : 'light',

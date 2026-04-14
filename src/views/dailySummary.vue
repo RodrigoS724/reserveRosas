@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
 import { api } from '../api'
 
@@ -11,6 +11,7 @@ const reservaActiva = ref<any>(null)
 
 const resumenGuardando = ref(false)
 const resumenEnviando = ref(false)
+let onRealtimeSyncRef: ((event: Event) => void) | null = null
 const resumenConfig = ref({
   enabled: false,
   sendTime: '07:30',
@@ -143,6 +144,21 @@ watch(fecha, () => {
 onMounted(async () => {
   await cargarResumen()
   await cargarConfigResumenDiario()
+
+  onRealtimeSyncRef = (event: Event) => {
+    const detail = (event as CustomEvent).detail || {}
+    const scope = String(detail?.scope || '')
+    if (scope !== 'reservas') return
+    void cargarResumen()
+  }
+  window.addEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+})
+
+onBeforeUnmount(() => {
+  if (onRealtimeSyncRef) {
+    window.removeEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+    onRealtimeSyncRef = null
+  }
 })
 </script>
 

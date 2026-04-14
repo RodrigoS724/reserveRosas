@@ -72,6 +72,7 @@ const modoEdicion = ref(false)
 
 // Intervalo para auto-refresh
 let intervaloRefresco: number | null = null
+let onRealtimeSyncRef: ((event: Event) => void) | null = null
 const cargarReservas = async () => {
   cargando.value = true
   try {
@@ -96,12 +97,20 @@ const cargarReservas = async () => {
 onMounted(() => {
   console.log('[Historial] Inicializando vista...')
   cargarReservas()
-  
-  console.log('[Historial] Iniciando auto-refresh cada 5 segundos...')
+
+  onRealtimeSyncRef = (event: Event) => {
+    const detail = (event as CustomEvent).detail || {}
+    const scope = String(detail?.scope || '')
+    if (!['reservas', 'horarios'].includes(scope)) return
+    void cargarReservas()
+  }
+  window.addEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+
+  console.log('[Historial] Iniciando fallback cada 15 segundos...')
   intervaloRefresco = window.setInterval(async () => {
-    console.log('[Historial] Auto-refresh: Recargando reservas...')
+    console.log('[Historial] Fallback refresh: Recargando reservas...')
     await cargarReservas()
-  }, 5000) // Recargar cada 5 segundos
+  }, 15000)
 })
 
 onBeforeUnmount(() => {
@@ -109,6 +118,10 @@ onBeforeUnmount(() => {
   if (intervaloRefresco) {
     clearInterval(intervaloRefresco)
     intervaloRefresco = null
+  }
+  if (onRealtimeSyncRef) {
+    window.removeEventListener('rr:sync', onRealtimeSyncRef as EventListener)
+    onRealtimeSyncRef = null
   }
 })
 
