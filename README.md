@@ -34,18 +34,19 @@ Variables opcionales:
 - `AUTO_UPDATE_ALLOW_PRERELEASE=1` para prereleases.
 - `AUTO_UPDATE_INTERVAL_MS=1800000` para intervalo personalizado.
 
-## Release 1.0 (GitHub)
+## Release Desktop (GitHub)
 
 Pasos recomendados:
 
-1. Verificar que `GH_TOKEN` exista en GitHub Actions (el workflow ya usa `secrets.GITHUB_TOKEN`).
-2. Ejecutar localmente `npm run release:github -- major` para crear y pushear `v1.0.0`.
-3. Esperar el workflow `Release (Windows)`.
-4. Confirmar en el release de GitHub que existan:
-	- `App-RosasUy-Setup-1.0.0.exe`
+1. Subir cambios a `main`.
+2. Ejecutar localmente `npm run release:github -- patch` (o `minor` / `major`).
+3. Ese script crea commit de version, crea tag `v*` y hace push.
+4. El workflow `.github/workflows/release.yml` se dispara con el tag.
+5. Confirmar en el release de GitHub que existan:
+	- `App-RosasUy-Setup-<version>.exe`
 	- `latest.yml`
 	- `*.blockmap`
-5. Instalar `1.0.0` en una PC de prueba y validar deteccion de update al publicar `1.0.1`.
+6. En clientes instalados, electron-updater detecta la nueva version automaticamente.
 
 ## Estructura separada de repositorios
 
