@@ -33,6 +33,25 @@ function normalizarCupo(value: any): number {
   return Math.floor(cupo)
 }
 
+function horaEnMinutos(hora: string): number {
+  const parts = String(hora || '').split(':')
+  const h = Number(parts[0])
+  const m = Number(parts[1])
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return -1
+  return h * 60 + m
+}
+
+function aplicarReglaFinDeSemana(fechaIso: string, rows: any[]) {
+  const day = new Date(`${fechaIso}T00:00:00`).getDay()
+  if (day === 0) {
+    return []
+  }
+  if (day !== 6) {
+    return rows
+  }
+  return (rows || []).filter((r: any) => horaEnMinutos(String(r?.hora || '')) <= 12 * 60)
+}
+
 function syncHorariosAprontesToSqlite(rows: any[]) {
   if (!Array.isArray(rows) || rows.length === 0) return
   try {
@@ -143,10 +162,10 @@ export async function obtenerHorariosAprontesDisponibles(fecha: string) {
     return rows
   })
 
-  if (mysqlResult.ok) return mysqlResult.value
+  if (mysqlResult.ok) return aplicarReglaFinDeSemana(fechaNormalizada, mysqlResult.value)
 
   const db = initDatabase()
-  return db.prepare(
+  const rows = db.prepare(
     `SELECT h.id, h.hora, h.cupo,
             IFNULL(a.usados, 0) AS usados,
             CASE
@@ -163,6 +182,8 @@ export async function obtenerHorariosAprontesDisponibles(fecha: string) {
      WHERE h.activo = 1
      ORDER BY h.hora`
   ).all(fechaNormalizada)
+
+  return aplicarReglaFinDeSemana(fechaNormalizada, rows)
 }
 
 export async function crearHorarioApronte(hora: string, cupo = 1) {

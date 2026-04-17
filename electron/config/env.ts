@@ -3,6 +3,8 @@ import path from 'node:path'
 import { app } from 'electron'
 
 const ENV_FILENAME = 'mysql.env'
+const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
+const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 const ENV_KEYS = [
   'MYSQL_HOST',
   'MYSQL_PORT',
@@ -11,7 +13,8 @@ const ENV_KEYS = [
   'MYSQL_DATABASE',
   'DISABLE_LOCAL_DB',
   'API_REMOTE_URL',
-  'API_REMOTE_TOKEN'
+  'API_REMOTE_TOKEN',
+  'API_REMOTE_IN_DEV'
 ]
 
 export function getEnvFilePath() {
@@ -46,6 +49,15 @@ function seedFromProcessEnv(): string {
     if (value !== undefined && value !== '') {
       lines.push(`${key}=${value}`)
     }
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_URL='))) {
+    lines.push(`API_REMOTE_URL=${EMBEDDED_REMOTE_URL}`)
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_TOKEN='))) {
+    lines.push(`API_REMOTE_TOKEN=${EMBEDDED_REMOTE_TOKEN}`)
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_IN_DEV='))) {
+    lines.push('API_REMOTE_IN_DEV=1')
   }
   return lines.join('\n')
 }

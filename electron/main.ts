@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
@@ -46,12 +47,19 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null = null // Una sola variable global
 
+const getAppIconPath = () => {
+  const fromPublic = path.join(process.env.VITE_PUBLIC, 'logo-app.png')
+  if (fs.existsSync(fromPublic)) return fromPublic
+  return path.join(process.env.APP_ROOT, 'src', 'assets', 'Logo_principal.png')
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1366,
     height: 768,
     minWidth: 1024, // Mínimo para que no se rompa el diseño
     minHeight: 700,
+    icon: getAppIconPath(),
     title: "ReserveRosas - Taller Central", autoHideMenuBar: true,
     frame: true, // Mantenemos el marco de Windows (cerrar, minimizar)
     webPreferences: {

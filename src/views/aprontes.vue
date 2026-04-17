@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '../api'
 import ApronteWindow from '../components/apronteWindow.vue'
+import ApronteSchedulePicker from '../components/ApronteSchedulePicker.vue'
 
 type Apronte = {
   id: number
@@ -13,6 +14,7 @@ type Apronte = {
   observaciones: string
   marca: string
   modelo: string
+  numero_motor?: string
   factura: string
   estado?: string
   repuestos_garantia?: string
@@ -20,14 +22,6 @@ type Apronte = {
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string
   created_at?: string
-}
-
-type HorarioApronte = {
-  id: number
-  hora: string
-  cupo: number
-  usados: number
-  disponibles: number
 }
 
 const formatLocalDate = (date: Date) => {
@@ -39,9 +33,15 @@ const formatLocalDate = (date: Date) => {
 
 const todayIso = formatLocalDate(new Date())
 
+const normalizarMensajeError = (error: any, fallback: string) => {
+  const msg = String(error?.message || fallback)
+  if (msg.toLowerCase().includes('fechas de aprontes posteriores a hoy')) {
+    return 'No se puede agendar con esa fecha/hora. Revisa las reglas de agenda de aprontes.'
+  }
+  return msg
+}
+
 const aprontes = ref<Apronte[]>([])
-const horarios = ref<HorarioApronte[]>([])
-const horariosNuevo = ref<HorarioApronte[]>([])
 const fechaFiltro = ref(todayIso)
 const busqueda = ref('')
 const cargando = ref(false)
@@ -80,6 +80,7 @@ const form = ref({
   observaciones: '',
   marca: '',
   modelo: '',
+  numero_motor: '',
   factura: '',
   estado: 'APRONTE',
   repuestos_garantia: '',
@@ -97,6 +98,7 @@ const newForm = ref({
   observaciones: '',
   marca: '',
   modelo: '',
+  numero_motor: '',
   factura: '',
   estado: 'APRONTE',
   repuestos_garantia: '',
@@ -122,34 +124,6 @@ const cargarAprontes = async () => {
   }
 }
 
-const cargarHorarios = async () => {
-  if (!form.value.fecha) {
-    horarios.value = []
-    return
-  }
-  try {
-    const data = await api.obtenerHorariosAprontesDisponibles(form.value.fecha)
-    horarios.value = data || []
-  } catch (error: any) {
-    console.error('[Aprontes] Error cargando horarios aprontes:', error)
-    horarios.value = []
-  }
-}
-
-const cargarHorariosNuevo = async () => {
-  if (!newForm.value.fecha) {
-    horariosNuevo.value = []
-    return
-  }
-  try {
-    const data = await api.obtenerHorariosAprontesDisponibles(newForm.value.fecha)
-    horariosNuevo.value = data || []
-  } catch (error: any) {
-    console.error('[Aprontes] Error cargando horarios para modal nuevo:', error)
-    horariosNuevo.value = []
-  }
-}
-
 const resetForm = () => {
   form.value = {
     id: null,
@@ -161,6 +135,7 @@ const resetForm = () => {
     observaciones: '',
     marca: '',
     modelo: '',
+    numero_motor: '',
     factura: '',
     estado: 'APRONTE',
     repuestos_garantia: '',
@@ -183,6 +158,7 @@ const resetNewForm = () => {
     observaciones: '',
     marca: '',
     modelo: '',
+    numero_motor: '',
     factura: '',
     estado: 'APRONTE',
     repuestos_garantia: '',
@@ -195,7 +171,6 @@ const resetNewForm = () => {
 const abrirModalNuevo = async () => {
   resetNewForm()
   mostrarModalNuevo.value = true
-  await cargarHorariosNuevo()
 }
 
 const cerrarModalNuevo = () => {
@@ -213,6 +188,7 @@ const seleccionarApronte = (a: Apronte) => {
     observaciones: a.observaciones || '',
     marca: a.marca || '',
     modelo: a.modelo || '',
+    numero_motor: String(a.numero_motor || ''),
     factura: a.factura || '',
     estado: String(a.estado || 'APRONTE'),
     repuestos_garantia: String(a.repuestos_garantia || ''),
@@ -222,7 +198,6 @@ const seleccionarApronte = (a: Apronte) => {
   }
   status.value = ''
   statusOk.value = true
-  cargarHorarios()
 }
 
 const cargarMarcas = async () => {
@@ -295,7 +270,6 @@ const cerrarDetalle = () => {
 
 const refrescarAprontes = async () => {
   await cargarAprontes()
-  await cargarHorarios()
 }
 
 const validarForm = () => {
@@ -316,9 +290,6 @@ const validarNewForm = () => {
       throw new Error(`Campo requerido: ${key}`)
     }
   }
-  if (newForm.value.fecha > todayIso) {
-    throw new Error('No se pueden seleccionar fechas de aprontes posteriores a hoy')
-  }
 }
 
 const guardarApronte = async () => {
@@ -334,9 +305,6 @@ const guardarApronte = async () => {
 
   try {
     validarForm()
-    if (form.value.fecha > todayIso) {
-      throw new Error('No se pueden seleccionar fechas de aprontes posteriores a hoy')
-    }
     const basePayload = {
       nombre: String(form.value.nombre || '').trim(),
       fecha: String(form.value.fecha || '').trim(),
@@ -346,6 +314,7 @@ const guardarApronte = async () => {
       observaciones: String(form.value.observaciones || '').trim(),
       marca: String(form.value.marca || '').trim(),
       modelo: String(form.value.modelo || '').trim(),
+      numero_motor: String(form.value.numero_motor || '').trim(),
       factura: String(form.value.factura || '').trim(),
       estado: String(form.value.estado || 'APRONTE').trim().toUpperCase(),
       repuestos_garantia: String(form.value.repuestos_garantia || '').trim(),
@@ -359,9 +328,8 @@ const guardarApronte = async () => {
     status.value = 'Apronte actualizado.'
     statusOk.value = true
     await cargarAprontes()
-    await cargarHorarios()
   } catch (error: any) {
-    status.value = error?.message || 'Error al guardar'
+    status.value = normalizarMensajeError(error, 'Error al guardar')
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -381,6 +349,7 @@ const crearApronteDesdeModal = async () => {
       observaciones: String(newForm.value.observaciones || '').trim(),
       marca: String(newForm.value.marca || '').trim(),
       modelo: String(newForm.value.modelo || '').trim(),
+      numero_motor: String(newForm.value.numero_motor || '').trim(),
       factura: String(newForm.value.factura || '').trim(),
       estado: String(newForm.value.estado || 'APRONTE').trim().toUpperCase()
     }
@@ -389,7 +358,7 @@ const crearApronteDesdeModal = async () => {
     await cargarAprontes()
     resetForm()
   } catch (error: any) {
-    alert(error?.message || 'No se pudo crear el apronte')
+    alert(normalizarMensajeError(error, 'No se pudo crear el apronte'))
   } finally {
     guardandoNuevo.value = false
   }
@@ -408,9 +377,8 @@ const borrarApronte = async () => {
     statusOk.value = true
     resetForm()
     await cargarAprontes()
-    await cargarHorarios()
   } catch (error: any) {
-    status.value = error?.message || 'Error al eliminar'
+    status.value = normalizarMensajeError(error, 'Error al eliminar')
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -433,26 +401,6 @@ const aprontesFiltrados = computed(() => {
   })
 })
 
-const horariosSelect = computed(() => {
-  const current = form.value.hora
-  return (horarios.value || []).map((h) => ({
-    ...h,
-    disabled: h.disponibles <= 0 && h.hora !== current
-  }))
-})
-
-const horariosNuevoSelect = computed(() => {
-  const current = newForm.value.hora
-  return (horariosNuevo.value || []).map((h) => ({
-    ...h,
-    disabled: h.disponibles <= 0 && h.hora !== current
-  }))
-})
-
-watch(() => form.value.fecha, () => {
-  cargarHorarios()
-})
-
 watch(() => form.value.marca, (marca) => {
   cargarModelos(marca)
 })
@@ -461,17 +409,8 @@ watch(() => newForm.value.marca, (marca) => {
   cargarModelos(marca)
 })
 
-watch(() => newForm.value.fecha, () => {
-  if (newForm.value.fecha > todayIso) {
-    newForm.value.fecha = todayIso
-  }
-  cargarHorariosNuevo()
-})
-
-watch(() => form.value.fecha, () => {
-  if (form.value.fecha > todayIso) {
-    form.value.fecha = todayIso
-  }
+watch([() => form.value.fecha, () => form.value.hora], () => {
+  status.value = ''
 })
 
 watch(fechaFiltro, () => {
@@ -485,8 +424,6 @@ watch(fechaFiltro, () => {
 onMounted(async () => {
   await cargarConfigAlertas()
   await cargarAprontes()
-  await cargarHorarios()
-  await cargarHorariosNuevo()
   await cargarMarcas()
   await cargarModelos(form.value.marca)
 })
@@ -624,6 +561,11 @@ onMounted(async () => {
             </datalist>
           </div>
           <div>
+            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Numero de motor</label>
+            <input v-model="form.numero_motor" type="text"
+              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+          </div>
+          <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Factura</label>
             <input v-model="form.factura" type="text"
               class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
@@ -635,22 +577,11 @@ onMounted(async () => {
               <option v-for="estado in ESTADOS_APRONTE" :key="estado" :value="estado">{{ estado }}</option>
             </select>
           </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Fecha</label>
-            <input v-model="form.fecha" type="date" :max="todayIso"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div class="md:col-span-2">
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Horario apronte</label>
-            <select v-model="form.hora"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
-              <option value="">Seleccionar horario...</option>
-              <option v-for="h in horariosSelect" :key="h.id" :value="h.hora" :disabled="h.disabled">
-                {{ h.hora }} hs ({{ h.disponibles }}/{{ h.cupo }})
-              </option>
-            </select>
-            <p v-if="form.fecha && horariosSelect.length === 0" class="text-[10px] text-amber-500 mt-2">No hay horarios de aprontes activos.</p>
-          </div>
+          <ApronteSchedulePicker
+            v-model:fecha="form.fecha"
+            v-model:hora="form.hora"
+            label="Agenda de apronte"
+          />
 
           <template v-if="isEdit">
             <div class="md:col-span-2 mt-1">
@@ -748,6 +679,10 @@ onMounted(async () => {
             <input v-model="newForm.modelo" list="aprontes-modelos" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
           </div>
           <div>
+            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Numero de motor</label>
+            <input v-model="newForm.numero_motor" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+          </div>
+          <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Factura</label>
             <input v-model="newForm.factura" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
           </div>
@@ -757,19 +692,11 @@ onMounted(async () => {
               <option v-for="estado in ESTADOS_APRONTE" :key="`nuevo-${estado}`" :value="estado">{{ estado }}</option>
             </select>
           </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Fecha</label>
-            <input v-model="newForm.fecha" type="date" :max="todayIso" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Horario apronte</label>
-            <select v-model="newForm.hora" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
-              <option value="">Seleccionar horario...</option>
-              <option v-for="h in horariosNuevoSelect" :key="`n-${h.id}`" :value="h.hora" :disabled="h.disabled">
-                {{ h.hora }} hs ({{ h.disponibles }}/{{ h.cupo }})
-              </option>
-            </select>
-          </div>
+          <ApronteSchedulePicker
+            v-model:fecha="newForm.fecha"
+            v-model:hora="newForm.hora"
+            label="Agenda de apronte"
+          />
           <div class="md:col-span-2 flex justify-end gap-2 mt-2">
             <button type="button" @click="cerrarModalNuevo" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-widest">Cancelar</button>
             <button type="submit" :disabled="guardandoNuevo" class="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest disabled:opacity-60 disabled:cursor-not-allowed">

@@ -88,6 +88,7 @@ declare global {
         observaciones: string
         marca: string
         modelo: string
+        numero_motor?: string
         factura: string
         estado?: string
         repuestos_garantia?: string
@@ -110,6 +111,7 @@ declare global {
         observaciones: string
         marca: string
         modelo: string
+        numero_motor?: string
         factura: string
         estado?: string
         repuestos_garantia?: string
@@ -128,6 +130,7 @@ declare global {
         observaciones: string
         marca: string
         modelo: string
+        numero_motor?: string
         factura: string
         estado?: string
         repuestos_garantia?: string
@@ -147,6 +150,7 @@ declare global {
         observaciones: string
         marca: string
         modelo: string
+        numero_motor?: string
         factura: string
         estado?: string
         repuestos_garantia?: string

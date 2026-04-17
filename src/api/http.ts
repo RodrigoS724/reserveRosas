@@ -1,7 +1,10 @@
-const RAW_BASE = String(import.meta.env.VITE_API_URL || '').trim()
+const EMBEDDED_API_BASE = 'https://rosas.uy/api-server'
+const EMBEDDED_API_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
+
+const RAW_BASE = String(import.meta.env.VITE_API_URL || EMBEDDED_API_BASE).trim()
 const BASE_URL = RAW_BASE.replace(/\/+$/, '')
 const IPC_ENDPOINT = BASE_URL ? `${BASE_URL}/api/admin/ipc` : '/api/admin/ipc'
-const API_TOKEN = String(import.meta.env.VITE_API_TOKEN || '').trim()
+const API_TOKEN = String(import.meta.env.VITE_API_TOKEN || EMBEDDED_API_TOKEN).trim()
 
 async function invoke(channel: string, ...args: any[]) {
   const fetchFn = globalThis.fetch

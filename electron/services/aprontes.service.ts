@@ -10,6 +10,7 @@ export type ApronteInput = {
   observaciones: string
   marca: string
   modelo: string
+  numero_motor?: string
   factura: string
   estado?: string
   repuestos_garantia?: string
@@ -71,17 +72,6 @@ function normalizarFechaOpcional(value: any) {
   return normalizarFecha(raw)
 }
 
-function ensureNotFutureDate(dateIso: string) {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  const todayIso = `${y}-${m}-${d}`
-  if (String(dateIso || '') > todayIso) {
-    throw new Error('No se pueden seleccionar fechas de aprontes posteriores a hoy')
-  }
-}
-
 function sqliteNowIso() {
   return new Date().toISOString().replace('T', ' ').slice(0, 19)
 }
@@ -96,6 +86,7 @@ async function ensureAprontesMysqlSchema() {
       `ALTER TABLE aprontes ADD COLUMN correo_alerta_garantia VARCHAR(255)`,
       `ALTER TABLE aprontes ADD COLUMN dias_alerta_garantia INT DEFAULT 7`,
       `ALTER TABLE aprontes ADD COLUMN fecha_alerta_garantia DATE NULL`,
+      `ALTER TABLE aprontes ADD COLUMN numero_motor VARCHAR(100)`,
       `ALTER TABLE aprontes ADD COLUMN garantia_espera_desde DATETIME NULL`,
       `ALTER TABLE aprontes ADD COLUMN garantia_notificada TINYINT DEFAULT 0`,
       `ALTER TABLE aprontes ADD COLUMN garantia_notificada_at DATETIME NULL`
@@ -172,6 +163,26 @@ function normalizarHora(value: any) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+function horaEnMinutos(hora: string) {
+  const parts = String(hora || '').split(':')
+  const h = Number(parts[0])
+  const m = Number(parts[1])
+  if (!Number.isFinite(h) || !Number.isFinite(m)) {
+    throw new Error('Formato de hora invalido')
+  }
+  return h * 60 + m
+}
+
+function validarReglaFinDeSemana(fechaIso: string, hora: string) {
+  const day = new Date(`${fechaIso}T00:00:00`).getDay()
+  if (day === 0) {
+    throw new Error('Los domingos no se agendan aprontes')
+  }
+  if (day === 6 && horaEnMinutos(hora) > 12 * 60) {
+    throw new Error('Los sabados solo se permiten horarios hasta las 12:00')
+  }
+}
+
 function validarRequeridos(data: ApronteInput) {
   const required: Array<keyof ApronteInput> = [
     'nombre',
@@ -204,6 +215,7 @@ function normalizarApronte(data: ApronteInput) {
     observaciones: limpiarTexto(data.observaciones, 500),
     marca: limpiarTexto(data.marca, 100),
     modelo: limpiarTexto(data.modelo, 100),
+    numero_motor: limpiarTexto(data.numero_motor, 100),
     factura: limpiarTexto(data.factura, 100),
     estado,
     repuestos_garantia: limpiarTexto(data.repuestos_garantia, 1000),
@@ -272,11 +284,11 @@ function syncAprontesToSqlite(rows: any[]) {
     const upsert = db.prepare(
       `INSERT INTO aprontes (
         id, nombre, fecha, hora, telefono, localidad, observaciones,
-        marca, modelo, factura, estado, repuestos_garantia,
+        marca, modelo, numero_motor, factura, estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at,
         created_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         nombre = excluded.nombre,
         fecha = excluded.fecha,
@@ -286,6 +298,7 @@ function syncAprontesToSqlite(rows: any[]) {
         observaciones = excluded.observaciones,
         marca = excluded.marca,
         modelo = excluded.modelo,
+        numero_motor = excluded.numero_motor,
         factura = excluded.factura,
         estado = excluded.estado,
         repuestos_garantia = excluded.repuestos_garantia,
@@ -311,6 +324,7 @@ function syncAprontesToSqlite(rows: any[]) {
           row?.observaciones ?? '',
           row?.marca ?? '',
           row?.modelo ?? '',
+          row?.numero_motor ?? '',
           row?.factura ?? '',
           row?.estado ?? 'APRONTE',
           row?.repuestos_garantia ?? '',
@@ -338,11 +352,11 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       `INSERT INTO aprontes (
         nombre, fecha, hora,
         telefono, localidad, observaciones,
-        marca, modelo, factura,
+        marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       dataNormalizada.nombre,
       fechaNormalizada,
@@ -352,6 +366,7 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       dataNormalizada.observaciones,
       dataNormalizada.marca,
       dataNormalizada.modelo,
+      dataNormalizada.numero_motor,
       dataNormalizada.factura,
       dataNormalizada.estado,
       dataNormalizada.repuestos_garantia,
@@ -376,11 +391,11 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
       `INSERT INTO aprontes (
         nombre, fecha, hora,
         telefono, localidad, observaciones,
-        marca, modelo, factura,
+        marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         dataNormalizada.nombre,
         fechaNormalizada,
@@ -390,6 +405,7 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
         dataNormalizada.observaciones,
         dataNormalizada.marca,
         dataNormalizada.modelo,
+        dataNormalizada.numero_motor,
         dataNormalizada.factura,
         dataNormalizada.estado,
         dataNormalizada.repuestos_garantia,
@@ -418,7 +434,7 @@ export async function crearApronte(data: ApronteInput) {
   const normalized = normalizarApronte({ ...data })
   const fechaNormalizada = normalizarFecha(normalized.fecha)
   const horaNormalizada = normalizarHora(normalized.hora)
-  ensureNotFutureDate(fechaNormalizada)
+  validarReglaFinDeSemana(fechaNormalizada, horaNormalizada)
 
   try {
     const mysqlId = await crearApronteMysql(normalized, fechaNormalizada, horaNormalizada)
@@ -428,11 +444,11 @@ export async function crearApronte(data: ApronteInput) {
         `INSERT INTO aprontes (
           id, nombre, fecha, hora,
           telefono, localidad, observaciones,
-          marca, modelo, factura,
+          marca, modelo, numero_motor, factura,
           estado, repuestos_garantia,
           correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
           garantia_espera_desde, garantia_notificada, garantia_notificada_at
-        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         mysqlId,
         normalized.nombre,
@@ -443,6 +459,7 @@ export async function crearApronte(data: ApronteInput) {
         normalized.observaciones,
         normalized.marca,
         normalized.modelo,
+        normalized.numero_motor,
         normalized.factura,
         normalized.estado,
         normalized.repuestos_garantia,
@@ -540,7 +557,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     const normalized = normalizarApronte(merged)
     const fechaNormalizada = normalizarFecha(normalized.fecha)
     const horaNormalizada = normalizarHora(normalized.hora)
-    ensureNotFutureDate(fechaNormalizada)
+    validarReglaFinDeSemana(fechaNormalizada, horaNormalizada)
     const estadoAnterior = normalizarEstadoApronte(anterior.estado)
     const estadoNuevo = normalizarEstadoApronte(normalized.estado)
     const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
@@ -555,7 +572,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
       `UPDATE aprontes
        SET nombre = ?, fecha = ?, hora = ?,
            telefono = ?, localidad = ?, observaciones = ?,
-           marca = ?, modelo = ?, factura = ?,
+           marca = ?, modelo = ?, numero_motor = ?, factura = ?,
            estado = ?, repuestos_garantia = ?,
            correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
            garantia_espera_desde = CASE
@@ -582,6 +599,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         normalized.observaciones,
         normalized.marca,
         normalized.modelo,
+        normalized.numero_motor,
         normalized.factura,
         estadoNuevo,
         normalized.repuestos_garantia,
@@ -610,7 +628,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
       const normalized = normalizarApronte(merged)
       const fechaNormalizada = normalizarFecha(normalized.fecha)
       const horaNormalizada = normalizarHora(normalized.hora)
-      ensureNotFutureDate(fechaNormalizada)
+      validarReglaFinDeSemana(fechaNormalizada, horaNormalizada)
       const estadoAnterior = normalizarEstadoApronte(anterior.estado)
       const estadoNuevo = normalizarEstadoApronte(normalized.estado)
       const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
@@ -623,7 +641,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         `UPDATE aprontes
          SET nombre = ?, fecha = ?, hora = ?,
              telefono = ?, localidad = ?, observaciones = ?,
-             marca = ?, modelo = ?, factura = ?,
+             marca = ?, modelo = ?, numero_motor = ?, factura = ?,
              estado = ?, repuestos_garantia = ?,
              correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
              garantia_espera_desde = CASE
@@ -650,6 +668,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         normalized.observaciones,
         normalized.marca,
         normalized.modelo,
+        normalized.numero_motor,
         normalized.factura,
         estadoNuevo,
         normalized.repuestos_garantia,
@@ -680,7 +699,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
   const normalized = normalizarApronte(merged)
   const fechaNormalizada = normalizarFecha(normalized.fecha)
   const horaNormalizada = normalizarHora(normalized.hora)
-  ensureNotFutureDate(fechaNormalizada)
+  validarReglaFinDeSemana(fechaNormalizada, horaNormalizada)
   const estadoAnterior = normalizarEstadoApronte(anterior.estado)
   const estadoNuevo = normalizarEstadoApronte(normalized.estado)
   const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
@@ -694,7 +713,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     `UPDATE aprontes
      SET nombre = ?, fecha = ?, hora = ?,
          telefono = ?, localidad = ?, observaciones = ?,
-         marca = ?, modelo = ?, factura = ?,
+         marca = ?, modelo = ?, numero_motor = ?, factura = ?,
          estado = ?, repuestos_garantia = ?,
          correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
          garantia_espera_desde = CASE
@@ -721,6 +740,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     normalized.observaciones,
     normalized.marca,
     normalized.modelo,
+    normalized.numero_motor,
     normalized.factura,
     estadoNuevo,
     normalized.repuestos_garantia,

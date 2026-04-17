@@ -106,7 +106,7 @@ onMounted(() => {
         <textarea
           v-model="envText"
           class="w-full h-full p-4 bg-transparent text-gray-800 dark:text-gray-100 font-mono text-xs outline-none resize-none"
-          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=...\n\nAPI_REMOTE_URL=http://rosas.uy/reserva\nAPI_REMOTE_TOKEN=tu_token_api"
+          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=...\n\nAPI_REMOTE_URL=https://rosas.uy/api-server\nAPI_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4"
         ></textarea>
       </div>
 

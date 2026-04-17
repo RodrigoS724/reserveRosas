@@ -1,3 +1,8 @@
+import { app } from 'electron'
+
+const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
+const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
+
 const LOCAL_ONLY_CHANNELS = new Set<string>([
   'config:env:get',
   'config:env:set',
@@ -5,11 +10,11 @@ const LOCAL_ONLY_CHANNELS = new Set<string>([
 ])
 
 function getRemoteBaseUrl() {
-  return String(process.env.API_REMOTE_URL || '').trim().replace(/\/+$/, '')
+  return String(process.env.API_REMOTE_URL || EMBEDDED_REMOTE_URL).trim().replace(/\/+$/, '')
 }
 
 function getRemoteToken() {
-  return String(process.env.API_REMOTE_TOKEN || '').trim()
+  return String(process.env.API_REMOTE_TOKEN || EMBEDDED_REMOTE_TOKEN).trim()
 }
 
 function buildAuthHeaders(token: string) {
@@ -24,7 +29,16 @@ function buildAuthHeaders(token: string) {
 }
 
 export function isRemoteBackendEnabled() {
-  return getRemoteBaseUrl().length > 0
+  const base = getRemoteBaseUrl()
+  if (!base) return false
+
+  // En desarrollo preferimos backend local, salvo opt-in explícito.
+  const allowInDev = String(process.env.API_REMOTE_IN_DEV || '0').trim().toLowerCase()
+  if (!app.isPackaged && !['1', 'true', 'on', 'yes'].includes(allowInDev)) {
+    return false
+  }
+
+  return true
 }
 
 export function shouldProxyChannel(channel: string) {

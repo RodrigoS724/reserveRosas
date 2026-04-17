@@ -139,6 +139,7 @@ export function initDatabase() {
       observaciones TEXT,
       marca TEXT,
       modelo TEXT,
+      numero_motor TEXT,
       factura TEXT,
       estado TEXT DEFAULT 'APRONTE',
       repuestos_garantia TEXT,
@@ -441,6 +442,19 @@ export function initDatabase() {
       console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
     } else {
       console.warn(' [DB] Error durante migracion (aprontes fecha_alerta_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN numero_motor TEXT`)
+    console.log(' [DB] Columna "numero_motor" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "numero_motor" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes numero_motor):', err.message)
     }
   }
 

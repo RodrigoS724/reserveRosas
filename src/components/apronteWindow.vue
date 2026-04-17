@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { api } from '../api'
+import ApronteSchedulePicker from './ApronteSchedulePicker.vue'
 
 const printLogoUrl = new URL('../assets/logo.png', import.meta.url).href
 
@@ -11,28 +12,21 @@ const props = defineProps<{
 const emit = defineEmits(['cerrar', 'actualizar'])
 
 const editable = ref<any | null>(null)
-const horarios = ref<any[]>([])
 const marcas = ref<string[]>([])
 const guardando = ref(false)
 const status = ref('')
 const statusOk = ref(true)
 
-const cerrar = () => {
-  emit('cerrar')
+const normalizarMensajeError = (error: any, fallback: string) => {
+  const msg = String(error?.message || fallback)
+  if (msg.toLowerCase().includes('fechas de aprontes posteriores a hoy')) {
+    return 'No se puede agendar con esa fecha/hora. Revisa las reglas de agenda de aprontes.'
+  }
+  return msg
 }
 
-const cargarHorarios = async (fecha: string) => {
-  if (!fecha) {
-    horarios.value = []
-    return
-  }
-  try {
-    const data = await api.obtenerHorariosAprontesDisponibles(fecha)
-    horarios.value = data || []
-  } catch (error) {
-    console.error('[ApronteWindow] Error cargando horarios:', error)
-    horarios.value = []
-  }
+const cerrar = () => {
+  emit('cerrar')
 }
 
 const cargarMarcas = async () => {
@@ -62,35 +56,23 @@ watch(
       observaciones: String(nueva.observaciones || ''),
       marca: String(nueva.marca || ''),
       modelo: String(nueva.modelo || ''),
+      numero_motor: String(nueva.numero_motor || ''),
       factura: String(nueva.factura || ''),
       created_at: String(nueva.created_at || '')
     }
     status.value = ''
     statusOk.value = true
-    cargarHorarios(editable.value.fecha)
     cargarMarcas()
   },
   { immediate: true }
 )
 
 watch(
-  () => editable.value?.fecha,
-  (fecha) => {
-    if (fecha) cargarHorarios(fecha)
+  () => [editable.value?.fecha, editable.value?.hora],
+  () => {
+    status.value = ''
   }
 )
-
-const horariosSelect = computed(() => {
-  const current = String(editable.value?.hora || '')
-  const list = (horarios.value || []).map((h) => ({
-    ...h,
-    disabled: h.disponibles <= 0 && h.hora !== current
-  }))
-  if (current && !list.some((h) => h.hora === current)) {
-    list.unshift({ id: -1, hora: current, cupo: 0, usados: 0, disponibles: 1, disabled: false })
-  }
-  return list
-})
 
 const validarForm = () => {
   const required = ['nombre', 'fecha', 'hora', 'telefono', 'localidad', 'marca', 'modelo', 'factura']
@@ -119,6 +101,7 @@ const guardar = async () => {
       observaciones: String(editable.value.observaciones || '').trim(),
       marca: String(editable.value.marca || '').trim(),
       modelo: String(editable.value.modelo || '').trim(),
+      numero_motor: String(editable.value.numero_motor || '').trim(),
       factura: String(editable.value.factura || '').trim()
     }
     await api.actualizarApronte(payload)
@@ -127,7 +110,7 @@ const guardar = async () => {
     emit('actualizar')
     cerrar()
   } catch (error: any) {
-    status.value = error?.message || 'Error al guardar'
+    status.value = normalizarMensajeError(error, 'Error al guardar')
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -148,7 +131,7 @@ const eliminar = async () => {
     emit('actualizar')
     cerrar()
   } catch (error: any) {
-    status.value = error?.message || 'Error al eliminar'
+    status.value = normalizarMensajeError(error, 'Error al eliminar')
     statusOk.value = false
   } finally {
     guardando.value = false
@@ -173,28 +156,25 @@ const buildPrintHtml = (data: any) => {
     <meta charset="utf-8">
     <title>CONSTANCIA DE ENTREGA DE MOTOS</title>
     <style>
+      @page { size: A4; margin: 6mm; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; color: #000; line-height: 1.4; }
-      .page { width: 210mm; height: 297mm; padding: 15mm; margin: 0 auto; background: white; }
-      .header { text-align: center; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
-      .logo-box { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+      body { font-family: Arial, sans-serif; color: #000; line-height: 1.28; background: white; }
+      .page { width: 100%; min-height: 285mm; padding: 4mm 5mm 5mm; margin: 0 auto; background: white; }
+      .header { text-align: center; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+      .logo-box { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
       .logo-box img { width: 100%; height: 100%; object-fit: contain; }
       .header-content { flex: 1; }
-      .header-title { font-size: 14px; font-weight: bold; border: 2px solid #000; padding: 8px; }
-      .section { margin-bottom: 15px; }
-      .section-title { font-size: 10px; font-weight: bold; border: 1px solid #000; padding: 4px 6px; background: #f0f0f0; }
-      table { width: 100%; border-collapse: collapse; font-size: 10px; }
-      td { border: 1px solid #000; padding: 6px; }
+      .header-title { font-size: 16px; font-weight: 700; border: 2px solid #000; padding: 10px 12px; letter-spacing: 0.02em; }
+      .section { margin-bottom: 9px; }
+      .section-title { font-size: 11px; font-weight: 700; border: 1px solid #000; padding: 5px 7px; background: #f0f0f0; }
+      table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      td { border: 1px solid #000; padding: 7px 8px; }
       .label { font-weight: bold; width: 35%; background: #f9f9f9; }
       .value { vertical-align: top; word-break: break-word; }
-      .row { display: table; width: 100%; margin-bottom: 8px; }
-      .col { display: table-cell; border: 1px solid #000; padding: 6px; vertical-align: top; }
-      .col-label { background: #f9f9f9; font-weight: bold; width: 50%; font-size: 10px; }
-      .col-value { width: 50%; font-size: 10px; }
-      .description-table td { height: 20px; text-align: center; font-size: 9px; }
-      .signature-section { margin-top: 20px; display: flex; justify-content: space-around; }
-      .signature-box { text-align: center; border-top: 1px solid #000; width: 28%; font-size: 9px; padding-top: 30px; }
-      .observaciones { border: 1px solid #000; padding: 8px; min-height: 80px; font-size: 10px; white-space: pre-wrap; word-wrap: break-word; }
+      .description-table td { height: 22px; text-align: center; font-size: 10px; padding: 6px; }
+      .signature-section { margin-top: 12px; display: flex; justify-content: space-around; gap: 14px; }
+      .signature-box { text-align: center; border-top: 1px solid #000; width: 32%; font-size: 10px; padding-top: 24px; }
+      .observaciones { border: 1px solid #000; padding: 8px; min-height: 74px; font-size: 11px; white-space: pre-wrap; word-wrap: break-word; }
       @media print {
         body { margin: 0; padding: 0; }
         .page { margin: 0; box-shadow: none; }
@@ -241,6 +221,10 @@ const buildPrintHtml = (data: any) => {
           <tr>
             <td class="label">MODELO</td>
             <td class="value">${escapeText(data.modelo)}</td>
+          </tr>
+          <tr>
+            <td class="label">N° MOTOR</td>
+            <td class="value">${escapeText(data.numero_motor)}</td>
           </tr>
           <tr>
             <td class="label">N° FACTURA DE COMPRA</td>
@@ -390,20 +374,11 @@ const imprimirPdf = () => {
           <input v-model="editable.nombre" />
         </div>
 
-        <div class="campo">
-          <label>Fecha</label>
-          <input v-model="editable.fecha" type="date" />
-        </div>
-
-        <div class="campo">
-          <label>Horario</label>
-          <select v-model="editable.hora">
-            <option value="">Seleccionar horario...</option>
-            <option v-for="h in horariosSelect" :key="h.id" :value="h.hora" :disabled="h.disabled">
-              {{ h.hora }} hs ({{ h.disponibles }}/{{ h.cupo }})
-            </option>
-          </select>
-        </div>
+        <ApronteSchedulePicker
+          v-model:fecha="editable.fecha"
+          v-model:hora="editable.hora"
+          label="Agenda de apronte"
+        />
 
         <div class="campo">
           <label>Telefono</label>
@@ -426,6 +401,11 @@ const imprimirPdf = () => {
         <div class="campo">
           <label>Modelo</label>
           <input v-model="editable.modelo" readonly class="read-only-input" />
+        </div>
+
+        <div class="campo">
+          <label>Numero de motor</label>
+          <input v-model="editable.numero_motor" />
         </div>
 
         <div class="campo">
