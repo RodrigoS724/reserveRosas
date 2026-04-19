@@ -14,6 +14,7 @@ const mostrandoConfirmacion = ref(false)
 const session = getSession()
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
+const reservasHistoricas = ref<any[]>([])
 const puedeEditarTodo = computed(() => canEditReservaCompleta(session))
 const puedeEditarEstado = computed(() => Boolean(session))
 const esTaller = computed(() => isTallerRole(session))
@@ -21,6 +22,12 @@ const esTaller = computed(() => isTallerRole(session))
 const normalizarMatricula = (value: string) => {
   return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 }
+
+const normalizarCatalogoTexto = (value: string) => {
+  return String(value || '').trim().toLowerCase()
+}
+
+const normalizarCedula = (value: string) => String(value || '').replace(/\D/g, '')
 
 const normalizarTexto = (value: string) => {
   return String(value || '')
@@ -82,6 +89,42 @@ const cargarModelos = async (marcaValue: string) => {
   }
 }
 
+const cargarReservasHistoricas = async () => {
+  try {
+    const data = await api.obtenerTodasLasReservas()
+    reservasHistoricas.value = Array.isArray(data) ? [...data].sort((a: any, b: any) => Number(b?.id || 0) - Number(a?.id || 0)) : []
+  } catch (error) {
+    console.error('[ReservaWindow] Error cargando reservas historicas:', error)
+    reservasHistoricas.value = []
+  }
+}
+
+const autocompletarPorCedula = (cedulaValue: string) => {
+  if (!editable.value || !puedeEditarTodo.value) return
+  const clean = normalizarCedula(cedulaValue)
+  if (clean.length < 7) return
+
+  const match = reservasHistoricas.value.find((r: any) => {
+    const sameCedula = normalizarCedula(String(r?.cedula || '')) === clean
+    const otroRegistro = Number(r?.id || 0) !== Number(editable.value?.id || 0)
+    return sameCedula && otroRegistro
+  })
+  if (!match) return
+
+  editable.value.nombre = String(match?.nombre || editable.value.nombre || '').trim()
+  editable.value.telefono = String(match?.telefono || editable.value.telefono || '').trim()
+  editable.value.marca = normalizarCatalogoTexto(String(match?.marca || editable.value.marca || ''))
+  editable.value.modelo = normalizarCatalogoTexto(String(match?.modelo || editable.value.modelo || ''))
+  editable.value.km = String(match?.km || editable.value.km || '').trim()
+  editable.value.tipo_turno = normalizarTipoTurno(String(match?.tipo_turno || editable.value.tipo_turno || '')) || editable.value.tipo_turno
+  editable.value.particular_tipo = String(match?.particular_tipo || editable.value.particular_tipo || '')
+  editable.value.garantia_tipo = normalizarTipoGarantia(String(match?.garantia_tipo || editable.value.garantia_tipo || '')) || editable.value.garantia_tipo
+  editable.value.garantia_fecha_compra = limpiarFecha(String(match?.garantia_fecha_compra || editable.value.garantia_fecha_compra || ''))
+  editable.value.garantia_numero_service = String(match?.garantia_numero_service || editable.value.garantia_numero_service || '')
+  editable.value.garantia_problema = String(match?.garantia_problema || editable.value.garantia_problema || '')
+  editable.value.detalles = String(match?.detalles || editable.value.detalles || '')
+}
+
 watch(
   () => props.reserva,
   (nueva) => {
@@ -112,6 +155,7 @@ watch(
     }
     cargarMarcas()
     cargarModelos(String(nueva.marca || ''))
+    cargarReservasHistoricas()
   },
   { immediate: true }
 )
@@ -121,6 +165,15 @@ watch(
   (marcaValue) => {
     if (marcaValue !== undefined) {
       cargarModelos(String(marcaValue || ''))
+    }
+  }
+)
+
+watch(
+  () => editable.value?.cedula,
+  (cedulaValue) => {
+    if (cedulaValue !== undefined) {
+      autocompletarPorCedula(String(cedulaValue || ''))
     }
   }
 )
@@ -171,6 +224,8 @@ const guardar = async () => {
       }
     } else {
       editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
+      editable.value.marca = normalizarCatalogoTexto(editable.value.marca)
+      editable.value.modelo = normalizarCatalogoTexto(editable.value.modelo)
       editable.value.tipo_turno = normalizarTipoTurno(editable.value.tipo_turno) || editable.value.tipo_turno
       editable.value.garantia_tipo = normalizarTipoGarantia(editable.value.garantia_tipo) || editable.value.garantia_tipo
       editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)

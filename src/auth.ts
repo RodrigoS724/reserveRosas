@@ -13,6 +13,10 @@ const STORAGE_KEY = 'rr_session'
 const ROUTE_PERMISSIONS: Record<string, string> = {
   '/agenda': 'agenda',
   '/reservas': 'reservas',
+  '/ventas': 'reservas',
+  '/ventas/motos': 'reservas',
+  '/ventas/creditos': 'reservas',
+  '/ventas/metricas': 'reservas',
   '/aprontes': 'aprontes',
   '/registros': 'registros',
   '/historial': 'historial',

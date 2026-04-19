@@ -31,6 +31,10 @@ const normalizarMensajeError = (error: any, fallback: string) => {
   return msg
 }
 
+const normalizarCatalogoTexto = (value: string) => {
+  return String(value || '').trim().toLowerCase()
+}
+
 const cerrar = () => {
   emit('cerrar')
 }
@@ -117,8 +121,8 @@ const guardar = async () => {
           telefono: String(editable.value.telefono || '').trim(),
           localidad: String(editable.value.localidad || '').trim(),
           observaciones: String(editable.value.observaciones || '').trim(),
-          marca: String(editable.value.marca || '').trim(),
-          modelo: String(editable.value.modelo || '').trim(),
+          marca: normalizarCatalogoTexto(String(editable.value.marca || '')),
+          modelo: normalizarCatalogoTexto(String(editable.value.modelo || '')),
           numero_motor: String(editable.value.numero_motor || '').trim(),
           factura: String(editable.value.factura || '').trim(),
           estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase(),

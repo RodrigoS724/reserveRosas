@@ -239,6 +239,47 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <div v-if="puede('reservas')" class="my-3 mx-4 border-t border-gray-100 dark:border-gray-800/60"></div>
+        <div v-if="puede('reservas')" class="px-4 mb-2">
+            <span class="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500">Ventas</span>
+        </div>
+
+        <router-link v-if="puede('reservas')" to="/ventas/motos" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M7 3v4m10-4v4M5 11h14v8H5z"/></svg>
+            <span>Motos vendidas</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="puede('reservas')" to="/ventas/creditos" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 0V4m0 12v4m8-8h-4M8 12H4"/></svg>
+            <span>Creditos</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="puede('reservas')" to="/ventas/metricas" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v18h16M9 15l3-3 3 2 4-6"/></svg>
+            <span>Registros de venta</span>
+          </div>
+        </router-link>
+
         <router-link v-if="puede('ajustes')" to="/ajustes" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',

@@ -49,7 +49,7 @@ function buildReservaMutationInput(anterior: any, incoming: any, actorRole: stri
 }
 
 function normalizarCatalogoTexto(value: any) {
-  const text = String(value || '').trim()
+  const text = String(value || '').trim().toLowerCase()
   return text.length > 100 ? text.slice(0, 100) : text
 }
 

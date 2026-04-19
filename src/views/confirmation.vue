@@ -18,6 +18,7 @@ const km = ref('')
 const detalles = ref('')
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
+const reservasHistoricas = ref<any[]>([])
 
 const tipoTurno = ref<'Garantia' | 'Particular' | 'TomaMoto'>('Particular')
 const particularTipo = ref<'Service' | 'Taller'>('Service')
@@ -55,6 +56,66 @@ const cargarModelos = async (marcaValue: string) => {
 }
 
 const normalizarCedula = (value: string) => value.replace(/\D/g, '')
+const normalizarCatalogoTexto = (value: string) => String(value || '').trim().toLowerCase()
+
+const normalizarTipoTurnoPrevio = (value: string) => {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (raw === 'garantia') return 'Garantia'
+  if (raw === 'particular') return 'Particular'
+  if (raw === 'toma de moto' || raw === 'tomamoto') return 'TomaMoto'
+  return ''
+}
+
+const normalizarTipoGarantiaPrevio = (value: string) => {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (raw === 'service') return 'Service'
+  if (raw === 'reparacion') return 'Reparacion'
+  return 'Service'
+}
+
+const cargarReservasHistoricas = async () => {
+  try {
+    const data = await api.obtenerTodasLasReservas()
+    reservasHistoricas.value = Array.isArray(data) ? [...data].sort((a: any, b: any) => Number(b?.id || 0) - Number(a?.id || 0)) : []
+  } catch (error) {
+    console.warn('[Confirmation] Error cargando reservas historicas:', error)
+    reservasHistoricas.value = []
+  }
+}
+
+const aplicarAutocompletadoPorCedula = (value: string) => {
+  const cedulaBuscada = normalizarCedula(value)
+  if (!cedulaBuscada || cedulaBuscada.length < 7) return
+
+  const match = reservasHistoricas.value.find((r: any) => normalizarCedula(String(r?.cedula || '')) === cedulaBuscada)
+  if (!match) return
+
+  nombre.value = String(match?.nombre || nombre.value || '').trim()
+  telefono.value = String(match?.telefono || telefono.value || '').trim()
+  marca.value = normalizarCatalogoTexto(String(match?.marca || marca.value || ''))
+  modelo.value = normalizarCatalogoTexto(String(match?.modelo || modelo.value || ''))
+
+  const tipoTurnoPrevio = normalizarTipoTurnoPrevio(String(match?.tipo_turno || ''))
+  if (tipoTurnoPrevio === 'Garantia' || tipoTurnoPrevio === 'Particular' || tipoTurnoPrevio === 'TomaMoto') {
+    tipoTurno.value = tipoTurnoPrevio as 'Garantia' | 'Particular' | 'TomaMoto'
+  }
+
+  particularTipo.value = String(match?.particular_tipo || '').trim().toLowerCase() === 'taller' ? 'Taller' : 'Service'
+  garantiaTipo.value = normalizarTipoGarantiaPrevio(String(match?.garantia_tipo || '')) as 'Service' | 'Reparacion'
+  garantiaFechaCompra.value = String(match?.garantia_fecha_compra || '').trim()
+  garantiaNumeroService.value = String(match?.garantia_numero_service || '').trim()
+  garantiaProblema.value = String(match?.garantia_problema || '').trim()
+  km.value = String(match?.km || '').trim()
+  detalles.value = String(match?.detalles || '').trim()
+}
 
 const validarCedulaUy = (value: string) => {
   const digitsRaw = normalizarCedula(value)
@@ -92,6 +153,14 @@ const isParticularService = computed(() => isParticular.value && particularTipo.
 const isParticularTaller = computed(() => isParticular.value && particularTipo.value === 'Taller')
 const isGarantiaService = computed(() => isGarantia.value && garantiaTipo.value === 'Service')
 const isGarantiaReparacion = computed(() => isGarantia.value && garantiaTipo.value === 'Reparacion')
+const cedulasHistoricas = computed(() => {
+  const set = new Set<string>()
+  for (const r of reservasHistoricas.value) {
+    const c = normalizarCedula(String(r?.cedula || ''))
+    if (c.length >= 7) set.add(formatCedula(c))
+  }
+  return Array.from(set)
+})
 
 const nombreValido = computed(() => nombre.value.trim().split(/\s+/).length >= 2)
 const cedulaValida = computed(() => validarCedulaUy(cedula.value))
@@ -120,6 +189,9 @@ const esValido = computed(() => {
 watch(cedula, (value) => {
   const formatted = formatCedula(value)
   if (formatted !== value) cedula.value = formatted
+  if (!isTomaMoto.value) {
+    aplicarAutocompletadoPorCedula(formatted)
+  }
 })
 
 watch(telefono, (value) => {
@@ -155,11 +227,23 @@ watch(garantiaTipo, () => {
 })
 
 watch(marca, (value) => {
-  cargarModelos(value)
+  const normalizada = normalizarCatalogoTexto(value)
+  if (normalizada !== value) {
+    marca.value = normalizada
+    return
+  }
+  cargarModelos(normalizada)
+})
+
+watch(modelo, (value) => {
+  const normalizada = normalizarCatalogoTexto(value)
+  if (normalizada !== value) {
+    modelo.value = normalizada
+  }
 })
 
 onMounted(async () => {
-  await cargarMarcas()
+  await Promise.all([cargarMarcas(), cargarReservasHistoricas()])
   await cargarModelos(marca.value)
 })
 
@@ -207,8 +291,8 @@ const confirmarReserva = async () => {
     nombre: nombre.value.trim(),
     cedula: isTomaMoto.value ? '' : normalizarCedula(cedula.value),
     telefono: telefono.value.trim(),
-    marca: marca.value.trim(),
-    modelo: modelo.value.trim(),
+    marca: normalizarCatalogoTexto(marca.value),
+    modelo: normalizarCatalogoTexto(modelo.value),
     km: (isParticularService.value || isGarantiaService.value) ? km.value.trim() : '',
     matricula: matriculaAuto,
     tipo_turno: tipoTurno.value === 'Garantia' ? 'Garantía' : (tipoTurno.value === 'Particular' ? 'Particular' : 'Toma de moto'),
@@ -290,7 +374,7 @@ const confirmarReserva = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div class="space-y-2">
                 <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Cedula</label>
-                <input v-model="cedula" type="text" placeholder="1.234.567-8" :class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')]">
+                <input v-model="cedula" type="text" list="cedulas-historicas" placeholder="1.234.567-8" :class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')]">
               </div>
               <div class="space-y-2">
                 <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Telefono</label>
@@ -374,6 +458,9 @@ const confirmarReserva = async () => {
           </datalist>
           <datalist id="motos-modelos">
             <option v-for="m in modelos" :key="m" :value="m"></option>
+          </datalist>
+          <datalist id="cedulas-historicas">
+            <option v-for="c in cedulasHistoricas" :key="c" :value="c"></option>
           </datalist>
 
           <button type="submit" :disabled="!esValido || guardando" :class="['mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl', !esValido ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20']">

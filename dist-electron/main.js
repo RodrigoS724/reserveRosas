@@ -20275,7 +20275,7 @@ function buildReservaMutationInput(anterior, incoming, actorRole) {
   };
 }
 function normalizarCatalogoTexto$1(value) {
-  const text = String(value || "").trim();
+  const text = String(value || "").trim().toLowerCase();
   return text.length > 100 ? text.slice(0, 100) : text;
 }
 async function registrarMarcaModeloMysql$1(pool2, marca, modelo) {
@@ -22509,7 +22509,7 @@ function limpiarTexto(value, maxLen = 255) {
   return text.length > maxLen ? text.slice(0, maxLen) : text;
 }
 function normalizarCatalogoTexto(value) {
-  return limpiarTexto(value, 100);
+  return limpiarTexto(value, 100).toLowerCase();
 }
 function normalizarEstadoApronte(value) {
   const raw = String(value || "").trim().toUpperCase().replace(/_/g, " ").replace(/\s+/g, " ");
@@ -23809,7 +23809,7 @@ function registrarHandlersAprontes() {
   );
 }
 function normalizarTexto(value, maxLen = 100) {
-  const text = String(value || "").trim();
+  const text = String(value || "").trim().toLowerCase();
   return text.length > maxLen ? text.slice(0, maxLen) : text;
 }
 async function obtenerMarcasMoto() {
@@ -23820,7 +23820,7 @@ async function obtenerMarcasMoto() {
        WHERE marca IS NOT NULL AND marca <> ''
        ORDER BY marca`
     );
-    return (rows2 || []).map((r) => String((r == null ? void 0 : r.marca) || "").trim()).filter(Boolean);
+    return (rows2 || []).map((r) => String((r == null ? void 0 : r.marca) || "").trim().toLowerCase()).filter(Boolean);
   });
   if (mysqlResult.ok) return mysqlResult.value;
   const db2 = initDatabase();
@@ -23830,7 +23830,7 @@ async function obtenerMarcasMoto() {
      WHERE marca IS NOT NULL AND marca <> ''
      ORDER BY marca`
   ).all();
-  return (rows || []).map((r) => String((r == null ? void 0 : r.marca) || "").trim()).filter(Boolean);
+  return (rows || []).map((r) => String((r == null ? void 0 : r.marca) || "").trim().toLowerCase()).filter(Boolean);
 }
 async function obtenerModelosMoto(marca) {
   const marcaNormalizada = normalizarTexto(marca, 100);
@@ -23839,11 +23839,11 @@ async function obtenerModelosMoto(marca) {
       const [rows3] = await pool2.execute(
         `SELECT DISTINCT modelo
          FROM motos_catalogo
-         WHERE marca = ? AND modelo IS NOT NULL AND modelo <> ''
+         WHERE LOWER(marca) = ? AND modelo IS NOT NULL AND modelo <> ''
          ORDER BY modelo`,
         [marcaNormalizada]
       );
-      return (rows3 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim()).filter(Boolean);
+      return (rows3 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim().toLowerCase()).filter(Boolean);
     }
     const [rows2] = await pool2.execute(
       `SELECT DISTINCT modelo
@@ -23851,7 +23851,7 @@ async function obtenerModelosMoto(marca) {
        WHERE modelo IS NOT NULL AND modelo <> ''
        ORDER BY modelo`
     );
-    return (rows2 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim()).filter(Boolean);
+    return (rows2 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim().toLowerCase()).filter(Boolean);
   });
   if (mysqlResult.ok) return mysqlResult.value;
   const db2 = initDatabase();
@@ -23859,10 +23859,10 @@ async function obtenerModelosMoto(marca) {
     const rows2 = db2.prepare(
       `SELECT DISTINCT modelo
        FROM motos_catalogo
-       WHERE marca = ? AND modelo IS NOT NULL AND modelo <> ''
+       WHERE LOWER(marca) = ? AND modelo IS NOT NULL AND modelo <> ''
        ORDER BY modelo`
     ).all(marcaNormalizada);
-    return (rows2 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim()).filter(Boolean);
+    return (rows2 || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim().toLowerCase()).filter(Boolean);
   }
   const rows = db2.prepare(
     `SELECT DISTINCT modelo
@@ -23870,7 +23870,7 @@ async function obtenerModelosMoto(marca) {
      WHERE modelo IS NOT NULL AND modelo <> ''
      ORDER BY modelo`
   ).all();
-  return (rows || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim()).filter(Boolean);
+  return (rows || []).map((r) => String((r == null ? void 0 : r.modelo) || "").trim().toLowerCase()).filter(Boolean);
 }
 function registrarHandlersMotos() {
   safeHandle("motos:marcas", async () => obtenerMarcasMoto());

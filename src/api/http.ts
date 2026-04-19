@@ -89,6 +89,17 @@ export const api = {
   // Registros
   obtenerRegistroMensual: (d: any) => invoke('registros:mensual', d),
 
+  // Ventas
+  listarMotosVentas: (d: any) => invoke('ventas:motos:list', d),
+  crearMotoVenta: (d: any) => invoke('ventas:motos:create', withActor(d)),
+  actualizarMotoVenta: (d: any) => invoke('ventas:motos:update', withActor(d)),
+  borrarMotoVenta: (id: number) => invoke('ventas:motos:delete', { id, actor: getActor() }),
+  listarCreditosVentas: () => invoke('ventas:creditos:list'),
+  crearCreditoVenta: (d: any) => invoke('ventas:creditos:create', withActor(d)),
+  actualizarCreditoVenta: (d: any) => invoke('ventas:creditos:update', withActor(d)),
+  borrarCreditoVenta: (id: number) => invoke('ventas:creditos:delete', { id, actor: getActor() }),
+  exportarMesVentas: (d: any) => invoke('ventas:exportar-mes', d),
+
   // Aprontes
   crearApronte: (d: any) => invoke('aprontes:crear', withActor(d)),
   obtenerApronte: (id: number) => invoke('aprontes:obtener', id),

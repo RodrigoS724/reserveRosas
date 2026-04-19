@@ -55,7 +55,7 @@ function limpiarTexto(value: any, maxLen = 255) {
 }
 
 function normalizarCatalogoTexto(value: any) {
-  return limpiarTexto(value, 100)
+  return limpiarTexto(value, 100).toLowerCase()
 }
 
 function normalizarEstadoApronte(value: any) {
