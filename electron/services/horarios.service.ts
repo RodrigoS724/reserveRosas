@@ -1,4 +1,4 @@
-import { initDatabase } from '../db/database'
+import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 
 /* =========================
@@ -39,6 +39,12 @@ export async function obtenerHorariosBase() {
     return rows
   })
   if (mysqlResult.ok) return mysqlResult.value
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
 
   const db = initDatabase()
   const result = db.prepare(`
@@ -110,6 +116,12 @@ export async function obtenerHorariosDisponibles(fecha: string) {
       horarios = horarios.filter(h => h.hora < '12:00')
     }
     return horarios
+  }
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
   }
 
   return obtenerHorariosDisponiblesSqlite(fechaNormalizada)
@@ -239,6 +251,12 @@ export async function obtenerHorariosInactivos() {
     return rows
   })
   if (mysqlResult.ok) return mysqlResult.value
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
 
   return obtenerHorariosInactivosSqlite()
 }

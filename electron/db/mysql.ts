@@ -28,7 +28,8 @@ export function getMysqlPool() {
         ? Number(process.env.MYSQL_CONNECT_TIMEOUT)
         : 10000,
       waitForConnections: true,
-      connectionLimit: 10,
+      // Clever Cloud user has low max_user_connections; keep local pool conservative.
+      connectionLimit: 3,
       queueLimit: 0,
       dateStrings: true
     })
@@ -37,7 +38,13 @@ export function getMysqlPool() {
 }
 
 export function resetMysqlPool() {
+  const current = pool
   pool = null
+  if (current) {
+    current.end().catch((error) => {
+      console.warn('[MySQL] Error cerrando pool previo:', error)
+    })
+  }
 }
 
 export async function tryMysql<T>(fn: (pool: mysql.Pool) => Promise<T>) {

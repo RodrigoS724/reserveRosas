@@ -1,4 +1,4 @@
-import { initDatabase } from '../db/database'
+import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 import {
   assertCanCreateReserva,
@@ -879,6 +879,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
 }
 
 function syncReservasToSqlite(rows: any[]) {
+  if (isLocalDbDisabled()) return
   if (!Array.isArray(rows) || rows.length === 0) return
   try {
     const db = initDatabase()
@@ -992,6 +993,12 @@ export async function obtenerReservasSemana(desde: string, hasta: string) {
     return mysqlResult.value
   }
 
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
+
   const db = initDatabase()
   const result = db.prepare(`
     SELECT * FROM reservas
@@ -1024,6 +1031,12 @@ export async function obtenerReservasPorFecha(fecha: string) {
     return mysqlResult.value
   }
 
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
+
   const db = initDatabase()
   return db.prepare(`
     SELECT * FROM reservas
@@ -1047,6 +1060,12 @@ export async function obtenerTodasLasReservas() {
   if (mysqlResult.ok) {
     syncReservasToSqlite(mysqlResult.value)
     return mysqlResult.value
+  }
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
   }
 
   const db = initDatabase()
@@ -1137,7 +1156,18 @@ export async function actualizarNotasReserva(idOrPayload: number | any, notas?: 
  * OBTENER CAMBIOS RECIENTES
  * ========================= */
 export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 200) {
-  console.log('[Service] Buscando cambios de reservas desde:', since, 'id>', lastId)
+  const sinceNormalized = (() => {
+    const raw = String(since || '').trim()
+    if (!raw) return new Date(0).toISOString()
+    const parsed = new Date(raw)
+    return Number.isNaN(parsed.getTime()) ? new Date(0).toISOString() : parsed.toISOString()
+  })()
+  const lastIdNormalized = Number.isFinite(Number(lastId)) ? Math.max(0, Math.floor(Number(lastId))) : 0
+  const limitNormalized = Number.isFinite(Number(limit))
+    ? Math.min(500, Math.max(1, Math.floor(Number(limit))))
+    : 200
+
+  console.log('[Service] Buscando cambios de reservas desde:', sinceNormalized, 'id>', lastIdNormalized)
 
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(
@@ -1150,11 +1180,17 @@ export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 
         ORDER BY h.fecha ASC, h.id ASC
         LIMIT ?
       `,
-      [since, since, lastId, limit]
+      [sinceNormalized, sinceNormalized, lastIdNormalized, limitNormalized]
     )
     return rows
   })
   if (mysqlResult.ok) return mysqlResult.value
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
 
   const db = initDatabase()
   const rows = db.prepare(
@@ -1167,7 +1203,7 @@ export async function obtenerCambiosReservas(since: string, lastId = 0, limit = 
       ORDER BY h.fecha ASC, h.id ASC
       LIMIT ?
     `
-  ).all(since, since, lastId, limit)
+  ).all(sinceNormalized, sinceNormalized, lastIdNormalized, limitNormalized)
   return rows
 }
 

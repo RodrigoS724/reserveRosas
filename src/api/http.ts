@@ -8,6 +8,14 @@ const BASE_URL = RAW_BASE.replace(/\/+$/, '')
 const IPC_ENDPOINT = BASE_URL ? `${BASE_URL}/api/admin/ipc` : '/api/admin/ipc'
 const API_TOKEN = String(import.meta.env.VITE_API_TOKEN || EMBEDDED_API_TOKEN).trim()
 
+function encodeIpcArgs(args: any[]) {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(Array.isArray(args) ? args : []))))
+  } catch {
+    return ''
+  }
+}
+
 async function invoke(channel: string, ...args: any[]) {
   const fetchFn = globalThis.fetch
   if (typeof fetchFn !== 'function') {
@@ -22,7 +30,16 @@ async function invoke(channel: string, ...args: any[]) {
     headers['X-API-KEY'] = API_TOKEN
   }
 
-  const response = await fetchFn(IPC_ENDPOINT, {
+  const safeChannel = String(channel || '')
+  const encodedArgs = encodeIpcArgs(args)
+  headers['X-RR-IPC-Channel'] = safeChannel
+  if (encodedArgs) {
+    headers['X-RR-IPC-Args'] = encodedArgs
+  }
+
+  const endpoint = `${IPC_ENDPOINT}?channel=${encodeURIComponent(safeChannel)}`
+
+  const response = await fetchFn(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({ channel, args })

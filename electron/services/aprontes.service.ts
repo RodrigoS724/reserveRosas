@@ -1,4 +1,4 @@
-import { initDatabase } from '../db/database'
+import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 import {
   assertCanCreateApronte,
@@ -305,6 +305,7 @@ function validarCupoDisponibleSqlite(db: any, fecha: string, hora: string, exclu
 }
 
 function syncAprontesToSqlite(rows: any[]) {
+  if (isLocalDbDisabled()) return
   if (!Array.isArray(rows) || rows.length === 0) return
   try {
     const db = initDatabase()
@@ -580,6 +581,12 @@ export async function obtenerAprontesPorFecha(fecha: string) {
     return mysqlResult.value
   }
 
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
+
   const db = initDatabase()
   return db.prepare(
     `SELECT *
@@ -603,6 +610,12 @@ export async function obtenerTodosLosAprontes() {
   if (mysqlResult.ok) {
     syncAprontesToSqlite(mysqlResult.value)
     return mysqlResult.value
+  }
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
   }
 
   const db = initDatabase()

@@ -1,4 +1,4 @@
-import { initDatabase } from '../db/database'
+import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 
 function normalizarHora(hora: string): string {
@@ -53,6 +53,7 @@ function aplicarReglaFinDeSemana(fechaIso: string, rows: any[]) {
 }
 
 function syncHorariosAprontesToSqlite(rows: any[]) {
+  if (isLocalDbDisabled()) return
   if (!Array.isArray(rows) || rows.length === 0) return
   try {
     const db = initDatabase()
@@ -106,6 +107,12 @@ export async function obtenerHorariosAprontesBase() {
     return mysqlResult.value
   }
 
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
+
   const db = initDatabase()
   return db.prepare(
     `SELECT id, hora, cupo, activo
@@ -129,6 +136,12 @@ export async function obtenerHorariosAprontesInactivos() {
   if (mysqlResult.ok) {
     syncHorariosAprontesToSqlite(mysqlResult.value.map((r: any) => ({ ...r, activo: 0 })))
     return mysqlResult.value
+  }
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
   }
 
   const db = initDatabase()
@@ -163,6 +176,12 @@ export async function obtenerHorariosAprontesDisponibles(fecha: string) {
   })
 
   if (mysqlResult.ok) return aplicarReglaFinDeSemana(fechaNormalizada, mysqlResult.value)
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
+  }
 
   const db = initDatabase()
   const rows = db.prepare(

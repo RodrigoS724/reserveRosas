@@ -10,7 +10,27 @@ const LOCAL_ONLY_CHANNELS = new Set<string>([
 ])
 
 function getRemoteBaseUrl() {
-  return String(process.env.API_REMOTE_URL || EMBEDDED_REMOTE_URL).trim().replace(/\/+$/, '')
+  const raw = String(process.env.API_REMOTE_URL || EMBEDDED_REMOTE_URL).trim()
+  const normalized = raw.replace(/\/+$/, '')
+  if (!normalized) return ''
+
+  // In packaged production builds, never allow unknown remote backends.
+  if (app.isPackaged) {
+    try {
+      const parsed = new URL(normalized)
+      const host = parsed.hostname.toLowerCase()
+      const path = parsed.pathname.replace(/\/+$/, '')
+      const trustedHost = host === 'rosas.uy' || host === 'www.rosas.uy'
+      const trustedPath = path === '/api-server'
+      if (!trustedHost || !trustedPath) {
+        return EMBEDDED_REMOTE_URL
+      }
+    } catch {
+      return EMBEDDED_REMOTE_URL
+    }
+  }
+
+  return normalized
 }
 
 function getRemoteToken() {

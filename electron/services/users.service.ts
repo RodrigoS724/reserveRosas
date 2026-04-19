@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { initDatabase } from '../db/database'
+import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 import { registrarAuditoria } from './auditoria.service'
 import {
@@ -112,6 +112,7 @@ function ensureUserSqlite(data: {
 }
 
 function syncUsersToSqlite(rows: any[]) {
+  if (isLocalDbDisabled()) return
   const db = initDatabase()
   const upsert = db.prepare(
     `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
@@ -219,6 +220,12 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
       permissions: parsePermissions(row.permissions_json, normalizeRole(row.role)), activo: Number(row.activo) || 0,
       created_at: row.created_at
     }))
+  }
+
+  if (isLocalDbDisabled()) {
+    throw mysqlResult.error instanceof Error
+      ? mysqlResult.error
+      : new Error('MySQL no disponible y DB local deshabilitada')
   }
 
   const db = initDatabase()
