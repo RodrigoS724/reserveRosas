@@ -28,6 +28,14 @@ function buildAuthHeaders(token: string) {
   return headers
 }
 
+function encodeIpcArgs(args: any[]) {
+  try {
+    return Buffer.from(JSON.stringify(Array.isArray(args) ? args : []), 'utf-8').toString('base64')
+  } catch {
+    return ''
+  }
+}
+
 export function isRemoteBackendEnabled() {
   const base = getRemoteBaseUrl()
   if (!base) return false
@@ -52,9 +60,15 @@ export async function proxyIpcToRemote(channel: string, args: any[]) {
     throw new Error('API remota no configurada (API_REMOTE_URL).')
   }
 
-  const endpoint = `${baseUrl}/api/admin/ipc`
+  const encodedChannel = encodeURIComponent(String(channel || ''))
+  const endpoint = `${baseUrl}/api/admin/ipc?channel=${encodedChannel}`
   const token = getRemoteToken()
   const headers = buildAuthHeaders(token)
+  headers['X-RR-IPC-Channel'] = String(channel || '')
+  const encodedArgs = encodeIpcArgs(args)
+  if (encodedArgs) {
+    headers['X-RR-IPC-Args'] = encodedArgs
+  }
 
   const fetchFn = (globalThis as any).fetch
   if (typeof fetchFn !== 'function') {
@@ -132,6 +146,10 @@ export async function testRemoteApiConnection() {
   const timeout = setTimeout(() => controller.abort(), 15000)
 
   try {
+    const pingHeaders = buildAuthHeaders(token)
+    pingHeaders['X-RR-IPC-Channel'] = '__ping__'
+    pingHeaders['X-RR-IPC-Args'] = encodeIpcArgs([])
+
     const healthResponse = await fetchFn(`${baseUrl}/api/health`, {
       method: 'GET',
       signal: controller.signal
@@ -143,9 +161,9 @@ export async function testRemoteApiConnection() {
       }
     }
 
-    const authResponse = await fetchFn(`${baseUrl}/api/admin/ipc`, {
+    const authResponse = await fetchFn(`${baseUrl}/api/admin/ipc?channel=__ping__`, {
       method: 'POST',
-      headers: buildAuthHeaders(token),
+      headers: pingHeaders,
       body: JSON.stringify({ channel: '__ping__', args: [] }),
       signal: controller.signal
     })
