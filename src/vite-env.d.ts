@@ -326,7 +326,10 @@ declare global {
         notas: string
       }[]>
 
-      actualizarNotasReserva: (id: number, notas: string) => Promise<void>
+      actualizarNotasReserva: (
+        idOrPayload: number | { id: number; notas: string; actor?: { username?: string; role?: string } },
+        notas?: string
+      ) => Promise<void>
 
       obtenerConfigResumenDiario: () => Promise<{
         enabled: boolean

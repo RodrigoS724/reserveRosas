@@ -820,9 +820,12 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
     `).get(reservaId) as Partial<ReservaSnapshot>
 
     if (!anterior) {
-      console.log('[Service] Reserva no encontrada para actualizar:', id)
+      console.log('[Service] Reserva no encontrada para actualizar:', reservaId)
       return
     }
+
+    const payload = buildReservaMutationInput(anterior, payloadBase, actor.role) as ReservaSnapshot
+    const campos = Object.keys(payload) as (keyof ReservaSnapshot)[]
 
     const transaction = db.transaction(() => {
       db.prepare(`
@@ -1057,11 +1060,11 @@ export async function obtenerTodasLasReservas() {
 /* =========================
  * ACTUALIZAR NOTAS DE RESERVA
  * ========================= */
-export async function actualizarNotasReserva(id: number, notas: string) {
-  const payload = typeof id === 'object' && id !== null ? id : { id, notas }
+export async function actualizarNotasReserva(idOrPayload: number | any, notas?: string) {
+  const payload = typeof idOrPayload === 'object' && idOrPayload !== null ? idOrPayload : { id: idOrPayload, notas }
   const actor = getActor(payload)
   assertCanEditReservaNotes(actor.role)
-  const reservaId = Number(payload?.id || id)
+  const reservaId = Number(payload?.id || idOrPayload)
   const nextNotas = String(payload?.notas ?? notas ?? '')
   console.log('[Service] Actualizando notas para reserva:', reservaId)
 

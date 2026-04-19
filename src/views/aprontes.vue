@@ -67,7 +67,6 @@ const ESTADOS_APRONTE = [
   'ENTREGADA ESPERA DE GARANTIA'
 ]
 
-const mostrarGestionGarantia = ref(false)
 const guardandoAlertas = ref(false)
 const configAlertas = ref({
   default_email: '',
