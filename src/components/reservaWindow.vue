@@ -190,7 +190,7 @@ const cancelarReserva = async () => {
   if (!editable.value) return
 
   try {
-    await api.borrarReserva({ id: editable.value.id })
+    await api.borrarReserva(editable.value.id)
     alert('Reserva cancelada exitosamente')
     emit('actualizar')
     cerrar()
