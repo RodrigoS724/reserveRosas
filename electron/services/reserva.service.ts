@@ -1,5 +1,13 @@
 import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
+import {
+  assertCanCreateReserva,
+  assertCanDeleteReserva,
+  assertCanEditReservaNotes,
+  assertCanMoveReserva,
+  getActor,
+  isTallerRole
+} from './access-control.service'
 
 const MAX_RETRIES = 3
 const RETRY_DELAY_MS = 100
@@ -25,6 +33,19 @@ type ReservaInput = {
 
 type ReservaSnapshot = ReservaInput & {
   estado: string
+}
+
+function buildReservaMutationInput(anterior: any, incoming: any, actorRole: string) {
+  if (isTallerRole(actorRole)) {
+    return {
+      ...anterior,
+      estado: incoming?.estado ?? anterior?.estado
+    }
+  }
+  return {
+    ...anterior,
+    ...incoming
+  }
 }
 
 function normalizarCatalogoTexto(value: any) {
@@ -405,6 +426,8 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
 
 export async function crearReserva(data: ReservaInput) {
   console.log('[Service] Iniciando crearReserva...')
+  const actor = getActor(data)
+  assertCanCreateReserva(actor.role)
   validarReserva(data)
   validarCondicionesSubtipo(data)
   const dataNormalizada = normalizarReserva({ ...data })
@@ -443,25 +466,29 @@ export async function obtenerReserva(id: number) {
 /* =========================
  * BORRAR RESERVA
  * ========================= */
-export async function borrarReserva(id: number) {
-  console.log('[Service] Borrando reserva:', id)
+export async function borrarReserva(input: number | any) {
+  const payload = typeof input === 'object' && input !== null ? input : { id: input }
+  const actor = getActor(payload)
+  assertCanDeleteReserva(actor.role)
+  const reservaId = Number(payload?.id || input)
+  console.log('[Service] Borrando reserva:', reservaId)
 
   const mysqlResult = await tryMysql( async (pool) => {
-    const [rows]: any = await pool.execute(`SELECT * FROM reservas WHERE id = ?`, [id])
+    const [rows]: any = await pool.execute(`SELECT * FROM reservas WHERE id = ?`, [reservaId])
     const reserva = rows[0]
     if (!reserva) {
-      console.log('[Service] Reserva no encontrada en MySQL:', id)
+      console.log('[Service] Reserva no encontrada en MySQL:', reservaId)
       return
     }
 
-    await pool.execute(`DELETE FROM reservas WHERE id = ?`, [id])
+    await pool.execute(`DELETE FROM reservas WHERE id = ?`, [reservaId])
     await pool.execute(
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'eliminación', ?, 'reserva eliminada', NOW())
       `,
-      [id, JSON.stringify(reserva)]
+      [reservaId, JSON.stringify(reserva)]
     )
   })
 
@@ -469,14 +496,14 @@ export async function borrarReserva(id: number) {
     try {
       const db = initDatabase()
       const tx = db.transaction(() => {
-        const reserva = db.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id)
+      const reserva = db.prepare(`SELECT * FROM reservas WHERE id = ?`).get(reservaId)
         if (!reserva) return
-        db.prepare(`DELETE FROM reservas WHERE id = ?`).run(id)
+      db.prepare(`DELETE FROM reservas WHERE id = ?`).run(reservaId)
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
-        `).run(id, JSON.stringify(reserva))
+        `).run(reservaId, JSON.stringify(reserva))
       })
       tx()
     } catch (error) {
@@ -488,17 +515,17 @@ export async function borrarReserva(id: number) {
   const db = initDatabase()
   try {
     const tx = db.transaction(() => {
-      const reserva = db.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id)
+      const reserva = db.prepare(`SELECT * FROM reservas WHERE id = ?`).get(reservaId)
       if (!reserva) {
-        console.log('[Service] Reserva no encontrada:', id)
+        console.log('[Service] Reserva no encontrada:', reservaId)
         return
       }
-      db.prepare(`DELETE FROM reservas WHERE id = ?`).run(id)
+      db.prepare(`DELETE FROM reservas WHERE id = ?`).run(reservaId)
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
-      `).run(id, JSON.stringify(reserva))
+      `).run(reservaId, JSON.stringify(reserva))
     })
     tx()
   } catch (error: any) {
@@ -510,44 +537,50 @@ export async function borrarReserva(id: number) {
 /* =========================
  * MOVER RESERVA (drag & drop)
  * ========================= */
-export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: string) {
-  console.log('[Service] Moviendo reserva:', { id, nuevaFecha, nuevaHora })
+export async function moverReserva(idOrPayload: number | any, nuevaFecha?: string, nuevaHora?: string) {
+  const payload = typeof idOrPayload === 'object' && idOrPayload !== null
+    ? idOrPayload
+    : { id: idOrPayload, nuevaFecha, nuevaHora }
+  const actor = getActor(payload)
+  assertCanMoveReserva(actor.role)
+  const reservaId = Number(payload?.id || idOrPayload)
+  console.log('[Service] Moviendo reserva:', { id: reservaId, nuevaFecha: payload?.nuevaFecha, nuevaHora: payload?.nuevaHora })
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT fecha, hora FROM reservas WHERE id = ?`,
-      [id]
+      [reservaId]
     )
     const anterior = rows[0]
     if (!anterior) {
-      console.log('[Service] Reserva no encontrada para mover (MySQL):', id)
+      console.log('[Service] Reserva no encontrada para mover (MySQL):', reservaId)
       return
     }
 
     await pool.execute(
       `UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`,
-      [nuevaFecha, nuevaHora ?? null, id]
+      [payload?.nuevaFecha, payload?.nuevaHora ?? null, reservaId]
     )
 
-    if (nuevaFecha !== anterior.fecha) {
+    if (payload?.nuevaFecha !== anterior.fecha) {
       await pool.execute(
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'fecha', ?, ?, NOW())
         `,
-        [id, anterior.fecha, nuevaFecha]
+        [reservaId, anterior.fecha, payload?.nuevaFecha]
       )
     }
 
-    if (nuevaHora && nuevaHora !== anterior.hora) {
+    if (payload?.nuevaHora && payload.nuevaHora !== anterior.hora) {
       await pool.execute(
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'hora', ?, ?, NOW())
         `,
-        [id, anterior.hora, nuevaHora]
+        [reservaId, anterior.hora, payload.nuevaHora]
       )
     }
   })
@@ -556,22 +589,22 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
     try {
       const db = initDatabase()
       const tx = db.transaction(() => {
-        const anterior = db.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(id) as { fecha: string; hora: string } | undefined
+      const anterior = db.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(reservaId) as { fecha: string; hora: string } | undefined
         if (!anterior) return
-        db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
-        if (nuevaFecha !== anterior.fecha) {
+      db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(payload?.nuevaFecha, payload?.nuevaHora ?? null, reservaId)
+      if (payload?.nuevaFecha !== anterior.fecha) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, 'fecha', ?, ?, datetime('now'))
-          `).run(id, anterior.fecha, nuevaFecha)
+          `).run(reservaId, anterior.fecha, payload?.nuevaFecha)
         }
-        if (nuevaHora && nuevaHora !== anterior.hora) {
+        if (payload?.nuevaHora && payload.nuevaHora !== anterior.hora) {
           db.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, 'hora', ?, ?, datetime('now'))
-          `).run(id, anterior.hora, nuevaHora)
+          `).run(reservaId, anterior.hora, payload.nuevaHora)
         }
       })
       tx()
@@ -584,25 +617,25 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
   const db = initDatabase()
   try {
     const tx = db.transaction(() => {
-      const anterior = db.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(id) as { fecha: string; hora: string } | undefined
+      const anterior = db.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(reservaId) as { fecha: string; hora: string } | undefined
       if (!anterior) {
-        console.log('[Service] Reserva no encontrada para mover:', id)
+        console.log('[Service] Reserva no encontrada para mover:', reservaId)
         return
       }
-      db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id)
-      if (nuevaFecha !== anterior.fecha) {
+      db.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(payload?.nuevaFecha, payload?.nuevaHora ?? null, reservaId)
+      if (payload?.nuevaFecha !== anterior.fecha) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'fecha', ?, ?, datetime('now'))
-        `).run(id, anterior.fecha, nuevaFecha)
+        `).run(reservaId, anterior.fecha, payload?.nuevaFecha)
       }
-      if (nuevaHora && nuevaHora !== anterior.hora) {
+      if (payload?.nuevaHora && payload.nuevaHora !== anterior.hora) {
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'hora', ?, ?, datetime('now'))
-        `).run(id, anterior.hora, nuevaHora)
+        `).run(reservaId, anterior.hora, payload.nuevaHora)
       }
     })
     tx()
@@ -615,38 +648,43 @@ export async function moverReserva(id: number, nuevaFecha: string, nuevaHora: st
 /* =========================
  * ACTUALIZAR RESERVA (EDITAR)
  * ========================= */
-export async function actualizarReserva(id: number, reserva: any) {
-  console.log('[Service] Actualizando reserva:', id, reserva)
-  const reservaId = Number(id || reserva?.id || 0)
+export async function actualizarReserva(idOrPayload: number | any, reserva?: any) {
+  const incoming = typeof idOrPayload === 'object' && idOrPayload !== null ? idOrPayload : (reserva || {})
+  const actor = getActor(incoming)
+  const reservaId = Number((typeof idOrPayload === 'object' ? idOrPayload?.id : idOrPayload) || incoming?.id || 0)
+  console.log('[Service] Actualizando reserva:', reservaId, incoming)
   if (!reservaId) {
     throw new Error('ID de reserva invalido.')
   }
 
-  const matriculaNormalizada = normalizarMatriculaReserva(reserva?.matricula || '').slice(0, 10)
+  const mergedIncoming = isTallerRole(actor.role)
+    ? { estado: incoming?.estado }
+    : incoming
+
+  const matriculaNormalizada = normalizarMatriculaReserva(mergedIncoming?.matricula || '').slice(0, 10)
   if (matriculaNormalizada && !/^[A-Z0-9]{3,10}$/.test(matriculaNormalizada)) {
     throw new Error('Matricula invalida. Usa solo letras y numeros.')
   }
   const reservaActualizada = normalizarReserva({
-    nombre: String(reserva?.nombre ?? ''),
-    cedula: String(reserva?.cedula ?? ''),
-    telefono: String(reserva?.telefono ?? ''),
-    marca: String(reserva?.marca ?? ''),
-    modelo: String(reserva?.modelo ?? ''),
-    km: String(reserva?.km ?? ''),
+    nombre: String(mergedIncoming?.nombre ?? ''),
+    cedula: String(mergedIncoming?.cedula ?? ''),
+    telefono: String(mergedIncoming?.telefono ?? ''),
+    marca: String(mergedIncoming?.marca ?? ''),
+    modelo: String(mergedIncoming?.modelo ?? ''),
+    km: String(mergedIncoming?.km ?? ''),
     matricula: matriculaNormalizada,
-    tipo_turno: String(reserva?.tipo_turno ?? ''),
-    particular_tipo: reserva?.particular_tipo ?? null,
-    garantia_tipo: reserva?.garantia_tipo ?? null,
-    garantia_fecha_compra: reserva?.garantia_fecha_compra ?? null,
-    garantia_numero_service: reserva?.garantia_numero_service ?? null,
-    garantia_problema: reserva?.garantia_problema ?? null,
-    fecha: String(reserva?.fecha ?? ''),
-    hora: String(reserva?.hora ?? ''),
-    detalles: String(reserva?.detalles ?? '')
+    tipo_turno: String(mergedIncoming?.tipo_turno ?? ''),
+    particular_tipo: mergedIncoming?.particular_tipo ?? null,
+    garantia_tipo: mergedIncoming?.garantia_tipo ?? null,
+    garantia_fecha_compra: mergedIncoming?.garantia_fecha_compra ?? null,
+    garantia_numero_service: mergedIncoming?.garantia_numero_service ?? null,
+    garantia_problema: mergedIncoming?.garantia_problema ?? null,
+    fecha: String(mergedIncoming?.fecha ?? ''),
+    hora: String(mergedIncoming?.hora ?? ''),
+    detalles: String(mergedIncoming?.detalles ?? '')
   } as ReservaInput)
-  const estadoActual = String(reserva?.estado ?? 'pendiente')
-  const payload: ReservaSnapshot = { ...reservaActualizada, estado: estadoActual }
-  const campos = Object.keys(payload) as (keyof ReservaSnapshot)[]
+  const estadoActual = String(mergedIncoming?.estado ?? 'pendiente')
+  const payloadBase: ReservaSnapshot = { ...reservaActualizada, estado: estadoActual }
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
@@ -658,9 +696,12 @@ export async function actualizarReserva(id: number, reserva: any) {
     )
     const anterior = rows[0] as Partial<ReservaSnapshot>
     if (!anterior) {
-      console.log('[Service] Reserva no encontrada para actualizar (MySQL):', id)
+      console.log('[Service] Reserva no encontrada para actualizar (MySQL):', reservaId)
       return
     }
+
+    const payload = buildReservaMutationInput(anterior, payloadBase, actor.role) as ReservaSnapshot
+    const campos = Object.keys(payload) as (keyof ReservaSnapshot)[]
 
     await pool.execute(
       `UPDATE reservas
@@ -717,6 +758,8 @@ export async function actualizarReserva(id: number, reserva: any) {
         WHERE id = ?
       `).get(reservaId) as Partial<ReservaSnapshot>
       if (!anterior) return
+      const payload = buildReservaMutationInput(anterior, payloadBase, actor.role) as ReservaSnapshot
+      const campos = Object.keys(payload) as (keyof ReservaSnapshot)[]
       const transaction = db.transaction(() => {
         db.prepare(`
           UPDATE reservas
@@ -1015,39 +1058,44 @@ export async function obtenerTodasLasReservas() {
  * ACTUALIZAR NOTAS DE RESERVA
  * ========================= */
 export async function actualizarNotasReserva(id: number, notas: string) {
-  console.log('[Service] Actualizando notas para reserva:', id)
+  const payload = typeof id === 'object' && id !== null ? id : { id, notas }
+  const actor = getActor(payload)
+  assertCanEditReservaNotes(actor.role)
+  const reservaId = Number(payload?.id || id)
+  const nextNotas = String(payload?.notas ?? notas ?? '')
+  console.log('[Service] Actualizando notas para reserva:', reservaId)
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT notas FROM reservas WHERE id = ?`,
-      [id]
+      [reservaId]
     )
     const anterior = rows[0]
     if (!anterior) return
 
-    await pool.execute(`UPDATE reservas SET notas = ? WHERE id = ?`, [notas, id])
+    await pool.execute(`UPDATE reservas SET notas = ? WHERE id = ?`, [nextNotas, reservaId])
     await pool.execute(
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'notas', ?, ?, NOW())
       `,
-      [id, anterior.notas || '', notas]
+      [reservaId, anterior.notas || '', nextNotas]
     )
   })
 
   if (mysqlResult.ok) {
     try {
       const db = initDatabase()
-      const anterior = db.prepare(`SELECT notas FROM reservas WHERE id = ?`).get(id) as { notas: string | null } | undefined
+      const anterior = db.prepare(`SELECT notas FROM reservas WHERE id = ?`).get(reservaId) as { notas: string | null } | undefined
       if (!anterior) return
       const transaction = db.transaction(() => {
-        db.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(notas, id)
+        db.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(nextNotas, reservaId)
         db.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'notas', ?, ?, datetime('now'))
-        `).run(id, anterior.notas || '', notas)
+        `).run(reservaId, anterior.notas || '', nextNotas)
       })
       transaction()
     } catch (error) {
@@ -1059,20 +1107,20 @@ export async function actualizarNotasReserva(id: number, notas: string) {
   const db = initDatabase()
   try {
     const anterior = db.prepare(`
-      SELECT notas FROM reservas WHERE id = ? `).get(id) as { notas: string | null } | undefined
+      SELECT notas FROM reservas WHERE id = ? `).get(reservaId) as { notas: string | null } | undefined
 
     if (!anterior) {
-      console.log('[Service] Reserva no encontrada:', id)
+      console.log('[Service] Reserva no encontrada:', reservaId)
       return
     }
 
     const transaction = db.transaction(() => {
-      db.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(notas, id)
+      db.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(nextNotas, reservaId)
       db.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'notas', ?, ?, datetime('now'))
-      `).run(id, anterior.notas || '', notas)
+      `).run(reservaId, anterior.notas || '', nextNotas)
     })
 
     transaction()

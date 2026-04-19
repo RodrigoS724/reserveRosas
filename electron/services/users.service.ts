@@ -2,8 +2,14 @@ import crypto from 'node:crypto'
 import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
 import { registrarAuditoria } from './auditoria.service'
-
-export type UserRole = 'superadmin' | 'super' | 'admin' | 'user'
+import {
+  ALL_PERMISSIONS,
+  getDefaultPermissions,
+  normalizePermissions,
+  normalizeRole,
+  parsePermissions,
+  type UserRole
+} from './access-control.service'
 
 export type UserRecord = {
   id: number
@@ -14,18 +20,6 @@ export type UserRecord = {
   activo: number
   created_at: string
 }
-
-const ALL_PERMISSIONS = [
-  'agenda',
-  'reservas',
-  'aprontes',
-  'historial',
-  'ajustes',
-  'vehiculos',
-  'config',
-  'usuarios',
-  'auditoria'
-]
 
 async function ensureUsersTableMysql() {
   return tryMysql( async (pool) => {
@@ -44,20 +38,6 @@ async function ensureUsersTableMysql() {
   })
 }
 
-export function getDefaultPermissions(role: UserRole) {
-  if (role === 'superadmin') return [...ALL_PERMISSIONS]
-  if (role === 'super') return [...ALL_PERMISSIONS]
-  if (role === 'admin') return ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos']
-  return ['reservas', 'historial']
-}
-
-function normalizeRole(role: string): UserRole {
-  if (role === 'superadmin' || role === 'super' || role === 'admin' || role === 'user') {
-    return role
-  }
-  return 'user'
-}
-
 function hashPassword(password: string) {
   const salt = crypto.randomBytes(16)
   const hash = crypto.scryptSync(password, salt, 32)
@@ -71,33 +51,6 @@ function verifyPassword(password: string, stored: string) {
   const hash = Buffer.from(parts[2], 'hex')
   const computed = crypto.scryptSync(password, salt, 32)
   return crypto.timingSafeEqual(hash, computed)
-}
-
-function normalizePermissions(role: UserRole, permissions: string[] | null) {
-  const normalizedRole = normalizeRole(role)
-  const allowed = new Set(ALL_PERMISSIONS)
-  if (!permissions || permissions.length === 0) {
-    return getDefaultPermissions(normalizedRole)
-  }
-  const unique = new Set<string>()
-  for (const p of permissions) {
-    if (allowed.has(p)) unique.add(p)
-  }
-  return Array.from(unique)
-}
-
-function parsePermissions(raw: any, role: UserRole) {
-  const normalizedRole = normalizeRole(role)
-  if (!raw) return getDefaultPermissions(normalizedRole)
-  try {
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      return normalizePermissions(normalizedRole, parsed)
-    }
-    return getDefaultPermissions(normalizedRole)
-  } catch {
-    return getDefaultPermissions(normalizedRole)
-  }
 }
 
 function isUniqueUsernameError(error: any) {

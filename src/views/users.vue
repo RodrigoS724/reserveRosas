@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, toRaw } from 'vue'
-import { PermissionsLabels, getSession, setSession } from '../auth'
+import { PermissionsLabels, getSession, normalizeRole, setSession, type SessionRole } from '../auth'
 import { api } from '../api'
 
 type UserForm = {
@@ -8,7 +8,7 @@ type UserForm = {
   nombre: string
   username: string
   password?: string
-  role: 'superadmin' | 'super' | 'admin' | 'user'
+  role: SessionRole
   permissions: string[]
   activo: number
 }
@@ -20,10 +20,11 @@ const statusOk = ref(true)
 const guardando = ref(false)
 
 const roles = [
-  { value: 'superadmin', label: 'Nivel 4', desc: 'Control total + credenciales' },
-  { value: 'super', label: 'Nivel 3', desc: 'Control total operativo' },
-  { value: 'admin', label: 'Nivel 2', desc: 'Acceso amplio sin configuracion' },
-  { value: 'user', label: 'Nivel 1', desc: 'Solo reservas e historial' }
+  { value: 'superadmin', label: 'SuperAdmin', desc: 'Control total del sistema' },
+  { value: 'administrador', label: 'Administrador', desc: 'Control operativo amplio sin configuracion DB' },
+  { value: 'ventas', label: 'Ventas', desc: 'Gestion comercial de reservas y aprontes' },
+  { value: 'caja', label: 'Caja', desc: 'Gestion operativa y habilitacion de aprontes de ventas' },
+  { value: 'taller', label: 'Taller', desc: 'Solo lectura operativa con cambio de estados' }
 ]
 
 const permisosCatalogo = Object.entries(PermissionsLabels).map(([key, label]) => ({
@@ -35,8 +36,8 @@ const form = ref<UserForm>({
   nombre: '',
   username: '',
   password: '',
-  role: 'user',
-  permissions: ['reservas', 'historial'],
+  role: 'ventas',
+  permissions: ['agenda', 'reservas', 'aprontes', 'historial'],
   activo: 1
 })
 
@@ -47,7 +48,7 @@ const cargarUsuarios = async () => {
   const data = await api.listarUsuarios()
   usuarios.value = (data || []).map((u: any) => ({
     ...u,
-    role: (u.role === 'superadmin' || u.role === 'super' || u.role === 'admin' || u.role === 'user') ? u.role : 'user'
+    role: normalizeRole(u.role)
   }))
 }
 
@@ -56,8 +57,8 @@ const resetForm = () => {
     nombre: '',
     username: '',
     password: '',
-    role: 'user',
-    permissions: ['reservas', 'historial'],
+    role: 'ventas',
+    permissions: ['agenda', 'reservas', 'aprontes', 'historial'],
     activo: 1
   }
   seleccion.value = null
@@ -69,7 +70,7 @@ const seleccionarUsuario = (u: any) => {
     id: u.id,
     nombre: u.nombre,
     username: u.username,
-    role: u.role,
+    role: normalizeRole(u.role),
     permissions: Array.isArray(u.permissions) ? [...u.permissions] : [],
     activo: u.activo ?? 1
   }
@@ -86,15 +87,19 @@ const togglePermiso = (perm: string) => {
 }
 
 const aplicarPermisosPorRol = () => {
-  if (form.value.role === 'superadmin' || form.value.role === 'super') {
+  if (form.value.role === 'superadmin') {
     form.value.permissions = permisosCatalogo.map((p) => p.key)
     return
   }
-  if (form.value.role === 'admin') {
-    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos']
+  if (form.value.role === 'administrador') {
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria']
     return
   }
-  form.value.permissions = ['reservas', 'historial']
+  if (form.value.role === 'ventas' || form.value.role === 'caja') {
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial']
+    return
+  }
+  form.value.permissions = ['reservas', 'aprontes', 'historial']
 }
 
 const guardarUsuario = async () => {

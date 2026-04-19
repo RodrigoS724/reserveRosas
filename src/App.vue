@@ -256,7 +256,7 @@ onMounted(() => {
             <span class="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500">Gestión</span>
         </div>
 
-        <router-link v-if="puede('reservas')" to="/registros" v-slot="{ isActive }">
+        <router-link v-if="puede('registros')" to="/registros" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
             isActive 

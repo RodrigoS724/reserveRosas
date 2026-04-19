@@ -118,17 +118,18 @@ export function registrarHandlersReservas() {
     return obtenerReserva(id)
   })
 
-  safeHandle('reservas:borrar', async (_event, id: number) => {
-    console.log('[IPC] Borrando reserva:', id)
+  safeHandle('reservas:borrar', async (_event, payload) => {
+    const reservaId = Number(payload?.id || payload)
+    console.log('[IPC] Borrando reserva:', reservaId)
     let anterior: any = null
     try {
-      anterior = await obtenerReserva(id)
+      anterior = await obtenerReserva(reservaId)
     } catch {
       anterior = null
     }
-    const result = await withDbLock(() => borrarReserva(id))
+    const result = await withDbLock(() => borrarReserva(payload))
     console.log('[IPC] Reserva borrada exitosamente')
-    await notifyReserva('eliminada', id, {
+    await notifyReserva('eliminada', reservaId, {
       nombre: anterior?.nombre,
       fecha: anterior?.fecha,
       hora: anterior?.hora,
@@ -139,9 +140,7 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:mover', async (_event, payload) => {
     console.log('[IPC] Moviendo reserva:', payload)
-    const result = await withDbLock(() =>
-      moverReserva(payload.id, payload.nuevaFecha, payload.nuevaHora)
-    )
+    const result = await withDbLock(() => moverReserva(payload))
     console.log('[IPC] Reserva movida exitosamente')
     if (payload?.id) {
       await notifyReserva('modificada', payload.id, {
@@ -154,9 +153,7 @@ export function registrarHandlersReservas() {
 
   safeHandle('reservas:actualizar', async (_event, payload) => {
     console.log('[IPC] Actualizando reserva:', payload)
-    const result = await withDbLock(() =>
-      actualizarReserva(payload.id, payload)
-    )
+    const result = await withDbLock(() => actualizarReserva(payload))
     console.log('[IPC] Reserva actualizada exitosamente')
     if (payload?.id) {
       await notifyReserva('modificada', payload.id, {
@@ -185,12 +182,13 @@ export function registrarHandlersReservas() {
     return result
   })
 
-  safeHandle('reservas:actualizar-notas', async (_event, id: number, notas: string) => {
-    console.log('[IPC] Actualizando notas para reserva:', id)
-    const result = await withDbLock(() => actualizarNotasReserva(id, notas))
+  safeHandle('reservas:actualizar-notas', async (_event, payload: any, notas?: string) => {
+    const data = typeof payload === 'object' && payload !== null ? payload : { id: payload, notas }
+    console.log('[IPC] Actualizando notas para reserva:', data?.id)
+    const result = await withDbLock(() => actualizarNotasReserva(data))
     console.log('[IPC] Notas actualizadas exitosamente')
-    if (id) {
-      await notifyReserva('modificada', id)
+    if (data?.id) {
+      await notifyReserva('modificada', data.id)
     }
     return result
   })

@@ -36,17 +36,17 @@ contextBridge.exposeInMainWorld('api', {
   // Reservas
   crearReserva: (d: any) => invokeSafe('reservas:crear', d),
   obtenerReserva: (id: number) => invokeSafe('reservas:obtener', id),
-  borrarReserva: (id: number) => invokeSafe('reservas:borrar', id),
+  borrarReserva: (data: any) => invokeSafe('reservas:borrar', data),
   moverReserva: (d: any) => invokeSafe('reservas:mover', d), actualizarReserva: (d: any) => invokeSafe('reservas:actualizar', d),
   obtenerReservasSemana: (d: any) => invokeSafe('reservas:semana', d),
   obtenerReservasDia: (d: any) => invokeSafe('reservas:dia', d),
-  obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (id: number, notas: string) => invokeSafe('reservas:actualizar-notas', id, notas),
+  obtenerTodasLasReservas: () => invokeSafe('reservas:todas'), actualizarNotasReserva: (data: any, notas?: string) => invokeSafe('reservas:actualizar-notas', data, notas),
   obtenerCambiosReservas: (d: any) => invokeSafe('reservas:cambios', d),
 
   // Aprontes
   crearApronte: (d: any) => invokeSafe('aprontes:crear', d),
   obtenerApronte: (id: number) => invokeSafe('aprontes:obtener', id),
-  borrarApronte: (id: number) => invokeSafe('aprontes:borrar', id),
+  borrarApronte: (data: any) => invokeSafe('aprontes:borrar', data),
   actualizarApronte: (d: any) => invokeSafe('aprontes:actualizar', d),
   obtenerAprontesFecha: (f: string) => invokeSafe('aprontes:fecha', f),
   obtenerAprontes: () => invokeSafe('aprontes:todas'),

@@ -1,3 +1,5 @@
+import { getSession, normalizeRole } from '../auth'
+
 const EMBEDDED_API_BASE = 'https://rosas.uy/api-server'
 const EMBEDDED_API_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 
@@ -56,27 +58,42 @@ async function invoke(channel: string, ...args: any[]) {
   return payload
 }
 
+function getActor() {
+  const session = getSession()
+  return {
+    username: session?.username || '',
+    role: normalizeRole(session?.role || '')
+  }
+}
+
+function withActor<T extends Record<string, any>>(payload: T | null | undefined): T & { actor: { username: string; role: string } } {
+  return {
+    ...(payload || {} as T),
+    actor: getActor()
+  }
+}
+
 export const api = {
   // Reservas
-  crearReserva: (d: any) => invoke('reservas:crear', d),
+  crearReserva: (d: any) => invoke('reservas:crear', withActor(d)),
   obtenerReserva: (id: number) => invoke('reservas:obtener', id),
-  borrarReserva: (id: number) => invoke('reservas:borrar', id),
-  moverReserva: (d: any) => invoke('reservas:mover', d),
-  actualizarReserva: (d: any) => invoke('reservas:actualizar', d),
+  borrarReserva: (id: number) => invoke('reservas:borrar', { id, actor: getActor() }),
+  moverReserva: (d: any) => invoke('reservas:mover', withActor(d)),
+  actualizarReserva: (d: any) => invoke('reservas:actualizar', withActor(d)),
   obtenerReservasSemana: (d: any) => invoke('reservas:semana', d),
   obtenerReservasDia: (d: any) => invoke('reservas:dia', d),
   obtenerTodasLasReservas: () => invoke('reservas:todas'),
-  actualizarNotasReserva: (id: number, notas: string) => invoke('reservas:actualizar-notas', id, notas),
+  actualizarNotasReserva: (id: number, notas: string) => invoke('reservas:actualizar-notas', { id, notas, actor: getActor() }),
   obtenerCambiosReservas: (d: any) => invoke('reservas:cambios', d),
 
   // Registros
   obtenerRegistroMensual: (d: any) => invoke('registros:mensual', d),
 
   // Aprontes
-  crearApronte: (d: any) => invoke('aprontes:crear', d),
+  crearApronte: (d: any) => invoke('aprontes:crear', withActor(d)),
   obtenerApronte: (id: number) => invoke('aprontes:obtener', id),
-  borrarApronte: (id: number) => invoke('aprontes:borrar', id),
-  actualizarApronte: (d: any) => invoke('aprontes:actualizar', d),
+  borrarApronte: (id: number) => invoke('aprontes:borrar', { id, actor: getActor() }),
+  actualizarApronte: (d: any) => invoke('aprontes:actualizar', withActor(d)),
   obtenerAprontesFecha: (f: string) => invoke('aprontes:fecha', f),
   obtenerAprontes: () => invoke('aprontes:todas'),
   obtenerConfigAlertasAprontes: () => invoke('aprontes:alertas:config:get'),

@@ -6,10 +6,12 @@ const props = withDefaults(defineProps<{
   fecha?: string
   hora?: string
   label?: string
+  disabled?: boolean
 }>(), {
   fecha: '',
   hora: '',
-  label: 'Fecha y horario'
+  label: 'Fecha y horario',
+  disabled: false
 })
 
 const emit = defineEmits<{
@@ -204,6 +206,7 @@ const cargarHorariosSeleccionados = async () => {
 }
 
 const seleccionarDia = (day: number, actual: boolean) => {
+  if (props.disabled) return
   if (!actual) return
   const iso = getIsoForDay(day)
   if (isPastDate(iso)) return
@@ -214,6 +217,7 @@ const seleccionarDia = (day: number, actual: boolean) => {
 }
 
 const seleccionarHora = (hora: string, disabled: boolean) => {
+  if (props.disabled) return
   if (disabled) return
   emit('update:hora', hora)
 }
@@ -292,8 +296,8 @@ watch([mesVisual, anioVisual], async () => {
         <div class="mt-1 text-sm font-bold text-slate-100">{{ mesTitulo }}</div>
       </div>
       <div class="flex items-center gap-2">
-        <button type="button" class="nav-btn" @click="mesAnterior">‹</button>
-        <button type="button" class="nav-btn" @click="mesSiguiente">›</button>
+        <button type="button" class="nav-btn" :disabled="props.disabled" @click="mesAnterior">‹</button>
+        <button type="button" class="nav-btn" :disabled="props.disabled" @click="mesSiguiente">›</button>
       </div>
     </div>
 
@@ -308,7 +312,7 @@ watch([mesVisual, anioVisual], async () => {
             :key="`${index}-${dia.numero}-${dia.actual}`"
             type="button"
             :class="obtenerClasesDia(dia)"
-            :disabled="!dia.actual || isPastDate(getIsoForDay(dia.numero))"
+            :disabled="props.disabled || !dia.actual || isPastDate(getIsoForDay(dia.numero))"
             @click="seleccionarDia(dia.numero, dia.actual)"
           >
             {{ dia.numero }}
@@ -326,7 +330,7 @@ watch([mesVisual, anioVisual], async () => {
             v-for="h in horariosDisponibles"
             :key="h.hora"
             type="button"
-            :disabled="Boolean(h.disabled)"
+            :disabled="props.disabled || Boolean(h.disabled)"
             :class="['hour-chip', props.hora === h.hora ? 'is-selected' : '', h.disabled ? 'is-disabled' : '']"
             @click="seleccionarHora(h.hora, Boolean(h.disabled))"
           >

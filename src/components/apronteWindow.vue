@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { canApproveApronte, canEditApronteCompleto, getSession, isTallerRole } from '../auth'
 import { api } from '../api'
 import ApronteSchedulePicker from './ApronteSchedulePicker.vue'
 
@@ -16,6 +17,11 @@ const marcas = ref<string[]>([])
 const guardando = ref(false)
 const status = ref('')
 const statusOk = ref(true)
+const session = getSession()
+const puedeEditarTodo = canEditApronteCompleto(session)
+const puedeAprobarCaja = canApproveApronte(session)
+const esTaller = isTallerRole(session)
+const puedeEditarEstado = Boolean(session)
 
 const normalizarMensajeError = (error: any, fallback: string) => {
   const msg = String(error?.message || fallback)
@@ -58,6 +64,11 @@ watch(
       modelo: String(nueva.modelo || ''),
       numero_motor: String(nueva.numero_motor || ''),
       factura: String(nueva.factura || ''),
+      estado: String(nueva.estado || 'APRONTE'),
+      caja_aprobado: Boolean(Number(nueva.caja_aprobado ?? 1)),
+      caja_aprobado_por: String(nueva.caja_aprobado_por || ''),
+      created_by_username: String(nueva.created_by_username || ''),
+      created_by_role: String(nueva.created_by_role || ''),
       created_at: String(nueva.created_at || '')
     }
     status.value = ''
@@ -90,20 +101,29 @@ const guardar = async () => {
   status.value = 'Guardando...'
   statusOk.value = true
   try {
-    validarForm()
-    const payload = {
-      id: editable.value.id,
-      nombre: String(editable.value.nombre || '').trim(),
-      fecha: String(editable.value.fecha || '').trim(),
-      hora: String(editable.value.hora || '').trim(),
-      telefono: String(editable.value.telefono || '').trim(),
-      localidad: String(editable.value.localidad || '').trim(),
-      observaciones: String(editable.value.observaciones || '').trim(),
-      marca: String(editable.value.marca || '').trim(),
-      modelo: String(editable.value.modelo || '').trim(),
-      numero_motor: String(editable.value.numero_motor || '').trim(),
-      factura: String(editable.value.factura || '').trim()
+    if (!esTaller) {
+      validarForm()
     }
+    const payload = esTaller
+      ? {
+          id: editable.value.id,
+          estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase()
+        }
+      : {
+          id: editable.value.id,
+          nombre: String(editable.value.nombre || '').trim(),
+          fecha: String(editable.value.fecha || '').trim(),
+          hora: String(editable.value.hora || '').trim(),
+          telefono: String(editable.value.telefono || '').trim(),
+          localidad: String(editable.value.localidad || '').trim(),
+          observaciones: String(editable.value.observaciones || '').trim(),
+          marca: String(editable.value.marca || '').trim(),
+          modelo: String(editable.value.modelo || '').trim(),
+          numero_motor: String(editable.value.numero_motor || '').trim(),
+          factura: String(editable.value.factura || '').trim(),
+          estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase(),
+          ...(puedeAprobarCaja ? { caja_aprobado: Boolean(editable.value.caja_aprobado) } : {})
+        }
     await api.actualizarApronte(payload)
     status.value = 'Apronte actualizado.'
     statusOk.value = true
@@ -125,7 +145,7 @@ const eliminar = async () => {
   status.value = 'Eliminando...'
   statusOk.value = true
   try {
-    await api.borrarApronte(editable.value.id)
+    await api.borrarApronte(Number(editable.value.id))
     status.value = 'Apronte eliminado.'
     statusOk.value = true
     emit('actualizar')
@@ -149,6 +169,8 @@ const escapeHtml = (value: any) => {
 
 const buildPrintHtml = (data: any) => {
   const escapeText = (v: any) => escapeHtml(v || '')
+  const nroConstancia = Number(data?.id || 0)
+  const nroConstanciaFmt = nroConstancia > 0 ? String(nroConstancia).padStart(5, '0') : '00000'
 
   return `<!doctype html>
 <html>
@@ -164,7 +186,19 @@ const buildPrintHtml = (data: any) => {
       .logo-box { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
       .logo-box img { width: 100%; height: 100%; object-fit: contain; }
       .header-content { flex: 1; }
-      .header-title { font-size: 16px; font-weight: 700; border: 2px solid #000; padding: 10px 12px; letter-spacing: 0.02em; }
+      .header-title {
+        font-size: 16px;
+        font-weight: 700;
+        border: 2px solid #000;
+        padding: 10px 12px;
+        letter-spacing: 0.02em;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .header-title-text { flex: 1; text-align: center; }
+      .constancia-id { font-size: 14px; font-weight: 800; min-width: 64px; text-align: right; }
       .section { margin-bottom: 9px; }
       .section-title { font-size: 11px; font-weight: 700; border: 1px solid #000; padding: 5px 7px; background: #f0f0f0; }
       table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -187,7 +221,10 @@ const buildPrintHtml = (data: any) => {
       <div class="header">
         <div class="logo-box"><img src="${printLogoUrl}" alt="Logo" /></div>
         <div class="header-content">
-          <div class="header-title">CONSTANCIA DE ENTREGA DE MOTOS</div>
+          <div class="header-title">
+            <span class="header-title-text">CONSTANCIA DE ENTREGA DE MOTOS</span>
+            <span class="constancia-id">N° ${escapeText(nroConstanciaFmt)}</span>
+          </div>
         </div>
       </div>
 
@@ -363,7 +400,7 @@ const imprimirPdf = () => {
       <div class="window-header">
         <div>
           <span class="titulo">Apronte #{{ editable.id }}</span>
-          <div class="read-only">Detalle completo</div>
+          <div class="read-only">{{ esTaller ? 'Taller: solo puede modificar estado' : 'Detalle completo' }}</div>
         </div>
         <button class="close-btn" @click="cerrar">x</button>
       </div>
@@ -371,28 +408,29 @@ const imprimirPdf = () => {
       <div class="window-body">
         <div class="campo">
           <label>Nombre</label>
-          <input v-model="editable.nombre" />
+          <input v-model="editable.nombre" :disabled="esTaller" />
         </div>
 
         <ApronteSchedulePicker
           v-model:fecha="editable.fecha"
           v-model:hora="editable.hora"
           label="Agenda de apronte"
+          :disabled="esTaller"
         />
 
         <div class="campo">
           <label>Telefono</label>
-          <input v-model="editable.telefono" type="tel" />
+          <input v-model="editable.telefono" type="tel" :disabled="esTaller" />
         </div>
 
         <div class="campo">
           <label>Localidad</label>
-          <input v-model="editable.localidad" />
+          <input v-model="editable.localidad" :disabled="esTaller" />
         </div>
 
         <div class="campo">
           <label>Marca</label>
-          <input v-model="editable.marca" list="apronte-marcas" />
+          <input v-model="editable.marca" list="apronte-marcas" :disabled="esTaller" />
           <datalist id="apronte-marcas">
             <option v-for="m in marcas" :key="m" :value="m"></option>
           </datalist>
@@ -405,7 +443,7 @@ const imprimirPdf = () => {
 
         <div class="campo">
           <label>Numero de motor</label>
-          <input v-model="editable.numero_motor" />
+          <input v-model="editable.numero_motor" :disabled="esTaller" />
         </div>
 
         <div class="campo">
@@ -415,7 +453,27 @@ const imprimirPdf = () => {
 
         <div class="campo full">
           <label>Observaciones</label>
-          <textarea v-model="editable.observaciones"></textarea>
+          <textarea v-model="editable.observaciones" :disabled="esTaller"></textarea>
+        </div>
+
+        <div class="campo">
+          <label>Estado</label>
+          <select v-model="editable.estado">
+            <option value="APRONTE">APRONTE</option>
+            <option value="ENTREGADA">ENTREGADA</option>
+            <option value="ENTREGADA ESPERA DE GARANTIA">ENTREGADA ESPERA DE GARANTIA</option>
+          </select>
+        </div>
+
+        <div class="campo full">
+          <label>Habilitado por caja</label>
+          <div class="read-only" style="width: fit-content;">
+            Creado por: {{ editable.created_by_username || '-' }}
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <input v-model="editable.caja_aprobado" type="checkbox" :disabled="!puedeAprobarCaja" />
+            <span>{{ editable.caja_aprobado ? 'Aprobado' : 'Pendiente de caja' }}</span>
+          </label>
         </div>
       </div>
 
@@ -423,8 +481,8 @@ const imprimirPdf = () => {
         <div :class="statusOk ? 'text-emerald-500 text-xs' : 'text-rose-500 text-xs'">{{ status }}</div>
         <div class="footer-actions">
           <button class="btn-sec" @click="imprimirPdf">Imprimir PDF</button>
-          <button class="btn-eliminar" @click="eliminar">Eliminar</button>
-          <button class="btn-guardar" :disabled="guardando" @click="guardar">
+          <button v-if="puedeEditarTodo && !esTaller" class="btn-eliminar" @click="eliminar">Eliminar</button>
+          <button v-if="puedeEditarEstado" class="btn-guardar" :disabled="guardando" @click="guardar">
             {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
           </button>
         </div>

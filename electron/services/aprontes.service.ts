@@ -1,5 +1,14 @@
 import { initDatabase } from '../db/database'
 import { tryMysql } from '../db/mysql'
+import {
+  assertCanCreateApronte,
+  assertCanDeleteApronte,
+  canApproveApronte,
+  getActor,
+  isTallerRole,
+  normalizeRole,
+  requiresCajaApproval
+} from './access-control.service'
 
 export type ApronteInput = {
   nombre: string
@@ -17,6 +26,19 @@ export type ApronteInput = {
   correo_alerta_garantia?: string
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string | null
+}
+
+function buildApronteMutationInput(anterior: any, incoming: any, actorRole: string) {
+  if (isTallerRole(actorRole)) {
+    return {
+      ...anterior,
+      estado: incoming?.estado ?? anterior?.estado
+    }
+  }
+  return {
+    ...anterior,
+    ...incoming
+  }
 }
 
 const ESTADOS_APRONTE = new Set([
@@ -89,7 +111,12 @@ async function ensureAprontesMysqlSchema() {
       `ALTER TABLE aprontes ADD COLUMN numero_motor VARCHAR(100)`,
       `ALTER TABLE aprontes ADD COLUMN garantia_espera_desde DATETIME NULL`,
       `ALTER TABLE aprontes ADD COLUMN garantia_notificada TINYINT DEFAULT 0`,
-      `ALTER TABLE aprontes ADD COLUMN garantia_notificada_at DATETIME NULL`
+      `ALTER TABLE aprontes ADD COLUMN garantia_notificada_at DATETIME NULL`,
+      `ALTER TABLE aprontes ADD COLUMN created_by_username VARCHAR(255) NULL`,
+      `ALTER TABLE aprontes ADD COLUMN created_by_role VARCHAR(50) NULL`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado TINYINT DEFAULT 1`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado_at DATETIME NULL`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado_por VARCHAR(255) NULL`
     ]
 
     for (const sql of alters) {
@@ -305,6 +332,11 @@ function syncAprontesToSqlite(rows: any[]) {
         correo_alerta_garantia = excluded.correo_alerta_garantia,
         dias_alerta_garantia = excluded.dias_alerta_garantia,
         fecha_alerta_garantia = excluded.fecha_alerta_garantia,
+        created_by_username = excluded.created_by_username,
+        created_by_role = excluded.created_by_role,
+        caja_aprobado = excluded.caja_aprobado,
+        caja_aprobado_at = excluded.caja_aprobado_at,
+        caja_aprobado_por = excluded.caja_aprobado_por,
         garantia_espera_desde = excluded.garantia_espera_desde,
         garantia_notificada = excluded.garantia_notificada,
         garantia_notificada_at = excluded.garantia_notificada_at,
@@ -331,6 +363,11 @@ function syncAprontesToSqlite(rows: any[]) {
           row?.correo_alerta_garantia ?? '',
           Number(row?.dias_alerta_garantia || 7),
           row?.fecha_alerta_garantia ?? null,
+          row?.created_by_username ?? null,
+          row?.created_by_role ?? null,
+          Number(row?.caja_aprobado ?? 1),
+          row?.caja_aprobado_at ?? null,
+          row?.caja_aprobado_por ?? null,
           row?.garantia_espera_desde ?? null,
           Number(row?.garantia_notificada || 0),
           row?.garantia_notificada_at ?? null,
@@ -344,7 +381,9 @@ function syncAprontesToSqlite(rows: any[]) {
   }
 }
 
-async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizada: string, horaNormalizada: string) {
+async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizada: string, horaNormalizada: string, actor: { username: string; role: string }) {
+  const creatorRole = normalizeRole(actor.role)
+  const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
   const db = initDatabase()
   const tx = db.transaction(() => {
     validarCupoDisponibleSqlite(db, fechaNormalizada, horaNormalizada)
@@ -355,8 +394,9 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-        garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+        created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       dataNormalizada.nombre,
       fechaNormalizada,
@@ -375,7 +415,12 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       dataNormalizada.fecha_alerta_garantia ?? null,
       dataNormalizada.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
       0,
-      null
+      null,
+      actor.username || null,
+      creatorRole,
+      cajaAprobado,
+      cajaAprobado ? sqliteNowIso() : null,
+      cajaAprobado ? (actor.username || null) : null
     )
     registrarMarcaModeloSqlite(db, dataNormalizada.marca, dataNormalizada.modelo)
     return Number(result.lastInsertRowid)
@@ -383,8 +428,10 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
   return tx()
 }
 
-async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada: string, horaNormalizada: string) {
+async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada: string, horaNormalizada: string, actor: { username: string; role: string }) {
   await ensureAprontesMysqlSchema()
+  const creatorRole = normalizeRole(actor.role)
+  const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
   const mysqlResult = await tryMysql(async (pool) => {
     await validarCupoDisponibleMysql(pool, fechaNormalizada, horaNormalizada)
     const [result]: any = await pool.execute(
@@ -394,8 +441,9 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-        garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+        created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
       [
         dataNormalizada.nombre,
         fechaNormalizada,
@@ -414,7 +462,12 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
         dataNormalizada.fecha_alerta_garantia ?? null,
         dataNormalizada.estado === 'ENTREGADA ESPERA DE GARANTIA' ? new Date() : null,
         0,
-        null
+        null,
+        actor.username || null,
+        creatorRole,
+        cajaAprobado,
+        cajaAprobado ? new Date() : null,
+        cajaAprobado ? (actor.username || null) : null
       ]
     )
     await registrarMarcaModeloMysql(pool, dataNormalizada.marca, dataNormalizada.modelo)
@@ -430,6 +483,8 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
 
 export async function crearApronte(data: ApronteInput) {
   await ensureAprontesMysqlSchema()
+  const actor = getActor(data)
+  assertCanCreateApronte(actor.role)
   validarRequeridos(data)
   const normalized = normalizarApronte({ ...data })
   const fechaNormalizada = normalizarFecha(normalized.fecha)
@@ -437,8 +492,10 @@ export async function crearApronte(data: ApronteInput) {
   validarReglaFinDeSemana(fechaNormalizada, horaNormalizada)
 
   try {
-    const mysqlId = await crearApronteMysql(normalized, fechaNormalizada, horaNormalizada)
+    const mysqlId = await crearApronteMysql(normalized, fechaNormalizada, horaNormalizada, actor)
     try {
+      const creatorRole = normalizeRole(actor.role)
+      const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
       const db = initDatabase()
       db.prepare(
         `INSERT INTO aprontes (
@@ -447,8 +504,9 @@ export async function crearApronte(data: ApronteInput) {
           marca, modelo, numero_motor, factura,
           estado, repuestos_garantia,
           correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-          garantia_espera_desde, garantia_notificada, garantia_notificada_at
-        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+          created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         mysqlId,
         normalized.nombre,
@@ -468,7 +526,12 @@ export async function crearApronte(data: ApronteInput) {
         normalized.fecha_alerta_garantia ?? null,
         normalized.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
         0,
-        null
+        null,
+        actor.username || null,
+        creatorRole,
+        cajaAprobado,
+        cajaAprobado ? sqliteNowIso() : null,
+        cajaAprobado ? (actor.username || null) : null
       )
       registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
     } catch (error) {
@@ -477,7 +540,7 @@ export async function crearApronte(data: ApronteInput) {
     return mysqlId
   } catch (error) {
     console.warn('[Aprontes] MySQL no disponible, usando SQLite local')
-    return crearApronteSqlite(normalized, fechaNormalizada, horaNormalizada)
+    return crearApronteSqlite(normalized, fechaNormalizada, horaNormalizada, actor)
   }
 }
 
@@ -503,7 +566,10 @@ export async function obtenerAprontesPorFecha(fecha: string) {
 
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT * FROM aprontes WHERE fecha = ? ORDER BY hora`,
+      `SELECT *
+       FROM aprontes
+       WHERE fecha = ?
+       ORDER BY hora`,
       [fechaNormalizada]
     )
     return rows
@@ -516,7 +582,10 @@ export async function obtenerAprontesPorFecha(fecha: string) {
 
   const db = initDatabase()
   return db.prepare(
-    `SELECT * FROM aprontes WHERE fecha = ? ORDER BY hora`
+    `SELECT *
+     FROM aprontes
+     WHERE fecha = ?
+     ORDER BY hora`
   ).all(fechaNormalizada)
 }
 
@@ -524,7 +593,9 @@ export async function obtenerTodosLosAprontes() {
   await ensureAprontesMysqlSchema()
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT * FROM aprontes ORDER BY fecha DESC, hora DESC`
+      `SELECT *
+       FROM aprontes
+       ORDER BY fecha DESC, hora DESC`
     )
     return rows
   })
@@ -536,12 +607,15 @@ export async function obtenerTodosLosAprontes() {
 
   const db = initDatabase()
   return db.prepare(
-    `SELECT * FROM aprontes ORDER BY fecha DESC, hora DESC`
+    `SELECT *
+     FROM aprontes
+     ORDER BY fecha DESC, hora DESC`
   ).all()
 }
 
 export async function actualizarApronte(id: number, data: Partial<ApronteInput>) {
   await ensureAprontesMysqlSchema()
+  const actor = getActor(data)
   const apronteId = Number(id || (data as any)?.id || 0)
   if (!apronteId) {
     throw new Error('ID de apronte invalido')
@@ -552,7 +626,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     const anterior = rows[0]
     if (!anterior) return
 
-    const merged = { ...anterior, ...data }
+    const merged = buildApronteMutationInput(anterior, data, actor.role)
     validarRequeridos(merged)
     const normalized = normalizarApronte(merged)
     const fechaNormalizada = normalizarFecha(normalized.fecha)
@@ -562,6 +636,10 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     const estadoNuevo = normalizarEstadoApronte(normalized.estado)
     const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
     const saleEspera = estadoNuevo !== 'ENTREGADA ESPERA DE GARANTIA'
+    const nextCajaAprobado = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, 'caja_aprobado')
+      ? ((data as any)?.caja_aprobado ? 1 : 0)
+      : Number(anterior.caja_aprobado ?? 1)
+    const cajaApprovalChanged = nextCajaAprobado !== Number(anterior.caja_aprobado ?? 1)
 
     const mismoHorario = fechaNormalizada === anterior.fecha && horaNormalizada === anterior.hora
     if (!mismoHorario) {
@@ -588,6 +666,17 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
            garantia_notificada_at = CASE
              WHEN ? OR ? THEN NULL
              ELSE garantia_notificada_at
+           END,
+           caja_aprobado = ?,
+           caja_aprobado_at = CASE
+             WHEN ? THEN NOW()
+             WHEN ? THEN NULL
+             ELSE caja_aprobado_at
+           END,
+           caja_aprobado_por = CASE
+             WHEN ? THEN ?
+             WHEN ? THEN NULL
+             ELSE caja_aprobado_por
            END
        WHERE id = ?`,
       [
@@ -612,6 +701,12 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         saleEspera,
         entraEspera,
         saleEspera,
+        nextCajaAprobado,
+        cajaApprovalChanged && nextCajaAprobado === 1,
+        cajaApprovalChanged && nextCajaAprobado === 0,
+        cajaApprovalChanged && nextCajaAprobado === 1,
+        actor.username || null,
+        cajaApprovalChanged && nextCajaAprobado === 0,
         apronteId
       ]
     )
@@ -623,7 +718,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
       const db = initDatabase()
       const anterior = db.prepare('SELECT * FROM aprontes WHERE id = ?').get(apronteId) as any
       if (!anterior) return
-      const merged = { ...anterior, ...data }
+      const merged = buildApronteMutationInput(anterior, data, actor.role)
       validarRequeridos(merged)
       const normalized = normalizarApronte(merged)
       const fechaNormalizada = normalizarFecha(normalized.fecha)
@@ -633,6 +728,10 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
       const estadoNuevo = normalizarEstadoApronte(normalized.estado)
       const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
       const saleEspera = estadoNuevo !== 'ENTREGADA ESPERA DE GARANTIA'
+      const nextCajaAprobado = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, 'caja_aprobado')
+        ? ((data as any)?.caja_aprobado ? 1 : 0)
+        : Number(anterior.caja_aprobado ?? 1)
+      const cajaApprovalChanged = nextCajaAprobado !== Number(anterior.caja_aprobado ?? 1)
       const mismoHorario = fechaNormalizada === anterior.fecha && horaNormalizada === anterior.hora
       if (!mismoHorario) {
         validarCupoDisponibleSqlite(db, fechaNormalizada, horaNormalizada, apronteId)
@@ -657,6 +756,17 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
              garantia_notificada_at = CASE
                WHEN ? OR ? THEN NULL
                ELSE garantia_notificada_at
+             END,
+             caja_aprobado = ?,
+             caja_aprobado_at = CASE
+               WHEN ? THEN ?
+               WHEN ? THEN NULL
+               ELSE caja_aprobado_at
+             END,
+             caja_aprobado_por = CASE
+               WHEN ? THEN ?
+               WHEN ? THEN NULL
+               ELSE caja_aprobado_por
              END
          WHERE id = ?`
       ).run(
@@ -682,6 +792,13 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         saleEspera,
         entraEspera,
         saleEspera,
+        nextCajaAprobado,
+        cajaApprovalChanged && nextCajaAprobado === 1,
+        sqliteNowIso(),
+        cajaApprovalChanged && nextCajaAprobado === 0,
+        cajaApprovalChanged && nextCajaAprobado === 1,
+        actor.username || null,
+        cajaApprovalChanged && nextCajaAprobado === 0,
         apronteId
       )
       registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
@@ -694,7 +811,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
   const db = initDatabase()
   const anterior = db.prepare('SELECT * FROM aprontes WHERE id = ?').get(apronteId) as any
   if (!anterior) return
-  const merged = { ...anterior, ...data }
+  const merged = buildApronteMutationInput(anterior, data, actor.role)
   validarRequeridos(merged)
   const normalized = normalizarApronte(merged)
   const fechaNormalizada = normalizarFecha(normalized.fecha)
@@ -704,6 +821,10 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
   const estadoNuevo = normalizarEstadoApronte(normalized.estado)
   const entraEspera = estadoNuevo === 'ENTREGADA ESPERA DE GARANTIA' && estadoAnterior !== 'ENTREGADA ESPERA DE GARANTIA'
   const saleEspera = estadoNuevo !== 'ENTREGADA ESPERA DE GARANTIA'
+  const nextCajaAprobado = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, 'caja_aprobado')
+    ? ((data as any)?.caja_aprobado ? 1 : 0)
+    : Number(anterior.caja_aprobado ?? 1)
+  const cajaApprovalChanged = nextCajaAprobado !== Number(anterior.caja_aprobado ?? 1)
   const mismoHorario = fechaNormalizada === anterior.fecha && horaNormalizada === anterior.hora
   if (!mismoHorario) {
     validarCupoDisponibleSqlite(db, fechaNormalizada, horaNormalizada, apronteId)
@@ -729,6 +850,17 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
          garantia_notificada_at = CASE
            WHEN ? OR ? THEN NULL
            ELSE garantia_notificada_at
+         END,
+         caja_aprobado = ?,
+         caja_aprobado_at = CASE
+           WHEN ? THEN ?
+           WHEN ? THEN NULL
+           ELSE caja_aprobado_at
+         END,
+         caja_aprobado_por = CASE
+           WHEN ? THEN ?
+           WHEN ? THEN NULL
+           ELSE caja_aprobado_por
          END
      WHERE id = ?`
   ).run(
@@ -754,14 +886,24 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     saleEspera,
     entraEspera,
     saleEspera,
+    nextCajaAprobado,
+    cajaApprovalChanged && nextCajaAprobado === 1,
+    sqliteNowIso(),
+    cajaApprovalChanged && nextCajaAprobado === 0,
+    cajaApprovalChanged && nextCajaAprobado === 1,
+    actor.username || null,
+    cajaApprovalChanged && nextCajaAprobado === 0,
     apronteId
   )
   registrarMarcaModeloSqlite(db, normalized.marca, normalized.modelo)
 }
 
-export async function borrarApronte(id: number) {
+export async function borrarApronte(input: number | any) {
   await ensureAprontesMysqlSchema()
-  const apronteId = Number(id)
+  const payload = typeof input === 'object' && input !== null ? input : { id: input }
+  const actor = getActor(payload)
+  assertCanDeleteApronte(actor.role)
+  const apronteId = Number(payload?.id || input)
   if (!apronteId) return
 
   const mysqlResult = await tryMysql(async (pool) => {

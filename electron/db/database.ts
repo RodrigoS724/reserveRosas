@@ -146,6 +146,11 @@ export function initDatabase() {
       correo_alerta_garantia TEXT,
       dias_alerta_garantia INTEGER DEFAULT 7,
       fecha_alerta_garantia TEXT,
+      created_by_username TEXT,
+      created_by_role TEXT,
+      caja_aprobado INTEGER DEFAULT 1,
+      caja_aprobado_at TEXT,
+      caja_aprobado_por TEXT,
       garantia_espera_desde TEXT,
       garantia_notificada INTEGER DEFAULT 0,
       garantia_notificada_at TEXT,
@@ -442,6 +447,71 @@ export function initDatabase() {
       console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
     } else {
       console.warn(' [DB] Error durante migracion (aprontes fecha_alerta_garantia):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN created_by_username TEXT`)
+    console.log(' [DB] Columna "created_by_username" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "created_by_username" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes created_by_username):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN created_by_role TEXT`)
+    console.log(' [DB] Columna "created_by_role" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "created_by_role" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes created_by_role):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado INTEGER DEFAULT 1`)
+    console.log(' [DB] Columna "caja_aprobado" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "caja_aprobado" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes caja_aprobado):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado_at TEXT`)
+    console.log(' [DB] Columna "caja_aprobado_at" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "caja_aprobado_at" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes caja_aprobado_at):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado_por TEXT`)
+    console.log(' [DB] Columna "caja_aprobado_por" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "caja_aprobado_por" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes caja_aprobado_por):', err.message)
     }
   }
 

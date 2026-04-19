@@ -467,30 +467,30 @@ async function proxyIpcToRemote(channel, args) {
       signal: controller.signal
     });
     const raw = await response.text();
-    let payload = null;
+    let payload2 = null;
     try {
-      payload = raw ? JSON.parse(raw) : null;
+      payload2 = raw ? JSON.parse(raw) : null;
     } catch {
-      payload = null;
+      payload2 = null;
     }
     if (!response.ok) {
-      const message = (payload == null ? void 0 : payload.error) || (payload == null ? void 0 : payload.message) || raw || `HTTP ${response.status}`;
+      const message = (payload2 == null ? void 0 : payload2.error) || (payload2 == null ? void 0 : payload2.message) || raw || `HTTP ${response.status}`;
       throw new Error(`API remota error (${response.status}): ${message}`);
     }
-    if (payload && typeof payload === "object") {
-      if (payload.__ipc_error) {
-        const err = new Error(payload.message || "Error remoto");
-        err.stack = payload.stack || err.stack;
+    if (payload2 && typeof payload2 === "object") {
+      if (payload2.__ipc_error) {
+        const err = new Error(payload2.message || "Error remoto");
+        err.stack = payload2.stack || err.stack;
         throw err;
       }
-      if (payload.ok === false) {
-        throw new Error(payload.error || payload.message || "Operacion remota rechazada");
+      if (payload2.ok === false) {
+        throw new Error(payload2.error || payload2.message || "Operacion remota rechazada");
       }
-      if ("data" in payload) {
-        return payload.data;
+      if ("data" in payload2) {
+        return payload2.data;
       }
     }
-    return payload;
+    return payload2;
   } catch (error2) {
     if ((error2 == null ? void 0 : error2.name) === "AbortError") {
       throw new Error("Timeout llamando API remota (20s)");
@@ -687,6 +687,11 @@ function initDatabase() {
       correo_alerta_garantia TEXT,
       dias_alerta_garantia INTEGER DEFAULT 7,
       fecha_alerta_garantia TEXT,
+      created_by_username TEXT,
+      created_by_role TEXT,
+      caja_aprobado INTEGER DEFAULT 1,
+      caja_aprobado_at TEXT,
+      caja_aprobado_por TEXT,
       garantia_espera_desde TEXT,
       garantia_notificada INTEGER DEFAULT 0,
       garantia_notificada_at TEXT,
@@ -936,6 +941,66 @@ function initDatabase() {
         console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
       } else {
         console.warn(" [DB] Error durante migracion (aprontes fecha_alerta_garantia):", err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE aprontes ADD COLUMN created_by_username TEXT`);
+      console.log(' [DB] Columna "created_by_username" agregada a aprontes');
+    } catch (err) {
+      if (err.message.includes("duplicate column")) {
+        console.log(' [DB] Columna "created_by_username" ya existe en aprontes');
+      } else if (err.message.includes("no such table")) {
+        console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn(" [DB] Error durante migracion (aprontes created_by_username):", err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE aprontes ADD COLUMN created_by_role TEXT`);
+      console.log(' [DB] Columna "created_by_role" agregada a aprontes');
+    } catch (err) {
+      if (err.message.includes("duplicate column")) {
+        console.log(' [DB] Columna "created_by_role" ya existe en aprontes');
+      } else if (err.message.includes("no such table")) {
+        console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn(" [DB] Error durante migracion (aprontes created_by_role):", err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado INTEGER DEFAULT 1`);
+      console.log(' [DB] Columna "caja_aprobado" agregada a aprontes');
+    } catch (err) {
+      if (err.message.includes("duplicate column")) {
+        console.log(' [DB] Columna "caja_aprobado" ya existe en aprontes');
+      } else if (err.message.includes("no such table")) {
+        console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn(" [DB] Error durante migracion (aprontes caja_aprobado):", err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado_at TEXT`);
+      console.log(' [DB] Columna "caja_aprobado_at" agregada a aprontes');
+    } catch (err) {
+      if (err.message.includes("duplicate column")) {
+        console.log(' [DB] Columna "caja_aprobado_at" ya existe en aprontes');
+      } else if (err.message.includes("no such table")) {
+        console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn(" [DB] Error durante migracion (aprontes caja_aprobado_at):", err.message);
+      }
+    }
+    try {
+      db.exec(`ALTER TABLE aprontes ADD COLUMN caja_aprobado_por TEXT`);
+      console.log(' [DB] Columna "caja_aprobado_por" agregada a aprontes');
+    } catch (err) {
+      if (err.message.includes("duplicate column")) {
+        console.log(' [DB] Columna "caja_aprobado_por" ya existe en aprontes');
+      } else if (err.message.includes("no such table")) {
+        console.log(" [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)");
+      } else {
+        console.warn(" [DB] Error durante migracion (aprontes caja_aprobado_por):", err.message);
       }
     }
     try {
@@ -10780,8 +10845,8 @@ function requirePacket() {
   const exponent = "e".charCodeAt(0);
   const exponentCapital = "E".charCodeAt(0);
   class Packet {
-    constructor(id, buffer, start, end) {
-      this.sequenceId = id;
+    constructor(id2, buffer, start, end) {
+      this.sequenceId = id2;
       this.numPackets = 1;
       this.buffer = buffer;
       this.start = start;
@@ -11648,19 +11713,19 @@ function requirePacket_parser() {
       const end = chunk.length;
       const remainingPayload = this.length - this.bufferLength + this.packetHeaderLength - 3;
       if (end - start >= remainingPayload) {
-        const payload = Buffer.allocUnsafe(this.length + this.packetHeaderLength);
+        const payload2 = Buffer.allocUnsafe(this.length + this.packetHeaderLength);
         let offset = 3;
         for (let i = 0; i < this.buffer.length; ++i) {
-          this.buffer[i].copy(payload, offset);
+          this.buffer[i].copy(payload2, offset);
           offset += this.buffer[i].length;
         }
-        chunk.copy(payload, offset, start, start + remainingPayload);
-        const sequenceId = payload[3];
+        chunk.copy(payload2, offset, start, start + remainingPayload);
+        const sequenceId = payload2[3];
         if (this.length < MAX_PACKET_LENGTH && this.largePacketParts.length === 0) {
           this.onPacket(
             new Packet(
               sequenceId,
-              payload,
+              payload2,
               0,
               this.length + this.packetHeaderLength
             )
@@ -11670,7 +11735,7 @@ function requirePacket_parser() {
             this.firstPacketSequenceId = sequenceId;
           }
           this.largePacketParts.push(
-            payload.slice(
+            payload2.slice(
               this.packetHeaderLength,
               this.packetHeaderLength + this.length
             )
@@ -12520,8 +12585,8 @@ function requireClose_statement$1() {
   const Packet = requirePacket();
   const CommandCodes = requireCommands$1();
   class CloseStatement {
-    constructor(id) {
-      this.id = id;
+    constructor(id2) {
+      this.id = id2;
     }
     // note: no response sent back
     toPacket() {
@@ -12874,8 +12939,8 @@ function requireExecute$1() {
     return { value, type: type2, length, writer };
   }
   class Execute {
-    constructor(id, parameters, charsetNumber, timezone) {
-      this.id = id;
+    constructor(id2, parameters, charsetNumber, timezone) {
+      this.id = id2;
       this.parameters = parameters;
       this.encoding = CharsetToEncoding[charsetNumber];
       this.timezone = timezone;
@@ -15843,9 +15908,9 @@ function requireClose_statement() {
   const Command = requireCommand();
   const Packets = requirePackets();
   class CloseStatement extends Command {
-    constructor(id) {
+    constructor(id2) {
       super();
-      this.id = id;
+      this.id = id2;
     }
     start(packet2, connection2) {
       connection2.writePacket(new Packets.CloseStatement(this.id).toPacket(1));
@@ -16325,9 +16390,9 @@ function requirePrepare() {
   const CloseStatement = requireClose_statement();
   const Execute = requireExecute();
   class PreparedStatementInfo {
-    constructor(query2, id, columns, parameters, connection2) {
+    constructor(query2, id2, columns, parameters, connection2) {
       this.query = query2;
-      this.id = id;
+      this.id = id2;
       this.columns = columns;
       this.parameters = parameters;
       this.rowParser = null;
@@ -19132,19 +19197,19 @@ function requirePool_cluster$1() {
       }
       return this._namespaces[key];
     }
-    add(id, config2) {
-      if (typeof id === "object") {
-        config2 = id;
-        id = `CLUSTER::${++this._lastId}`;
+    add(id2, config2) {
+      if (typeof id2 === "object") {
+        config2 = id2;
+        id2 = `CLUSTER::${++this._lastId}`;
       }
-      if (typeof this._nodes[id] === "undefined") {
-        this._nodes[id] = {
-          id,
+      if (typeof this._nodes[id2] === "undefined") {
+        this._nodes[id2] = {
+          id: id2,
           errorCount: 0,
           pool: new Pool({ config: new PoolConfig(config2) }),
           _offlineUntil: 0
         };
-        this._serviceableNodeIds.push(id);
+        this._serviceableNodeIds.push(id2);
         this._clearFindCaches();
       }
     }
@@ -19190,9 +19255,9 @@ function requirePool_cluster$1() {
           return cb(err);
         }
       };
-      for (const id in this._nodes) {
+      for (const id2 in this._nodes) {
         waitingClose++;
-        this._nodes[id].pool.end(onEnd);
+        this._nodes[id2].pool.end(onEnd);
       }
       if (waitingClose === 0) {
         process2.nextTick(onEnd);
@@ -19204,7 +19269,7 @@ function requirePool_cluster$1() {
       if (foundNodeIds === void 0) {
         const expression = patternRegExp(pattern);
         foundNodeIds = this._serviceableNodeIds.filter(
-          (id) => id.match(expression)
+          (id2) => id2.match(expression)
         );
       }
       this._findCaches[pattern] = foundNodeIds;
@@ -19222,8 +19287,8 @@ function requirePool_cluster$1() {
         return node2._offlineUntil <= currentTime;
       });
     }
-    _getNode(id) {
-      return this._nodes[id] || null;
+    _getNode(id2) {
+      return this._nodes[id2] || null;
     }
     _increaseErrorCount(node2) {
       const errorCount = ++node2.errorCount;
@@ -19728,8 +19793,8 @@ async function crearHorario(hora) {
   }
   return crearHorarioSqlite(horaNormalizada);
 }
-function desactivarHorarioSqlite(id) {
-  console.log("[Service] Desactivando horario:", id);
+function desactivarHorarioSqlite(id2) {
+  console.log("[Service] Desactivando horario:", id2);
   const db2 = initDatabase();
   try {
     const tx = db2.transaction(() => {
@@ -19737,8 +19802,8 @@ function desactivarHorarioSqlite(id) {
         UPDATE horarios_base
         SET activo = 0
         WHERE id = ?
-      `).run(id);
-      console.log("[Service] Horario desactivado:", id);
+      `).run(id2);
+      console.log("[Service] Horario desactivado:", id2);
     });
     tx();
   } catch (error2) {
@@ -19746,20 +19811,20 @@ function desactivarHorarioSqlite(id) {
     throw error2;
   }
 }
-async function desactivarHorario(id) {
-  console.log("[Service] Desactivando horario:", id);
+async function desactivarHorario(id2) {
+  console.log("[Service] Desactivando horario:", id2);
   const mysqlResult = await tryMysql(async (pool2) => {
-    await pool2.execute(`UPDATE horarios_base SET activo = 0 WHERE id = ?`, [id]);
+    await pool2.execute(`UPDATE horarios_base SET activo = 0 WHERE id = ?`, [id2]);
   });
   if (mysqlResult.ok) {
     try {
-      desactivarHorarioSqlite(id);
+      desactivarHorarioSqlite(id2);
     } catch (error2) {
       console.warn("[Service] Backup SQLite fallo en desactivarHorario:", error2);
     }
     return;
   }
-  return desactivarHorarioSqlite(id);
+  return desactivarHorarioSqlite(id2);
 }
 function obtenerHorariosInactivosSqlite() {
   console.log("[Service] Obteniendo horarios inactivos");
@@ -19781,30 +19846,30 @@ async function obtenerHorariosInactivos() {
   if (mysqlResult.ok) return mysqlResult.value;
   return obtenerHorariosInactivosSqlite();
 }
-function activarHorarioSqlite(id) {
+function activarHorarioSqlite(id2) {
   const db2 = initDatabase();
   const tx = db2.transaction(() => {
     db2.prepare(`
       UPDATE horarios_base
       SET activo = 1
       WHERE id = ?
-    `).run(id);
+    `).run(id2);
   });
   tx();
 }
-async function activarHorario(id) {
+async function activarHorario(id2) {
   const mysqlResult = await tryMysql(async (pool2) => {
-    await pool2.execute(`UPDATE horarios_base SET activo = 1 WHERE id = ?`, [id]);
+    await pool2.execute(`UPDATE horarios_base SET activo = 1 WHERE id = ?`, [id2]);
   });
   if (mysqlResult.ok) {
     try {
-      activarHorarioSqlite(id);
+      activarHorarioSqlite(id2);
     } catch (error2) {
       console.warn("[Service] Backup SQLite fallo en activarHorario:", error2);
     }
     return;
   }
-  return activarHorarioSqlite(id);
+  return activarHorarioSqlite(id2);
 }
 function bloquearHorarioSqlite(fecha, hora, motivo) {
   console.log("[Service] Bloqueando horario:", { fecha, hora, motivo });
@@ -19929,21 +19994,21 @@ async function obtenerHorariosBloqueados(fecha) {
   if (mysqlResult.ok) return mysqlResult.value;
   return obtenerHorariosBloqueadosSqlite(fechaNormalizada);
 }
-function borrarHorarioPermanenteSqlite(id) {
-  console.log("[Service] Borrando horario permanentemente:", id);
+function borrarHorarioPermanenteSqlite(id2) {
+  console.log("[Service] Borrando horario permanentemente:", id2);
   const db2 = initDatabase();
   try {
     const tx = db2.transaction(() => {
       const horario = db2.prepare(`
         SELECT * FROM horarios_base WHERE id = ?
-      `).get(id);
+      `).get(id2);
       if (!horario) {
-        console.log("[Service] Horario no encontrado:", id);
+        console.log("[Service] Horario no encontrado:", id2);
         throw new Error("Horario no encontrado");
       }
       db2.prepare(`
         DELETE FROM horarios_base WHERE id = ?
-      `).run(id);
+      `).run(id2);
       console.log("[Service] Horario eliminado permanentemente:", horario);
     });
     tx();
@@ -19952,35 +20017,35 @@ function borrarHorarioPermanenteSqlite(id) {
     throw error2;
   }
 }
-async function borrarHorarioPermanente(id) {
-  console.log("[Service] Borrando horario permanentemente:", id);
+async function borrarHorarioPermanente(id2) {
+  console.log("[Service] Borrando horario permanentemente:", id2);
   const mysqlResult = await tryMysql(async (pool2) => {
-    const [rows] = await pool2.execute(`SELECT * FROM horarios_base WHERE id = ?`, [id]);
+    const [rows] = await pool2.execute(`SELECT * FROM horarios_base WHERE id = ?`, [id2]);
     const horario = rows[0];
     if (!horario) {
       throw new Error("Horario no encontrado");
     }
-    await pool2.execute(`DELETE FROM horarios_base WHERE id = ?`, [id]);
+    await pool2.execute(`DELETE FROM horarios_base WHERE id = ?`, [id2]);
   });
   if (mysqlResult.ok) {
     try {
-      borrarHorarioPermanenteSqlite(id);
+      borrarHorarioPermanenteSqlite(id2);
     } catch (error2) {
       console.warn("[Service] Backup SQLite fallo en borrarHorarioPermanente:", error2);
     }
     return;
   }
-  return borrarHorarioPermanenteSqlite(id);
+  return borrarHorarioPermanenteSqlite(id2);
 }
 let isLocked = false;
 const queue = [];
 let operationCounter = 0;
 async function withDbLock(fn) {
   return new Promise((resolve, reject) => {
-    const id = `op_${++operationCounter}`;
+    const id2 = `op_${++operationCounter}`;
     const now = Date.now();
-    queue.push({ id, fn, resolve, reject, createdAt: now });
-    console.log(`[Lock] ${id} encolada. Cola: ${queue.length} operaciones. Locked: ${isLocked}`);
+    queue.push({ id: id2, fn, resolve, reject, createdAt: now });
+    console.log(`[Lock] ${id2} encolada. Cola: ${queue.length} operaciones. Locked: ${isLocked}`);
     processQueue();
   });
 }
@@ -20034,15 +20099,15 @@ function registrarHandlersHorarios() {
     "horarios:crear",
     async (_event, hora) => await withDbLock(() => crearHorario(hora))
   );
-  safeHandle("horarios:desactivar", async (_event, id) => {
-    console.log("[IPC] Desactivando horario:", id);
-    const result = await withDbLock(() => desactivarHorario(id));
+  safeHandle("horarios:desactivar", async (_event, id2) => {
+    console.log("[IPC] Desactivando horario:", id2);
+    const result = await withDbLock(() => desactivarHorario(id2));
     console.log("[IPC] Horario desactivado exitosamente");
     return result;
   });
-  safeHandle("horarios:activar", async (_event, id) => {
-    console.log("[IPC] Activando horario:", id);
-    const result = await withDbLock(() => activarHorario(id));
+  safeHandle("horarios:activar", async (_event, id2) => {
+    console.log("[IPC] Activando horario:", id2);
+    const result = await withDbLock(() => activarHorario(id2));
     console.log("[IPC] Horario activado exitosamente");
     return result;
   });
@@ -20054,14 +20119,14 @@ function registrarHandlersHorarios() {
   });
   safeHandle(
     "horarios:bloquear",
-    async (_event, payload) => await withDbLock(
-      () => bloquearHorario(payload.fecha, payload.hora, payload.motivo)
+    async (_event, payload2) => await withDbLock(
+      () => bloquearHorario(payload2.fecha, payload2.hora, payload2.motivo)
     )
   );
-  safeHandle("horarios:desbloquear", async (_event, payload) => {
-    console.log("[IPC] Desbloqueando horario:", payload);
+  safeHandle("horarios:desbloquear", async (_event, payload2) => {
+    console.log("[IPC] Desbloqueando horario:", payload2);
     const result = await withDbLock(
-      () => desbloquearHorario(payload.fecha, payload.hora)
+      () => desbloquearHorario(payload2.fecha, payload2.hora)
     );
     console.log("[IPC] Horario desbloqueado exitosamente");
     return result;
@@ -20072,9 +20137,9 @@ function registrarHandlersHorarios() {
     console.log("[IPC] Horarios bloqueados obtenidos:", result);
     return result;
   });
-  safeHandle("horarios:borrar", async (_event, id) => {
-    console.log("[IPC] Borrando horario permanentemente:", id);
-    const result = await withDbLock(() => borrarHorarioPermanente(id));
+  safeHandle("horarios:borrar", async (_event, id2) => {
+    console.log("[IPC] Borrando horario permanentemente:", id2);
+    const result = await withDbLock(() => borrarHorarioPermanente(id2));
     console.log("[IPC] Horario eliminado exitosamente");
     return result;
   });
@@ -20089,8 +20154,126 @@ function setSettings(partial) {
 function getSettings() {
   return settings;
 }
+const ALL_PERMISSIONS = [
+  "agenda",
+  "reservas",
+  "registros",
+  "aprontes",
+  "historial",
+  "ajustes",
+  "vehiculos",
+  "config",
+  "usuarios",
+  "auditoria"
+];
+const DEFAULT_PERMISSIONS = {
+  superadmin: [...ALL_PERMISSIONS],
+  administrador: ["agenda", "reservas", "registros", "aprontes", "historial", "ajustes", "vehiculos", "usuarios", "auditoria"],
+  ventas: ["agenda", "reservas", "registros", "aprontes", "historial"],
+  caja: ["agenda", "reservas", "registros", "aprontes", "historial"],
+  taller: ["reservas", "registros", "aprontes", "historial"]
+};
+const ROLE_ALIASES = {
+  superadmin: "superadmin",
+  superAdmin: "superadmin",
+  super: "superadmin",
+  admin: "administrador",
+  administrador: "administrador",
+  user: "ventas",
+  ventas: "ventas",
+  caja: "caja",
+  taller: "taller"
+};
+function normalizeRole(role) {
+  const raw = String(role || "").trim();
+  return ROLE_ALIASES[raw] || "ventas";
+}
+function getDefaultPermissions(role) {
+  return [...DEFAULT_PERMISSIONS[normalizeRole(role)]];
+}
+function normalizePermissions(role, permissions) {
+  const normalizedRole = normalizeRole(role);
+  const allowed = new Set(ALL_PERMISSIONS);
+  if (!Array.isArray(permissions) || permissions.length === 0) {
+    return getDefaultPermissions(normalizedRole);
+  }
+  const unique = /* @__PURE__ */ new Set();
+  for (const permission of permissions) {
+    if (allowed.has(permission)) unique.add(permission);
+  }
+  return Array.from(unique);
+}
+function parsePermissions(raw, role) {
+  const normalizedRole = normalizeRole(role);
+  if (!raw) return getDefaultPermissions(normalizedRole);
+  try {
+    const parsed = JSON.parse(raw);
+    return normalizePermissions(normalizedRole, parsed);
+  } catch {
+    return getDefaultPermissions(normalizedRole);
+  }
+}
+function getActor(payload2) {
+  const actor = (payload2 == null ? void 0 : payload2.actor) && typeof payload2.actor === "object" ? payload2.actor : payload2 || {};
+  return {
+    username: String(actor.username || actor.actor_username || "").trim(),
+    role: normalizeRole(actor.role || actor.actor_role || "")
+  };
+}
+function isTallerRole(role) {
+  return normalizeRole(role) === "taller";
+}
+function canApproveApronte(role) {
+  const normalizedRole = normalizeRole(role);
+  return normalizedRole === "superadmin" || normalizedRole === "administrador" || normalizedRole === "caja";
+}
+function requiresCajaApproval(role) {
+  return normalizeRole(role) === "ventas";
+}
+function assertCanCreateReserva(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede crear reservas");
+  }
+}
+function assertCanDeleteReserva(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede eliminar reservas");
+  }
+}
+function assertCanMoveReserva(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede mover reservas");
+  }
+}
+function assertCanEditReservaNotes(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede editar notas de reservas");
+  }
+}
+function assertCanCreateApronte(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede crear aprontes");
+  }
+}
+function assertCanDeleteApronte(role) {
+  if (isTallerRole(role)) {
+    throw new Error("El taller no puede eliminar aprontes");
+  }
+}
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 100;
+function buildReservaMutationInput(anterior, incoming, actorRole) {
+  if (isTallerRole(actorRole)) {
+    return {
+      ...anterior,
+      estado: (incoming == null ? void 0 : incoming.estado) ?? (anterior == null ? void 0 : anterior.estado)
+    };
+  }
+  return {
+    ...anterior,
+    ...incoming
+  };
+}
 function normalizarCatalogoTexto$1(value) {
   const text = String(value || "").trim();
   return text.length > 100 ? text.slice(0, 100) : text;
@@ -20424,6 +20607,8 @@ async function crearReservaMysql(dataNormalizada, fechaNormalizada) {
 }
 async function crearReserva(data) {
   console.log("[Service] Iniciando crearReserva...");
+  const actor = getActor(data);
+  assertCanCreateReserva(actor.role);
   validarReserva(data);
   validarCondicionesSubtipo(data);
   const dataNormalizada = normalizarReserva({ ...data });
@@ -20442,47 +20627,51 @@ async function crearReserva(data) {
     return await crearReservaSqlite(dataNormalizada, fechaNormalizada);
   }
 }
-async function obtenerReserva(id) {
-  console.log("[Service] Obteniendo reserva:", id);
+async function obtenerReserva(id2) {
+  console.log("[Service] Obteniendo reserva:", id2);
   const mysqlResult = await tryMysql(async (pool2) => {
-    const [rows] = await pool2.execute(`SELECT * FROM reservas WHERE id = ?`, [id]);
+    const [rows] = await pool2.execute(`SELECT * FROM reservas WHERE id = ?`, [id2]);
     return rows[0] ?? null;
   });
   if (mysqlResult.ok) return mysqlResult.value;
   const db2 = initDatabase();
-  return db2.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id);
+  return db2.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id2);
 }
-async function borrarReserva(id) {
-  console.log("[Service] Borrando reserva:", id);
+async function borrarReserva(input) {
+  const payload2 = typeof input === "object" && input !== null ? input : { id: input };
+  const actor = getActor(payload2);
+  assertCanDeleteReserva(actor.role);
+  const reservaId = Number((payload2 == null ? void 0 : payload2.id) || input);
+  console.log("[Service] Borrando reserva:", reservaId);
   const mysqlResult = await tryMysql(async (pool2) => {
-    const [rows] = await pool2.execute(`SELECT * FROM reservas WHERE id = ?`, [id]);
+    const [rows] = await pool2.execute(`SELECT * FROM reservas WHERE id = ?`, [reservaId]);
     const reserva = rows[0];
     if (!reserva) {
-      console.log("[Service] Reserva no encontrada en MySQL:", id);
+      console.log("[Service] Reserva no encontrada en MySQL:", reservaId);
       return;
     }
-    await pool2.execute(`DELETE FROM reservas WHERE id = ?`, [id]);
+    await pool2.execute(`DELETE FROM reservas WHERE id = ?`, [reservaId]);
     await pool2.execute(
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'eliminación', ?, 'reserva eliminada', NOW())
       `,
-      [id, JSON.stringify(reserva)]
+      [reservaId, JSON.stringify(reserva)]
     );
   });
   if (mysqlResult.ok) {
     try {
       const db22 = initDatabase();
       const tx = db22.transaction(() => {
-        const reserva = db22.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id);
+        const reserva = db22.prepare(`SELECT * FROM reservas WHERE id = ?`).get(reservaId);
         if (!reserva) return;
-        db22.prepare(`DELETE FROM reservas WHERE id = ?`).run(id);
+        db22.prepare(`DELETE FROM reservas WHERE id = ?`).run(reservaId);
         db22.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
-        `).run(id, JSON.stringify(reserva));
+        `).run(reservaId, JSON.stringify(reserva));
       });
       tx();
     } catch (error2) {
@@ -20493,17 +20682,17 @@ async function borrarReserva(id) {
   const db2 = initDatabase();
   try {
     const tx = db2.transaction(() => {
-      const reserva = db2.prepare(`SELECT * FROM reservas WHERE id = ?`).get(id);
+      const reserva = db2.prepare(`SELECT * FROM reservas WHERE id = ?`).get(reservaId);
       if (!reserva) {
-        console.log("[Service] Reserva no encontrada:", id);
+        console.log("[Service] Reserva no encontrada:", reservaId);
         return;
       }
-      db2.prepare(`DELETE FROM reservas WHERE id = ?`).run(id);
+      db2.prepare(`DELETE FROM reservas WHERE id = ?`).run(reservaId);
       db2.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'eliminación', ?, 'reserva eliminada', datetime('now'))
-      `).run(id, JSON.stringify(reserva));
+      `).run(reservaId, JSON.stringify(reserva));
     });
     tx();
   } catch (error2) {
@@ -20511,40 +20700,44 @@ async function borrarReserva(id) {
     throw error2;
   }
 }
-async function moverReserva(id, nuevaFecha, nuevaHora) {
-  console.log("[Service] Moviendo reserva:", { id, nuevaFecha, nuevaHora });
+async function moverReserva(idOrPayload, nuevaFecha, nuevaHora) {
+  const payload2 = typeof idOrPayload === "object" && idOrPayload !== null ? idOrPayload : { id: idOrPayload, nuevaFecha, nuevaHora };
+  const actor = getActor(payload2);
+  assertCanMoveReserva(actor.role);
+  const reservaId = Number((payload2 == null ? void 0 : payload2.id) || idOrPayload);
+  console.log("[Service] Moviendo reserva:", { id: reservaId, nuevaFecha: payload2 == null ? void 0 : payload2.nuevaFecha, nuevaHora: payload2 == null ? void 0 : payload2.nuevaHora });
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(
       `SELECT fecha, hora FROM reservas WHERE id = ?`,
-      [id]
+      [reservaId]
     );
     const anterior = rows[0];
     if (!anterior) {
-      console.log("[Service] Reserva no encontrada para mover (MySQL):", id);
+      console.log("[Service] Reserva no encontrada para mover (MySQL):", reservaId);
       return;
     }
     await pool2.execute(
       `UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`,
-      [nuevaFecha, nuevaHora ?? null, id]
+      [payload2 == null ? void 0 : payload2.nuevaFecha, (payload2 == null ? void 0 : payload2.nuevaHora) ?? null, reservaId]
     );
-    if (nuevaFecha !== anterior.fecha) {
+    if ((payload2 == null ? void 0 : payload2.nuevaFecha) !== anterior.fecha) {
       await pool2.execute(
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'fecha', ?, ?, NOW())
         `,
-        [id, anterior.fecha, nuevaFecha]
+        [reservaId, anterior.fecha, payload2 == null ? void 0 : payload2.nuevaFecha]
       );
     }
-    if (nuevaHora && nuevaHora !== anterior.hora) {
+    if ((payload2 == null ? void 0 : payload2.nuevaHora) && payload2.nuevaHora !== anterior.hora) {
       await pool2.execute(
         `
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'hora', ?, ?, NOW())
         `,
-        [id, anterior.hora, nuevaHora]
+        [reservaId, anterior.hora, payload2.nuevaHora]
       );
     }
   });
@@ -20552,22 +20745,22 @@ async function moverReserva(id, nuevaFecha, nuevaHora) {
     try {
       const db22 = initDatabase();
       const tx = db22.transaction(() => {
-        const anterior = db22.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(id);
+        const anterior = db22.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(reservaId);
         if (!anterior) return;
-        db22.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id);
-        if (nuevaFecha !== anterior.fecha) {
+        db22.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(payload2 == null ? void 0 : payload2.nuevaFecha, (payload2 == null ? void 0 : payload2.nuevaHora) ?? null, reservaId);
+        if ((payload2 == null ? void 0 : payload2.nuevaFecha) !== anterior.fecha) {
           db22.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, 'fecha', ?, ?, datetime('now'))
-          `).run(id, anterior.fecha, nuevaFecha);
+          `).run(reservaId, anterior.fecha, payload2 == null ? void 0 : payload2.nuevaFecha);
         }
-        if (nuevaHora && nuevaHora !== anterior.hora) {
+        if ((payload2 == null ? void 0 : payload2.nuevaHora) && payload2.nuevaHora !== anterior.hora) {
           db22.prepare(`
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, 'hora', ?, ?, datetime('now'))
-          `).run(id, anterior.hora, nuevaHora);
+          `).run(reservaId, anterior.hora, payload2.nuevaHora);
         }
       });
       tx();
@@ -20579,25 +20772,25 @@ async function moverReserva(id, nuevaFecha, nuevaHora) {
   const db2 = initDatabase();
   try {
     const tx = db2.transaction(() => {
-      const anterior = db2.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(id);
+      const anterior = db2.prepare(`SELECT fecha, hora FROM reservas WHERE id = ?`).get(reservaId);
       if (!anterior) {
-        console.log("[Service] Reserva no encontrada para mover:", id);
+        console.log("[Service] Reserva no encontrada para mover:", reservaId);
         return;
       }
-      db2.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(nuevaFecha, nuevaHora ?? null, id);
-      if (nuevaFecha !== anterior.fecha) {
+      db2.prepare(`UPDATE reservas SET fecha = ?, hora = COALESCE( ?, hora) WHERE id = ?`).run(payload2 == null ? void 0 : payload2.nuevaFecha, (payload2 == null ? void 0 : payload2.nuevaHora) ?? null, reservaId);
+      if ((payload2 == null ? void 0 : payload2.nuevaFecha) !== anterior.fecha) {
         db2.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'fecha', ?, ?, datetime('now'))
-        `).run(id, anterior.fecha, nuevaFecha);
+        `).run(reservaId, anterior.fecha, payload2 == null ? void 0 : payload2.nuevaFecha);
       }
-      if (nuevaHora && nuevaHora !== anterior.hora) {
+      if ((payload2 == null ? void 0 : payload2.nuevaHora) && payload2.nuevaHora !== anterior.hora) {
         db2.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'hora', ?, ?, datetime('now'))
-        `).run(id, anterior.hora, nuevaHora);
+        `).run(reservaId, anterior.hora, payload2.nuevaHora);
       }
     });
     tx();
@@ -20606,37 +20799,39 @@ async function moverReserva(id, nuevaFecha, nuevaHora) {
     throw error2;
   }
 }
-async function actualizarReserva(id, reserva) {
-  console.log("[Service] Actualizando reserva:", id, reserva);
-  const reservaId = Number(id || (reserva == null ? void 0 : reserva.id) || 0);
+async function actualizarReserva(idOrPayload, reserva) {
+  const incoming = typeof idOrPayload === "object" && idOrPayload !== null ? idOrPayload : {};
+  const actor = getActor(incoming);
+  const reservaId = Number((typeof idOrPayload === "object" ? idOrPayload == null ? void 0 : idOrPayload.id : idOrPayload) || (incoming == null ? void 0 : incoming.id) || 0);
+  console.log("[Service] Actualizando reserva:", reservaId, incoming);
   if (!reservaId) {
     throw new Error("ID de reserva invalido.");
   }
-  const matriculaNormalizada = normalizarMatriculaReserva((reserva == null ? void 0 : reserva.matricula) || "").slice(0, 10);
+  const mergedIncoming = isTallerRole(actor.role) ? { estado: incoming == null ? void 0 : incoming.estado } : incoming;
+  const matriculaNormalizada = normalizarMatriculaReserva((mergedIncoming == null ? void 0 : mergedIncoming.matricula) || "").slice(0, 10);
   if (matriculaNormalizada && !/^[A-Z0-9]{3,10}$/.test(matriculaNormalizada)) {
     throw new Error("Matricula invalida. Usa solo letras y numeros.");
   }
   const reservaActualizada = normalizarReserva({
-    nombre: String((reserva == null ? void 0 : reserva.nombre) ?? ""),
-    cedula: String((reserva == null ? void 0 : reserva.cedula) ?? ""),
-    telefono: String((reserva == null ? void 0 : reserva.telefono) ?? ""),
-    marca: String((reserva == null ? void 0 : reserva.marca) ?? ""),
-    modelo: String((reserva == null ? void 0 : reserva.modelo) ?? ""),
-    km: String((reserva == null ? void 0 : reserva.km) ?? ""),
+    nombre: String((mergedIncoming == null ? void 0 : mergedIncoming.nombre) ?? ""),
+    cedula: String((mergedIncoming == null ? void 0 : mergedIncoming.cedula) ?? ""),
+    telefono: String((mergedIncoming == null ? void 0 : mergedIncoming.telefono) ?? ""),
+    marca: String((mergedIncoming == null ? void 0 : mergedIncoming.marca) ?? ""),
+    modelo: String((mergedIncoming == null ? void 0 : mergedIncoming.modelo) ?? ""),
+    km: String((mergedIncoming == null ? void 0 : mergedIncoming.km) ?? ""),
     matricula: matriculaNormalizada,
-    tipo_turno: String((reserva == null ? void 0 : reserva.tipo_turno) ?? ""),
-    particular_tipo: (reserva == null ? void 0 : reserva.particular_tipo) ?? null,
-    garantia_tipo: (reserva == null ? void 0 : reserva.garantia_tipo) ?? null,
-    garantia_fecha_compra: (reserva == null ? void 0 : reserva.garantia_fecha_compra) ?? null,
-    garantia_numero_service: (reserva == null ? void 0 : reserva.garantia_numero_service) ?? null,
-    garantia_problema: (reserva == null ? void 0 : reserva.garantia_problema) ?? null,
-    fecha: String((reserva == null ? void 0 : reserva.fecha) ?? ""),
-    hora: String((reserva == null ? void 0 : reserva.hora) ?? ""),
-    detalles: String((reserva == null ? void 0 : reserva.detalles) ?? "")
+    tipo_turno: String((mergedIncoming == null ? void 0 : mergedIncoming.tipo_turno) ?? ""),
+    particular_tipo: (mergedIncoming == null ? void 0 : mergedIncoming.particular_tipo) ?? null,
+    garantia_tipo: (mergedIncoming == null ? void 0 : mergedIncoming.garantia_tipo) ?? null,
+    garantia_fecha_compra: (mergedIncoming == null ? void 0 : mergedIncoming.garantia_fecha_compra) ?? null,
+    garantia_numero_service: (mergedIncoming == null ? void 0 : mergedIncoming.garantia_numero_service) ?? null,
+    garantia_problema: (mergedIncoming == null ? void 0 : mergedIncoming.garantia_problema) ?? null,
+    fecha: String((mergedIncoming == null ? void 0 : mergedIncoming.fecha) ?? ""),
+    hora: String((mergedIncoming == null ? void 0 : mergedIncoming.hora) ?? ""),
+    detalles: String((mergedIncoming == null ? void 0 : mergedIncoming.detalles) ?? "")
   });
-  const estadoActual = String((reserva == null ? void 0 : reserva.estado) ?? "pendiente");
-  const payload = { ...reservaActualizada, estado: estadoActual };
-  const campos = Object.keys(payload);
+  const estadoActual = String((mergedIncoming == null ? void 0 : mergedIncoming.estado) ?? "pendiente");
+  const payloadBase = { ...reservaActualizada, estado: estadoActual };
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(
       `SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
@@ -20647,9 +20842,11 @@ async function actualizarReserva(id, reserva) {
     );
     const anterior = rows[0];
     if (!anterior) {
-      console.log("[Service] Reserva no encontrada para actualizar (MySQL):", id);
+      console.log("[Service] Reserva no encontrada para actualizar (MySQL):", reservaId);
       return;
     }
+    const payload2 = buildReservaMutationInput(anterior, payloadBase, actor.role);
+    const campos2 = Object.keys(payload2);
     await pool2.execute(
       `UPDATE reservas
        SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
@@ -20657,36 +20854,36 @@ async function actualizarReserva(id, reserva) {
            garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
        WHERE id = ?`,
       [
-        payload.nombre,
-        payload.cedula,
-        payload.telefono,
-        payload.marca,
-        payload.modelo,
-        payload.km,
-        payload.matricula,
-        payload.tipo_turno,
-        payload.particular_tipo ?? null,
-        payload.garantia_tipo ?? null,
-        payload.garantia_fecha_compra ?? null,
-        payload.garantia_numero_service ?? null,
-        payload.garantia_problema ?? null,
-        payload.fecha,
-        payload.hora,
-        payload.estado,
-        payload.detalles,
+        payload2.nombre,
+        payload2.cedula,
+        payload2.telefono,
+        payload2.marca,
+        payload2.modelo,
+        payload2.km,
+        payload2.matricula,
+        payload2.tipo_turno,
+        payload2.particular_tipo ?? null,
+        payload2.garantia_tipo ?? null,
+        payload2.garantia_fecha_compra ?? null,
+        payload2.garantia_numero_service ?? null,
+        payload2.garantia_problema ?? null,
+        payload2.fecha,
+        payload2.hora,
+        payload2.estado,
+        payload2.detalles,
         reservaId
       ]
     );
-    await registrarMarcaModeloMysql$1(pool2, payload.marca, payload.modelo);
-    for (const campo of campos) {
-      if (anterior[campo] !== payload[campo]) {
+    await registrarMarcaModeloMysql$1(pool2, payload2.marca, payload2.modelo);
+    for (const campo of campos2) {
+      if (anterior[campo] !== payload2[campo]) {
         await pool2.execute(
           `
             INSERT INTO historial_reservas
             (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
             VALUES ( ?, ?, ?, ?, NOW())
           `,
-          [reservaId, campo, anterior[campo], payload[campo]]
+          [reservaId, campo, anterior[campo], payload2[campo]]
         );
       }
     }
@@ -20702,6 +20899,8 @@ async function actualizarReserva(id, reserva) {
         WHERE id = ?
       `).get(reservaId);
       if (!anterior) return;
+      const payload2 = buildReservaMutationInput(anterior, payloadBase, actor.role);
+      const campos2 = Object.keys(payload2);
       const transaction = db22.transaction(() => {
         db22.prepare(`
           UPDATE reservas
@@ -20710,28 +20909,28 @@ async function actualizarReserva(id, reserva) {
               garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
           WHERE id = ?
         `).run(
-          payload.nombre,
-          payload.cedula,
-          payload.telefono,
-          payload.marca,
-          payload.modelo,
-          payload.km,
-          payload.matricula,
-          payload.tipo_turno,
-          payload.particular_tipo ?? null,
-          payload.garantia_tipo ?? null,
-          payload.garantia_fecha_compra ?? null,
-          payload.garantia_numero_service ?? null,
-          payload.garantia_problema ?? null,
-          payload.fecha,
-          payload.hora,
-          payload.estado,
-          payload.detalles,
+          payload2.nombre,
+          payload2.cedula,
+          payload2.telefono,
+          payload2.marca,
+          payload2.modelo,
+          payload2.km,
+          payload2.matricula,
+          payload2.tipo_turno,
+          payload2.particular_tipo ?? null,
+          payload2.garantia_tipo ?? null,
+          payload2.garantia_fecha_compra ?? null,
+          payload2.garantia_numero_service ?? null,
+          payload2.garantia_problema ?? null,
+          payload2.fecha,
+          payload2.hora,
+          payload2.estado,
+          payload2.detalles,
           reservaId
         );
-        registrarMarcaModeloSqlite$1(db22, payload.marca, payload.modelo);
-        for (const campo of campos) {
-          if (anterior[campo] !== payload[campo]) {
+        registrarMarcaModeloSqlite$1(db22, payload2.marca, payload2.modelo);
+        for (const campo of campos2) {
+          if (anterior[campo] !== payload2[campo]) {
             db22.prepare(`
               INSERT INTO historial_reservas
               (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
@@ -20740,7 +20939,7 @@ async function actualizarReserva(id, reserva) {
               reservaId,
               campo,
               anterior[campo],
-              payload[campo]
+              payload2[campo]
             );
           }
         }
@@ -20843,10 +21042,10 @@ function syncReservasToSqlite(rows) {
     `);
     const tx = db2.transaction(() => {
       for (const row of rows) {
-        const id = (row == null ? void 0 : row.id) ? Number(row.id) : null;
+        const id2 = (row == null ? void 0 : row.id) ? Number(row.id) : null;
         let existingId = null;
-        if (id) {
-          const byId = selectById.get(id);
+        if (id2) {
+          const byId = selectById.get(id2);
           if (byId == null ? void 0 : byId.id) existingId = byId.id;
         }
         if (!existingId) {
@@ -20885,7 +21084,7 @@ function syncReservasToSqlite(rows) {
           );
         } else {
           insert.run(
-            id || null,
+            id2 || null,
             ...values
           );
         }
@@ -20967,37 +21166,42 @@ async function obtenerTodasLasReservas() {
   `).all();
   return result;
 }
-async function actualizarNotasReserva(id, notas) {
-  console.log("[Service] Actualizando notas para reserva:", id);
+async function actualizarNotasReserva(id2, notas) {
+  const payload2 = typeof id2 === "object" && id2 !== null ? id2 : { id: id2, notas };
+  const actor = getActor(payload2);
+  assertCanEditReservaNotes(actor.role);
+  const reservaId = Number((payload2 == null ? void 0 : payload2.id) || id2);
+  const nextNotas = String((payload2 == null ? void 0 : payload2.notas) ?? notas ?? "");
+  console.log("[Service] Actualizando notas para reserva:", reservaId);
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(
       `SELECT notas FROM reservas WHERE id = ?`,
-      [id]
+      [reservaId]
     );
     const anterior = rows[0];
     if (!anterior) return;
-    await pool2.execute(`UPDATE reservas SET notas = ? WHERE id = ?`, [notas, id]);
+    await pool2.execute(`UPDATE reservas SET notas = ? WHERE id = ?`, [nextNotas, reservaId]);
     await pool2.execute(
       `
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'notas', ?, ?, NOW())
       `,
-      [id, anterior.notas || "", notas]
+      [reservaId, anterior.notas || "", nextNotas]
     );
   });
   if (mysqlResult.ok) {
     try {
       const db22 = initDatabase();
-      const anterior = db22.prepare(`SELECT notas FROM reservas WHERE id = ?`).get(id);
+      const anterior = db22.prepare(`SELECT notas FROM reservas WHERE id = ?`).get(reservaId);
       if (!anterior) return;
       const transaction = db22.transaction(() => {
-        db22.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(notas, id);
+        db22.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(nextNotas, reservaId);
         db22.prepare(`
           INSERT INTO historial_reservas
           (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
           VALUES ( ?, 'notas', ?, ?, datetime('now'))
-        `).run(id, anterior.notas || "", notas);
+        `).run(reservaId, anterior.notas || "", nextNotas);
       });
       transaction();
     } catch (error2) {
@@ -21008,18 +21212,18 @@ async function actualizarNotasReserva(id, notas) {
   const db2 = initDatabase();
   try {
     const anterior = db2.prepare(`
-      SELECT notas FROM reservas WHERE id = ? `).get(id);
+      SELECT notas FROM reservas WHERE id = ? `).get(reservaId);
     if (!anterior) {
-      console.log("[Service] Reserva no encontrada:", id);
+      console.log("[Service] Reserva no encontrada:", reservaId);
       return;
     }
     const transaction = db2.transaction(() => {
-      db2.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(notas, id);
+      db2.prepare(`UPDATE reservas SET notas = ? WHERE id = ?`).run(nextNotas, reservaId);
       db2.prepare(`
         INSERT INTO historial_reservas
         (reserva_id, campo, valor_anterior, valor_nuevo, fecha)
         VALUES ( ?, 'notas', ?, ?, datetime('now'))
-      `).run(id, anterior.notas || "", notas);
+      `).run(reservaId, anterior.notas || "", nextNotas);
     });
     transaction();
   } catch (error2) {
@@ -21261,17 +21465,17 @@ async function sendDailySummaryNow(dateIso) {
   }
 }
 function registrarHandlersReservas() {
-  const broadcast = (channel, payload) => {
+  const broadcast = (channel, payload2) => {
     for (const win2 of BrowserWindow.getAllWindows()) {
       if (!win2.isDestroyed()) {
-        win2.webContents.send(channel, payload);
+        win2.webContents.send(channel, payload2);
       }
     }
   };
-  const notifyReserva = async (accion, id, fallback) => {
+  const notifyReserva = async (accion, id2, fallback) => {
     let reserva = null;
     try {
-      reserva = await obtenerReserva(id);
+      reserva = await obtenerReserva(id2);
     } catch {
       reserva = null;
     }
@@ -21281,7 +21485,7 @@ function registrarHandlersReservas() {
       fecha: reserva.fecha,
       hora: reserva.hora,
       tipo_turno: reserva.tipo_turno
-    } : { id, ...fallback || {} };
+    } : { id: id2, ...fallback || {} };
     const title = accion === "creada" ? "Nueva reserva" : accion === "eliminada" ? "Reserva eliminada" : "Reserva modificada";
     const bodyParts = [
       (resumen == null ? void 0 : resumen.nombre) ? String(resumen.nombre) : "Cliente sin nombre",
@@ -21334,21 +21538,22 @@ function registrarHandlersReservas() {
     }
     return result;
   });
-  safeHandle("reservas:obtener", (_event, id) => {
-    console.log("[IPC] Obteniendo reserva:", id);
-    return obtenerReserva(id);
+  safeHandle("reservas:obtener", (_event, id2) => {
+    console.log("[IPC] Obteniendo reserva:", id2);
+    return obtenerReserva(id2);
   });
-  safeHandle("reservas:borrar", async (_event, id) => {
-    console.log("[IPC] Borrando reserva:", id);
+  safeHandle("reservas:borrar", async (_event, payload2) => {
+    const reservaId = Number((payload2 == null ? void 0 : payload2.id) || payload2);
+    console.log("[IPC] Borrando reserva:", reservaId);
     let anterior = null;
     try {
-      anterior = await obtenerReserva(id);
+      anterior = await obtenerReserva(reservaId);
     } catch {
       anterior = null;
     }
-    const result = await withDbLock(() => borrarReserva(id));
+    const result = await withDbLock(() => borrarReserva(payload2));
     console.log("[IPC] Reserva borrada exitosamente");
-    await notifyReserva("eliminada", id, {
+    await notifyReserva("eliminada", reservaId, {
       nombre: anterior == null ? void 0 : anterior.nombre,
       fecha: anterior == null ? void 0 : anterior.fecha,
       hora: anterior == null ? void 0 : anterior.hora,
@@ -21356,39 +21561,35 @@ function registrarHandlersReservas() {
     });
     return result;
   });
-  safeHandle("reservas:mover", async (_event, payload) => {
-    console.log("[IPC] Moviendo reserva:", payload);
-    const result = await withDbLock(
-      () => moverReserva(payload.id, payload.nuevaFecha, payload.nuevaHora)
-    );
+  safeHandle("reservas:mover", async (_event, payload2) => {
+    console.log("[IPC] Moviendo reserva:", payload2);
+    const result = await withDbLock(() => moverReserva(payload2));
     console.log("[IPC] Reserva movida exitosamente");
-    if (payload == null ? void 0 : payload.id) {
-      await notifyReserva("modificada", payload.id, {
-        fecha: payload.nuevaFecha,
-        hora: payload.nuevaHora
+    if (payload2 == null ? void 0 : payload2.id) {
+      await notifyReserva("modificada", payload2.id, {
+        fecha: payload2.nuevaFecha,
+        hora: payload2.nuevaHora
       });
     }
     return result;
   });
-  safeHandle("reservas:actualizar", async (_event, payload) => {
-    console.log("[IPC] Actualizando reserva:", payload);
-    const result = await withDbLock(
-      () => actualizarReserva(payload.id, payload)
-    );
+  safeHandle("reservas:actualizar", async (_event, payload2) => {
+    console.log("[IPC] Actualizando reserva:", payload2);
+    const result = await withDbLock(() => actualizarReserva(payload2));
     console.log("[IPC] Reserva actualizada exitosamente");
-    if (payload == null ? void 0 : payload.id) {
-      await notifyReserva("modificada", payload.id, {
-        nombre: payload == null ? void 0 : payload.nombre,
-        fecha: payload == null ? void 0 : payload.fecha,
-        hora: payload == null ? void 0 : payload.hora,
-        tipo_turno: payload == null ? void 0 : payload.tipo_turno
+    if (payload2 == null ? void 0 : payload2.id) {
+      await notifyReserva("modificada", payload2.id, {
+        nombre: payload2 == null ? void 0 : payload2.nombre,
+        fecha: payload2 == null ? void 0 : payload2.fecha,
+        hora: payload2 == null ? void 0 : payload2.hora,
+        tipo_turno: payload2 == null ? void 0 : payload2.tipo_turno
       });
     }
     return result;
   });
-  safeHandle("reservas:semana", async (_event, payload) => {
-    console.log("[IPC] Obteniendo reservas de semana:", payload);
-    const result = await obtenerReservasSemana(payload.desde, payload.hasta);
+  safeHandle("reservas:semana", async (_event, payload2) => {
+    console.log("[IPC] Obteniendo reservas de semana:", payload2);
+    const result = await obtenerReservasSemana(payload2.desde, payload2.hasta);
     console.log("[IPC] Reservas de semana obtenidas:", result.length, "registros");
     return result;
   });
@@ -21398,38 +21599,39 @@ function registrarHandlersReservas() {
     console.log("[IPC] Total de reservas obtenidas:", result.length);
     return result;
   });
-  safeHandle("reservas:actualizar-notas", async (_event, id, notas) => {
-    console.log("[IPC] Actualizando notas para reserva:", id);
-    const result = await withDbLock(() => actualizarNotasReserva(id, notas));
+  safeHandle("reservas:actualizar-notas", async (_event, payload2, notas) => {
+    const data = typeof payload2 === "object" && payload2 !== null ? payload2 : { id: payload2, notas };
+    console.log("[IPC] Actualizando notas para reserva:", data == null ? void 0 : data.id);
+    const result = await withDbLock(() => actualizarNotasReserva(data));
     console.log("[IPC] Notas actualizadas exitosamente");
-    if (id) {
-      await notifyReserva("modificada", id);
+    if (data == null ? void 0 : data.id) {
+      await notifyReserva("modificada", data.id);
     }
     return result;
   });
-  safeHandle("reservas:cambios", async (_event, payload) => {
-    const since = (payload == null ? void 0 : payload.since) || (/* @__PURE__ */ new Date(0)).toISOString();
-    const lastId = Number((payload == null ? void 0 : payload.lastId) || 0);
-    const limit = Number((payload == null ? void 0 : payload.limit) || 200);
+  safeHandle("reservas:cambios", async (_event, payload2) => {
+    const since = (payload2 == null ? void 0 : payload2.since) || (/* @__PURE__ */ new Date(0)).toISOString();
+    const lastId = Number((payload2 == null ? void 0 : payload2.lastId) || 0);
+    const limit = Number((payload2 == null ? void 0 : payload2.limit) || 200);
     return obtenerCambiosReservas(since, lastId, limit);
   });
-  safeHandle("reservas:dia", async (_event, payload) => {
-    const fecha = String((payload == null ? void 0 : payload.fecha) || "").trim();
+  safeHandle("reservas:dia", async (_event, payload2) => {
+    const fecha = String((payload2 == null ? void 0 : payload2.fecha) || "").trim();
     if (!fecha) return [];
     return obtenerReservasPorFecha(fecha);
   });
   safeHandle("resumen-diario:config:get", async () => {
     return getDailySummaryConfig();
   });
-  safeHandle("resumen-diario:config:set", async (_event, payload) => {
+  safeHandle("resumen-diario:config:set", async (_event, payload2) => {
     return setDailySummaryConfig({
-      enabled: typeof (payload == null ? void 0 : payload.enabled) === "boolean" ? payload.enabled : void 0,
-      sendTime: typeof (payload == null ? void 0 : payload.sendTime) === "string" ? payload.sendTime : void 0,
-      recipients: Array.isArray(payload == null ? void 0 : payload.recipients) ? payload.recipients : void 0
+      enabled: typeof (payload2 == null ? void 0 : payload2.enabled) === "boolean" ? payload2.enabled : void 0,
+      sendTime: typeof (payload2 == null ? void 0 : payload2.sendTime) === "string" ? payload2.sendTime : void 0,
+      recipients: Array.isArray(payload2 == null ? void 0 : payload2.recipients) ? payload2.recipients : void 0
     });
   });
-  safeHandle("resumen-diario:enviar", async (_event, payload) => {
-    const fecha = String((payload == null ? void 0 : payload.fecha) || "").trim();
+  safeHandle("resumen-diario:enviar", async (_event, payload2) => {
+    const fecha = String((payload2 == null ? void 0 : payload2.fecha) || "").trim();
     return sendDailySummaryNow(fecha);
   });
 }
@@ -21571,13 +21773,13 @@ function registrarHandlersHistorial() {
   );
   safeHandle(
     "historial:registrar",
-    async (_event, payload) => await withDbLock(
+    async (_event, payload2) => await withDbLock(
       () => registrarEventoHistorial(
-        payload.reservaId,
-        payload.campo,
-        payload.anterior,
-        payload.nuevo,
-        payload.usuario
+        payload2.reservaId,
+        payload2.campo,
+        payload2.anterior,
+        payload2.nuevo,
+        payload2.usuario
       )
     )
   );
@@ -21812,14 +22014,14 @@ async function ensureAuditTableMysql() {
     return true;
   });
 }
-async function registrarAuditoria(payload) {
+async function registrarAuditoria(payload2) {
   await ensureAuditTableMysql();
   const data = {
-    actor_username: payload.actor_username ?? null,
-    actor_role: payload.actor_role ?? null,
-    accion: payload.accion,
-    target_username: payload.target_username ?? null,
-    detalle: payload.detalle ?? null
+    actor_username: payload2.actor_username ?? null,
+    actor_role: payload2.actor_role ?? null,
+    accion: payload2.accion,
+    target_username: payload2.target_username ?? null,
+    detalle: payload2.detalle ?? null
   };
   await tryMysql(async (pool2) => {
     await pool2.query(
@@ -21863,17 +22065,6 @@ async function listarAuditoria() {
      ORDER BY id DESC`
   ).all();
 }
-const ALL_PERMISSIONS = [
-  "agenda",
-  "reservas",
-  "aprontes",
-  "historial",
-  "ajustes",
-  "vehiculos",
-  "config",
-  "usuarios",
-  "auditoria"
-];
 async function ensureUsersTableMysql() {
   return tryMysql(async (pool2) => {
     await pool2.query(
@@ -21890,18 +22081,6 @@ async function ensureUsersTableMysql() {
     return true;
   });
 }
-function getDefaultPermissions(role) {
-  if (role === "superadmin") return [...ALL_PERMISSIONS];
-  if (role === "super") return [...ALL_PERMISSIONS];
-  if (role === "admin") return ["agenda", "reservas", "aprontes", "historial", "ajustes", "vehiculos"];
-  return ["reservas", "historial"];
-}
-function normalizeRole(role) {
-  if (role === "superadmin" || role === "super" || role === "admin" || role === "user") {
-    return role;
-  }
-  return "user";
-}
 function hashPassword(password) {
   const salt = crypto.randomBytes(16);
   const hash = crypto.scryptSync(password, salt, 32);
@@ -21914,31 +22093,6 @@ function verifyPassword(password, stored) {
   const hash = Buffer.from(parts[2], "hex");
   const computed = crypto.scryptSync(password, salt, 32);
   return crypto.timingSafeEqual(hash, computed);
-}
-function normalizePermissions(role, permissions) {
-  const normalizedRole = normalizeRole(role);
-  const allowed = new Set(ALL_PERMISSIONS);
-  if (!permissions || permissions.length === 0) {
-    return getDefaultPermissions(normalizedRole);
-  }
-  const unique = /* @__PURE__ */ new Set();
-  for (const p of permissions) {
-    if (allowed.has(p)) unique.add(p);
-  }
-  return Array.from(unique);
-}
-function parsePermissions(raw, role) {
-  const normalizedRole = normalizeRole(role);
-  if (!raw) return getDefaultPermissions(normalizedRole);
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return normalizePermissions(normalizedRole, parsed);
-    }
-    return getDefaultPermissions(normalizedRole);
-  } catch {
-    return getDefaultPermissions(normalizedRole);
-  }
 }
 function isUniqueUsernameError(error2) {
   const message = String((error2 == null ? void 0 : error2.message) || "");
@@ -22229,47 +22383,47 @@ async function actualizarUsuario(data) {
     detalle: `Rol: ${role} | activo: ${data.activo ?? 1}`
   });
 }
-async function eliminarUsuario(id, actor) {
-  const username = await obtenerUsernamePorId(id);
+async function eliminarUsuario(id2, actor) {
+  const username = await obtenerUsernamePorId(id2);
   await ensureUsersTableMysql();
   await tryMysql(async (pool2) => {
-    await pool2.query("DELETE FROM usuarios WHERE id = ?", [id]);
+    await pool2.query("DELETE FROM usuarios WHERE id = ?", [id2]);
     return true;
   });
   const db2 = initDatabase();
-  db2.prepare("DELETE FROM usuarios WHERE id = ?").run(id);
+  db2.prepare("DELETE FROM usuarios WHERE id = ?").run(id2);
   await registrarAuditoria({
     actor_username: actor.username || "sistema",
     actor_role: actor.role || "system",
     accion: "USUARIO_ELIMINADO",
     target_username: username,
-    detalle: `ID: ${id}`
+    detalle: `ID: ${id2}`
   });
 }
-async function actualizarPassword(id, password, actor) {
-  const username = await obtenerUsernamePorId(id);
+async function actualizarPassword(id2, password, actor) {
+  const username = await obtenerUsernamePorId(id2);
   await ensureUsersTableMysql();
   const passwordHash = hashPassword(password);
   await tryMysql(async (pool2) => {
-    await pool2.query("UPDATE usuarios SET password_hash = ? WHERE id = ?", [passwordHash, id]);
+    await pool2.query("UPDATE usuarios SET password_hash = ? WHERE id = ?", [passwordHash, id2]);
     return true;
   });
   const db2 = initDatabase();
-  db2.prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?").run(passwordHash, id);
+  db2.prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?").run(passwordHash, id2);
   await registrarAuditoria({
     actor_username: actor.username || "sistema",
     actor_role: actor.role || "system",
     accion: "PASSWORD_CAMBIADA",
     target_username: username,
-    detalle: `ID: ${id}`
+    detalle: `ID: ${id2}`
   });
 }
-async function obtenerUsernamePorId(id) {
+async function obtenerUsernamePorId(id2) {
   const mysqlResult = await tryMysql(async (pool2) => {
     var _a;
     const [rows] = await pool2.query(
       "SELECT username FROM usuarios WHERE id = ? LIMIT 1",
-      [id]
+      [id2]
     );
     return ((_a = rows[0]) == null ? void 0 : _a.username) || null;
   });
@@ -22277,7 +22431,7 @@ async function obtenerUsernamePorId(id) {
     return mysqlResult.value || null;
   }
   const db2 = initDatabase();
-  const row = db2.prepare("SELECT username FROM usuarios WHERE id = ? LIMIT 1").get(id);
+  const row = db2.prepare("SELECT username FROM usuarios WHERE id = ? LIMIT 1").get(id2);
   return row.username || null;
 }
 function registrarHandlersUsuarios() {
@@ -22331,6 +22485,18 @@ function registrarHandlersAuditoria() {
   safeHandle("auditoria:list", async () => {
     return listarAuditoria();
   });
+}
+function buildApronteMutationInput(anterior, incoming, actorRole) {
+  if (isTallerRole(actorRole)) {
+    return {
+      ...anterior,
+      estado: (incoming == null ? void 0 : incoming.estado) ?? (anterior == null ? void 0 : anterior.estado)
+    };
+  }
+  return {
+    ...anterior,
+    ...incoming
+  };
 }
 const ESTADOS_APRONTE = /* @__PURE__ */ new Set([
   "APRONTE",
@@ -22387,7 +22553,12 @@ async function ensureAprontesMysqlSchema() {
       `ALTER TABLE aprontes ADD COLUMN numero_motor VARCHAR(100)`,
       `ALTER TABLE aprontes ADD COLUMN garantia_espera_desde DATETIME NULL`,
       `ALTER TABLE aprontes ADD COLUMN garantia_notificada TINYINT DEFAULT 0`,
-      `ALTER TABLE aprontes ADD COLUMN garantia_notificada_at DATETIME NULL`
+      `ALTER TABLE aprontes ADD COLUMN garantia_notificada_at DATETIME NULL`,
+      `ALTER TABLE aprontes ADD COLUMN created_by_username VARCHAR(255) NULL`,
+      `ALTER TABLE aprontes ADD COLUMN created_by_role VARCHAR(50) NULL`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado TINYINT DEFAULT 1`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado_at DATETIME NULL`,
+      `ALTER TABLE aprontes ADD COLUMN caja_aprobado_por VARCHAR(255) NULL`
     ];
     for (const sql of alters) {
       try {
@@ -22587,6 +22758,11 @@ function syncAprontesToSqlite(rows) {
         correo_alerta_garantia = excluded.correo_alerta_garantia,
         dias_alerta_garantia = excluded.dias_alerta_garantia,
         fecha_alerta_garantia = excluded.fecha_alerta_garantia,
+        created_by_username = excluded.created_by_username,
+        created_by_role = excluded.created_by_role,
+        caja_aprobado = excluded.caja_aprobado,
+        caja_aprobado_at = excluded.caja_aprobado_at,
+        caja_aprobado_por = excluded.caja_aprobado_por,
         garantia_espera_desde = excluded.garantia_espera_desde,
         garantia_notificada = excluded.garantia_notificada,
         garantia_notificada_at = excluded.garantia_notificada_at,
@@ -22594,10 +22770,10 @@ function syncAprontesToSqlite(rows) {
     );
     const tx = db2.transaction((items) => {
       for (const row of items) {
-        const id = (row == null ? void 0 : row.id) ? Number(row.id) : null;
-        if (!id) continue;
+        const id2 = (row == null ? void 0 : row.id) ? Number(row.id) : null;
+        if (!id2) continue;
         upsert.run(
-          id,
+          id2,
           (row == null ? void 0 : row.nombre) ?? "",
           (row == null ? void 0 : row.fecha) ?? "",
           (row == null ? void 0 : row.hora) ?? "",
@@ -22613,6 +22789,11 @@ function syncAprontesToSqlite(rows) {
           (row == null ? void 0 : row.correo_alerta_garantia) ?? "",
           Number((row == null ? void 0 : row.dias_alerta_garantia) || 7),
           (row == null ? void 0 : row.fecha_alerta_garantia) ?? null,
+          (row == null ? void 0 : row.created_by_username) ?? null,
+          (row == null ? void 0 : row.created_by_role) ?? null,
+          Number((row == null ? void 0 : row.caja_aprobado) ?? 1),
+          (row == null ? void 0 : row.caja_aprobado_at) ?? null,
+          (row == null ? void 0 : row.caja_aprobado_por) ?? null,
           (row == null ? void 0 : row.garantia_espera_desde) ?? null,
           Number((row == null ? void 0 : row.garantia_notificada) || 0),
           (row == null ? void 0 : row.garantia_notificada_at) ?? null,
@@ -22625,7 +22806,9 @@ function syncAprontesToSqlite(rows) {
     console.warn("[Aprontes] Error sync sqlite:", error2);
   }
 }
-async function crearApronteSqlite(dataNormalizada, fechaNormalizada, horaNormalizada) {
+async function crearApronteSqlite(dataNormalizada, fechaNormalizada, horaNormalizada, actor) {
+  const creatorRole = normalizeRole(actor.role);
+  const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1;
   const db2 = initDatabase();
   const tx = db2.transaction(() => {
     validarCupoDisponibleSqlite(db2, fechaNormalizada, horaNormalizada);
@@ -22636,8 +22819,9 @@ async function crearApronteSqlite(dataNormalizada, fechaNormalizada, horaNormali
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-        garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+        created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       dataNormalizada.nombre,
       fechaNormalizada,
@@ -22656,15 +22840,22 @@ async function crearApronteSqlite(dataNormalizada, fechaNormalizada, horaNormali
       dataNormalizada.fecha_alerta_garantia ?? null,
       dataNormalizada.estado === "ENTREGADA ESPERA DE GARANTIA" ? sqliteNowIso() : null,
       0,
-      null
+      null,
+      actor.username || null,
+      creatorRole,
+      cajaAprobado,
+      cajaAprobado ? sqliteNowIso() : null,
+      cajaAprobado ? actor.username || null : null
     );
     registrarMarcaModeloSqlite(db2, dataNormalizada.marca, dataNormalizada.modelo);
     return Number(result.lastInsertRowid);
   });
   return tx();
 }
-async function crearApronteMysql(dataNormalizada, fechaNormalizada, horaNormalizada) {
+async function crearApronteMysql(dataNormalizada, fechaNormalizada, horaNormalizada, actor) {
   await ensureAprontesMysqlSchema();
+  const creatorRole = normalizeRole(actor.role);
+  const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1;
   const mysqlResult = await tryMysql(async (pool2) => {
     await validarCupoDisponibleMysql(pool2, fechaNormalizada, horaNormalizada);
     const [result] = await pool2.execute(
@@ -22674,8 +22865,9 @@ async function crearApronteMysql(dataNormalizada, fechaNormalizada, horaNormaliz
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-        garantia_espera_desde, garantia_notificada, garantia_notificada_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+        created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         dataNormalizada.nombre,
         fechaNormalizada,
@@ -22694,7 +22886,12 @@ async function crearApronteMysql(dataNormalizada, fechaNormalizada, horaNormaliz
         dataNormalizada.fecha_alerta_garantia ?? null,
         dataNormalizada.estado === "ENTREGADA ESPERA DE GARANTIA" ? /* @__PURE__ */ new Date() : null,
         0,
-        null
+        null,
+        actor.username || null,
+        creatorRole,
+        cajaAprobado,
+        cajaAprobado ? /* @__PURE__ */ new Date() : null,
+        cajaAprobado ? actor.username || null : null
       ]
     );
     await registrarMarcaModeloMysql(pool2, dataNormalizada.marca, dataNormalizada.modelo);
@@ -22707,14 +22904,18 @@ async function crearApronteMysql(dataNormalizada, fechaNormalizada, horaNormaliz
 }
 async function crearApronte(data) {
   await ensureAprontesMysqlSchema();
+  const actor = getActor(data);
+  assertCanCreateApronte(actor.role);
   validarRequeridos(data);
   const normalized = normalizarApronte({ ...data });
   const fechaNormalizada = normalizarFecha$1(normalized.fecha);
   const horaNormalizada = normalizarHora$1(normalized.hora);
   validarReglaFinDeSemana(fechaNormalizada, horaNormalizada);
   try {
-    const mysqlId = await crearApronteMysql(normalized, fechaNormalizada, horaNormalizada);
+    const mysqlId = await crearApronteMysql(normalized, fechaNormalizada, horaNormalizada, actor);
     try {
+      const creatorRole = normalizeRole(actor.role);
+      const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1;
       const db2 = initDatabase();
       db2.prepare(
         `INSERT INTO aprontes (
@@ -22723,8 +22924,9 @@ async function crearApronte(data) {
           marca, modelo, numero_motor, factura,
           estado, repuestos_garantia,
           correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
-          garantia_espera_desde, garantia_notificada, garantia_notificada_at
-        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          garantia_espera_desde, garantia_notificada, garantia_notificada_at,
+          created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
+        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         mysqlId,
         normalized.nombre,
@@ -22744,7 +22946,12 @@ async function crearApronte(data) {
         normalized.fecha_alerta_garantia ?? null,
         normalized.estado === "ENTREGADA ESPERA DE GARANTIA" ? sqliteNowIso() : null,
         0,
-        null
+        null,
+        actor.username || null,
+        creatorRole,
+        cajaAprobado,
+        cajaAprobado ? sqliteNowIso() : null,
+        cajaAprobado ? actor.username || null : null
       );
       registrarMarcaModeloSqlite(db2, normalized.marca, normalized.modelo);
     } catch (error2) {
@@ -22753,12 +22960,12 @@ async function crearApronte(data) {
     return mysqlId;
   } catch (error2) {
     console.warn("[Aprontes] MySQL no disponible, usando SQLite local");
-    return crearApronteSqlite(normalized, fechaNormalizada, horaNormalizada);
+    return crearApronteSqlite(normalized, fechaNormalizada, horaNormalizada, actor);
   }
 }
-async function obtenerApronte(id) {
+async function obtenerApronte(id2) {
   await ensureAprontesMysqlSchema();
-  const idNum = Number(id);
+  const idNum = Number(id2);
   if (!idNum) return null;
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(`SELECT * FROM aprontes WHERE id = ?`, [idNum]);
@@ -22773,7 +22980,10 @@ async function obtenerAprontesPorFecha(fecha) {
   const fechaNormalizada = normalizarFecha$1(fecha);
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(
-      `SELECT * FROM aprontes WHERE fecha = ? ORDER BY hora`,
+      `SELECT *
+       FROM aprontes
+       WHERE fecha = ?
+       ORDER BY hora`,
       [fechaNormalizada]
     );
     return rows;
@@ -22784,14 +22994,19 @@ async function obtenerAprontesPorFecha(fecha) {
   }
   const db2 = initDatabase();
   return db2.prepare(
-    `SELECT * FROM aprontes WHERE fecha = ? ORDER BY hora`
+    `SELECT *
+     FROM aprontes
+     WHERE fecha = ?
+     ORDER BY hora`
   ).all(fechaNormalizada);
 }
 async function obtenerTodosLosAprontes() {
   await ensureAprontesMysqlSchema();
   const mysqlResult = await tryMysql(async (pool2) => {
     const [rows] = await pool2.execute(
-      `SELECT * FROM aprontes ORDER BY fecha DESC, hora DESC`
+      `SELECT *
+       FROM aprontes
+       ORDER BY fecha DESC, hora DESC`
     );
     return rows;
   });
@@ -22801,12 +23016,15 @@ async function obtenerTodosLosAprontes() {
   }
   const db2 = initDatabase();
   return db2.prepare(
-    `SELECT * FROM aprontes ORDER BY fecha DESC, hora DESC`
+    `SELECT *
+     FROM aprontes
+     ORDER BY fecha DESC, hora DESC`
   ).all();
 }
-async function actualizarApronte(id, data) {
+async function actualizarApronte(id2, data) {
   await ensureAprontesMysqlSchema();
-  const apronteId = Number(id || (data == null ? void 0 : data.id) || 0);
+  const actor = getActor(data);
+  const apronteId = Number(id2 || (data == null ? void 0 : data.id) || 0);
   if (!apronteId) {
     throw new Error("ID de apronte invalido");
   }
@@ -22814,7 +23032,7 @@ async function actualizarApronte(id, data) {
     const [rows] = await pool2.execute("SELECT * FROM aprontes WHERE id = ?", [apronteId]);
     const anterior2 = rows[0];
     if (!anterior2) return;
-    const merged2 = { ...anterior2, ...data };
+    const merged2 = buildApronteMutationInput(anterior2, data, actor.role);
     validarRequeridos(merged2);
     const normalized2 = normalizarApronte(merged2);
     const fechaNormalizada2 = normalizarFecha$1(normalized2.fecha);
@@ -22824,6 +23042,8 @@ async function actualizarApronte(id, data) {
     const estadoNuevo2 = normalizarEstadoApronte(normalized2.estado);
     const entraEspera2 = estadoNuevo2 === "ENTREGADA ESPERA DE GARANTIA" && estadoAnterior2 !== "ENTREGADA ESPERA DE GARANTIA";
     const saleEspera2 = estadoNuevo2 !== "ENTREGADA ESPERA DE GARANTIA";
+    const nextCajaAprobado2 = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, "caja_aprobado") ? (data == null ? void 0 : data.caja_aprobado) ? 1 : 0 : Number(anterior2.caja_aprobado ?? 1);
+    const cajaApprovalChanged2 = nextCajaAprobado2 !== Number(anterior2.caja_aprobado ?? 1);
     const mismoHorario2 = fechaNormalizada2 === anterior2.fecha && horaNormalizada2 === anterior2.hora;
     if (!mismoHorario2) {
       await validarCupoDisponibleMysql(pool2, fechaNormalizada2, horaNormalizada2, apronteId);
@@ -22848,6 +23068,17 @@ async function actualizarApronte(id, data) {
            garantia_notificada_at = CASE
              WHEN ? OR ? THEN NULL
              ELSE garantia_notificada_at
+           END,
+           caja_aprobado = ?,
+           caja_aprobado_at = CASE
+             WHEN ? THEN NOW()
+             WHEN ? THEN NULL
+             ELSE caja_aprobado_at
+           END,
+           caja_aprobado_por = CASE
+             WHEN ? THEN ?
+             WHEN ? THEN NULL
+             ELSE caja_aprobado_por
            END
        WHERE id = ?`,
       [
@@ -22872,6 +23103,12 @@ async function actualizarApronte(id, data) {
         saleEspera2,
         entraEspera2,
         saleEspera2,
+        nextCajaAprobado2,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 1,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 0,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 1,
+        actor.username || null,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 0,
         apronteId
       ]
     );
@@ -22882,7 +23119,7 @@ async function actualizarApronte(id, data) {
       const db22 = initDatabase();
       const anterior2 = db22.prepare("SELECT * FROM aprontes WHERE id = ?").get(apronteId);
       if (!anterior2) return;
-      const merged2 = { ...anterior2, ...data };
+      const merged2 = buildApronteMutationInput(anterior2, data, actor.role);
       validarRequeridos(merged2);
       const normalized2 = normalizarApronte(merged2);
       const fechaNormalizada2 = normalizarFecha$1(normalized2.fecha);
@@ -22892,6 +23129,8 @@ async function actualizarApronte(id, data) {
       const estadoNuevo2 = normalizarEstadoApronte(normalized2.estado);
       const entraEspera2 = estadoNuevo2 === "ENTREGADA ESPERA DE GARANTIA" && estadoAnterior2 !== "ENTREGADA ESPERA DE GARANTIA";
       const saleEspera2 = estadoNuevo2 !== "ENTREGADA ESPERA DE GARANTIA";
+      const nextCajaAprobado2 = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, "caja_aprobado") ? (data == null ? void 0 : data.caja_aprobado) ? 1 : 0 : Number(anterior2.caja_aprobado ?? 1);
+      const cajaApprovalChanged2 = nextCajaAprobado2 !== Number(anterior2.caja_aprobado ?? 1);
       const mismoHorario2 = fechaNormalizada2 === anterior2.fecha && horaNormalizada2 === anterior2.hora;
       if (!mismoHorario2) {
         validarCupoDisponibleSqlite(db22, fechaNormalizada2, horaNormalizada2, apronteId);
@@ -22916,6 +23155,17 @@ async function actualizarApronte(id, data) {
              garantia_notificada_at = CASE
                WHEN ? OR ? THEN NULL
                ELSE garantia_notificada_at
+             END,
+             caja_aprobado = ?,
+             caja_aprobado_at = CASE
+               WHEN ? THEN ?
+               WHEN ? THEN NULL
+               ELSE caja_aprobado_at
+             END,
+             caja_aprobado_por = CASE
+               WHEN ? THEN ?
+               WHEN ? THEN NULL
+               ELSE caja_aprobado_por
              END
          WHERE id = ?`
       ).run(
@@ -22941,6 +23191,13 @@ async function actualizarApronte(id, data) {
         saleEspera2,
         entraEspera2,
         saleEspera2,
+        nextCajaAprobado2,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 1,
+        sqliteNowIso(),
+        cajaApprovalChanged2 && nextCajaAprobado2 === 0,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 1,
+        actor.username || null,
+        cajaApprovalChanged2 && nextCajaAprobado2 === 0,
         apronteId
       );
       registrarMarcaModeloSqlite(db22, normalized2.marca, normalized2.modelo);
@@ -22952,7 +23209,7 @@ async function actualizarApronte(id, data) {
   const db2 = initDatabase();
   const anterior = db2.prepare("SELECT * FROM aprontes WHERE id = ?").get(apronteId);
   if (!anterior) return;
-  const merged = { ...anterior, ...data };
+  const merged = buildApronteMutationInput(anterior, data, actor.role);
   validarRequeridos(merged);
   const normalized = normalizarApronte(merged);
   const fechaNormalizada = normalizarFecha$1(normalized.fecha);
@@ -22962,6 +23219,8 @@ async function actualizarApronte(id, data) {
   const estadoNuevo = normalizarEstadoApronte(normalized.estado);
   const entraEspera = estadoNuevo === "ENTREGADA ESPERA DE GARANTIA" && estadoAnterior !== "ENTREGADA ESPERA DE GARANTIA";
   const saleEspera = estadoNuevo !== "ENTREGADA ESPERA DE GARANTIA";
+  const nextCajaAprobado = canApproveApronte(actor.role) && Object.prototype.hasOwnProperty.call(data || {}, "caja_aprobado") ? (data == null ? void 0 : data.caja_aprobado) ? 1 : 0 : Number(anterior.caja_aprobado ?? 1);
+  const cajaApprovalChanged = nextCajaAprobado !== Number(anterior.caja_aprobado ?? 1);
   const mismoHorario = fechaNormalizada === anterior.fecha && horaNormalizada === anterior.hora;
   if (!mismoHorario) {
     validarCupoDisponibleSqlite(db2, fechaNormalizada, horaNormalizada, apronteId);
@@ -22986,6 +23245,17 @@ async function actualizarApronte(id, data) {
          garantia_notificada_at = CASE
            WHEN ? OR ? THEN NULL
            ELSE garantia_notificada_at
+         END,
+         caja_aprobado = ?,
+         caja_aprobado_at = CASE
+           WHEN ? THEN ?
+           WHEN ? THEN NULL
+           ELSE caja_aprobado_at
+         END,
+         caja_aprobado_por = CASE
+           WHEN ? THEN ?
+           WHEN ? THEN NULL
+           ELSE caja_aprobado_por
          END
      WHERE id = ?`
   ).run(
@@ -23011,13 +23281,23 @@ async function actualizarApronte(id, data) {
     saleEspera,
     entraEspera,
     saleEspera,
+    nextCajaAprobado,
+    cajaApprovalChanged && nextCajaAprobado === 1,
+    sqliteNowIso(),
+    cajaApprovalChanged && nextCajaAprobado === 0,
+    cajaApprovalChanged && nextCajaAprobado === 1,
+    actor.username || null,
+    cajaApprovalChanged && nextCajaAprobado === 0,
     apronteId
   );
   registrarMarcaModeloSqlite(db2, normalized.marca, normalized.modelo);
 }
-async function borrarApronte(id) {
+async function borrarApronte(input) {
   await ensureAprontesMysqlSchema();
-  const apronteId = Number(id);
+  const payload2 = typeof input === "object" && input !== null ? input : { id: input };
+  const actor = getActor(payload2);
+  assertCanDeleteApronte(actor.role);
+  const apronteId = Number((payload2 == null ? void 0 : payload2.id) || input);
   if (!apronteId) return;
   const mysqlResult = await tryMysql(async (pool2) => {
     await pool2.execute(`DELETE FROM aprontes WHERE id = ?`, [apronteId]);
@@ -23061,9 +23341,9 @@ async function obtenerAprontesPendientesAlertaGarantia() {
        AND IFNULL(garantia_notificada, 0) = 0`
   ).all();
 }
-async function marcarApronteGarantiaNotificado(id) {
+async function marcarApronteGarantiaNotificado(id2) {
   await ensureAprontesMysqlSchema();
-  const apronteId = Number(id);
+  const apronteId = Number(id2);
   if (!apronteId) return;
   const mysqlResult = await tryMysql(async (pool2) => {
     await pool2.execute(
@@ -23213,12 +23493,12 @@ function syncHorariosAprontesToSqlite(rows) {
     );
     const tx = db2.transaction((items) => {
       for (const row of items) {
-        const id = (row == null ? void 0 : row.id) ? Number(row.id) : null;
+        const id2 = (row == null ? void 0 : row.id) ? Number(row.id) : null;
         const hora = String((row == null ? void 0 : row.hora) || "");
         const cupo = Number((row == null ? void 0 : row.cupo) || 1);
         const activo = typeof (row == null ? void 0 : row.activo) === "number" ? Number(row.activo) : 1;
-        if (id) {
-          upsertById.run(id, hora, cupo, activo);
+        if (id2) {
+          upsertById.run(id2, hora, cupo, activo);
         } else if (hora) {
           upsertByHora.run(hora, cupo, activo);
         }
@@ -23355,8 +23635,8 @@ async function crearHorarioApronte(hora, cupo = 1) {
   ).run(horaNormalizada, cupoNormalizado);
   return Number(result.lastInsertRowid);
 }
-async function actualizarCupoHorarioApronte(id, cupo) {
-  const idNum = Number(id);
+async function actualizarCupoHorarioApronte(id2, cupo) {
+  const idNum = Number(id2);
   if (!idNum) {
     throw new Error("ID de horario invalido");
   }
@@ -23394,8 +23674,8 @@ async function actualizarCupoHorarioApronte(id, cupo) {
   }
   db2.prepare(`UPDATE horarios_aprontes SET cupo = ? WHERE id = ?`).run(cupoNormalizado, idNum);
 }
-async function desactivarHorarioApronte(id) {
-  const idNum = Number(id);
+async function desactivarHorarioApronte(id2) {
+  const idNum = Number(id2);
   if (!idNum) {
     throw new Error("ID de horario invalido");
   }
@@ -23414,8 +23694,8 @@ async function desactivarHorarioApronte(id) {
   const db2 = initDatabase();
   db2.prepare(`UPDATE horarios_aprontes SET activo = 0 WHERE id = ?`).run(idNum);
 }
-async function activarHorarioApronte(id) {
-  const idNum = Number(id);
+async function activarHorarioApronte(id2) {
+  const idNum = Number(id2);
   if (!idNum) {
     throw new Error("ID de horario invalido");
   }
@@ -23434,8 +23714,8 @@ async function activarHorarioApronte(id) {
   const db2 = initDatabase();
   db2.prepare(`UPDATE horarios_aprontes SET activo = 1 WHERE id = ?`).run(idNum);
 }
-async function borrarHorarioApronte(id) {
-  const idNum = Number(id);
+async function borrarHorarioApronte(id2) {
+  const idNum = Number(id2);
   if (!idNum) {
     throw new Error("ID de horario invalido");
   }
@@ -23469,15 +23749,15 @@ function registrarHandlersAprontes() {
   );
   safeHandle(
     "aprontes:obtener",
-    (_event, id) => obtenerApronte(id)
+    (_event, id2) => obtenerApronte(id2)
   );
   safeHandle(
     "aprontes:borrar",
-    async (_event, id) => await withDbLock(() => borrarApronte(id))
+    async (_event, payload2) => await withDbLock(() => borrarApronte(payload2))
   );
   safeHandle(
     "aprontes:actualizar",
-    async (_event, payload) => await withDbLock(() => actualizarApronte(payload == null ? void 0 : payload.id, payload))
+    async (_event, payload2) => await withDbLock(() => actualizarApronte(payload2 == null ? void 0 : payload2.id, payload2 || {}))
   );
   safeHandle(
     "aprontes:fecha",
@@ -23493,7 +23773,7 @@ function registrarHandlersAprontes() {
   );
   safeHandle(
     "aprontes:alertas:config:set",
-    (_event, payload) => setAprontesAlertConfig(payload || {})
+    (_event, payload2) => setAprontesAlertConfig(payload2 || {})
   );
   safeHandle(
     "horarios-aprontes:base",
@@ -23509,23 +23789,23 @@ function registrarHandlersAprontes() {
   );
   safeHandle(
     "horarios-aprontes:crear",
-    async (_event, payload) => await withDbLock(() => crearHorarioApronte(payload == null ? void 0 : payload.hora, payload == null ? void 0 : payload.cupo))
+    async (_event, payload2) => await withDbLock(() => crearHorarioApronte(payload2 == null ? void 0 : payload2.hora, payload2 == null ? void 0 : payload2.cupo))
   );
   safeHandle(
     "horarios-aprontes:actualizar-cupo",
-    async (_event, payload) => await withDbLock(() => actualizarCupoHorarioApronte(payload == null ? void 0 : payload.id, payload == null ? void 0 : payload.cupo))
+    async (_event, payload2) => await withDbLock(() => actualizarCupoHorarioApronte(payload2 == null ? void 0 : payload2.id, payload2 == null ? void 0 : payload2.cupo))
   );
   safeHandle(
     "horarios-aprontes:desactivar",
-    async (_event, id) => await withDbLock(() => desactivarHorarioApronte(id))
+    async (_event, id2) => await withDbLock(() => desactivarHorarioApronte(id2))
   );
   safeHandle(
     "horarios-aprontes:activar",
-    async (_event, id) => await withDbLock(() => activarHorarioApronte(id))
+    async (_event, id2) => await withDbLock(() => activarHorarioApronte(id2))
   );
   safeHandle(
     "horarios-aprontes:borrar",
-    async (_event, id) => await withDbLock(() => borrarHorarioApronte(id))
+    async (_event, id2) => await withDbLock(() => borrarHorarioApronte(id2))
   );
 }
 function normalizarTexto(value, maxLen = 100) {
@@ -23754,7 +24034,7 @@ async function obtenerRegistroMensual(mes) {
 function registrarHandlersRegistros() {
   safeHandle(
     "registros:mensual",
-    async (_event, payload) => obtenerRegistroMensual((payload == null ? void 0 : payload.mes) || payload)
+    async (_event, payload2) => obtenerRegistroMensual((payload2 == null ? void 0 : payload2.mes) || payload2)
   );
 }
 function setupIpcHandlers() {
@@ -32868,14 +33148,14 @@ function requireXoauth2() {
      * @param {String|Buffer} payload Payload to POST
      * @param {Function} callback Callback function with (err, buff)
      */
-    postRequest(url, payload, params, callback) {
+    postRequest(url, payload2, params, callback) {
       let returned = false;
       let chunks = [];
       let chunklen = 0;
       let req = nmfetch(url, {
         method: "post",
         headers: params.customHeaders,
-        body: payload,
+        body: payload2,
         allowErrorResponse: true
       });
       req.on("readable", () => {
@@ -32918,10 +33198,10 @@ function requireXoauth2() {
      * @param {Object} payload The payload to include in the generated token
      * @return {String} The generated and signed token
      */
-    jwtSignRS256(payload) {
-      payload = ['{"alg":"RS256","typ":"JWT"}', JSON.stringify(payload)].map((val) => this.toBase64URL(val)).join(".");
-      let signature = crypto2.createSign("RSA-SHA256").update(payload).sign(this.options.privateKey);
-      return payload + "." + this.toBase64URL(signature);
+    jwtSignRS256(payload2) {
+      payload2 = ['{"alg":"RS256","typ":"JWT"}', JSON.stringify(payload2)].map((val) => this.toBase64URL(val)).join(".");
+      let signature = crypto2.createSign("RSA-SHA256").update(payload2).sign(this.options.privateKey);
+      return payload2 + "." + this.toBase64URL(signature);
     }
   }
   xoauth2 = XOAuth2;
@@ -44036,14 +44316,14 @@ function requireSemver$1() {
       if (!m[4]) {
         this.prerelease = [];
       } else {
-        this.prerelease = m[4].split(".").map((id) => {
-          if (/^[0-9]+$/.test(id)) {
-            const num = +id;
+        this.prerelease = m[4].split(".").map((id2) => {
+          if (/^[0-9]+$/.test(id2)) {
+            const num = +id2;
             if (num >= 0 && num < MAX_SAFE_INTEGER) {
               return num;
             }
           }
-          return id;
+          return id2;
         });
       }
       this.build = m[5] ? m[5].split(".") : [];
@@ -44867,7 +45147,7 @@ function requireRange() {
     debug("stars", comp);
     return comp;
   };
-  const isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
+  const isX = (id2) => !id2 || id2.toLowerCase() === "x" || id2 === "*";
   const replaceTildes = (comp, options) => {
     return comp.trim().split(/\s+/).map((c) => replaceTilde(c, options)).join(" ");
   };
@@ -48893,25 +49173,25 @@ function requireAppUpdater() {
     async getOrCreateStagingUserId() {
       const file2 = path2.join(this.app.userDataPath, ".updaterId");
       try {
-        const id2 = await (0, fs_extra_1.readFile)(file2, "utf-8");
-        if (builder_util_runtime_1.UUID.check(id2)) {
-          return id2;
+        const id3 = await (0, fs_extra_1.readFile)(file2, "utf-8");
+        if (builder_util_runtime_1.UUID.check(id3)) {
+          return id3;
         } else {
-          this._logger.warn(`Staging user id file exists, but content was invalid: ${id2}`);
+          this._logger.warn(`Staging user id file exists, but content was invalid: ${id3}`);
         }
       } catch (e) {
         if (e.code !== "ENOENT") {
           this._logger.warn(`Couldn't read staging user ID, creating a blank one: ${e}`);
         }
       }
-      const id = builder_util_runtime_1.UUID.v5((0, crypto_1.randomBytes)(4096), builder_util_runtime_1.UUID.OID);
-      this._logger.info(`Generated new staging user ID: ${id}`);
+      const id2 = builder_util_runtime_1.UUID.v5((0, crypto_1.randomBytes)(4096), builder_util_runtime_1.UUID.OID);
+      this._logger.info(`Generated new staging user ID: ${id2}`);
       try {
-        await (0, fs_extra_1.outputFile)(file2, id);
+        await (0, fs_extra_1.outputFile)(file2, id2);
       } catch (e) {
         this._logger.warn(`Couldn't write out staging user ID: ${e}`);
       }
-      return id;
+      return id2;
     }
     /** @internal */
     get isAddNoCacheQuery() {
@@ -50466,10 +50746,10 @@ app.whenReady().then(async () => {
   }
   createWindow();
   startAutoUpdateFlow(() => win);
-  ipcMain.on("settings:update", (_event, payload) => {
-    if (!payload || typeof payload !== "object") return;
-    const soundEnabled = payload.soundEnabled;
-    const theme = payload.theme;
+  ipcMain.on("settings:update", (_event, payload2) => {
+    if (!payload2 || typeof payload2 !== "object") return;
+    const soundEnabled = payload2.soundEnabled;
+    const theme = payload2.theme;
     setSettings({
       soundEnabled: typeof soundEnabled === "boolean" ? soundEnabled : true,
       theme: theme === "light" ? "light" : "dark"

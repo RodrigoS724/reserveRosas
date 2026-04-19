@@ -32,12 +32,12 @@ export function registrarHandlersAprontes() {
     obtenerApronte(id)
   )
 
-  safeHandle('aprontes:borrar', async (_event, id: number) =>
-    await withDbLock(() => borrarApronte(id))
+  safeHandle('aprontes:borrar', async (_event, payload) =>
+    await withDbLock(() => borrarApronte(payload))
   )
 
   safeHandle('aprontes:actualizar', async (_event, payload) =>
-    await withDbLock(() => actualizarApronte(payload?.id, payload))
+    await withDbLock(() => actualizarApronte(payload?.id, payload || {}))
   )
 
   safeHandle('aprontes:fecha', (_event, fecha: string) =>

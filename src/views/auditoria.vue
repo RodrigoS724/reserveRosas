@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { api } from '../api'
+import { getSession, hasPermission } from '../auth'
+
+const session = getSession()
+const puedeVer = hasPermission(session, 'auditoria')
 
 const registros = ref<any[]>([])
 const cargando = ref(false)
@@ -32,6 +36,14 @@ onMounted(() => {
 
 <template>
   <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
+    <div v-if="!puedeVer" class="flex h-full items-center justify-center">
+      <div class="text-center">
+        <h2 class="text-2xl font-black text-gray-800 dark:text-gray-200 mb-2">Acceso denegado</h2>
+        <p class="text-gray-600 dark:text-gray-400">No tienes permisos para acceder a la auditoría</p>
+      </div>
+    </div>
+    
+    <template v-else>
     <header class="flex justify-between items-center">
       <div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-gray-800 dark:text-white tracking-tighter">Auditoria</h1>
@@ -82,5 +94,6 @@ onMounted(() => {
         </table>
       </div>
     </div>
+    </template>
   </div>
 </template>

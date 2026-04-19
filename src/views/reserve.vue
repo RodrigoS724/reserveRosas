@@ -3,6 +3,7 @@ import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
 import ReservaWindow from '../components/reservaWindow.vue'
 import ApronteWindow from '../components/apronteWindow.vue'
 import { api, ipc } from '../api'
+import { getSession, isTallerRole } from '../auth'
 
 const semanaOffset = ref(0)
 const busquedaCedula = ref('')
@@ -11,6 +12,8 @@ const soloHoyEnLista = ref(false)
 const reservasSeleccionadas = ref<number[]>([])
 const estadoMasivo = ref('PENDIENTE')
 const aplicandoEstadoMasivo = ref(false)
+const session = getSession()
+const esTaller = isTallerRole(session)
 
 const OPCIONES_ESTADO = [
   { value: 'PENDIENTE', label: 'Pendiente' },
@@ -275,7 +278,14 @@ const cargarReservas = async () => {
     aprontesPorDia.forEach((lista, index) => {
       const fecha = fechas[index]?.fecha
       if (!fecha || !Array.isArray(lista)) return
-      lista.forEach((apronte: any) => {
+      
+      // Si es taller, filtrar solo aprontes aprobados
+      let aprontesAMostrar = lista
+      if (esTaller) {
+        aprontesAMostrar = lista.filter((a: any) => Number(a?.caja_aprobado ?? 1) === 1)
+      }
+      
+      aprontesAMostrar.forEach((apronte: any) => {
         const hora = apronte?.hora
         if (hora && nuevaMatrizAprontes[fecha] && nuevaMatrizAprontes[fecha][hora]) {
           nuevaMatrizAprontes[fecha][hora].push(apronte)
@@ -794,7 +804,7 @@ const obtenerDetalleResumen = (reserva: any) => {
       </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
+    <div v-if="!esTaller" class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
       <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
         Seleccionadas: {{ reservasSeleccionadas.length }}
       </span>

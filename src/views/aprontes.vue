@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '../api'
+import { getSession, isTallerRole } from '../auth'
 import ApronteWindow from '../components/apronteWindow.vue'
 import ApronteSchedulePicker from '../components/ApronteSchedulePicker.vue'
 
@@ -21,8 +22,14 @@ type Apronte = {
   correo_alerta_garantia?: string
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string
+  created_by_role?: string
+  caja_aprobado?: number | boolean
+  caja_aprobado_por?: string
   created_at?: string
 }
+
+const session = getSession()
+const esTaller = isTallerRole(session)
 
 const formatLocalDate = (date: Date) => {
   const y = date.getFullYear()
@@ -45,10 +52,7 @@ const aprontes = ref<Apronte[]>([])
 const fechaFiltro = ref(todayIso)
 const busqueda = ref('')
 const cargando = ref(false)
-const guardando = ref(false)
 const guardandoNuevo = ref(false)
-const status = ref('')
-const statusOk = ref(true)
 const mostrarDetalle = ref(false)
 const mostrarModalNuevo = ref(false)
 const mostrarModalAlertas = ref(false)
@@ -70,25 +74,6 @@ const configAlertas = ref({
   default_dias_alerta: 7
 })
 
-const form = ref({
-  id: null as number | null,
-  nombre: '',
-  fecha: todayIso,
-  hora: '',
-  telefono: '',
-  localidad: '',
-  observaciones: '',
-  marca: '',
-  modelo: '',
-  numero_motor: '',
-  factura: '',
-  estado: 'APRONTE',
-  repuestos_garantia: '',
-  correo_alerta_garantia: '',
-  dias_alerta_garantia: 7,
-  fecha_alerta_garantia: ''
-})
-
 const newForm = ref({
   nombre: '',
   fecha: todayIso,
@@ -104,10 +89,11 @@ const newForm = ref({
   repuestos_garantia: '',
   correo_alerta_garantia: '',
   dias_alerta_garantia: 7,
-  fecha_alerta_garantia: ''
+  fecha_alerta_garantia: '',
+  caja_aprobado: false,
+  caja_aprobado_por: '',
+  created_by_role: ''
 })
-
-const isEdit = computed(() => Boolean(form.value.id))
 
 const cargarAprontes = async () => {
   cargando.value = true
@@ -122,30 +108,6 @@ const cargarAprontes = async () => {
   } finally {
     cargando.value = false
   }
-}
-
-const resetForm = () => {
-  form.value = {
-    id: null,
-    nombre: '',
-    fecha: fechaFiltro.value || todayIso,
-    hora: '',
-    telefono: '',
-    localidad: '',
-    observaciones: '',
-    marca: '',
-    modelo: '',
-    numero_motor: '',
-    factura: '',
-    estado: 'APRONTE',
-    repuestos_garantia: '',
-    correo_alerta_garantia: '',
-    dias_alerta_garantia: 7,
-    fecha_alerta_garantia: ''
-  }
-  status.value = ''
-  statusOk.value = true
-  mostrarGestionGarantia.value = false
 }
 
 const resetNewForm = () => {
@@ -164,7 +126,10 @@ const resetNewForm = () => {
     repuestos_garantia: '',
     correo_alerta_garantia: '',
     dias_alerta_garantia: 7,
-    fecha_alerta_garantia: ''
+    fecha_alerta_garantia: '',
+    caja_aprobado: false,
+    caja_aprobado_por: '',
+    created_by_role: ''
   }
 }
 
@@ -175,29 +140,6 @@ const abrirModalNuevo = async () => {
 
 const cerrarModalNuevo = () => {
   mostrarModalNuevo.value = false
-}
-
-const seleccionarApronte = (a: Apronte) => {
-  form.value = {
-    id: a.id,
-    nombre: a.nombre || '',
-    fecha: a.fecha || todayIso,
-    hora: a.hora || '',
-    telefono: a.telefono || '',
-    localidad: a.localidad || '',
-    observaciones: a.observaciones || '',
-    marca: a.marca || '',
-    modelo: a.modelo || '',
-    numero_motor: String(a.numero_motor || ''),
-    factura: a.factura || '',
-    estado: String(a.estado || 'APRONTE'),
-    repuestos_garantia: String(a.repuestos_garantia || ''),
-    correo_alerta_garantia: String(a.correo_alerta_garantia || configAlertas.value.default_email || ''),
-    dias_alerta_garantia: Number(a.dias_alerta_garantia || configAlertas.value.default_dias_alerta || 7),
-    fecha_alerta_garantia: String((a as any).fecha_alerta_garantia || '')
-  }
-  status.value = ''
-  statusOk.value = true
 }
 
 const cargarMarcas = async () => {
@@ -257,7 +199,6 @@ const guardarConfigAlertas = async () => {
 }
 
 const abrirDetalle = (a: Apronte) => {
-  seleccionarApronte(a)
   apronteActivo.value = { ...a }
   modalKey.value += 1
   mostrarDetalle.value = true
@@ -272,16 +213,6 @@ const refrescarAprontes = async () => {
   await cargarAprontes()
 }
 
-const validarForm = () => {
-  const required = ['nombre', 'fecha', 'hora', 'telefono', 'localidad', 'marca', 'modelo', 'factura'] as const
-  for (const key of required) {
-    const value = String(form.value[key] || '').trim()
-    if (!value) {
-      throw new Error(`Campo requerido: ${key}`)
-    }
-  }
-}
-
 const validarNewForm = () => {
   const required = ['nombre', 'fecha', 'hora', 'telefono', 'localidad', 'marca', 'modelo', 'factura'] as const
   for (const key of required) {
@@ -292,51 +223,11 @@ const validarNewForm = () => {
   }
 }
 
-const guardarApronte = async () => {
-  if (!isEdit.value || !form.value.id) {
-    status.value = 'Selecciona un apronte del listado para editar.'
-    statusOk.value = false
+const crearApronteDesdeModal = async () => {
+  if (esTaller) {
+    alert('El taller no puede crear aprontes')
     return
   }
-
-  guardando.value = true
-  status.value = 'Guardando...'
-  statusOk.value = true
-
-  try {
-    validarForm()
-    const basePayload = {
-      nombre: String(form.value.nombre || '').trim(),
-      fecha: String(form.value.fecha || '').trim(),
-      hora: String(form.value.hora || '').trim(),
-      telefono: String(form.value.telefono || '').trim(),
-      localidad: String(form.value.localidad || '').trim(),
-      observaciones: String(form.value.observaciones || '').trim(),
-      marca: String(form.value.marca || '').trim(),
-      modelo: String(form.value.modelo || '').trim(),
-      numero_motor: String(form.value.numero_motor || '').trim(),
-      factura: String(form.value.factura || '').trim(),
-      estado: String(form.value.estado || 'APRONTE').trim().toUpperCase(),
-      repuestos_garantia: String(form.value.repuestos_garantia || '').trim(),
-      correo_alerta_garantia: String(form.value.correo_alerta_garantia || configAlertas.value.default_email || '').trim(),
-      dias_alerta_garantia: Number(form.value.dias_alerta_garantia || configAlertas.value.default_dias_alerta || 7),
-      fecha_alerta_garantia: String(form.value.fecha_alerta_garantia || '').trim()
-    }
-
-    const payload = { id: Number(form.value.id), ...basePayload }
-    await api.actualizarApronte(payload)
-    status.value = 'Apronte actualizado.'
-    statusOk.value = true
-    await cargarAprontes()
-  } catch (error: any) {
-    status.value = normalizarMensajeError(error, 'Error al guardar')
-    statusOk.value = false
-  } finally {
-    guardando.value = false
-  }
-}
-
-const crearApronteDesdeModal = async () => {
   guardandoNuevo.value = true
   try {
     validarNewForm()
@@ -356,7 +247,6 @@ const crearApronteDesdeModal = async () => {
     await api.crearApronte(payload)
     cerrarModalNuevo()
     await cargarAprontes()
-    resetForm()
   } catch (error: any) {
     alert(normalizarMensajeError(error, 'No se pudo crear el apronte'))
   } finally {
@@ -364,31 +254,19 @@ const crearApronteDesdeModal = async () => {
   }
 }
 
-const borrarApronte = async () => {
-  if (!form.value.id) return
-  const ok = window.confirm('Eliminar este apronte?')
-  if (!ok) return
-  guardando.value = true
-  status.value = 'Eliminando...'
-  statusOk.value = true
-  try {
-    await api.borrarApronte(form.value.id)
-    status.value = 'Apronte eliminado.'
-    statusOk.value = true
-    resetForm()
-    await cargarAprontes()
-  } catch (error: any) {
-    status.value = normalizarMensajeError(error, 'Error al eliminar')
-    statusOk.value = false
-  } finally {
-    guardando.value = false
-  }
-}
-
 const aprontesFiltrados = computed(() => {
+  let resultado = aprontes.value
+  
+  // Si es taller, mostrar solo aprontes aprobados
+  if (esTaller) {
+    resultado = resultado.filter((a) => Number(a.caja_aprobado ?? 1) === 1)
+  }
+  
+  // Aplicar búsqueda
   const q = busqueda.value.trim().toLowerCase()
-  if (!q) return aprontes.value
-  return aprontes.value.filter((a) => {
+  if (!q) return resultado
+  
+  return resultado.filter((a) => {
     return [
       a.nombre,
       a.telefono,
@@ -401,31 +279,19 @@ const aprontesFiltrados = computed(() => {
   })
 })
 
-watch(() => form.value.marca, (marca) => {
-  cargarModelos(marca)
-})
-
 watch(() => newForm.value.marca, (marca) => {
   cargarModelos(marca)
 })
 
-watch([() => form.value.fecha, () => form.value.hora], () => {
-  status.value = ''
-})
-
 watch(fechaFiltro, () => {
   cargarAprontes()
-  if (!isEdit.value) {
-    form.value.fecha = fechaFiltro.value || todayIso
-    form.value.hora = ''
-  }
 })
 
 onMounted(async () => {
   await cargarConfigAlertas()
   await cargarAprontes()
   await cargarMarcas()
-  await cargarModelos(form.value.marca)
+  await cargarModelos(newForm.value.marca)
 })
 </script>
 
@@ -441,15 +307,15 @@ onMounted(async () => {
           class="px-4 py-2 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-bold text-xs uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
           Gestionar alertas
         </button>
-        <button @click="abrirModalNuevo"
+        <button v-if="!esTaller" @click="abrirModalNuevo"
           class="px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition-all">
           Nuevo apronte
         </button>
       </div>
     </header>
 
-    <div class="grid grid-cols-1 2xl:grid-cols-3 gap-6 flex-1 min-h-0">
-      <div class="xl:col-span-2 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-0">
+    <div class="grid grid-cols-1 gap-6 flex-1 min-h-0">
+      <div class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-0">
         <div class="p-4 border-b border-gray-100 dark:border-gray-800">
           <div class="flex flex-wrap items-end gap-3">
             <div>
@@ -490,13 +356,14 @@ onMounted(async () => {
                   <th class="px-4 py-3 text-left">Modelo</th>
                   <th class="px-4 py-3 text-left">Factura</th>
                   <th class="px-4 py-3 text-left">Estado</th>
+                  <th class="px-4 py-3 text-left">Habilitado</th>
                   <th class="px-4 py-3 text-left">Repuestos garantia</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="a in aprontesFiltrados" :key="a.id"
                   @click="abrirDetalle(a)"
-                  :class="['border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50/40 dark:hover:bg-emerald-500/10', a.id === form.id ? 'bg-emerald-50/70 dark:bg-emerald-500/20' : '']">
+                  :class="['border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50/40 dark:hover:bg-emerald-500/10']">
                   <td class="px-4 py-3 font-bold text-gray-700 dark:text-gray-200">{{ a.fecha }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.hora }}</td>
                   <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-100">{{ a.nombre }}</td>
@@ -507,132 +374,23 @@ onMounted(async () => {
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.modelo }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.factura }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.estado || 'APRONTE' }}</td>
+                  <td :class="[
+                    'px-4 py-3',
+                    Number(a.caja_aprobado ?? 1)
+                      ? 'text-gray-700 dark:text-gray-200'
+                      : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-200 font-black'
+                  ]">
+                    <label class="inline-flex items-center gap-2">
+                      <input type="checkbox" disabled :checked="Boolean(Number(a.caja_aprobado ?? 1))" class="accent-emerald-600" />
+                      <span>{{ Number(a.caja_aprobado ?? 1) ? 'Habilitado' : 'No habilitado' }}</span>
+                    </label>
+                  </td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-[220px] truncate">{{ a.repuestos_garantia || '-' }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
-
-      <div class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-6 overflow-y-auto custom-scrollbar">
-        <h3 class="text-lg font-black text-gray-800 dark:text-gray-100">Editar apronte</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Selecciona un apronte del listado para editar datos y garantia.</p>
-
-        <div v-if="!isEdit" class="mt-5 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 px-4 py-5 text-xs text-gray-500 dark:text-gray-400">
-          No hay apronte seleccionado. Haz click en una fila del listado para editarlo.
-        </div>
-
-        <form v-else class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="guardarApronte">
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Nombre</label>
-            <input v-model="form.nombre" type="text"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Telefono</label>
-            <input v-model="form.telefono" type="text"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Localidad</label>
-            <input v-model="form.localidad" type="text"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Observaciones</label>
-            <textarea v-model="form.observaciones" rows="2"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100 resize-none"></textarea>
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Marca</label>
-            <input v-model="form.marca" type="text" list="aprontes-marcas"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-            <datalist id="aprontes-marcas">
-              <option v-for="m in marcas" :key="m" :value="m"></option>
-            </datalist>
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Modelo</label>
-            <input v-model="form.modelo" type="text" list="aprontes-modelos"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-            <datalist id="aprontes-modelos">
-              <option v-for="m in modelos" :key="m" :value="m"></option>
-            </datalist>
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Numero de motor</label>
-            <input v-model="form.numero_motor" type="text"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Factura</label>
-            <input v-model="form.factura" type="text"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Estado</label>
-            <select v-model="form.estado"
-              class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
-              <option v-for="estado in ESTADOS_APRONTE" :key="estado" :value="estado">{{ estado }}</option>
-            </select>
-          </div>
-          <ApronteSchedulePicker
-            v-model:fecha="form.fecha"
-            v-model:hora="form.hora"
-            label="Agenda de apronte"
-          />
-
-          <template v-if="isEdit">
-            <div class="md:col-span-2 mt-1">
-              <button
-                type="button"
-                @click="mostrarGestionGarantia = !mostrarGestionGarantia"
-                class="w-full flex items-center justify-between rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 px-4 py-2.5 text-left"
-              >
-                <span class="text-[11px] uppercase tracking-widest font-black text-amber-700 dark:text-amber-300">Gestion de garantia</span>
-                <span class="text-xs font-black text-amber-700 dark:text-amber-300">{{ mostrarGestionGarantia ? 'Ocultar' : 'Mostrar' }}</span>
-              </button>
-            </div>
-
-            <template v-if="mostrarGestionGarantia">
-              <div>
-                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Dias para alerta garantia</label>
-                <input v-model.number="form.dias_alerta_garantia" type="number" min="1" max="90"
-                  class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-              </div>
-              <div class="md:col-span-2">
-                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Correo alerta garantia</label>
-                <input v-model="form.correo_alerta_garantia" type="email" placeholder="correo@dominio.com"
-                  class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-              </div>
-              <div>
-                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Fecha pactada alerta</label>
-                <input v-model="form.fecha_alerta_garantia" type="date"
-                  class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-              </div>
-              <div class="md:col-span-2">
-                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Repuestos garantia</label>
-                <textarea v-model="form.repuestos_garantia" rows="3" placeholder="Describe los repuestos pendientes"
-                  class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100 resize-none"></textarea>
-              </div>
-            </template>
-          </template>
-
-          <div class="md:col-span-2 flex items-center justify-between mt-2">
-            <div :class="statusOk ? 'text-emerald-500 text-xs' : 'text-rose-500 text-xs'">{{ status }}</div>
-            <div class="flex items-center gap-2">
-              <button v-if="isEdit" type="button" @click="borrarApronte"
-                class="px-4 py-3 rounded-xl bg-rose-600 text-white font-black uppercase tracking-widest text-xs shadow-lg">
-                Eliminar
-              </button>
-              <button type="submit" :disabled="guardando"
-                class="px-6 py-3 rounded-xl bg-blue-600 text-white font-black uppercase tracking-widest shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
-                {{ guardando ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear apronte') }}
-              </button>
-            </div>
-          </div>
-        </form>
       </div>
     </div>
     <ApronteWindow

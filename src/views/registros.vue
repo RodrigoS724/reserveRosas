@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { api } from '../api'
+import { getSession, hasPermission } from '../auth'
+
+const session = getSession()
+const puedeVer = hasPermission(session, 'registros')
 
 type RegistroStats = {
   reservas: {
@@ -210,7 +214,14 @@ onMounted(() => {
 
 <template>
   <div class="h-screen w-full overflow-auto bg-gray-50 dark:bg-[#0f172a] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8">
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div v-if="!puedeVer" class="flex h-full items-center justify-center">
+      <div class="text-center">
+        <h2 class="text-2xl font-black text-gray-800 dark:text-gray-200 mb-2">Acceso denegado</h2>
+        <p class="text-gray-600 dark:text-gray-400">No tienes permisos para acceder a los registros</p>
+      </div>
+    </div>
+    
+    <div v-else class="max-w-7xl mx-auto space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-50">

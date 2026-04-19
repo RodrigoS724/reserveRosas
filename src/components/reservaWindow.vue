@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { getSession } from '../auth'
+import { canEditReservaCompleta, getSession, isTallerRole } from '../auth'
 import { api } from '../api'
 
 const props = defineProps<{
@@ -14,10 +14,9 @@ const mostrandoConfirmacion = ref(false)
 const session = getSession()
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
-const puedeEditarTodo = computed(() => {
-  const role = session?.role
-  return role === 'admin' || role === 'super' || role === 'superadmin'
-})
+const puedeEditarTodo = computed(() => canEditReservaCompleta(session))
+const puedeEditarEstado = computed(() => Boolean(session))
+const esTaller = computed(() => isTallerRole(session))
 
 const normalizarMatricula = (value: string) => {
   return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -160,16 +159,23 @@ watch(
 )
 
 const guardar = async () => {
-  if (!puedeEditarTodo.value) return
+  if (!editable.value || !puedeEditarEstado.value) return
   if (!editable.value) return
 
   try {
-    editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
-    editable.value.tipo_turno = normalizarTipoTurno(editable.value.tipo_turno) || editable.value.tipo_turno
-    editable.value.garantia_tipo = normalizarTipoGarantia(editable.value.garantia_tipo) || editable.value.garantia_tipo
-    editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)
-
-    const reservaPlana = JSON.parse(JSON.stringify(editable.value))
+    let reservaPlana: any
+    if (esTaller.value) {
+      reservaPlana = {
+        id: editable.value.id,
+        estado: editable.value.estado
+      }
+    } else {
+      editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
+      editable.value.tipo_turno = normalizarTipoTurno(editable.value.tipo_turno) || editable.value.tipo_turno
+      editable.value.garantia_tipo = normalizarTipoGarantia(editable.value.garantia_tipo) || editable.value.garantia_tipo
+      editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)
+      reservaPlana = JSON.parse(JSON.stringify(editable.value))
+    }
     await api.actualizarReserva(reservaPlana)
     emit('actualizar')
     cerrar()
@@ -184,7 +190,7 @@ const cancelarReserva = async () => {
   if (!editable.value) return
 
   try {
-    await api.borrarReserva(editable.value.id)
+    await api.borrarReserva({ id: editable.value.id })
     alert('Reserva cancelada exitosamente')
     emit('actualizar')
     cerrar()
@@ -201,7 +207,8 @@ const cancelarReserva = async () => {
       <div class="window-header">
         <div>
           <span class="titulo">Reserva #{{ editable.id }}</span>
-          <div v-if="!puedeEditarTodo" class="read-only">Solo lectura (Nivel 1)</div>
+          <div v-if="esTaller" class="read-only">Taller: solo puede modificar estado</div>
+          <div v-else-if="!puedeEditarTodo" class="read-only">Solo lectura</div>
         </div>
         <button class="close-btn" @click="cerrar">x</button>
       </div>
@@ -309,7 +316,7 @@ const cancelarReserva = async () => {
 
         <div class="campo">
           <label>Estado</label>
-          <select v-model="editable.estado" class="select-estado" :class="editable.estado" :disabled="!puedeEditarTodo">
+          <select v-model="editable.estado" class="select-estado" :class="editable.estado" :disabled="!puedeEditarEstado">
             <option value="pendiente">Pendiente</option>
             <option value="pendiente_repuestos">Pendiente de repuestos</option>
             <option value="revision">En revision</option>
@@ -326,8 +333,8 @@ const cancelarReserva = async () => {
 
       <div v-if="!mostrandoConfirmacion" class="window-footer">
         <button class="btn-cancelar" @click="cerrar">Cerrar</button>
-        <button v-if="puedeEditarTodo" class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
-        <button v-if="puedeEditarTodo" class="btn-guardar" @click="guardar">Guardar</button>
+        <button v-if="puedeEditarTodo && !esTaller" class="btn-eliminar" @click="mostrandoConfirmacion = true">Cancelar Reserva</button>
+        <button v-if="puedeEditarEstado" class="btn-guardar" @click="guardar">Guardar</button>
       </div>
 
       <div v-else class="window-footer confirmation-footer">
