@@ -85,7 +85,7 @@ export function canApproveApronte(role: UserRole | string) {
   return normalizedRole === 'superadmin' || normalizedRole === 'administrador' || normalizedRole === 'caja'
 }
 
-export function requiresCajaApproval(role: UserRole | string) {
+export function requiresCajaApproval(_role: UserRole | string) {
   return false
 }
 

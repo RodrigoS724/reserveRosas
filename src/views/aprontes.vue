@@ -22,6 +22,7 @@ type Apronte = {
   correo_alerta_garantia?: string
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string
+  created_by_username?: string
   created_by_role?: string
   caja_aprobado?: number | boolean
   caja_aprobado_por?: string
