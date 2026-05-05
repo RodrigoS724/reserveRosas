@@ -86,7 +86,7 @@ export function canApproveApronte(role: UserRole | string) {
 }
 
 export function requiresCajaApproval(role: UserRole | string) {
-  return normalizeRole(role) === 'ventas'
+  return false
 }
 
 export function assertCanCreateReserva(role: UserRole | string) {

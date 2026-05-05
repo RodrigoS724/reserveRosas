@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { canApproveApronte, canEditApronteCompleto, getSession, isTallerRole } from '../auth'
+import { canEditApronteCompleto, getSession, isTallerRole } from '../auth'
 import { api } from '../api'
 import ApronteSchedulePicker from './ApronteSchedulePicker.vue'
 
@@ -19,7 +19,6 @@ const status = ref('')
 const statusOk = ref(true)
 const session = getSession()
 const puedeEditarTodo = canEditApronteCompleto(session)
-const puedeAprobarCaja = canApproveApronte(session)
 const esTaller = isTallerRole(session)
 const puedeEditarEstado = Boolean(session)
 
@@ -121,8 +120,7 @@ const guardar = async () => {
           modelo: String(editable.value.modelo || '').trim(),
           numero_motor: String(editable.value.numero_motor || '').trim(),
           factura: String(editable.value.factura || '').trim(),
-          estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase(),
-          ...(puedeAprobarCaja ? { caja_aprobado: Boolean(editable.value.caja_aprobado) } : {})
+          estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase()
         }
     await api.actualizarApronte(payload)
     status.value = 'Apronte actualizado.'
@@ -466,14 +464,10 @@ const imprimirPdf = () => {
         </div>
 
         <div class="campo full">
-          <label>Habilitado por caja</label>
+          <label>Creado por</label>
           <div class="read-only" style="width: fit-content;">
             Creado por: {{ editable.created_by_username || '-' }}
           </div>
-          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-            <input v-model="editable.caja_aprobado" type="checkbox" :disabled="!puedeAprobarCaja" />
-            <span>{{ editable.caja_aprobado ? 'Aprobado' : 'Pendiente de caja' }}</span>
-          </label>
         </div>
       </div>
 

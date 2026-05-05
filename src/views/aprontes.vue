@@ -89,8 +89,6 @@ const newForm = ref({
   correo_alerta_garantia: '',
   dias_alerta_garantia: 7,
   fecha_alerta_garantia: '',
-  caja_aprobado: false,
-  caja_aprobado_por: '',
   created_by_role: ''
 })
 
@@ -126,8 +124,6 @@ const resetNewForm = () => {
     correo_alerta_garantia: '',
     dias_alerta_garantia: 7,
     fecha_alerta_garantia: '',
-    caja_aprobado: false,
-    caja_aprobado_por: '',
     created_by_role: ''
   }
 }
@@ -255,12 +251,7 @@ const crearApronteDesdeModal = async () => {
 
 const aprontesFiltrados = computed(() => {
   let resultado = aprontes.value
-  
-  // Si es taller, mostrar solo aprontes aprobados
-  if (esTaller) {
-    resultado = resultado.filter((a) => Number(a.caja_aprobado ?? 1) === 1)
-  }
-  
+
   // Aplicar búsqueda
   const q = busqueda.value.trim().toLowerCase()
   if (!q) return resultado
@@ -355,7 +346,7 @@ onMounted(async () => {
                   <th class="px-4 py-3 text-left">Modelo</th>
                   <th class="px-4 py-3 text-left">Factura</th>
                   <th class="px-4 py-3 text-left">Estado</th>
-                  <th class="px-4 py-3 text-left">Habilitado</th>
+                  <th class="px-4 py-3 text-left">Creado por</th>
                   <th class="px-4 py-3 text-left">Repuestos garantia</th>
                 </tr>
               </thead>
@@ -373,17 +364,7 @@ onMounted(async () => {
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.modelo }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.factura }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.estado || 'APRONTE' }}</td>
-                  <td :class="[
-                    'px-4 py-3',
-                    Number(a.caja_aprobado ?? 1)
-                      ? 'text-gray-700 dark:text-gray-200'
-                      : 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-200 font-black'
-                  ]">
-                    <label class="inline-flex items-center gap-2">
-                      <input type="checkbox" disabled :checked="Boolean(Number(a.caja_aprobado ?? 1))" class="accent-emerald-600" />
-                      <span>{{ Number(a.caja_aprobado ?? 1) ? 'Habilitado' : 'No habilitado' }}</span>
-                    </label>
-                  </td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.created_by_username || '-' }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-[220px] truncate">{{ a.repuestos_garantia || '-' }}</td>
                 </tr>
               </tbody>

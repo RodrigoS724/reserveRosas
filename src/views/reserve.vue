@@ -278,14 +278,8 @@ const cargarReservas = async () => {
     aprontesPorDia.forEach((lista, index) => {
       const fecha = fechas[index]?.fecha
       if (!fecha || !Array.isArray(lista)) return
-      
-      // Si es taller, filtrar solo aprontes aprobados
-      let aprontesAMostrar = lista
-      if (esTaller) {
-        aprontesAMostrar = lista.filter((a: any) => Number(a?.caja_aprobado ?? 1) === 1)
-      }
-      
-      aprontesAMostrar.forEach((apronte: any) => {
+
+      lista.forEach((apronte: any) => {
         const hora = apronte?.hora
         if (hora && nuevaMatrizAprontes[fecha] && nuevaMatrizAprontes[fecha][hora]) {
           nuevaMatrizAprontes[fecha][hora].push(apronte)
