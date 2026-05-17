@@ -1,7 +1,7 @@
 {
   "name": "reserverosas",
   "private": true,
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "App de escritorio ReserveRosas para gestion de taller de motos.",
   "author": "RosasUy",
   "repository": {
