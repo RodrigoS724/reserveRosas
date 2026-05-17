@@ -9,6 +9,7 @@ const semanaOffset = ref(0)
 const busquedaCedula = ref('')
 const estadoFiltro = ref('TODOS')
 const soloHoyEnLista = ref(false)
+const panelActivo = ref<'agenda' | 'aprontes'>('agenda')
 const reservasSeleccionadas = ref<number[]>([])
 const estadoMasivo = ref('PENDIENTE')
 const aplicandoEstadoMasivo = ref(false)
@@ -73,6 +74,37 @@ const formatLocalDate = (date: Date) => {
   return `${y}-${m}-${d}`
 }
 
+const normalizarFechaAgenda = (value: any) => {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+
+  const isoMatch = raw.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (isoMatch?.[1]) return isoMatch[1]
+
+  const date = new Date(raw)
+  if (!Number.isNaN(date.getTime())) {
+    return formatLocalDate(date)
+  }
+
+  return ''
+}
+
+const normalizarHoraAgenda = (value: any) => {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+
+  const hhmm = raw.match(/(\d{1,2}):(\d{2})/)
+  if (!hhmm) return ''
+
+  const h = Number(hhmm[1])
+  const m = Number(hhmm[2])
+  if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+    return ''
+  }
+
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
 // Estructura de semana
 const diasSemana = ref([
   { id: 0, nombre: 'Lunes' },
@@ -86,8 +118,91 @@ const diasSemana = ref([
 // Matriz de reservas: [dia][hora] => []
 const matrizReservas = ref<Record<string, Record<string, any[]>>>({})
 const matrizAprontes = ref<Record<string, Record<string, any[]>>>({})
+const cargandoMetricasAprontes = ref(false)
+const metricasAprontes = ref({
+  mesActual: 0,
+  mesAnterior: 0,
+  variacionPct: 0,
+  promedioDiarioMes: 0,
+  estadosMes: {} as Record<string, number>,
+  horasTopMes: [] as Array<{ hora: string; total: number }>
+})
+let ultimoFetchMetricasAprontes = 0
 // Caché de aprontes para evitar parpadeos cuando el fetch falla
 const cacheAprontes = new Map<string, any[]>()
+
+const obtenerMesIso = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  return `${y}-${m}`
+}
+
+const normalizarEstadoApronte = (estado: any) => {
+  return String(estado || 'APRONTE')
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const cargarMetricasAprontes = async (force = false) => {
+  const nowMs = Date.now()
+  if (!force && nowMs - ultimoFetchMetricasAprontes < 120000) return
+  if (cargandoMetricasAprontes.value) return
+
+  cargandoMetricasAprontes.value = true
+  try {
+    const lista = await api.obtenerAprontes()
+    const aprontes = Array.isArray(lista) ? lista : []
+
+    const hoy = new Date()
+    const mesActualIso = obtenerMesIso(hoy)
+    const mesAnteriorDate = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)
+    const mesAnteriorIso = obtenerMesIso(mesAnteriorDate)
+
+    const aprontesMesActual = aprontes.filter((a: any) => String(a?.fecha || '').startsWith(`${mesActualIso}-`))
+    const aprontesMesAnterior = aprontes.filter((a: any) => String(a?.fecha || '').startsWith(`${mesAnteriorIso}-`))
+
+    const estadoCounts: Record<string, number> = {}
+    const horaCounts: Record<string, number> = {}
+
+    for (const apronte of aprontesMesActual) {
+      const estado = normalizarEstadoApronte(apronte?.estado)
+      estadoCounts[estado] = (estadoCounts[estado] || 0) + 1
+
+      const hora = String(apronte?.hora || '').trim()
+      if (hora) {
+        horaCounts[hora] = (horaCounts[hora] || 0) + 1
+      }
+    }
+
+    const horasTopMes = Object.entries(horaCounts)
+      .map(([hora, total]) => ({ hora, total }))
+      .sort((a, b) => b.total - a.total || a.hora.localeCompare(b.hora))
+      .slice(0, 3)
+
+    const totalActual = aprontesMesActual.length
+    const totalAnterior = aprontesMesAnterior.length
+    const variacion = totalAnterior > 0
+      ? ((totalActual - totalAnterior) / totalAnterior) * 100
+      : (totalActual > 0 ? 100 : 0)
+
+    metricasAprontes.value = {
+      mesActual: totalActual,
+      mesAnterior: totalAnterior,
+      variacionPct: Number(variacion.toFixed(1)),
+      promedioDiarioMes: Number((totalActual / Math.max(1, hoy.getDate())).toFixed(1)),
+      estadosMes: estadoCounts,
+      horasTopMes
+    }
+
+    ultimoFetchMetricasAprontes = nowMs
+  } catch (error) {
+    console.warn('[Reserve] Error cargando metricas de aprontes:', error)
+  } finally {
+    cargandoMetricasAprontes.value = false
+  }
+}
 
 /* =========================
  * CARGAR HORARIOS BASE ACTIVOS
@@ -200,16 +315,26 @@ const cargarReservas = async () => {
     })
 
     const horasAprontesSemana = new Set<string>()
+    const horasReservasSemana = new Set<string>()
+
+    if (Array.isArray(nuevasReservas)) {
+      nuevasReservas.forEach((reserva: any) => {
+        const hora = normalizarHoraAgenda(reserva?.hora)
+        if (hora) horasReservasSemana.add(hora)
+      })
+    }
+
     aprontesPorDia.forEach((lista) => {
       if (!Array.isArray(lista)) return
       lista.forEach((apronte: any) => {
-        const hora = String(apronte?.hora || '').trim()
+        const hora = normalizarHoraAgenda(apronte?.hora)
         if (hora) horasAprontesSemana.add(hora)
       })
     })
 
     const horasSemana = Array.from(new Set([
       ...horariosBase.value,
+      ...Array.from(horasReservasSemana),
       ...Array.from(horasAprontesSemana)
     ])).sort()
     horariosDisponibles.value = horasSemana
@@ -263,11 +388,15 @@ const cargarReservas = async () => {
     })
 
     reservasUnicas.forEach((reserva: any) => {
-      if (nuevaMatriz[reserva.fecha] && nuevaMatriz[reserva.fecha][reserva.hora]) {
+      const fecha = normalizarFechaAgenda(reserva?.fecha)
+      const hora = normalizarHoraAgenda(reserva?.hora)
+      if (fecha && hora && nuevaMatriz[fecha] && nuevaMatriz[fecha][hora]) {
         const tipoResumen = obtenerTipoResumen(reserva)
         const detalleResumen = obtenerDetalleResumen(reserva)
-        nuevaMatriz[reserva.fecha][reserva.hora].push({
+        nuevaMatriz[fecha][hora].push({
           ...reserva,
+          fecha,
+          hora,
           estado: reserva.estado || 'Pendiente',
           tipo_resumen: tipoResumen,
           detalle_resumen: detalleResumen
@@ -280,9 +409,12 @@ const cargarReservas = async () => {
       if (!fecha || !Array.isArray(lista)) return
 
       lista.forEach((apronte: any) => {
-        const hora = apronte?.hora
+        const hora = normalizarHoraAgenda(apronte?.hora)
         if (hora && nuevaMatrizAprontes[fecha] && nuevaMatrizAprontes[fecha][hora]) {
-          nuevaMatrizAprontes[fecha][hora].push(apronte)
+          nuevaMatrizAprontes[fecha][hora].push({
+            ...apronte,
+            hora
+          })
         }
       })
     })
@@ -392,6 +524,7 @@ const refrescarDatos = async (force = false) => {
   try {
     await chequearCambiosRemotos()
     await cargarReservas()
+    await cargarMetricasAprontes(force)
   } finally {
     refreshEnCurso = false
   }
@@ -400,6 +533,7 @@ const refrescarDatos = async (force = false) => {
 onMounted(async () => {
   await cargarHorariosBase()
   await refrescarDatos(true)
+  await cargarMetricasAprontes(true)
 
   if (ipc?.on) {
     const onLocalNotify = (_event: any, payload: any) => {
@@ -491,20 +625,57 @@ const reservasHoyLista = computed(() => {
   return lista
 })
 
-const aprontesHoyLista = computed(() => {
-  const fecha = fechaHoyIso.value
-  const porHora = matrizAprontes.value[fecha] || {}
-  const horas = [...(horariosDisponibles.value || [])].sort()
-  const lista: any[] = []
-
-  for (const hora of horas) {
-    const aprontes = porHora[hora] || []
-    for (const a of aprontes) {
-      lista.push({ ...a, _hora_lista: hora })
+const totalAprontesSemana = computed(() => {
+  let total = 0
+  for (const dia of fechasWeek.value) {
+    const porHora = matrizAprontes.value[dia.fecha] || {}
+    for (const lista of Object.values(porHora)) {
+      total += Array.isArray(lista) ? lista.length : 0
     }
   }
+  return total
+})
 
-  return lista
+const aprontesSemanaPanel = computed(() => {
+  return fechasWeek.value.map((dia) => {
+    const porHora = matrizAprontes.value[dia.fecha] || {}
+    const horas = [...(horariosDisponibles.value || [])].sort()
+    const items: any[] = []
+
+    for (const hora of horas) {
+      const lista = porHora[hora] || []
+      for (const a of lista) {
+        items.push({ ...a, _hora_panel: hora })
+      }
+    }
+
+    return {
+      ...dia,
+      total: items.length,
+      items
+    }
+  })
+})
+
+const estadosTopMes = computed(() => {
+  return Object.entries(metricasAprontes.value.estadosMes || {})
+    .map(([estado, total]) => ({ estado, total }))
+    .sort((a, b) => b.total - a.total || a.estado.localeCompare(b.estado))
+    .slice(0, 4)
+})
+
+const variacionAprontesLabel = computed(() => {
+  const valor = metricasAprontes.value.variacionPct
+  if (!Number.isFinite(valor)) return '0%'
+  if (valor > 0) return `+${valor}%`
+  return `${valor}%`
+})
+
+const variacionAprontesClass = computed(() => {
+  const valor = metricasAprontes.value.variacionPct
+  if (valor > 0) return 'text-emerald-600 dark:text-emerald-400'
+  if (valor < 0) return 'text-rose-600 dark:text-rose-400'
+  return 'text-gray-500 dark:text-gray-400'
 })
 
 const idsReservasVisibles = computed(() => {
@@ -616,15 +787,10 @@ const aplicarEstadoMasivo = async () => {
   }
 }
 
-const obtenerAprontesEnCelda = (fecha: string, hora: string) => {
-  return matrizAprontes.value[fecha]?.[hora] || []
-}
-
 const obtenerHorasConContenido = (fecha: string) => {
   return (horariosDisponibles.value || []).filter((hora) => {
     const reservas = obtenerReservasEnCelda(fecha, hora)
-    const aprontes = obtenerAprontesEnCelda(fecha, hora)
-    return reservas.length > 0 || aprontes.length > 0
+    return reservas.length > 0
   })
 }
 
@@ -681,6 +847,7 @@ const manejarCierreApronte = async () => {
   apronteActivo.value = null
   setTimeout(() => {
     cargarReservas()
+    cargarMetricasAprontes(true)
   }, 150)
 }
 
@@ -796,9 +963,34 @@ const obtenerDetalleResumen = (reserva: any) => {
         <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
         <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
       </div>
+
+      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <button
+          @click="panelActivo = 'agenda'"
+          :class="[
+            'px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest transition-all',
+            panelActivo === 'agenda'
+              ? 'bg-cyan-600 text-white shadow-lg'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ]"
+        >
+          Panel Reservas
+        </button>
+        <button
+          @click="panelActivo = 'aprontes'"
+          :class="[
+            'px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest transition-all',
+            panelActivo === 'aprontes'
+              ? 'bg-cyan-600 text-white shadow-lg'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ]"
+        >
+          Panel Aprontes
+        </button>
+      </div>
     </header>
 
-    <div v-if="!esTaller" class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
+    <div v-if="!esTaller && panelActivo === 'agenda'" class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
       <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
         Seleccionadas: {{ reservasSeleccionadas.length }}
       </span>
@@ -832,18 +1024,18 @@ const obtenerDetalleResumen = (reserva: any) => {
     </div>
 
     <div class="flex-1 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
-      <div v-if="soloHoyEnLista" class="p-3 sm:p-4 md:p-5">
+      <div v-if="panelActivo === 'agenda' && soloHoyEnLista" class="p-3 sm:p-4 md:p-5">
         <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-[#0f172a]/40 overflow-hidden">
           <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#1e293b]/85 flex flex-wrap items-center justify-between gap-2">
             <div>
               <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Agenda del dia</div>
               <div class="text-sm sm:text-base font-black text-gray-800 dark:text-gray-100">{{ new Date(fechaHoyIso).toLocaleDateString('es-UY', { weekday: 'long', day: '2-digit', month: 'short' }) }}</div>
             </div>
-            <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-cyan-600">Reservas: {{ reservasHoyLista.length }} · Aprontes: {{ aprontesHoyLista.length }}</div>
+            <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-cyan-600">Reservas: {{ reservasHoyLista.length }}</div>
           </div>
 
-          <div v-if="reservasHoyLista.length === 0 && aprontesHoyLista.length === 0" class="px-3 sm:px-4 py-6 text-sm text-gray-500 dark:text-gray-400 italic">
-            No hay reservas ni aprontes para hoy.
+          <div v-if="reservasHoyLista.length === 0" class="px-3 sm:px-4 py-6 text-sm text-gray-500 dark:text-gray-400 italic">
+            No hay reservas para hoy.
           </div>
 
           <div v-else class="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
@@ -868,22 +1060,11 @@ const obtenerDetalleResumen = (reserva: any) => {
               <div class="text-[11px] sm:text-xs font-bold opacity-80 break-words leading-tight mt-1">{{ r.marca }} {{ r.modelo }} · CI {{ r.cedula }}</div>
             </div>
 
-            <div
-              v-for="a in aprontesHoyLista"
-              :key="`hoy-apronte-${a.id}`"
-              @click="abrirApronte(a)"
-              class="p-3 sm:p-3.5 rounded-xl border shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0 border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/85 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200"
-            >
-              <div class="text-sm sm:text-base font-black uppercase break-words leading-tight">{{ a.nombre }}</div>
-              <div class="text-[11px] sm:text-xs font-bold opacity-90 mt-1">{{ a._hora_lista || a.hora }} hs · Apronte</div>
-              <div class="text-[11px] sm:text-xs opacity-80 break-words leading-tight mt-0.5">{{ a.marca }} {{ a.modelo }}</div>
-              <div v-if="a.telefono" class="text-[11px] sm:text-xs opacity-75 break-words leading-tight mt-1">Tel: {{ a.telefono }}</div>
-            </div>
           </div>
         </div>
       </div>
 
-      <template v-else>
+      <div v-else-if="panelActivo === 'agenda'">
       <div class="lg:hidden p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5">
         <div v-for="dia in fechasWeek" :key="`list-${dia.fecha}`" class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0f172a]/35 overflow-hidden">
           <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-[#1e293b]/80">
@@ -892,14 +1073,14 @@ const obtenerDetalleResumen = (reserva: any) => {
           </div>
 
           <div v-if="!tieneContenidoEnDia(dia.fecha)" class="px-3 sm:px-4 py-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
-            Sin reservas ni aprontes para este día.
+            Sin reservas para este día.
           </div>
 
           <div v-else class="divide-y divide-gray-200/70 dark:divide-gray-800/70">
             <div v-for="hora in obtenerHorasConContenido(dia.fecha)" :key="`${dia.fecha}-list-${hora}`" class="px-3 sm:px-4 py-3 sm:py-4">
               <div class="text-[10px] sm:text-xs font-black tracking-widest uppercase text-cyan-600 mb-2">{{ hora }} hs</div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="grid grid-cols-1 gap-2">
                 <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="`list-r-${r.id}`"
                      @click="abrirVentana(r)"
                      :class="['p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]">
@@ -916,14 +1097,6 @@ const obtenerDetalleResumen = (reserva: any) => {
                   <div class="text-[9px] sm:text-[10px] font-bold opacity-80">{{ r.tipo_resumen }}</div>
                   <div v-if="r.detalle_resumen" class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ r.detalle_resumen }}</div>
                   <div class="text-[9px] sm:text-[10px] font-bold opacity-75 break-words leading-tight">{{ r.marca }} {{ r.modelo }} · {{ r.cedula }}</div>
-                </div>
-
-                <div v-for="a in obtenerAprontesEnCelda(dia.fecha, hora)" :key="`list-a-${a.id}`"
-                     @click="abrirApronte(a)"
-                     class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0">
-                  <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Apronte</div>
-                  <div class="text-[10px] sm:text-[11px] font-bold break-words leading-tight">{{ a.nombre }}</div>
-                  <div class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
                 </div>
               </div>
             </div>
@@ -963,45 +1136,32 @@ const obtenerDetalleResumen = (reserva: any) => {
               <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${item.hora}`" 
                   class="p-1.5 xl:p-2.5 border-l border-gray-100 dark:border-gray-800/30 min-h-[84px] xl:min-h-[112px] align-top hover:bg-cyan-500/5 transition-colors">
                 
-                <div class="flex gap-1.5 xl:gap-2">
-                  <div class="flex-1 flex flex-col gap-1.5">
-                    <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
-                         @click="abrirVentana(r)"
-                         :class="['p-2 xl:p-2.5 rounded-lg xl:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0', getCardStyles(r.estado)]">
-                      <div class="flex items-start justify-between gap-2 mb-1">
-                        <div class="text-[8px] xl:text-[10px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
-                        <input
-                          :checked="reservaSeleccionada(r.id)"
-                          @click.stop
-                          @change="toggleReservaSeleccionada(r.id)"
-                          type="checkbox"
-                          class="h-3.5 w-3.5 xl:h-4 xl:w-4 accent-cyan-600 shrink-0"
-                        />
-                      </div>
-                      <div class="text-[7px] xl:text-[9px] font-bold opacity-80 mb-1 break-words leading-tight">
-                        {{ r.tipo_resumen }}
-                      </div>
-                      <div v-if="r.detalle_resumen" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
-                        {{ r.detalle_resumen }}
-                      </div>
-                      <div v-if="r.garantia_fecha_compra" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
-                        Compra: {{ r.garantia_fecha_compra }}
-                      </div>
-                      <div class="text-[7px] xl:text-[9px] font-bold opacity-80 leading-tight break-words">
-                        {{ r.marca }} {{ r.modelo }}<br/>
-                        <span class="opacity-60">{{ r.cedula }}</span>
-                      </div>
+                <div class="flex-1 flex flex-col gap-1.5">
+                  <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
+                       @click="abrirVentana(r)"
+                       :class="['p-2 xl:p-2.5 rounded-lg xl:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0', getCardStyles(r.estado)]">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                      <div class="text-[8px] xl:text-[10px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
+                      <input
+                        :checked="reservaSeleccionada(r.id)"
+                        @click.stop
+                        @change="toggleReservaSeleccionada(r.id)"
+                        type="checkbox"
+                        class="h-3.5 w-3.5 xl:h-4 xl:w-4 accent-cyan-600 shrink-0"
+                      />
                     </div>
-                  </div>
-
-                  <div v-if="obtenerAprontesEnCelda(dia.fecha, item.hora).length"
-                       class="w-20 xl:w-28 flex flex-col gap-1.5">
-                    <div v-for="a in obtenerAprontesEnCelda(dia.fecha, item.hora)" :key="a.id"
-                         @click="abrirApronte(a)"
-                         class="p-2 rounded-lg xl:rounded-xl border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0">
-                      <div class="text-[7px] xl:text-[9px] font-black uppercase tracking-wide">Apronte</div>
-                      <div class="text-[7px] xl:text-[9px] font-bold break-words leading-tight">{{ a.nombre }}</div>
-                      <div class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
+                    <div class="text-[7px] xl:text-[9px] font-bold opacity-80 mb-1 break-words leading-tight">
+                      {{ r.tipo_resumen }}
+                    </div>
+                    <div v-if="r.detalle_resumen" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                      {{ r.detalle_resumen }}
+                    </div>
+                    <div v-if="r.garantia_fecha_compra" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                      Compra: {{ r.garantia_fecha_compra }}
+                    </div>
+                    <div class="text-[7px] xl:text-[9px] font-bold opacity-80 leading-tight break-words">
+                      {{ r.marca }} {{ r.modelo }}<br/>
+                      <span class="opacity-60">{{ r.cedula }}</span>
                     </div>
                   </div>
                 </div>
@@ -1010,7 +1170,143 @@ const obtenerDetalleResumen = (reserva: any) => {
           </template>
         </tbody>
       </table>
-      </template>
+      </div>
+
+      <div v-else>
+        <div class="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+            <div class="rounded-xl sm:rounded-2xl border border-cyan-200 dark:border-cyan-700/50 bg-cyan-50/85 dark:bg-cyan-500/10 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-cyan-700 dark:text-cyan-300">Aprontes esta semana</div>
+              <div class="text-2xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-200 leading-none mt-1">{{ totalAprontesSemana }}</div>
+            </div>
+
+            <div class="rounded-xl sm:rounded-2xl border border-emerald-200 dark:border-emerald-700/50 bg-emerald-50/85 dark:bg-emerald-500/10 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Mes actual</div>
+              <div class="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-200 leading-none mt-1">{{ metricasAprontes.mesActual }}</div>
+              <div class="text-[10px] sm:text-xs font-bold mt-1" :class="variacionAprontesClass">{{ variacionAprontesLabel }} vs mes anterior</div>
+            </div>
+
+            <div class="rounded-xl sm:rounded-2xl border border-amber-200 dark:border-amber-700/50 bg-amber-50/85 dark:bg-amber-500/10 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-300">Mes anterior</div>
+              <div class="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-200 leading-none mt-1">{{ metricasAprontes.mesAnterior }}</div>
+            </div>
+
+            <div class="rounded-xl sm:rounded-2xl border border-violet-200 dark:border-violet-700/50 bg-violet-50/85 dark:bg-violet-500/10 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-violet-700 dark:text-violet-300">Promedio diario mes</div>
+              <div class="text-2xl sm:text-3xl font-black text-violet-800 dark:text-violet-200 leading-none mt-1">{{ metricasAprontes.promedioDiarioMes }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
+            <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-[#0f172a]/40 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Estados del mes</div>
+              <div v-if="estadosTopMes.length" class="flex flex-wrap gap-2">
+                <div
+                  v-for="estado in estadosTopMes"
+                  :key="estado.estado"
+                  class="px-2.5 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e293b] text-[10px] sm:text-xs font-black text-gray-700 dark:text-gray-200"
+                >
+                  {{ estado.estado }}: {{ estado.total }}
+                </div>
+              </div>
+              <div v-else class="text-xs text-gray-500 dark:text-gray-400 italic">Sin datos del mes actual.</div>
+            </div>
+
+            <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-[#0f172a]/40 px-4 py-3">
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Horas pico del mes</div>
+              <div v-if="metricasAprontes.horasTopMes.length" class="space-y-2">
+                <div
+                  v-for="item in metricasAprontes.horasTopMes"
+                  :key="item.hora"
+                  class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e293b] px-3 py-1.5"
+                >
+                  <span class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-200">{{ item.hora }}</span>
+                  <span class="text-xs sm:text-sm font-bold text-cyan-700 dark:text-cyan-300">{{ item.total }} aprontes</span>
+                </div>
+              </div>
+              <div v-else class="text-xs text-gray-500 dark:text-gray-400 italic">Sin datos del mes actual.</div>
+            </div>
+          </div>
+
+          <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-[#0f172a]/35 overflow-hidden">
+            <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#1e293b]/85 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Panel semanal</div>
+                <div class="text-sm sm:text-base font-black text-gray-800 dark:text-gray-100">Aprontes por dia y horario</div>
+              </div>
+              <div class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-cyan-600">{{ totalAprontesSemana }} aprontes en la semana</div>
+            </div>
+
+            <div class="lg:hidden p-3 sm:p-4 space-y-3">
+              <div
+                v-for="dia in aprontesSemanaPanel"
+                :key="`ap-panel-mobile-${dia.fecha}`"
+                class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b] overflow-hidden"
+              >
+                <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                  <div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ dia.nombre }}</div>
+                    <div class="text-sm font-black text-gray-800 dark:text-gray-100">{{ dia.fechaFormato }}</div>
+                  </div>
+                  <div class="text-[10px] font-black uppercase tracking-widest text-cyan-600">{{ dia.total }} aprontes</div>
+                </div>
+
+                <div v-if="!dia.items.length" class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400 italic">Sin aprontes.</div>
+                <div v-else class="p-2.5 space-y-2">
+                  <div
+                    v-for="a in dia.items"
+                    :key="`ap-panel-mobile-item-${a.id}`"
+                    @click="abrirApronte(a)"
+                    class="p-2.5 rounded-lg border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/85 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95"
+                  >
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="text-[10px] font-black uppercase tracking-wide">{{ a._hora_panel || a.hora }}</div>
+                      <div class="text-[10px] font-bold opacity-80">{{ a.estado || 'APRONTE' }}</div>
+                    </div>
+                    <div class="text-[11px] font-black break-words leading-tight mt-1">{{ a.nombre }}</div>
+                    <div class="text-[10px] opacity-80 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hidden lg:grid lg:grid-cols-6 gap-3 p-3 sm:p-4">
+              <div
+                v-for="dia in aprontesSemanaPanel"
+                :key="`ap-panel-desktop-${dia.fecha}`"
+                class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b] overflow-hidden min-h-[360px]"
+              >
+                <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-800">
+                  <div class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ dia.nombre }}</div>
+                  <div class="text-sm font-black text-gray-800 dark:text-gray-100">{{ dia.fechaFormato }}</div>
+                  <div class="text-[10px] font-black uppercase tracking-widest text-cyan-600 mt-1">{{ dia.total }} aprontes</div>
+                </div>
+
+                <div v-if="!dia.items.length" class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400 italic">Sin aprontes.</div>
+                <div v-else class="p-2.5 space-y-2">
+                  <div
+                    v-for="a in dia.items"
+                    :key="`ap-panel-desktop-item-${a.id}`"
+                    @click="abrirApronte(a)"
+                    class="p-2 rounded-lg border border-cyan-200 dark:border-cyan-500/40 bg-cyan-50/85 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 shadow-sm cursor-pointer transition-all hover:scale-[1.015] active:scale-95"
+                  >
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="text-[10px] font-black uppercase tracking-wide">{{ a._hora_panel || a.hora }}</div>
+                      <div class="text-[10px] font-bold opacity-80">{{ a.estado || 'APRONTE' }}</div>
+                    </div>
+                    <div class="text-[10px] xl:text-[11px] font-black break-words leading-tight mt-1">{{ a.nombre }}</div>
+                    <div class="text-[10px] opacity-80 break-words leading-tight">{{ a.marca }} {{ a.modelo }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="cargandoMetricasAprontes" class="text-xs font-bold text-gray-500 dark:text-gray-400 italic px-1">
+            Actualizando metricas de aprontes...
+          </div>
+        </div>
+      </div>
     </div>
     <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
     <ApronteWindow
@@ -1018,7 +1314,7 @@ const obtenerDetalleResumen = (reserva: any) => {
       :key="apronteModalKey"
       :apronte="apronteActivo"
       @cerrar="manejarCierreApronte"
-      @actualizar="cargarReservas"
+      @actualizar="() => { cargarReservas(); cargarMetricasAprontes(true) }"
     />
   </div>
 </template>

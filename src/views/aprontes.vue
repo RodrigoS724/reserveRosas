@@ -64,6 +64,7 @@ const modelos = ref<string[]>([])
 
 const ESTADOS_APRONTE = [
   'APRONTE',
+  'LISTA PARA ENTREGAR',
   'ENTREGADA',
   'ENTREGADA ESPERA DE GARANTIA'
 ]

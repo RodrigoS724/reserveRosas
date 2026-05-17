@@ -458,6 +458,7 @@ const imprimirPdf = () => {
           <label>Estado</label>
           <select v-model="editable.estado">
             <option value="APRONTE">APRONTE</option>
+            <option value="LISTA PARA ENTREGAR">LISTA PARA ENTREGAR</option>
             <option value="ENTREGADA">ENTREGADA</option>
             <option value="ENTREGADA ESPERA DE GARANTIA">ENTREGADA ESPERA DE GARANTIA</option>
           </select>

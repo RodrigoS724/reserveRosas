@@ -19,6 +19,15 @@ const __dirname = path.dirname(__filename)
 
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('disable-direct-composition')
+
+  try {
+    const sessionDataPath = path.join(app.getPath('userData'), 'session-data')
+    fs.mkdirSync(sessionDataPath, { recursive: true })
+    app.setPath('sessionData', sessionDataPath)
+    app.commandLine.appendSwitch('disk-cache-dir', path.join(sessionDataPath, 'Cache'))
+  } catch (error) {
+    console.warn('[Main] No se pudo configurar cache de Chromium:', error)
+  }
 }
 
 // Hacer disponibles globalmente para módulos que los necesitan
