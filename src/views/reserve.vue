@@ -13,6 +13,21 @@ const panelActivo = ref<'agenda' | 'aprontes'>('agenda')
 const reservasSeleccionadas = ref<number[]>([])
 const estadoMasivo = ref('PENDIENTE')
 const aplicandoEstadoMasivo = ref(false)
+const sidebarAbiertoLocal = ref(true)
+const sidebarAbierto = computed({
+  get: () => sidebarAbiertoLocal.value,
+  set: (val) => {
+    sidebarAbiertoLocal.value = val
+    localStorage.setItem('reserve-sidebar-open', String(val))
+  }
+})
+
+onMounted(() => {
+  const stored = localStorage.getItem('reserve-sidebar-open')
+  if (stored !== null) {
+    sidebarAbiertoLocal.value = stored === 'true'
+  }
+})
 const session = getSession()
 const esTaller = isTallerRole(session)
 
@@ -921,109 +936,143 @@ const obtenerDetalleResumen = (reserva: any) => {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-y-auto overflow-x-hidden">
-    <header class="flex justify-between items-end">
-      <div class="space-y-3 sm:space-y-4 md:space-y-5">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-gray-800 dark:text-gray-100 tracking-tight">
-          CALENDARIO <span class="text-cyan-600">SEMANAL</span>
-        </h2>
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="relative group">
-            <input 
-              v-model="busquedaCedula" 
-              placeholder="Buscar por CI..." 
-              class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl py-3 px-4 sm:px-5 md:px-6 text-gray-700 dark:text-gray-200 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium shadow-sm" 
-            />
+  <div class="h-screen flex bg-gray-50 dark:bg-[#0f172a] overflow-hidden">
+    <!-- Mobile: Floating hamburger button -->
+    <button v-if="!sidebarAbierto" @click="sidebarAbierto = true" class="lg:hidden fixed bottom-6 left-6 z-50 p-4 bg-cyan-600 text-white rounded-full shadow-lg hover:bg-cyan-700 transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Sidebar overlay for mobile -->
+    <div v-if="sidebarAbierto" class="lg:hidden fixed inset-0 bg-black/50 z-30" @click="sidebarAbierto = false"></div>
+
+    <!-- Sidebar -->
+    <aside :class="['w-72 shrink-0 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-lg overflow-hidden transition-transform duration-300', sidebarAbierto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']"
+           style="height: 100vh; z-index: 40;">
+      <!-- Sidebar header -->
+      <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+        <h3 class="text-lg font-black text-gray-800 dark:text-gray-100">Filtros</h3>
+        <button @click="sidebarAbierto = false" class="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Sidebar content -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        <!-- Búsqueda -->
+        <div>
+          <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Buscar por CI</label>
+          <input 
+            v-model="busquedaCedula" 
+            placeholder="Ingrese CI..." 
+            class="w-full bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium" 
+          />
+        </div>
+
+        <!-- Estado -->
+        <div>
+          <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Estado</label>
+          <select v-model="estadoFiltro"
+            class="w-full bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/20">
+            <option value="TODOS">Todos</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
+            <option value="EN REVISION">En revision</option>
+            <option value="PRONTO">Pronto</option>
+            <option value="EN PROCESO">En proceso</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
+        </div>
+
+        <!-- Solo hoy en lista -->
+        <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-[#0f172a]/50 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+          <input v-model="soloHoyEnLista" type="checkbox" class="w-4 h-4 accent-cyan-600" />
+          <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Solo hoy en lista</span>
+        </label>
+
+        <!-- Navegación de semana -->
+        <div>
+          <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Semana</label>
+          <div class="flex gap-2">
+            <button @click="cambiarSemana(-1)" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-bold text-xs">Anterior</button>
+            <button @click="semanaOffset = 0; cargarReservas()" class="flex-1 px-3 py-2.5 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 transition-colors font-bold text-xs">Hoy</button>
+            <button @click="cambiarSemana(1)" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-bold text-xs">Siguiente</button>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Estado</span>
-            <select v-model="estadoFiltro"
-              class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl py-2.5 px-4 text-gray-700 dark:text-gray-200 text-xs font-bold uppercase tracking-widest">
-              <option value="TODOS">Todos</option>
-              <option value="PENDIENTE">Pendiente</option>
-              <option value="PENDIENTE REPUESTOS">Pendiente repuestos</option>
-              <option value="EN REVISION">En revision</option>
-              <option value="PRONTO">Pronto</option>
-              <option value="EN PROCESO">En proceso</option>
-              <option value="CANCELADO">Cancelado</option>
-            </select>
+        </div>
+
+        <!-- Panel toggle -->
+        <div>
+          <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">Panel</label>
+          <div class="flex gap-2">
+            <button
+              @click="panelActivo = 'agenda'"
+              :class="[
+                'flex-1 px-3 py-2.5 rounded-lg font-bold text-xs transition-all uppercase tracking-wide',
+                panelActivo === 'agenda'
+                  ? 'bg-cyan-600 text-white shadow-lg'
+                  : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ]"
+            >
+              Reservas
+            </button>
+            <button
+              @click="panelActivo = 'aprontes'"
+              :class="[
+                'flex-1 px-3 py-2.5 rounded-lg font-bold text-xs transition-all uppercase tracking-wide',
+                panelActivo === 'aprontes'
+                  ? 'bg-cyan-600 text-white shadow-lg'
+                  : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ]"
+            >
+              Aprontes
+            </button>
           </div>
-          <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">Solo hoy en lista</span>
-            <input v-model="soloHoyEnLista" type="checkbox" class="sr-only peer" />
-            <span class="relative h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors peer-checked:bg-cyan-600">
-              <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5"></span>
-            </span>
-          </label>
+        </div>
+
+        <!-- Controles masivos -->
+        <div v-if="!esTaller && panelActivo === 'agenda'" class="space-y-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div class="text-xs font-black text-cyan-600">Seleccionadas: {{ reservasSeleccionadas.length }}</div>
+          <button
+            @click="seleccionarVisibles"
+            class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+          >
+            Seleccionar visibles
+          </button>
+          <button
+            @click="limpiarSeleccion"
+            class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+          >
+            Limpiar
+          </button>
+          <select
+            v-model="estadoMasivo"
+            class="w-full bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+          >
+            <option v-for="estado in OPCIONES_ESTADO" :key="estado.value" :value="estado.value">
+              {{ estado.label }}
+            </option>
+          </select>
+          <button
+            :disabled="aplicandoEstadoMasivo || reservasSeleccionadas.length === 0"
+            @click="aplicarEstadoMasivo"
+            class="w-full px-3 py-2.5 rounded-lg bg-cyan-600 text-white text-xs font-black uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-700 transition-colors"
+          >
+            {{ aplicandoEstadoMasivo ? 'Aplicando...' : 'Cambiar estado' }}
+          </button>
         </div>
       </div>
+    </aside>
 
-      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <button @click="cambiarSemana(-1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Anterior</button>
-        <button @click="semanaOffset = 0; cargarReservas()" class="px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-cyan-600 text-white font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">Hoy</button>
-        <button @click="cambiarSemana(1)" class="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest">Siguiente</button>
-      </div>
+    <!-- Main content -->
+    <main class="flex-1 flex flex-col min-w-0 h-screen">
+      <!-- Header with title -->
+      <header class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b] flex items-center justify-between flex-shrink-0">
+        <h2 class="text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100">
+          CALENDARIO <span class="text-cyan-600">SEMANAL</span>
+        </h2>
+      </header>
 
-      <div class="flex bg-white dark:bg-[#1e293b] p-1.5 rounded-xl sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
-        <button
-          @click="panelActivo = 'agenda'"
-          :class="[
-            'px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest transition-all',
-            panelActivo === 'agenda'
-              ? 'bg-cyan-600 text-white shadow-lg'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-          ]"
-        >
-          Panel Reservas
-        </button>
-        <button
-          @click="panelActivo = 'aprontes'"
-          :class="[
-            'px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[8px] sm:text-[9px] md:text-xs uppercase tracking-widest transition-all',
-            panelActivo === 'aprontes'
-              ? 'bg-cyan-600 text-white shadow-lg'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-          ]"
-        >
-          Panel Aprontes
-        </button>
-      </div>
-    </header>
-
-    <div v-if="!esTaller && panelActivo === 'agenda'" class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm">
-      <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
-        Seleccionadas: {{ reservasSeleccionadas.length }}
-      </span>
-      <button
-        @click="seleccionarVisibles"
-        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        Seleccionar visibles
-      </button>
-      <button
-        @click="limpiarSeleccion"
-        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        Limpiar
-      </button>
-      <select
-        v-model="estadoMasivo"
-        class="bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-200"
-      >
-        <option v-for="estado in OPCIONES_ESTADO" :key="estado.value" :value="estado.value">
-          {{ estado.label }}
-        </option>
-      </select>
-      <button
-        :disabled="aplicandoEstadoMasivo || reservasSeleccionadas.length === 0"
-        @click="aplicarEstadoMasivo"
-        class="px-3 sm:px-4 py-1.5 rounded-lg bg-cyan-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-700 transition-colors"
-      >
-        {{ aplicandoEstadoMasivo ? 'Aplicando...' : 'Cambiar estado' }}
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl md:rounded-4xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e293b]/50 shadow-xl custom-scrollbar">
+      <!-- Calendar content area -->
+      <div class="flex-1 overflow-auto custom-scrollbar bg-white dark:bg-[#1e293b]">
       <div v-if="panelActivo === 'agenda' && soloHoyEnLista" class="p-3 sm:p-4 md:p-5">
         <div class="rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-[#0f172a]/40 overflow-hidden">
           <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#1e293b]/85 flex flex-wrap items-center justify-between gap-2">
@@ -1038,12 +1087,12 @@ const obtenerDetalleResumen = (reserva: any) => {
             No hay reservas para hoy.
           </div>
 
-          <div v-else class="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+          <div v-else class="p-3 sm:p-4 space-y-2 sm:space-y-2.5">
             <div
               v-for="r in reservasHoyLista"
               :key="`hoy-${r.id}`"
               @click="abrirVentana(r)"
-              :class="['p-3 sm:p-3.5 rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]"
+              :class="['p-2 sm:p-2.5 rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]"
             >
               <div class="flex items-start justify-between gap-2 mb-1">
                 <div class="text-sm sm:text-base font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
@@ -1083,7 +1132,7 @@ const obtenerDetalleResumen = (reserva: any) => {
               <div class="grid grid-cols-1 gap-2">
                 <div v-for="r in obtenerReservasEnCelda(dia.fecha, hora)" :key="`list-r-${r.id}`"
                      @click="abrirVentana(r)"
-                     :class="['p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]">
+                     :class="['p-1.5 sm:p-2 rounded-lg sm:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-95 min-w-0', getCardStyles(r.estado)]">
                   <div class="flex items-start justify-between gap-2 mb-1">
                     <div class="text-[10px] sm:text-[11px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
                     <input
@@ -1107,11 +1156,11 @@ const obtenerDetalleResumen = (reserva: any) => {
       <table class="hidden lg:table w-full border-collapse table-fixed">
         <thead class="sticky top-0 z-20 bg-white dark:bg-[#1e293b]">
           <tr>
-            <th class="w-16 xl:w-20 p-2 xl:p-3 text-[8px] xl:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-800">Hora</th>
+            <th class="w-14 xl:w-[4.5rem] 2xl:w-20 p-2 xl:p-3 text-[9px] xl:text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] border-b border-gray-200 dark:border-gray-800">Hora</th>
             <th v-for="dia in fechasWeek" :key="dia.fecha" class="p-2 xl:p-3 border-b border-gray-200 dark:border-gray-800 border-l border-gray-100 dark:border-gray-800/50">
               <div class="flex flex-col items-center">
-                <span class="text-[8px] xl:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase">{{ dia.nombre }}</span>
-                <span class="text-base xl:text-xl font-black text-gray-800 dark:text-gray-100">{{ dia.fecha?.split('-')[2] }}</span>
+                <span class="text-[9px] xl:text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.14em]">{{ dia.nombre }}</span>
+                <span class="text-lg xl:text-[1.65rem] font-black text-gray-800 dark:text-gray-100 leading-none mt-1">{{ dia.fecha?.split('-')[2] }}</span>
               </div>
             </th>
           </tr>
@@ -1130,18 +1179,18 @@ const obtenerDetalleResumen = (reserva: any) => {
             </tr>
             <tr v-else>
               <td class="p-2 xl:p-3 text-center border-r border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-[#0f172a]/30">
-                <span class="text-[8px] xl:text-xs font-black text-gray-400 dark:text-gray-500">{{ item.hora }}</span>
+                <span class="text-[9px] xl:text-[13px] font-black text-gray-400 dark:text-gray-500">{{ item.hora }}</span>
               </td>
 
               <td v-for="dia in fechasWeek" :key="`${dia.fecha}-${item.hora}`" 
-                  class="p-1.5 xl:p-2.5 border-l border-gray-100 dark:border-gray-800/30 min-h-[84px] xl:min-h-[112px] align-top hover:bg-cyan-500/5 transition-colors">
+                  class="p-1.5 xl:p-2 border-l border-gray-100 dark:border-gray-800/30 min-h-[92px] xl:min-h-[128px] align-top hover:bg-cyan-500/5 transition-colors">
                 
                 <div class="flex-1 flex flex-col gap-1.5">
                   <div v-for="r in obtenerReservasEnCelda(dia.fecha, item.hora)" :key="r.id"
                        @click="abrirVentana(r)"
-                       :class="['p-2 xl:p-2.5 rounded-lg xl:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0', getCardStyles(r.estado)]">
+                       :class="['p-1.5 xl:p-2 rounded-lg xl:rounded-xl border-l-4 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95 min-w-0', getCardStyles(r.estado)]">
                     <div class="flex items-start justify-between gap-2 mb-1">
-                      <div class="text-[8px] xl:text-[10px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
+                      <div class="text-[9px] xl:text-[11px] font-black uppercase break-words leading-tight">{{ r.nombre }}</div>
                       <input
                         :checked="reservaSeleccionada(r.id)"
                         @click.stop
@@ -1150,16 +1199,16 @@ const obtenerDetalleResumen = (reserva: any) => {
                         class="h-3.5 w-3.5 xl:h-4 xl:w-4 accent-cyan-600 shrink-0"
                       />
                     </div>
-                    <div class="text-[7px] xl:text-[9px] font-bold opacity-80 mb-1 break-words leading-tight">
+                    <div class="text-[8px] xl:text-[10px] font-bold opacity-80 mb-1 break-words leading-tight">
                       {{ r.tipo_resumen }}
                     </div>
-                    <div v-if="r.detalle_resumen" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                    <div v-if="r.detalle_resumen" class="text-[8px] xl:text-[10px] opacity-70 break-words leading-tight mb-1">
                       {{ r.detalle_resumen }}
                     </div>
-                    <div v-if="r.garantia_fecha_compra" class="text-[7px] xl:text-[9px] opacity-70 break-words leading-tight mb-1">
+                    <div v-if="r.garantia_fecha_compra" class="text-[8px] xl:text-[10px] opacity-70 break-words leading-tight mb-1">
                       Compra: {{ r.garantia_fecha_compra }}
                     </div>
-                    <div class="text-[7px] xl:text-[9px] font-bold opacity-80 leading-tight break-words">
+                    <div class="text-[8px] xl:text-[10px] font-bold opacity-80 leading-tight break-words">
                       {{ r.marca }} {{ r.modelo }}<br/>
                       <span class="opacity-60">{{ r.cedula }}</span>
                     </div>
@@ -1307,8 +1356,11 @@ const obtenerDetalleResumen = (reserva: any) => {
           </div>
         </div>
       </div>
-    </div>
-    <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
+      </div>
+    </main>
+  </div>
+
+  <ReservaWindow v-if="mostrarVentana" :key="modalKey" :reserva="reservaActiva" @cerrar="manejarCierre" />
     <ApronteWindow
       v-if="mostrarApronte"
       :key="apronteModalKey"
@@ -1316,7 +1368,6 @@ const obtenerDetalleResumen = (reserva: any) => {
       @cerrar="manejarCierreApronte"
       @actualizar="() => { cargarReservas(); cargarMetricasAprontes(true) }"
     />
-  </div>
 </template>
 
 

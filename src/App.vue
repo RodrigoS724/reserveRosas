@@ -9,6 +9,7 @@ const isDark = ref(true)
 const soundEnabled = ref(true)
 const SETTINGS_KEY = 'rr_settings'
 const LAST_LOGIN_KEY = 'rr_last_login_user'
+const SIDEBAR_COLLAPSED_KEY = 'rr_sidebar_collapsed'
 const session = ref(null)
 const usuariosLogin = ref([])
 const loginUser = ref('')
@@ -17,7 +18,28 @@ const showLoginPass = ref(false)
 const loginError = ref('')
 const cargandoLogin = ref(false)
 const notifications = ref([])
+const sidebarCollapsed = ref(false)
 let notificationSeq = 0
+
+const setSidebarCollapsed = (value) => {
+  sidebarCollapsed.value = value
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, value ? 'true' : 'false')
+}
+
+const loadSidebarPreference = () => {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+    if (raw === 'true' || raw === 'false') {
+      sidebarCollapsed.value = raw === 'true'
+      return
+    }
+  } catch {}
+  sidebarCollapsed.value = window.innerWidth <= 1440
+}
+
+const toggleSidebar = () => {
+  setSidebarCollapsed(!sidebarCollapsed.value)
+}
 
 const applyTheme = (value) => {
   isDark.value = value
@@ -113,6 +135,7 @@ const pushNotification = (message, variant = 'info') => {
 
 onMounted(() => {
   loadSettings()
+  loadSidebarPreference()
   document.documentElement.classList.toggle('dark', isDark.value)
   ipc?.send?.('settings:update', {
     theme: isDark.value ? 'dark' : 'light',
@@ -179,9 +202,26 @@ onMounted(() => {
 <template>
   <div class="flex h-screen w-screen min-w-0 bg-gray-50 dark:bg-[#0f172a] overflow-x-hidden overflow-y-hidden text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
 
-    <aside class="w-64 xl:w-72 shrink-0 bg-white dark:bg-[#1e293b] border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-20">
+    <aside
+      :class="[
+        sidebarCollapsed
+          ? 'w-0 -translate-x-full opacity-0 pointer-events-none border-r-0'
+          : 'w-64 xl:w-72 border-r border-gray-200 dark:border-gray-800 opacity-100',
+        'shrink-0 bg-white dark:bg-[#1e293b] flex flex-col shadow-xl z-20 overflow-hidden transition-all duration-300'
+      ]"
+    >
       
-      <div class="p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
+      <div class="relative p-8 pb-6 border-b border-gray-100 dark:border-gray-800 flex justify-center">
+        <button
+          @click="setSidebarCollapsed(true)"
+          class="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-[#0f172a]/90 text-gray-500 dark:text-gray-300 shadow-sm transition-all hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
+          title="Ocultar menu"
+          aria-label="Ocultar menu"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <img :src="logoPrincipalUrl" alt="Logo principal" class="w-full h-auto max-w-[260px] drop-shadow-md hover:scale-[1.02] transition-transform duration-500" />
       </div>
 
@@ -372,7 +412,18 @@ onMounted(() => {
     </aside>
 
     <main class="flex-1 min-w-0 overflow-hidden h-full w-full bg-white dark:bg-[#0f172a] relative">
-      <div class="w-full h-full overflow-y-auto overflow-x-hidden">
+      <button
+        v-if="sidebarCollapsed"
+        @click="toggleSidebar"
+        class="absolute left-3 top-3 z-30 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#1e293b]/95 text-gray-700 dark:text-gray-200 shadow-lg backdrop-blur transition-all hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
+        title="Mostrar menu"
+        aria-label="Mostrar menu"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <div class="w-full h-full overflow-y-auto overflow-x-hidden transition-all duration-300" :class="sidebarCollapsed ? 'pl-14 sm:pl-16' : ''">
         <router-view />
       </div>
     </main>
