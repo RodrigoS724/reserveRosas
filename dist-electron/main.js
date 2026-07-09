@@ -21659,6 +21659,19 @@ function registrarHandlersReservas() {
     }
     return result;
   });
+  safeHandle("reservas:estado", async (_event, payload) => {
+    console.log("[IPC] Actualizando estado de reserva:", payload);
+    const data = {
+      id: Number((payload == null ? void 0 : payload.id) || 0),
+      estado: payload == null ? void 0 : payload.estado,
+      actor: payload == null ? void 0 : payload.actor
+    };
+    const result = await withDbLock(() => actualizarReserva(data));
+    if (data.id) {
+      await notifyReserva("modificada", data.id);
+    }
+    return result;
+  });
   safeHandle("reservas:semana", async (_event, payload) => {
     console.log("[IPC] Obteniendo reservas de semana:", payload);
     const result = await obtenerReservasSemana(payload.desde, payload.hasta);

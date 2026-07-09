@@ -51,6 +51,15 @@ declare global {
         detalles: string
       }) => Promise<void>
 
+      actualizarEstadoReserva: (data: {
+        id: number
+        estado: string
+        actor?: {
+          username?: string
+          role?: string
+        }
+      }) => Promise<void>
+
       obtenerReservasSemana: (data: {
         desde: string
         hasta: string
@@ -406,6 +415,5 @@ declare global {
   }
 }
 export {}
-
 
 

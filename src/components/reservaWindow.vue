@@ -163,20 +163,16 @@ const guardar = async () => {
   if (!editable.value) return
 
   try {
-    let reservaPlana: any
     if (esTaller.value) {
-      reservaPlana = {
-        id: editable.value.id,
-        estado: editable.value.estado
-      }
+      await api.actualizarEstadoReserva(editable.value.id, editable.value.estado)
     } else {
       editable.value.matricula = normalizarMatricula(editable.value.matricula).slice(0, 7)
       editable.value.tipo_turno = normalizarTipoTurno(editable.value.tipo_turno) || editable.value.tipo_turno
       editable.value.garantia_tipo = normalizarTipoGarantia(editable.value.garantia_tipo) || editable.value.garantia_tipo
       editable.value.garantia_fecha_compra = limpiarFecha(editable.value.garantia_fecha_compra)
-      reservaPlana = JSON.parse(JSON.stringify(editable.value))
+      const reservaPlana = JSON.parse(JSON.stringify(editable.value))
+      await api.actualizarReserva(reservaPlana)
     }
-    await api.actualizarReserva(reservaPlana)
     emit('actualizar')
     cerrar()
   } catch (e) {

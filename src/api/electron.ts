@@ -20,6 +20,7 @@ export const api = {
 	crearReserva: (data: any) => window.api.crearReserva(withActor(data)),
 	borrarReserva: (data: any) => window.api.borrarReserva(typeof data === 'object' ? { ...data, actor: getActor() } : { id: data, actor: getActor() }),
 	moverReserva: (data: any) => window.api.moverReserva(withActor(data)),
+	actualizarEstadoReserva: (id: number, estado: string) => window.api.actualizarEstadoReserva(withActor({ id, estado })),
 	actualizarReserva: (data: any) => window.api.actualizarReserva(withActor(data)),
 	actualizarNotasReserva: (idOrPayload: any, notas?: string) => {
 		const payload = typeof idOrPayload === 'object' && idOrPayload !== null

@@ -96,6 +96,7 @@ export const api = {
   obtenerReserva: (id: number) => invoke('reservas:obtener', id),
   borrarReserva: (id: number) => invoke('reservas:borrar', { id, actor: getActor() }),
   moverReserva: (d: any) => invoke('reservas:mover', withActor(d)),
+  actualizarEstadoReserva: (id: number, estado: string) => invoke('reservas:estado', withActor({ id, estado })),
   actualizarReserva: (d: any) => invoke('reservas:actualizar', withActor(d)),
   obtenerReservasSemana: (d: any) => invoke('reservas:semana', d),
   obtenerReservasDia: (d: any) => invoke('reservas:dia', d),
@@ -198,7 +199,6 @@ export const api = {
   // Auditoria
   obtenerAuditoriaUsuarios: () => invoke('auditoria:list')
 }
-
 
 
 

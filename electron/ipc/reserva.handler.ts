@@ -166,6 +166,20 @@ export function registrarHandlersReservas() {
     return result
   })
 
+  safeHandle('reservas:estado', async (_event, payload) => {
+    console.log('[IPC] Actualizando estado de reserva:', payload)
+    const data = {
+      id: Number(payload?.id || 0),
+      estado: payload?.estado,
+      actor: payload?.actor
+    }
+    const result = await withDbLock(() => actualizarReserva(data))
+    if (data.id) {
+      await notifyReserva('modificada', data.id)
+    }
+    return result
+  })
+
   safeHandle('reservas:semana', async (_event, payload) => {
     console.log('[IPC] Obteniendo reservas de semana:', payload)
     // Lectura sin lock global para evitar congelar toda la cola

@@ -35,6 +35,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerReserva: (id) => invokeSafe("reservas:obtener", id),
   borrarReserva: (data) => invokeSafe("reservas:borrar", data),
   moverReserva: (d) => invokeSafe("reservas:mover", d),
+  actualizarEstadoReserva: (d) => invokeSafe("reservas:estado", d),
   actualizarReserva: (d) => invokeSafe("reservas:actualizar", d),
   obtenerReservasSemana: (d) => invokeSafe("reservas:semana", d),
   obtenerReservasDia: (d) => invokeSafe("reservas:dia", d),
