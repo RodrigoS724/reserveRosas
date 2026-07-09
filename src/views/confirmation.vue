@@ -1,225 +1,384 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { api } from '../api'
 
 const route = useRoute()
 const router = useRouter()
 
-// Datos que vienen del Home
-const fecha = route.query.fecha || '2026-01-19'
-const hora = route.query.hora || '11:00'
+const fecha = (route.query.fecha as string) || '2026-01-19'
+const hora = (route.query.hora as string) || '11:00'
 
-// Estado del Formulario - UNIFICADO A 'tipoTurno'
 const nombre = ref('')
 const cedula = ref('')
 const telefono = ref('')
 const marca = ref('')
 const modelo = ref('')
 const km = ref('')
-const matricula = ref('')
-const tipoTurno = ref('Service') // Esta es la variable clave
-const detalles = ref('') // Para los comentarios de garantía/taller
-onMounted(() => {
-  console.log("API:", window.api)
-  console.log("crearReserva:", window.api?.crearReserva)
-})  
-const descargarTicket = () => {
-  const ticketHTML = `
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; color: #333; }
-        .ticket { width: 350px; border: 2px solid #3b82f6; border-radius: 15px; padding: 20px; }
-        .header { text-align: center; border-bottom: 2px dashed #ddd; margin-bottom: 15px; padding-bottom: 10px; }
-        .title { font-weight: bold; font-size: 18px; color: #1e293b; }
-        .section-title { font-size: 10px; font-weight: bold; color: #3b82f6; margin-top: 15px; text-transform: uppercase; }
-        .row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
-        .val { font-weight: bold; }
-        .footer { text-align: center; font-size: 10px; color: #999; margin-top: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="ticket">
-        <div class="header">
-          <div class="title">TALLER ROSAS</div>
-          <p style="font-size: 11px">Comprobante de Reserva</p>
-        </div>
-        <div class="section-title">Cita</div>
-        <div class="row"><span>Fecha:</span> <span class="val">${fecha}</span></div>
-        <div class="row"><span>Horario:</span> <span class="val">${hora} hs</span></div>
-        <div class="section-title">Cliente</div>
-        <div class="row"><span>Nombre:</span> <span class="val">${nombre.value}</span></div>
-        <div class="section-title">Vehículo</div>
-        <div class="row"><span>Moto:</span> <span class="val">${marca.value} ${modelo.value}</span></div>
-        <div class="row"><span>Matrícula:</span> <span class="val">${matricula.value}</span></div>
-        <div class="row"><span>Tipo:</span> <span class="val">${tipoTurno.value}</span></div>
-        <div class="footer"><p>Rodo y Oribe, Mercedes, Soriano</p></div>
-      </div>
-      <script>window.print();<\/script>
-    </body>
-    </html>
-  `;
-  const blob = new Blob([ticketHTML], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+const detalles = ref('')
+const marcas = ref<string[]>([])
+const modelos = ref<string[]>([])
+
+const tipoTurno = ref<'Garantia' | 'Particular' | 'TomaMoto'>('Particular')
+const particularTipo = ref<'Service' | 'Taller'>('Service')
+const garantiaTipo = ref<'Service' | 'Reparacion'>('Service')
+const garantiaFechaCompra = ref('')
+const garantiaNumeroService = ref('')
+const garantiaProblema = ref('')
+
+const guardando = ref(false)
+const matriculaGenerada = ref('TMP0000')
+
+const baseInputClass = 'w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white'
+const smallInputClass = 'w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white'
+const successClass = 'border-blue-500/50 ring-2 ring-blue-500/10 bg-blue-50/30 dark:bg-blue-900/10'
+const errorClass = 'border-red-500/50 ring-2 ring-red-500/10 bg-red-50/30 dark:bg-red-900/10'
+
+const cargarMarcas = async () => {
+  try {
+    const data = await api.obtenerMarcasMoto()
+    marcas.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[Confirmation] Error cargando marcas:', error)
+    marcas.value = []
+  }
+}
+
+const cargarModelos = async (marcaValue: string) => {
+  try {
+    const data = await api.obtenerModelosMoto(marcaValue)
+    modelos.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[Confirmation] Error cargando modelos:', error)
+    modelos.value = []
+  }
+}
+
+const normalizarCedula = (value: string) => value.replace(/\D/g, '')
+
+const validarCedulaUy = (value: string) => {
+  const digitsRaw = normalizarCedula(value)
+  if (digitsRaw.length < 7 || digitsRaw.length > 8) return false
+  const digits = digitsRaw.padStart(8, '0').split('').map((d) => parseInt(d, 10))
+  const weights = [2, 9, 8, 7, 6, 3, 4]
+  let sum = 0
+  for (let i = 0; i < 7; i++) sum += digits[i] * weights[i]
+  const check = (10 - (sum % 10)) % 10
+  return check === digits[7]
+}
+
+const formatCedula = (value: string) => {
+  let limpio = normalizarCedula(value)
+  if (limpio.length > 8) limpio = limpio.slice(0, 8)
+  if (limpio.length > 7) return limpio.replace(/^(\d)(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  if (limpio.length > 6) return limpio.replace(/^(\d{1,2})(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  return limpio
+}
+
+const normalizarTelefonoUy = (value: string) => {
+  let digits = value.replace(/\D/g, '')
+  if (digits.startsWith('598')) digits = digits.slice(3)
+  if (digits.startsWith('0')) digits = digits.slice(1)
+  if (digits.startsWith('9')) digits = digits.slice(1)
+  return `09${digits}`.slice(0, 9)
+}
+
+const telefonoValidoUy = (value: string) => /^0\d{8}$/.test(value)
+
+const isParticular = computed(() => tipoTurno.value === 'Particular')
+const isGarantia = computed(() => tipoTurno.value === 'Garantia')
+const isTomaMoto = computed(() => tipoTurno.value === 'TomaMoto')
+const isParticularService = computed(() => isParticular.value && particularTipo.value === 'Service')
+const isParticularTaller = computed(() => isParticular.value && particularTipo.value === 'Taller')
+const isGarantiaService = computed(() => isGarantia.value && garantiaTipo.value === 'Service')
+const isGarantiaReparacion = computed(() => isGarantia.value && garantiaTipo.value === 'Reparacion')
+
+const nombreValido = computed(() => nombre.value.trim().split(/\s+/).length >= 2)
+const cedulaValida = computed(() => validarCedulaUy(cedula.value))
+const telefonoValido = computed(() => telefonoValidoUy(telefono.value))
+const marcaValida = computed(() => marca.value.trim().length > 0)
+const modeloValido = computed(() => modelo.value.trim().length > 0)
+const kmValido = computed(() => /^\d+$/.test(km.value.trim()))
+const garantiaFechaCompraValida = computed(() => garantiaFechaCompra.value.trim().length > 0)
+const garantiaNumeroServiceValida = computed(() => /^\d+$/.test(garantiaNumeroService.value.trim()))
+const garantiaProblemaValido = computed(() => garantiaProblema.value.trim().length > 0)
+const detallesTallerValidos = computed(() => detalles.value.trim().length > 0)
+
+const esValido = computed(() => {
+  if (!nombreValido.value) return false
+  if (!telefonoValido.value || !marcaValida.value || !modeloValido.value) return false
+  if (!isTomaMoto.value && !cedulaValida.value) return false
+  if (isTomaMoto.value) return true
+
+  if (isParticularService.value) return kmValido.value
+  if (isParticularTaller.value) return detallesTallerValidos.value
+  if (isGarantiaService.value) return garantiaFechaCompraValida.value && kmValido.value && garantiaNumeroServiceValida.value
+  if (isGarantiaReparacion.value) return garantiaFechaCompraValida.value && garantiaProblemaValido.value
+  return false
+})
+
+watch(cedula, (value) => {
+  const formatted = formatCedula(value)
+  if (formatted !== value) cedula.value = formatted
+})
+
+watch(telefono, (value) => {
+  const formatted = normalizarTelefonoUy(value)
+  if (formatted !== value) telefono.value = formatted
+})
+
+watch(tipoTurno, (tipo) => {
+  km.value = ''
+  detalles.value = ''
+  garantiaFechaCompra.value = ''
+  garantiaNumeroService.value = ''
+  garantiaProblema.value = ''
+  if (tipo === 'Particular') {
+    particularTipo.value = 'Service'
+  } else if (tipo === 'Garantia') {
+    garantiaTipo.value = 'Service'
+  } else {
+    cedula.value = ''
+  }
+})
+
+watch(particularTipo, () => {
+  km.value = ''
+  detalles.value = ''
+})
+
+watch(garantiaTipo, () => {
+  km.value = ''
+  garantiaFechaCompra.value = ''
+  garantiaNumeroService.value = ''
+  garantiaProblema.value = ''
+})
+
+watch(marca, (value) => {
+  cargarModelos(value)
+})
+
+onMounted(async () => {
+  await cargarMarcas()
+  await cargarModelos(marca.value)
+})
+
+const generarMatriculaGenericaUnica = async () => {
+  const prefix = 'TMP'
+  try {
+    const vehiculos = await api.obtenerVehiculos()
+    const usadas = new Set((vehiculos || []).map((v: { matricula?: string | null }) => String(v.matricula || '').toUpperCase()))
+    for (let i = 0; i < 200; i++) {
+      const numero = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+      const candidata = `${prefix}${numero}`
+      if (!usadas.has(candidata)) {
+        return candidata
+      }
+    }
+  } catch (error) {
+    console.warn('[Confirmation] No se pudo validar unicidad de matricula generica:', error)
+  }
+  return `${prefix}${(Date.now() % 10000).toString().padStart(4, '0')}`
 }
 
 const confirmarReserva = async () => {
-  if (!nombre.value || !cedula.value) return; // Validación básica
-  console.log(window.api)
-  
-  const datos = {
-    nombre: nombre.value,
-    cedula: cedula.value,
-    telefono: telefono.value,
-    marca: marca.value,
-    modelo: modelo.value,
-    km: km.value,
-    matricula: matricula.value,
-    tipo_turno: tipoTurno.value,
-    fecha: fecha, // El que viene del query param
-    hora: hora, // El que viene del query param
-    detalles: detalles.value
-  };
+  if (!esValido.value) {
+    alert('Por favor completa los campos requeridos correctamente.')
+    return
+  }
 
   try {
-    // LLAMADA A ELECTRON
-    const resultado = await window.api.crearReserva(datos);
-    console.log("/n/nResultados   ", resultado);
-
-    if (resultado.success) {
-      descargarTicket(); // Tu función de HTML
-      alert("¡Reserva guardada en la base de datos!");
-    } else {
-      alert("Error: " + ('error' in resultado ? (resultado as any).error : 'No se pudo guardar la reserva.'));
+    const horariosDisponibles = await api.obtenerHorariosDisponibles(fecha)
+    const horaDisponible = horariosDisponibles.some((h: any) => h.hora === hora)
+    if (!horaDisponible) {
+      alert('Este horario ya no esta disponible. Por favor selecciona otro.')
+      return
     }
-    router.push('/reservas');
+  } catch {
+    alert('Error al verificar disponibilidad. Intenta de nuevo.')
+    return
+  }
+
+  guardando.value = true
+  const matriculaAuto = await generarMatriculaGenericaUnica()
+  matriculaGenerada.value = matriculaAuto
+
+  const datos = {
+    nombre: nombre.value.trim(),
+    cedula: isTomaMoto.value ? '' : normalizarCedula(cedula.value),
+    telefono: telefono.value.trim(),
+    marca: marca.value.trim(),
+    modelo: modelo.value.trim(),
+    km: (isParticularService.value || isGarantiaService.value) ? km.value.trim() : '',
+    matricula: matriculaAuto,
+    tipo_turno: tipoTurno.value === 'Garantia' ? 'Garantía' : (tipoTurno.value === 'Particular' ? 'Particular' : 'Toma de moto'),
+    particular_tipo: isParticular.value ? particularTipo.value : null,
+    garantia_tipo: isGarantia.value ? (garantiaTipo.value === 'Reparacion' ? 'Reparación' : 'Service') : null,
+    garantia_fecha_compra: isGarantia.value ? garantiaFechaCompra.value.trim() : null,
+    garantia_numero_service: isGarantiaService.value ? garantiaNumeroService.value.trim() : null,
+    garantia_problema: isGarantiaReparacion.value ? garantiaProblema.value.trim() : null,
+    fecha,
+    hora,
+    detalles: isParticularTaller.value ? detalles.value.trim() : ''
+  }
+
+  try {
+    const resultado = await api.crearReserva(datos as any)
+    if (resultado && typeof resultado === 'number' && resultado > 0) {
+      alert(`Reserva guardada exitosamente. Matricula generica: ${matriculaAuto}`)
+      router.push('/reservas')
+    } else {
+      alert('Error: No se pudo guardar la reserva.')
+    }
   } catch (error) {
-    console.error("Error al guardar:", error);
+    alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+  } finally {
+    guardando.value = false
   }
 }
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto animate-in fade-in duration-500">
-    <button @click="router.back()"
-      class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-6 font-medium group">
+  <div class="w-full h-full min-h-0 flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 sm:py-6">
+    <button
+      @click="router.back()"
+      class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-4 sm:mb-5 md:mb-6 font-medium group text-sm md:text-base"
+    >
       <span class="group-hover:-translate-x-1 transition-transform">←</span> Volver a la agenda
     </button>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="space-y-6">
-        <div class="bg-white dark:bg-[#1e293b] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
-          <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Resumen de Cita</h3>
-          <div class="space-y-4">
-            <div class="flex items-center gap-4">
-              <div
-                class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-2xl">📅
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 font-bold uppercase">Fecha</p>
-                <p class="text-gray-800 dark:text-white font-bold">{{ fecha }}</p>
-              </div>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8 w-full max-w-6xl flex-1 min-h-0 pb-4">
+      <div class="space-y-6 min-h-0 flex-1">
+        <div class="bg-white dark:bg-[#1e293b] p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
+          <h3 class="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest mb-3 sm:mb-4">Resumen de cita</h3>
+          <div class="space-y-3 sm:space-y-4">
+            <div>
+              <p class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Fecha</p>
+              <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ fecha }}</p>
             </div>
-            <div class="flex items-center gap-4">
-              <div
-                class="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center text-2xl">
-                🕒</div>
-              <div>
-                <p class="text-xs text-gray-500 font-bold uppercase">Horario</p>
-                <p class="text-gray-800 dark:text-white font-bold">{{ hora }} hs</p>
-              </div>
+            <div>
+              <p class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Horario</p>
+              <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ hora }} hs</p>
+            </div>
+            <div>
+              <p class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Matricula</p>
+              <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ matriculaGenerada }}</p>
+              <p class="text-[10px] text-gray-500 mt-1">Se crea automatica y luego se puede editar en panel de vehiculos.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        class="lg:col-span-2 bg-white dark:bg-[#1e293b] p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-8">Datos de la Reserva</h2>
+      <div class="lg:col-span-2 bg-white dark:bg-[#1e293b] p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 min-h-0 flex flex-col">
+        <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-6 sm:mb-7 md:mb-8">Datos de la reserva</h2>
+        <form class="space-y-4 sm:space-y-5 md:space-y-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar" @submit.prevent="confirmarReserva">
+          <div class="space-y-2">
+            <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Nombre completo</label>
+            <input v-model="nombre" type="text" placeholder="Ej: Rodrigo Rosas" :class="[baseInputClass, nombre && !nombreValido ? errorClass : (nombreValido ? successClass : '')]">
+          </div>
 
-        <form class="space-y-6" @submit.prevent="descargarTicket">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="text-xs font-black text-gray-400 uppercase ml-1">Nombre Completo</label>
-              <input v-model="nombre" type="text" placeholder="Ej: Rodrigo Rosas"
-                class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+          <div class="space-y-2 sm:space-y-3">
+            <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Tipo de turno</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+              <button type="button" @click="tipoTurno = 'Garantia'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'Garantia' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Garantia</button>
+              <button type="button" @click="tipoTurno = 'Particular'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'Particular' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Particular</button>
+              <button type="button" @click="tipoTurno = 'TomaMoto'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', tipoTurno === 'TomaMoto' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Toma de moto</button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+
+          <div v-if="!isTomaMoto" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div class="space-y-2">
-                <label class="text-xs font-black text-gray-400 uppercase ml-1">Cédula</label>
-                <input v-model="cedula" type="text" placeholder="1.234.567-8" class="...">
+                <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Cedula</label>
+                <input v-model="cedula" type="text" placeholder="1.234.567-8" :class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')]">
               </div>
-
               <div class="space-y-2">
-                <label class="text-xs font-black text-gray-400 uppercase ml-1">Teléfono de Contacto</label>
-                <input v-model="telefono" type="tel" placeholder="099 123 456"
-                  class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all">
+                <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Telefono</label>
+                <input v-model="telefono" type="tel" placeholder="099111111" :class="[baseInputClass, telefono && !telefonoValido ? errorClass : (telefonoValido ? successClass : '')]">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
+                <input v-model="marca" type="text" list="motos-marcas" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
+                <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div v-else class="space-y-4">
             <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
-              <input v-model="marca" type="text"
-                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:text-white">
+              <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Telefono</label>
+              <input v-model="telefono" type="tel" placeholder="099111111" :class="[baseInputClass, telefono && !telefonoValido ? errorClass : (telefonoValido ? successClass : '')]">
             </div>
-            <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
-              <input v-model="modelo" type="text"
-                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:text-white">
-            </div>
-            <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">KM</label>
-              <input v-model="km" type="number"
-                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:text-white">
-            </div>
-            <div class="space-y-2">
-              <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Matrícula</label>
-              <input v-model="matricula" type="text"
-                class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:text-white">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Marca</label>
+                <input v-model="marca" type="text" list="motos-marcas" :class="[smallInputClass, marca && !marcaValida ? errorClass : (marcaValida ? successClass : '')]">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
+                <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
+              </div>
             </div>
           </div>
 
-          <div class="space-y-3">
-            <label class="text-xs font-black text-gray-400 uppercase ml-1">Tipo de Turno</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button v-for="t in ['Service', 'Garantía', 'Taller']" :key="t" type="button" @click="tipoTurno = t"
-                :class="[
-                  'p-4 rounded-xl border-2 font-bold transition-all text-sm',
-                  tipoTurno === t
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400'
-                    : 'border-gray-100 dark:border-gray-800 text-gray-400'
-                ]">
-                {{ t }}
-              </button>
+          <div v-if="isParticular" class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
+            <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Subtipo particular</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <button type="button" @click="particularTipo = 'Service'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', particularTipo === 'Service' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Service</button>
+              <button type="button" @click="particularTipo = 'Taller'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', particularTipo === 'Taller' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Taller</button>
+            </div>
+            <div v-if="isParticularService" class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">KM</label>
+              <input v-model="km" type="text" inputmode="numeric" :class="[smallInputClass, km && !kmValido ? errorClass : (kmValido ? successClass : '')]">
+            </div>
+            <div v-if="isParticularTaller" class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Reparacion a realizar</label>
+              <textarea v-model="detalles" class="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 dark:text-white h-24" placeholder="Describe la reparacion..." />
             </div>
           </div>
 
-          <div
-            class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 min-h-[100px]">
-            <p v-if="tipoTurno === 'Service'" class="text-gray-500 dark:text-gray-400 text-sm text-center italic">
-              Mantenimiento programado según manual de fabricante.
-            </p>
-            <div v-else class="space-y-4">
-              <textarea v-model="detalles"
-                :placeholder="tipoTurno === 'Garantía' ? 'Describa el inconveniente por garantía...' : 'Describa el problema...'"
-                class="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none dark:text-white h-24"></textarea>
+          <div v-if="isGarantia" class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
+            <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Subtipo garantia</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <button type="button" @click="garantiaTipo = 'Service'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Service' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Service</button>
+              <button type="button" @click="garantiaTipo = 'Reparacion'" :class="['p-4 rounded-xl border-2 font-bold transition-all text-sm', garantiaTipo === 'Reparacion' ? 'border-blue-600 bg-blue-50 dark:bg-blue-600/20 text-blue-600' : 'border-gray-100 dark:border-gray-800 text-gray-400']">Reparacion</button>
+            </div>
+            <div class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Fecha compra</label>
+              <input v-model="garantiaFechaCompra" type="date" :class="[smallInputClass, garantiaFechaCompra && !garantiaFechaCompraValida ? errorClass : (garantiaFechaCompraValida ? successClass : '')]">
+            </div>
+            <div v-if="isGarantiaService" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">KM</label>
+                <input v-model="km" type="text" inputmode="numeric" :class="[smallInputClass, km && !kmValido ? errorClass : (kmValido ? successClass : '')]">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Nro service</label>
+                <input v-model="garantiaNumeroService" type="text" inputmode="numeric" :class="[smallInputClass, garantiaNumeroService && !garantiaNumeroServiceValida ? errorClass : (garantiaNumeroServiceValida ? successClass : '')]">
+              </div>
+            </div>
+            <div v-if="isGarantiaReparacion" class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Descripcion del problema</label>
+              <textarea v-model="garantiaProblema" class="w-full p-3 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 dark:text-white h-24" placeholder="Describe el problema..." />
             </div>
           </div>
 
-          <button type="submit" @click.prevent="confirmarReserva" :disabled="!nombre || !cedula || !matricula" :class="[
-            'mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl active:scale-95',
-            (!nombre || !cedula || !matricula)
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'
-          ]">
-            Confirmar y Descargar Ticket
+          <datalist id="motos-marcas">
+            <option v-for="m in marcas" :key="m" :value="m"></option>
+          </datalist>
+          <datalist id="motos-modelos">
+            <option v-for="m in modelos" :key="m" :value="m"></option>
+          </datalist>
+
+          <button type="submit" :disabled="!esValido || guardando" :class="['mt-8 w-full font-black py-5 rounded-2xl transition-all uppercase tracking-widest shadow-xl', !esValido ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20']">
+            {{ guardando ? 'Guardando...' : 'Confirmar Reserva' }}
           </button>
-
-
         </form>
       </div>
     </div>

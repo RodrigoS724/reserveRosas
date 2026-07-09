@@ -1,29 +1,42 @@
 {
   "name": "reserverosas",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.2.10",
+  "description": "App de escritorio ReserveRosas para gestion de taller de motos.",
+  "author": "RosasUy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RodrigoS724/reserveRosas.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
-    "preview": "vite preview"
+    "build:win": "vue-tsc && vite build && electron-builder --win",
+    "build:win:publish": "vue-tsc && vite build && electron-builder --win --publish always",
+    "release:local": "powershell -ExecutionPolicy Bypass -File scripts/release-local.ps1",
+    "release:github": "powershell -ExecutionPolicy Bypass -File scripts/release-github.ps1",
+    "preview": "vite preview",
+    "api": "node ..\\reserveRosas-server\\index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.6.2",
-    "cors": "^2.8.5",
-    "express": "^5.2.1",
-    "sqlite3": "^5.1.7",
+    "better-sqlite3": "^12.6.0",
+    "dotenv": "^16.4.5",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.7.3",
+    "mysql2": "^3.11.0",
+    "nodemailer": "^7.0.13",
     "vue": "^3.4.21",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/nodemailer": "^7.0.11",
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.23",
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
-    "electron-rebuild": "^3.2.9",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.2.2",

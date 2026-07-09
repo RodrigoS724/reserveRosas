@@ -1,0 +1,97 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { app } from 'electron'
+
+const ENV_FILENAME = 'mysql.env'
+const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
+const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
+const ENV_KEYS = [
+  'MYSQL_HOST',
+  'MYSQL_PORT',
+  'MYSQL_USER',
+  'MYSQL_PASSWORD',
+  'MYSQL_DATABASE',
+  'DISABLE_LOCAL_DB',
+  'API_REMOTE_URL',
+  'API_REMOTE_TOKEN',
+  'API_REMOTE_IN_DEV'
+]
+
+export function getEnvFilePath() {
+  const userDataPath = app.getPath('userData')
+  return path.join(userDataPath, ENV_FILENAME)
+}
+
+function parseEnv(content: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  const lines = content.split(/\r?\n/)
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const idx = trimmed.indexOf('=')
+    if (idx === -1) continue
+    const key = trimmed.slice(0, idx).trim()
+    let value = trimmed.slice(idx + 1).trim()
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+    if (key) {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+function seedFromProcessEnv(): string {
+  const lines: string[] = []
+  for (const key of ENV_KEYS) {
+    const value = process.env[key]
+    if (value !== undefined && value !== '') {
+      lines.push(`${key}=${value}`)
+    }
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_URL='))) {
+    lines.push(`API_REMOTE_URL=${EMBEDDED_REMOTE_URL}`)
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_TOKEN='))) {
+    lines.push(`API_REMOTE_TOKEN=${EMBEDDED_REMOTE_TOKEN}`)
+  }
+  if (!lines.some((line) => line.startsWith('API_REMOTE_IN_DEV='))) {
+    lines.push('API_REMOTE_IN_DEV=1')
+  }
+  return lines.join('\n')
+}
+
+export function loadUserEnv() {
+  const envPath = getEnvFilePath()
+  if (!fs.existsSync(envPath)) {
+    const seeded = seedFromProcessEnv()
+    if (seeded) {
+      writeUserEnvText(seeded)
+    } else {
+      return
+    }
+  }
+  const content = fs.readFileSync(envPath, 'utf-8')
+  const parsed = parseEnv(content)
+  for (const [key, value] of Object.entries(parsed)) {
+    process.env[key] = value
+  }
+}
+
+export function readUserEnvText(): string {
+  const envPath = getEnvFilePath()
+  if (!fs.existsSync(envPath)) {
+    return ''
+  }
+  return fs.readFileSync(envPath, 'utf-8')
+}
+
+export function writeUserEnvText(text: string) {
+  const envPath = getEnvFilePath()
+  const dir = path.dirname(envPath)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  fs.writeFileSync(envPath, text, 'utf-8')
+}

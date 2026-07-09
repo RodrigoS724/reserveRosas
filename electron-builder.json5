@@ -1,15 +1,23 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.rosas.reserverosas",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "App RosasUy",
   "directories": {
     "output": "release/${version}"
   },
   "files": [
     "dist",
     "dist-electron"
+  ],
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "RodrigoS724",
+      "repo": "reserveRosas",
+      "releaseType": "release"
+    }
   ],
   "mac": {
     "target": [
@@ -19,14 +27,9 @@
   },
   "win": {
     "target": [
-      {
-        "target": "nsis",
-        "arch": [
-          "x64"
-        ]
-      }
+      "nsis"
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "artifactName": "App-RosasUy-Setup-${version}.${ext}"
   },
   "nsis": {
     "oneClick": false,

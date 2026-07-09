@@ -1,18 +1,58 @@
-# Vue 3 + TypeScript + Vite
+# ReserveRosas (Desktop App)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Aplicacion Electron + Vue para gestion de reservas y operativa interna.
 
-## Recommended IDE Setup
+## Scripts utiles
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+- `npm run dev`: entorno de desarrollo.
+- `npm run build`: build completo de app.
+- `npm run build:win`: build instalador Windows.
+- `npm run build:win:publish`: build y publicacion en GitHub Releases.
+- `npm run release:github`: bump de version + push de tag.
+- `npm run api`: arranca backend separado en `..\\reserveRosas-server`.
 
-## Type Support For `.vue` Imports in TS
+## Actualizaciones automaticas (GitHub)
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+La app incluye auto-update con `electron-updater`.
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+Requisitos:
 
-1. Disable the built-in TypeScript Extension
-   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+1. `electron-builder.json5` con `publish.provider = github`.
+2. Publicar releases (assets NSIS + `latest.yml`) desde CI o local.
+3. Repositorio GitHub accesible para los clientes de la app.
+4. Workflow de release publicando assets en cada tag `v*`.
+
+Comportamiento:
+
+- En app empaquetada (`app.isPackaged = true`), se busca update al iniciar.
+- Se vuelve a verificar cada 30 minutos (configurable).
+- Si descarga una nueva version, muestra dialogo para reiniciar e instalar.
+
+Variables opcionales:
+
+- `AUTO_UPDATE_ENABLED=0` para desactivar.
+- `AUTO_UPDATE_ALLOW_PRERELEASE=1` para prereleases.
+- `AUTO_UPDATE_INTERVAL_MS=1800000` para intervalo personalizado.
+
+## Release Desktop (GitHub)
+
+Pasos recomendados:
+
+1. Subir cambios a `main`.
+2. Ejecutar localmente `npm run release:github -- patch` (o `minor` / `major`).
+3. Ese script crea commit de version, crea tag `v*` y hace push.
+4. El workflow `.github/workflows/release.yml` se dispara con el tag.
+5. Confirmar en el release de GitHub que existan:
+	- `App-RosasUy-Setup-<version>.exe`
+	- `latest.yml`
+	- `*.blockmap`
+6. En clientes instalados, electron-updater detecta la nueva version automaticamente.
+
+## Estructura separada de repositorios
+
+Este repo queda solo para la app desktop.
+
+- Backend Node: `..\\reserveRosas-server`
+- Web publica (PHP): `..\\reserveRosas-web`
+
+Si no existen esas carpetas hermanas, el script `npm run api` fallara hasta crearlas/moverlas.
