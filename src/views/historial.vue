@@ -11,6 +11,7 @@ const puedeVer = hasPermission(session, 'historial')
  * ========================= */
 const reservas = ref<any[]>([])
 const filtroTexto = ref('')
+const filtroVehiculo = ref('')
 const fechaDesde = ref('')
 const fechaHasta = ref('')
 const estadoFiltro = ref('TODOS')
@@ -46,6 +47,16 @@ const reservasFiltradas = computed(() => {
       const nombre = r.nombre.toLowerCase() || ''
       const cedula = r.cedula.toLowerCase() || ''
       if (!nombre.includes(search) && !cedula.includes(search)) {
+        return false
+      }
+    }
+
+    if (filtroVehiculo.value) {
+      const search = filtroVehiculo.value.toLowerCase()
+      const matricula = (r.matricula || '').toLowerCase()
+      const marca = (r.marca || '').toLowerCase()
+      const modelo = (r.modelo || '').toLowerCase()
+      if (!matricula.includes(search) && !marca.includes(search) && !modelo.includes(search)) {
         return false
       }
     }
@@ -124,6 +135,12 @@ const abrirModalNotas = (reserva: any) => {
   notasActuales.value = reserva.notas || ''
   modoEdicion.value = false
   mostrarModalNotas.value = true
+}
+
+const abrirCliente = (reserva: any) => {
+  const cedula = String(reserva?.cedula || '').replace(/\D/g, '')
+  if (!cedula) return
+  window.location.hash = `#/clientes?cedula=${encodeURIComponent(cedula)}`
 }
 
 const guardarNotas = async () => {
@@ -282,6 +299,8 @@ const getBadgeStyles = (estado: string) => {
     <div class="bg-white dark:bg-[#1e293b] p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-2xl md:rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col md:flex-row items-center gap-3 md:gap-4 shadow-sm">
       <input v-model="filtroTexto" type="text" placeholder="Buscar por nombre o CI..." 
              class="flex-1 bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl md:rounded-2xl py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
+          <input v-model="filtroVehiculo" type="text" placeholder="Buscar por matrícula o modelo..." 
+            class="flex-1 bg-gray-50 dark:bg-[#0f172a] border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl md:rounded-2xl py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
       
       <div class="flex items-center gap-3 md:gap-4 px-2 md:px-4 border-l border-gray-100 dark:border-gray-800">
         <input v-model="fechaDesde" type="date" class="bg-transparent text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-300 outline-none" />
@@ -359,6 +378,9 @@ const getBadgeStyles = (estado: string) => {
                 <button @click="abrirModalNotas(r)" class="bg-cyan-600 hover:bg-cyan-700 text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-lg sm:rounded-xl md:rounded-2xl text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-cyan-600/20">
                    Ver Notas
                 </button>
+                 <button @click="abrirCliente(r)" class="ml-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-lg sm:rounded-xl md:rounded-2xl text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-fuchsia-600/20">
+                   Cliente
+                 </button>
               </td>
             </tr>
           </tbody>

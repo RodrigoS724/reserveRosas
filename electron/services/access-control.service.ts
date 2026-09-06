@@ -1,13 +1,15 @@
-export type UserRole = 'superadmin' | 'administrador' | 'ventas' | 'caja' | 'taller'
+export type UserRole = 'superadmin' | 'administrador' | 'ventas' | 'caja' | 'taller' | 'mecanico'
 
-export const APP_ROLES: UserRole[] = ['superadmin', 'administrador', 'ventas', 'caja', 'taller']
+export const APP_ROLES: UserRole[] = ['superadmin', 'administrador', 'ventas', 'caja', 'taller', 'mecanico']
 
 export const ALL_PERMISSIONS = [
   'agenda',
   'reservas',
   'registros',
   'aprontes',
+  'mecanicos',
   'historial',
+  'clientes',
   'ajustes',
   'vehiculos',
   'config',
@@ -17,10 +19,11 @@ export const ALL_PERMISSIONS = [
 
 const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
   superadmin: [...ALL_PERMISSIONS],
-  administrador: ['agenda', 'reservas', 'registros', 'aprontes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria'],
-  ventas: ['agenda', 'reservas', 'registros', 'aprontes', 'historial'],
-  caja: ['agenda', 'reservas', 'registros', 'aprontes', 'historial'],
-  taller: ['reservas', 'registros', 'aprontes', 'historial']
+  administrador: ['agenda', 'reservas', 'registros', 'aprontes', 'mecanicos', 'historial', 'clientes', 'ajustes', 'vehiculos', 'usuarios', 'auditoria'],
+  ventas: ['agenda', 'reservas', 'registros', 'aprontes', 'historial', 'clientes', 'mecanicos'],
+  caja: ['agenda', 'reservas', 'registros', 'aprontes', 'historial', 'clientes', 'mecanicos'],
+  taller: ['reservas', 'registros', 'aprontes', 'historial', 'clientes'],
+  mecanico: ['reservas', 'registros', 'aprontes', 'historial', 'clientes']
 }
 
 const ROLE_ALIASES: Record<string, UserRole> = {
@@ -32,7 +35,8 @@ const ROLE_ALIASES: Record<string, UserRole> = {
   user: 'ventas',
   ventas: 'ventas',
   caja: 'caja',
-  taller: 'taller'
+  taller: 'taller',
+  mecanico: 'mecanico'
 }
 
 export function normalizeRole(role: string | null | undefined): UserRole {
@@ -78,6 +82,10 @@ export function getActor(payload: any) {
 
 export function isTallerRole(role: UserRole | string) {
   return normalizeRole(role) === 'taller'
+}
+
+export function isMecanicoRole(role: UserRole | string) {
+  return normalizeRole(role) === 'mecanico'
 }
 
 export function canApproveApronte(role: UserRole | string) {

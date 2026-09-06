@@ -80,13 +80,20 @@ electron.contextBridge.exposeInMainWorld("api", {
   obtenerVehiculos: () => invokeSafe("vehiculos:todos"),
   obtenerHistorialVehiculo: (vehiculoId) => invokeSafe("vehiculos:historial", vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula) => invokeSafe("vehiculos:mysql-by-matricula", matricula),
+  obtenerVehiculosPorCedula: (cedula) => invokeSafe("vehiculos:por-cedula", cedula),
+  obtenerCatalogoVehiculos: () => invokeSafe("vehiculos:catalogo"),
+  actualizarVehiculoCliente: (data) => invokeSafe("vehiculos:actualizar", data),
+  // Clientes
+  obtenerClientes: (filtro) => invokeSafe("clientes:listar", filtro || ""),
+  obtenerClienteDetalle: (cliente) => invokeSafe("clientes:detalle", cliente),
+  guardarCliente: (data) => invokeSafe("clientes:guardar", data),
   // Motos catalogo
   obtenerMarcasMoto: () => invokeSafe("motos:marcas"),
   obtenerModelosMoto: (marca) => invokeSafe("motos:modelos", marca),
   // Configuración
   obtenerEnvConfig: () => invokeSafe("config:env:get"),
   guardarEnvConfig: (text) => invokeSafe("config:env:set", text),
-  probarConexionDB: () => invokeSafe("config:db:test"),
+  probarConexionDB: () => invokeSafe("config:api:test"),
   probarConexionApi: () => invokeSafe("config:api:test"),
   // Usuarios / Auth
   obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
@@ -100,5 +107,12 @@ electron.contextBridge.exposeInMainWorld("api", {
   // Auditor�a
   obtenerAuditoriaUsuarios: () => invokeSafe("auditoria:list"),
   // Registros
-  obtenerRegistroMensual: (d) => invokeSafe("registros:mensual", d)
+  obtenerRegistroMensual: (d) => invokeSafe("registros:mensual", d),
+  // Ingresos / egresos
+  listarIngresos: () => invokeSafe("ingresos:list"),
+  obtenerIngresosPorCliente: (cliente) => invokeSafe("ingresos:por-cliente", cliente),
+  obtenerIngreso: (id) => invokeSafe("ingresos:obtener", id),
+  crearIngreso: (d) => invokeSafe("ingresos:crear", d),
+  actualizarIngreso: (d) => invokeSafe("ingresos:actualizar", d),
+  registrarEgreso: (d) => invokeSafe("ingresos:egreso", d)
 });

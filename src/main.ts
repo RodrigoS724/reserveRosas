@@ -10,11 +10,14 @@ import Aprontes from './views/aprontes.vue'
 import adminHorarios from './views/adminHorarios.vue'
 import historial from './views/historial.vue'
 import vehiculos from './views/vehiculos.vue'
+import Mecanicos from './views/mecanicos.vue'
+import Ingresos from './views/ingresos.vue'
 import Config from './views/config.vue'
 import Users from './views/users.vue'
 import Auditoria from './views/auditoria.vue'
 import DailySummary from './views/dailySummary.vue'
 import Registros from './views/registros.vue'
+import Mensajes from './views/mensajes.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -26,11 +29,14 @@ const router = createRouter({
     { path: '/clientes', component: () => import('./views/client.vue') },
     { path: '/historial', component: historial },
     { path: '/vehiculos', component: vehiculos },
+    { path: '/mecanicos', component: Mecanicos },
+    { path: '/ingresos', component: Ingresos },
     { path: '/ajustes', component: adminHorarios },
     { path: '/reservas', component: Reservas },
     { path: '/aprontes', component: Aprontes },
     { path: '/resumen-diario', component: DailySummary },
     { path: '/registros', component: Registros },
+    { path: '/mensajes', component: Mensajes },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },

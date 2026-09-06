@@ -18,6 +18,7 @@ export type UserRecord = {
   role: UserRole
   permissions: string[]
   activo: number
+  es_mecanico_default: number
   created_at: string
 }
 
@@ -31,9 +32,15 @@ async function ensureUsersTableMysql() {
         password_hash TEXT NOT NULL,
         role VARCHAR(50) NOT NULL,
         permissions_json TEXT, activo TINYINT DEFAULT 1,
+        es_mecanico_default TINYINT DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`
     )
+    try {
+      await pool.query('ALTER TABLE usuarios ADD COLUMN es_mecanico_default TINYINT DEFAULT 0')
+    } catch {
+      // ignore existing column
+    }
     return true
   })
 }
@@ -70,20 +77,23 @@ async function ensureUserMysql(data: {
   role: UserRole
   permissions: string[]
   activo: number
+  esMecanicoDefault?: number
 }) {
   await ensureUsersTableMysql()
   const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions))
   const activo = data.activo ?? 1
+  const esMecanicoDefault = data.role === 'mecanico' ? Number(data.esMecanicoDefault || 0) : 0
   return tryMysql( async (pool) => {
     await pool.query(
-      `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
-       VALUES ( ?, ?, ?, ?, ?, ?)
+      `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo, es_mecanico_default)
+       VALUES ( ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          nombre = VALUES(nombre),
          password_hash = VALUES(password_hash),
          role = VALUES(role),
-         permissions_json = VALUES(permissions_json), activo = VALUES( activo)`,
-      [data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo]
+        permissions_json = VALUES(permissions_json), activo = VALUES( activo),
+        es_mecanico_default = VALUES(es_mecanico_default)`,
+      [data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo, esMecanicoDefault]
     )
     return true
   })
@@ -96,33 +106,37 @@ function ensureUserSqlite(data: {
   role: UserRole
   permissions: string[]
   activo: number
+  esMecanicoDefault?: number
 }) {
   const db = initDatabase()
   const permissionsJson = JSON.stringify(normalizePermissions(data.role, data.permissions))
   const activo = data.activo ?? 1
+  const esMecanicoDefault = data.role === 'mecanico' ? Number(data.esMecanicoDefault || 0) : 0
   db.prepare(
-    `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
-     VALUES ( ?, ?, ?, ?, ?, ?)
+    `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo, es_mecanico_default)
+     VALUES ( ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(username) DO UPDATE SET
        nombre = excluded.nombre,
        password_hash = excluded.password_hash,
        role = excluded.role,
-       permissions_json = excluded.permissions_json, activo = excluded.activo`
-  ).run(data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo)
+       permissions_json = excluded.permissions_json, activo = excluded.activo,
+       es_mecanico_default = excluded.es_mecanico_default`
+  ).run(data.nombre, data.username, data.passwordHash, data.role, permissionsJson, activo, esMecanicoDefault)
 }
 
 function syncUsersToSqlite(rows: any[]) {
   if (isLocalDbDisabled()) return
   const db = initDatabase()
   const upsert = db.prepare(
-    `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO usuarios (nombre, username, password_hash, role, permissions_json, activo, es_mecanico_default)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(username) DO UPDATE SET
        nombre = excluded.nombre,
        password_hash = excluded.password_hash,
        role = excluded.role,
        permissions_json = excluded.permissions_json,
-       activo = excluded.activo`
+       activo = excluded.activo,
+       es_mecanico_default = excluded.es_mecanico_default`
   )
   const tx = db.transaction((users: any[]) => {
     for (const row of users) {
@@ -132,7 +146,8 @@ function syncUsersToSqlite(rows: any[]) {
         row.password_hash,
         normalizeRole(row.role),
         row.permissions_json ?? JSON.stringify(getDefaultPermissions(normalizeRole(row.role))),
-        Number(row.activo) || 0
+        Number(row.activo) || 0,
+        Number(row.es_mecanico_default) || 0
       )
     }
   })
@@ -178,7 +193,8 @@ export async function bootstrapSuperAdmin() {
       username,
       passwordHash,
       role,
-      permissions, activo: 1
+      permissions, activo: 1,
+      esMecanicoDefault: 0
     })
   }
 
@@ -189,7 +205,8 @@ export async function bootstrapSuperAdmin() {
         username,
         passwordHash,
         role,
-        permissions, activo: 1
+        permissions, activo: 1,
+        esMecanicoDefault: 0
       })
     } catch (error) {
       console.warn('[Usuarios] Error sincronizando ? sqlite:', error)
@@ -201,7 +218,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
   await ensureUsersTableMysql()
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows] = await pool.query<any[]>(
-      'SELECT id, nombre, username, password_hash, role, permissions_json, activo, created_at FROM usuarios'
+      'SELECT id, nombre, username, password_hash, role, permissions_json, activo, es_mecanico_default, created_at FROM usuarios'
     )
     return rows
   })
@@ -218,6 +235,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
       username: row.username,
       role: normalizeRole(row.role),
       permissions: parsePermissions(row.permissions_json, normalizeRole(row.role)), activo: Number(row.activo) || 0,
+      es_mecanico_default: Number(row.es_mecanico_default) || 0,
       created_at: row.created_at
     }))
   }
@@ -230,7 +248,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
 
   const db = initDatabase()
   const rows = db.prepare(
-    'SELECT id, nombre, username, role, permissions_json, activo, created_at FROM usuarios'
+    'SELECT id, nombre, username, role, permissions_json, activo, es_mecanico_default, created_at FROM usuarios'
   ).all() as any[]
   return rows.map((row) => ({
     id: Number(row.id),
@@ -238,6 +256,7 @@ export async function listarUsuarios(): Promise<UserRecord[]> {
     username: row.username,
     role: normalizeRole(row.role),
     permissions: parsePermissions(row.permissions_json, normalizeRole(row.role)), activo: Number(row.activo) || 0,
+    es_mecanico_default: Number(row.es_mecanico_default) || 0,
     created_at: row.created_at
   }))
 }
@@ -297,6 +316,12 @@ export async function validarLogin(username: string, password: string) {
   }
 }
 
+function validatePasswordStrength(password: string) {
+  if (password.length < 4) {
+    throw new Error('La contrasena debe tener al menos 4 caracteres')
+  }
+}
+
 export async function crearUsuario(data: {
   nombre: string
   username: string
@@ -304,19 +329,22 @@ export async function crearUsuario(data: {
   role: UserRole
   permissions: string[]
   activo: number
+  es_mecanico_default?: number
   actor_username: string
   actor_role: string
 }) {
   await ensureUsersTableMysql()
   const role = normalizeRole(data.role)
   const permissions = normalizePermissions(role, data.permissions)
+  validatePasswordStrength(data.password)
   const passwordHash = hashPassword(data.password)
   const mysqlResult = await ensureUserMysql({
     nombre: data.nombre,
     username: data.username,
     passwordHash,
     role,
-    permissions, activo: data.activo ?? 1
+    permissions, activo: data.activo ?? 1,
+    esMecanicoDefault: data.es_mecanico_default ?? 0
   })
 
   if (!mysqlResult.ok) {
@@ -325,7 +353,8 @@ export async function crearUsuario(data: {
       username: data.username,
       passwordHash,
       role,
-      permissions, activo: data.activo ?? 1
+      permissions, activo: data.activo ?? 1,
+      esMecanicoDefault: data.es_mecanico_default ?? 0
     })
   } else {
     try {
@@ -334,7 +363,8 @@ export async function crearUsuario(data: {
         username: data.username,
         passwordHash,
         role,
-        permissions, activo: data.activo ?? 1
+        permissions, activo: data.activo ?? 1,
+        esMecanicoDefault: data.es_mecanico_default ?? 0
       })
     } catch (error) {
       console.warn('[Usuarios] Error sincronizando ? sqlite:', error)
@@ -355,6 +385,7 @@ export async function actualizarUsuario(data: {
   role: UserRole
   permissions: string[]
   activo: number
+  es_mecanico_default?: number
   actor_username: string
   actor_role: string
 }) {
@@ -363,9 +394,9 @@ export async function actualizarUsuario(data: {
   const permissions = normalizePermissions(role, data.permissions)
   const mysqlResult = await tryMysql( async (pool) => {
     await pool.query(
-      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
+      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?, es_mecanico_default = ?
        WHERE id = ?`,
-      [data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, data.id]
+      [data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, role === 'mecanico' ? Number(data.es_mecanico_default || 0) : 0, data.id]
     )
     return true
   })
@@ -377,9 +408,9 @@ export async function actualizarUsuario(data: {
   const db = initDatabase()
   try {
     db.prepare(
-      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?
+      `UPDATE usuarios SET nombre = ?, username = ?, role = ?, permissions_json = ?, activo = ?, es_mecanico_default = ?
        WHERE id = ?`
-    ).run(data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, data.id)
+    ).run(data.nombre, data.username, role, JSON.stringify(permissions), data.activo ?? 1, role === 'mecanico' ? Number(data.es_mecanico_default || 0) : 0, data.id)
   } catch (error: any) {
     if (!mysqlResult.ok) {
       if (isUniqueUsernameError(error)) {
@@ -422,6 +453,7 @@ export async function eliminarUsuario(id: number, actor: { username: string; rol
 export async function actualizarPassword(id: number, password: string, actor: { username: string; role: string }) {
   const username = await obtenerUsernamePorId(id)
   await ensureUsersTableMysql()
+  validatePasswordStrength(password)
   const passwordHash = hashPassword(password)
   await tryMysql( async (pool) => {
     await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [passwordHash, id])

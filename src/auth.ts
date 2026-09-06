@@ -1,4 +1,4 @@
-export type SessionRole = 'superadmin' | 'administrador' | 'ventas' | 'caja' | 'taller'
+export type SessionRole = 'superadmin' | 'administrador' | 'ventas' | 'caja' | 'taller' | 'mecanico'
 
 export type SessionUser = {
   id: number
@@ -14,8 +14,10 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/agenda': 'agenda',
   '/reservas': 'reservas',
   '/aprontes': 'aprontes',
+  '/mecanicos': 'mecanicos',
   '/registros': 'registros',
   '/historial': 'historial',
+  '/clientes': 'clientes',
   '/ajustes': 'ajustes',
   '/vehiculos': 'vehiculos',
   '/config': 'config',
@@ -32,7 +34,8 @@ const ROLE_ALIASES: Record<string, SessionRole> = {
   user: 'ventas',
   ventas: 'ventas',
   caja: 'caja',
-  taller: 'taller'
+  taller: 'taller',
+  mecanico: 'mecanico'
 }
 
 const DEFAULT_ROUTES: Record<SessionUser['role'], string> = {
@@ -40,7 +43,8 @@ const DEFAULT_ROUTES: Record<SessionUser['role'], string> = {
   administrador: '/',
   ventas: '/reservas',
   caja: '/aprontes',
-  taller: '/aprontes'
+  taller: '/aprontes',
+  mecanico: '/mecanicos'
 }
 
 export function normalizeRole(role: unknown): SessionRole {
@@ -77,12 +81,14 @@ export function clearSession() {
 
 export function hasPermission(session: SessionUser | null, permission: string) {
   if (!session) return false
+  if (normalizeRole(session.role) === 'superadmin') return true
   return session.permissions.includes(permission)
 }
 
 export function canAccessRoute(session: SessionUser | null, path: string) {
   const permission = ROUTE_PERMISSIONS[path]
   if (!permission) return true
+  if (path === '/mecanicos' && isMecanicoRole(session)) return true
   return hasPermission(session, permission)
 }
 
@@ -95,17 +101,21 @@ export function isTallerRole(session: SessionUser | null) {
   return normalizeRole(session?.role) === 'taller'
 }
 
+export function isMecanicoRole(session: SessionUser | null) {
+  return normalizeRole(session?.role) === 'mecanico'
+}
+
 export function canApproveApronte(session: SessionUser | null) {
   const role = normalizeRole(session?.role)
   return role === 'superadmin' || role === 'administrador' || role === 'caja'
 }
 
 export function canEditReservaCompleta(session: SessionUser | null) {
-  return !isTallerRole(session)
+  return !isTallerRole(session) && !isMecanicoRole(session)
 }
 
 export function canEditApronteCompleto(session: SessionUser | null) {
-  return !isTallerRole(session)
+  return !isTallerRole(session) && !isMecanicoRole(session)
 }
 
 export const PermissionsLabels: Record<string, string> = {
@@ -113,7 +123,9 @@ export const PermissionsLabels: Record<string, string> = {
   reservas: 'Reservas',
   registros: 'Registros',
   aprontes: 'Aprontes',
+  mecanicos: 'Mecanicos',
   historial: 'Historial',
+  clientes: 'Clientes',
   ajustes: 'Ajustes horarios',
   vehiculos: 'Historial BD Gestor',
   config: 'Configuracion DB',

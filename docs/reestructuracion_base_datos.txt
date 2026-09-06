@@ -1,0 +1,26 @@
+Reestructuracion de la base de datos
+
+Fecha: 2026-07-30
+
+Objetivo:
+- Unificar la estructura de clientes, vehiculos, aprontes, garantias, servicios y catalogo de motos para que reservas y aprontes trabajen con relaciones reales y no solo con texto plano.
+
+Cambios realizados:
+- Se incorporo la tabla clientes con cedula unica, nombre, telefono y localidad.
+- Se extendio vehiculos con cliente_id, dt_vehiculo_cod_id, color, fecha_compra, motor y numero_motor.
+- Se agrego dt_vehiculo_cod para el catalogo de codigo y modelo de motos.
+- Se agrego vehiculos_sin_ingresar para registros externos o no formalizados.
+- Se crearon garantias y servicios con los campos definidos en la reestructuracion funcional.
+- Aprontes quedo preparado para relacionar cliente_id y vehiculo_id.
+- El flujo de reservas ahora puede reutilizar clientes y vehiculos existentes cuando se ingresa la cedula.
+
+Impacto en la web:
+- La web de turnos ahora consulta las motos registradas por cédula.
+- Si el cliente ya existe, se muestra el listado de motos y se puede reutilizar una existente.
+- Si no existe, el formulario sigue permitiendo registrar una nueva reserva manualmente.
+- El proxy PHP se amplio para exponer la consulta por cedula y el catalogo de vehiculos.
+
+Pendientes:
+- Completar CRUD de garantias y servicios en la interfaz administrativa.
+- Cargar datos reales en dt_vehiculo_cod.
+- Revisar pantallas de aprontes para usar las relaciones nuevas de forma completa.

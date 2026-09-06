@@ -69,8 +69,8 @@ const cambiarPassword = async () => {
     passwordStatusOk.value = false
     return
   }
-  if (newPassword.value.length < 8) {
-    passwordStatus.value = 'La nueva contrasena debe tener al menos 8 caracteres'
+  if (newPassword.value.length < 4) {
+    passwordStatus.value = 'La nueva contrasena debe tener al menos 4 caracteres'
     passwordStatusOk.value = false
     return
   }
@@ -154,7 +154,7 @@ onMounted(() => {
           <div class="flex items-center justify-between mb-4">
             <div>
               <h2 class="text-sm uppercase tracking-widest font-black text-gray-500 dark:text-gray-400">Seguridad</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cambio de contrasena del usuario activo.</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cambio de contrasena o PIN de 4 digitos del usuario activo.</p>
             </div>
             <span class="text-xs font-black uppercase tracking-widest text-blue-500">@{{ session?.username || 'sin-sesion' }}</span>
           </div>

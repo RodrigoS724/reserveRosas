@@ -1,16 +1,19 @@
 import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
+import { buildApronteDomain } from '../domain/apronte-domain'
 import {
   assertCanCreateApronte,
   assertCanDeleteApronte,
   canApproveApronte,
   getActor,
+  isMecanicoRole,
   isTallerRole,
   normalizeRole,
   requiresCajaApproval
 } from './access-control.service'
 
 export type ApronteInput = {
+  cedula?: string
   nombre: string
   fecha: string
   hora: string
@@ -22,14 +25,43 @@ export type ApronteInput = {
   numero_motor?: string
   factura: string
   estado?: string
+  vehiculo_id?: number | null
+  mecanico_id?: number | null
   repuestos_garantia?: string
   correo_alerta_garantia?: string
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string | null
+  matricula?: string
+  cliente?: {
+    nombre?: string
+    telefono?: string
+    localidad?: string
+  }
+  vehiculo?: {
+    matricula?: string
+    marca?: string
+    modelo?: string
+    numero_motor?: string
+  }
+  apronte?: {
+    nombre?: string
+    telefono?: string
+    localidad?: string
+    observaciones?: string
+    marca?: string
+    modelo?: string
+    numero_motor?: string
+    factura?: string
+    estado?: string
+    repuestos_garantia?: string
+    correo_alerta_garantia?: string
+    dias_alerta_garantia?: number
+    fecha_alerta_garantia?: string | null
+  }
 }
 
 function buildApronteMutationInput(anterior: any, incoming: any, actorRole: string) {
-  if (isTallerRole(actorRole)) {
+  if (isTallerRole(actorRole) || isMecanicoRole(actorRole)) {
     return {
       ...anterior,
       estado: incoming?.estado ?? anterior?.estado
@@ -81,6 +113,10 @@ function normalizarEmail(value: any) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : ''
 }
 
+function normalizarCedula(value: any) {
+  return String(value || '').replace(/\D/g, '').slice(0, 20)
+}
+
 function normalizarDiasAlerta(value: any) {
   const n = Number(value)
   if (!Number.isFinite(n)) return 7
@@ -96,6 +132,10 @@ function normalizarFechaOpcional(value: any) {
   return normalizarFecha(raw)
 }
 
+function buildApronteDomainPayload(data: ApronteInput) {
+  return buildApronteDomain(data)
+}
+
 function sqliteNowIso() {
   return new Date().toISOString().replace('T', ' ').slice(0, 19)
 }
@@ -105,6 +145,19 @@ async function ensureAprontesMysqlSchema() {
 
   const result = await tryMysql(async (pool) => {
     const alters = [
+      `CREATE TABLE IF NOT EXISTS clientes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cedula VARCHAR(50) NULL,
+        nombre VARCHAR(255) NOT NULL,
+        telefono VARCHAR(50) NULL,
+        localidad VARCHAR(100) NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `ALTER TABLE clientes ADD COLUMN cedula VARCHAR(50) NULL`,
+      `ALTER TABLE vehiculos ADD COLUMN cliente_id INT NULL`,
+      `ALTER TABLE vehiculos ADD COLUMN numero_motor VARCHAR(100) NULL`,
+      `ALTER TABLE aprontes ADD COLUMN cliente_id INT NULL`,
+      `ALTER TABLE aprontes ADD COLUMN vehiculo_id INT NULL`,
       `ALTER TABLE aprontes ADD COLUMN estado VARCHAR(60) DEFAULT 'APRONTE'`,
       `ALTER TABLE aprontes ADD COLUMN repuestos_garantia TEXT`,
       `ALTER TABLE aprontes ADD COLUMN correo_alerta_garantia VARCHAR(255)`,
@@ -236,6 +289,7 @@ function normalizarApronte(data: ApronteInput) {
   const diasAlerta = normalizarDiasAlerta(data.dias_alerta_garantia)
 
   return {
+    cedula: normalizarCedula(data.cedula),
     nombre: limpiarTexto(data.nombre, 255),
     fecha: data.fecha,
     hora: data.hora,
@@ -247,11 +301,130 @@ function normalizarApronte(data: ApronteInput) {
     numero_motor: limpiarTexto(data.numero_motor, 100),
     factura: limpiarTexto(data.factura, 100),
     estado,
+    vehiculo_id: data.vehiculo_id == null ? null : Number(data.vehiculo_id),
+      mecanico_id: data.mecanico_id == null ? null : Number(data.mecanico_id),
     repuestos_garantia: limpiarTexto(data.repuestos_garantia, 1000),
     correo_alerta_garantia: correoAlerta,
     dias_alerta_garantia: diasAlerta,
     fecha_alerta_garantia: normalizarFechaOpcional(data.fecha_alerta_garantia)
   }
+}
+
+async function upsertClienteMysql(pool: any, cliente: any) {
+  const cedula = normalizarCedula(cliente.cedula)
+  const nombre = limpiarTexto(cliente.nombre, 255)
+  const telefono = limpiarTexto(cliente.telefono, 50)
+  const localidad = limpiarTexto(cliente.localidad, 100)
+
+  if (!cedula) {
+    const [inserted]: any = await pool.execute(
+      `INSERT INTO clientes (cedula, nombre, telefono, localidad)
+       VALUES (?, ?, ?, ?)`,
+      [null, nombre, telefono, localidad]
+    )
+    return Number(inserted.insertId)
+  }
+
+  const [rows]: any = await pool.execute('SELECT id FROM clientes WHERE cedula = ? LIMIT 1', [cedula])
+  const existente = rows?.[0]?.id ? Number(rows[0].id) : null
+  if (existente) {
+    await pool.execute('UPDATE clientes SET nombre = ?, telefono = ?, localidad = ? WHERE id = ?', [nombre, telefono, localidad, existente])
+    return existente
+  }
+
+  const [inserted]: any = await pool.execute(
+    `INSERT INTO clientes (cedula, nombre, telefono, localidad)
+     VALUES (?, ?, ?, ?)`,
+    [cedula, nombre, telefono, localidad]
+  )
+  return Number(inserted.insertId)
+}
+
+function upsertClienteSqlite(db: any, cliente: any) {
+  const cedula = normalizarCedula(cliente.cedula)
+  const nombre = limpiarTexto(cliente.nombre, 255)
+  const telefono = limpiarTexto(cliente.telefono, 50)
+  const localidad = limpiarTexto(cliente.localidad, 100)
+
+  if (!cedula) {
+    const inserted = db.prepare(
+      `INSERT INTO clientes (cedula, nombre, telefono, localidad)
+       VALUES (?, ?, ?, ?)`
+    ).run(null, nombre, telefono, localidad)
+    return Number(inserted.lastInsertRowid)
+  }
+
+  const existente = db.prepare('SELECT id FROM clientes WHERE cedula = ? LIMIT 1').get(cedula) as { id?: number } | undefined
+  if (existente?.id) {
+    db.prepare('UPDATE clientes SET nombre = ?, telefono = ?, localidad = ? WHERE id = ?').run(nombre, telefono, localidad, existente.id)
+    return Number(existente.id)
+  }
+
+  const inserted = db.prepare(
+    `INSERT INTO clientes (cedula, nombre, telefono, localidad)
+     VALUES (?, ?, ?, ?)`
+  ).run(cedula, nombre, telefono, localidad)
+  return Number(inserted.lastInsertRowid)
+}
+
+async function upsertVehiculoMysql(pool: any, clienteId: number, cliente: any, vehiculo: any, vehiculoId?: number | null) {
+  const matricula = limpiarTexto(vehiculo.matricula, 20)
+  const marca = limpiarTexto(vehiculo.marca, 100)
+  const modelo = limpiarTexto(vehiculo.modelo, 100)
+  const numeroMotor = limpiarTexto(vehiculo.numeroMotor, 100)
+
+  if (vehiculoId) {
+    await pool.execute(
+      'UPDATE vehiculos SET cliente_id = ?, nombre = ?, telefono = ?, marca = ?, modelo = ?, numero_motor = ? WHERE id = ?',
+      [clienteId, cliente.nombre, cliente.telefono, marca, modelo, numeroMotor || null, vehiculoId]
+    )
+    return vehiculoId
+  }
+
+  if (matricula) {
+    const [rows]: any = await pool.execute('SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1', [matricula])
+    const existente = rows?.[0]?.id ? Number(rows[0].id) : null
+    if (existente) {
+      await pool.execute(
+        'UPDATE vehiculos SET cliente_id = ?, nombre = ?, telefono = ?, marca = ?, modelo = ?, numero_motor = ? WHERE id = ?',
+        [clienteId, cliente.nombre, cliente.telefono, marca, modelo, numeroMotor || null, existente]
+      )
+      return existente
+    }
+  }
+
+  const [inserted]: any = await pool.execute(
+    `INSERT INTO vehiculos (cliente_id, matricula, marca, modelo, nombre, telefono, numero_motor)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [clienteId, matricula || null, marca, modelo, cliente.nombre, cliente.telefono, numeroMotor || null]
+  )
+  return Number(inserted.insertId)
+}
+
+function upsertVehiculoSqlite(db: any, clienteId: number, cliente: any, vehiculo: any, vehiculoId?: number | null) {
+  const matricula = limpiarTexto(vehiculo.matricula, 20)
+  const marca = limpiarTexto(vehiculo.marca, 100)
+  const modelo = limpiarTexto(vehiculo.modelo, 100)
+  const numeroMotor = limpiarTexto(vehiculo.numeroMotor, 100)
+
+  if (vehiculoId) {
+    db.prepare('UPDATE vehiculos SET cliente_id = ?, nombre = ?, telefono = ?, marca = ?, modelo = ?, numero_motor = ? WHERE id = ?').run(clienteId, cliente.nombre, cliente.telefono, marca, modelo, numeroMotor || null, vehiculoId)
+    return vehiculoId
+  }
+
+  if (matricula) {
+    const existente = db.prepare('SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1').get(matricula) as { id?: number } | undefined
+    if (existente?.id) {
+      db.prepare('UPDATE vehiculos SET cliente_id = ?, nombre = ?, telefono = ?, marca = ?, modelo = ?, numero_motor = ? WHERE id = ?').run(clienteId, cliente.nombre, cliente.telefono, marca, modelo, numeroMotor || null, existente.id)
+      return Number(existente.id)
+    }
+  }
+
+  const inserted = db.prepare(
+    `INSERT INTO vehiculos (cliente_id, matricula, marca, modelo, nombre, telefono, numero_motor)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(clienteId, matricula || null, marca, modelo, cliente.nombre, cliente.telefono, numeroMotor || null)
+  return Number(inserted.lastInsertRowid)
 }
 
 async function validarCupoDisponibleMysql(pool: any, fecha: string, hora: string, excludeId?: number | null) {
@@ -313,13 +486,17 @@ function syncAprontesToSqlite(rows: any[]) {
     const db = initDatabase()
     const upsert = db.prepare(
       `INSERT INTO aprontes (
-        id, nombre, fecha, hora, telefono, localidad, observaciones,
+        id, cliente_id, vehiculo_id, mecanico_id, nombre, fecha, hora, telefono, localidad, observaciones,
         marca, modelo, numero_motor, factura, estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
+        created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at,
         created_at
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
+        cliente_id = excluded.cliente_id,
+        vehiculo_id = excluded.vehiculo_id,
+        mecanico_id = excluded.mecanico_id,
         nombre = excluded.nombre,
         fecha = excluded.fecha,
         hora = excluded.hora,
@@ -351,6 +528,9 @@ function syncAprontesToSqlite(rows: any[]) {
         if (!id) continue
         upsert.run(
           id,
+          row?.cliente_id == null ? null : Number(row?.cliente_id),
+          row?.vehiculo_id == null ? null : Number(row?.vehiculo_id),
+          row?.mecanico_id == null ? null : Number(row?.mecanico_id),
           row?.nombre ?? '',
           row?.fecha ?? '',
           row?.hora ?? '',
@@ -387,20 +567,28 @@ function syncAprontesToSqlite(rows: any[]) {
 async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizada: string, horaNormalizada: string, actor: { username: string; role: string }) {
   const creatorRole = normalizeRole(actor.role)
   const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
+  const { cliente, vehiculo, apronte } = buildApronteDomainPayload(dataNormalizada)
   const db = initDatabase()
   const tx = db.transaction(() => {
     validarCupoDisponibleSqlite(db, fechaNormalizada, horaNormalizada)
+    const clienteId = upsertClienteSqlite(db, cliente)
+    const mecanicoId = dataNormalizada.mecanico_id == null ? null : Number(dataNormalizada.mecanico_id)
+    const vehiculoId = upsertVehiculoSqlite(db, clienteId, cliente, vehiculo, dataNormalizada.vehiculo_id ?? null)
+
     const result = db.prepare(
       `INSERT INTO aprontes (
-        nombre, fecha, hora,
+        cliente_id, vehiculo_id, mecanico_id, nombre, fecha, hora,
         telefono, localidad, observaciones,
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at,
         created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
+      clienteId,
+      vehiculoId,
+      mecanicoId,
       dataNormalizada.nombre,
       fechaNormalizada,
       horaNormalizada,
@@ -416,7 +604,7 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       dataNormalizada.correo_alerta_garantia,
       dataNormalizada.dias_alerta_garantia,
       dataNormalizada.fecha_alerta_garantia ?? null,
-      dataNormalizada.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
+      apronte.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
       0,
       null,
       actor.username || null,
@@ -426,7 +614,7 @@ async function crearApronteSqlite(dataNormalizada: ApronteInput, fechaNormalizad
       cajaAprobado ? (actor.username || null) : null
     )
     registrarMarcaModeloSqlite(db, dataNormalizada.marca, dataNormalizada.modelo)
-    return Number(result.lastInsertRowid)
+    return { apronteId: Number(result.lastInsertRowid), clienteId, vehiculoId }
   })
   return tx()
 }
@@ -435,19 +623,27 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
   await ensureAprontesMysqlSchema()
   const creatorRole = normalizeRole(actor.role)
   const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
+  const { cliente, vehiculo, apronte } = buildApronteDomainPayload(dataNormalizada)
   const mysqlResult = await tryMysql(async (pool) => {
     await validarCupoDisponibleMysql(pool, fechaNormalizada, horaNormalizada)
+    const clienteId = await upsertClienteMysql(pool, cliente)
+    const mecanicoId = dataNormalizada.mecanico_id == null ? null : Number(dataNormalizada.mecanico_id)
+    const vehiculoId = await upsertVehiculoMysql(pool, clienteId, cliente, vehiculo, dataNormalizada.vehiculo_id ?? null)
+
     const [result]: any = await pool.execute(
       `INSERT INTO aprontes (
-        nombre, fecha, hora,
+        cliente_id, vehiculo_id, mecanico_id, nombre, fecha, hora,
         telefono, localidad, observaciones,
         marca, modelo, numero_motor, factura,
         estado, repuestos_garantia,
         correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
         garantia_espera_desde, garantia_notificada, garantia_notificada_at,
         created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
       [
+        clienteId,
+        vehiculoId,
+        mecanicoId,
         dataNormalizada.nombre,
         fechaNormalizada,
         horaNormalizada,
@@ -463,7 +659,7 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
         dataNormalizada.correo_alerta_garantia,
         dataNormalizada.dias_alerta_garantia,
         dataNormalizada.fecha_alerta_garantia ?? null,
-        dataNormalizada.estado === 'ENTREGADA ESPERA DE GARANTIA' ? new Date() : null,
+        apronte.estado === 'ENTREGADA ESPERA DE GARANTIA' ? new Date() : null,
         0,
         null,
         actor.username || null,
@@ -474,7 +670,7 @@ async function crearApronteMysql(dataNormalizada: ApronteInput, fechaNormalizada
       ]
     )
     await registrarMarcaModeloMysql(pool, dataNormalizada.marca, dataNormalizada.modelo)
-    return Number(result.insertId)
+    return { apronteId: Number(result.insertId), clienteId, vehiculoId }
   })
 
   if (!mysqlResult.ok) {
@@ -499,19 +695,25 @@ export async function crearApronte(data: ApronteInput) {
     try {
       const creatorRole = normalizeRole(actor.role)
       const cajaAprobado = requiresCajaApproval(creatorRole) ? 0 : 1
+      const { cliente, vehiculo, apronte } = buildApronteDomainPayload(normalized)
       const db = initDatabase()
+      const clienteId = upsertClienteSqlite(db, cliente)
+      const vehiculoId = upsertVehiculoSqlite(db, clienteId, cliente, vehiculo, normalized.vehiculo_id ?? null)
+
       db.prepare(
         `INSERT INTO aprontes (
-          id, nombre, fecha, hora,
+          id, cliente_id, vehiculo_id, nombre, fecha, hora,
           telefono, localidad, observaciones,
           marca, modelo, numero_motor, factura,
           estado, repuestos_garantia,
           correo_alerta_garantia, dias_alerta_garantia, fecha_alerta_garantia,
           garantia_espera_desde, garantia_notificada, garantia_notificada_at,
           created_by_username, created_by_role, caja_aprobado, caja_aprobado_at, caja_aprobado_por
-        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         mysqlId,
+        clienteId,
+        vehiculoId,
         normalized.nombre,
         fechaNormalizada,
         horaNormalizada,
@@ -527,7 +729,7 @@ export async function crearApronte(data: ApronteInput) {
         normalized.correo_alerta_garantia,
         normalized.dias_alerta_garantia,
         normalized.fecha_alerta_garantia ?? null,
-        normalized.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
+        apronte.estado === 'ENTREGADA ESPERA DE GARANTIA' ? sqliteNowIso() : null,
         0,
         null,
         actor.username || null,
@@ -540,7 +742,7 @@ export async function crearApronte(data: ApronteInput) {
     } catch (error) {
       console.warn('[Aprontes] Backup SQLite fallo en crear:', error)
     }
-    return mysqlId
+    return { apronteId: mysqlId, clienteId: null, vehiculoId: null }
   } catch (error) {
     console.warn('[Aprontes] MySQL no disponible, usando SQLite local')
     return crearApronteSqlite(normalized, fechaNormalizada, horaNormalizada, actor)
@@ -666,6 +868,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
        SET nombre = ?, fecha = ?, hora = ?,
            telefono = ?, localidad = ?, observaciones = ?,
            marca = ?, modelo = ?, numero_motor = ?, factura = ?,
+           mecanico_id = ?,
            estado = ?, repuestos_garantia = ?,
            correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
            garantia_espera_desde = CASE
@@ -705,6 +908,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         normalized.modelo,
         normalized.numero_motor,
         normalized.factura,
+        normalized.mecanico_id ?? null,
         estadoNuevo,
         normalized.repuestos_garantia,
         normalized.correo_alerta_garantia,
@@ -756,6 +960,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
          SET nombre = ?, fecha = ?, hora = ?,
              telefono = ?, localidad = ?, observaciones = ?,
              marca = ?, modelo = ?, numero_motor = ?, factura = ?,
+             mecanico_id = ?,
              estado = ?, repuestos_garantia = ?,
              correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
              garantia_espera_desde = CASE
@@ -795,6 +1000,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
         normalized.modelo,
         normalized.numero_motor,
         normalized.factura,
+          normalized.mecanico_id ?? null,
         estadoNuevo,
         normalized.repuestos_garantia,
         normalized.correo_alerta_garantia,
@@ -850,6 +1056,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
      SET nombre = ?, fecha = ?, hora = ?,
          telefono = ?, localidad = ?, observaciones = ?,
          marca = ?, modelo = ?, numero_motor = ?, factura = ?,
+         mecanico_id = ?,
          estado = ?, repuestos_garantia = ?,
          correo_alerta_garantia = ?, dias_alerta_garantia = ?, fecha_alerta_garantia = ?,
          garantia_espera_desde = CASE
@@ -889,6 +1096,7 @@ export async function actualizarApronte(id: number, data: Partial<ApronteInput>)
     normalized.modelo,
     normalized.numero_motor,
     normalized.factura,
+    normalized.mecanico_id ?? null,
     estadoNuevo,
     normalized.repuestos_garantia,
     normalized.correo_alerta_garantia,

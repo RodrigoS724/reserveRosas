@@ -59,13 +59,6 @@ function encodeIpcArgs(args: any[]) {
 export function isRemoteBackendEnabled() {
   const base = getRemoteBaseUrl()
   if (!base) return false
-
-  // En desarrollo preferimos backend local, salvo opt-in explícito.
-  const allowInDev = String(process.env.API_REMOTE_IN_DEV || '0').trim().toLowerCase()
-  if (!app.isPackaged && !['1', 'true', 'on', 'yes'].includes(allowInDev)) {
-    return false
-  }
-
   return true
 }
 

@@ -109,6 +109,16 @@ function summarizeAprontes(aprontes: any[]) {
 
 async function obtenerDesdeMysql(desde: string, hasta: string) {
   return tryMysql(async (pool) => {
+    const [aprontesColumns]: any = await pool.execute(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'aprontes'
+         AND COLUMN_NAME IN ('observaciones', 'observacion')`
+    )
+    const tieneObservaciones = Array.isArray(aprontesColumns) && aprontesColumns.some((row: any) => row.COLUMN_NAME === 'observaciones')
+    const observacionesSql = tieneObservaciones ? 'observaciones' : 'observacion AS observaciones'
+
     const [reservas] = await pool.execute(
       `SELECT id, nombre, telefono, marca, modelo, km, matricula,
               tipo_turno, particular_tipo, garantia_tipo,
@@ -121,7 +131,7 @@ async function obtenerDesdeMysql(desde: string, hasta: string) {
     )
 
     const [aprontes] = await pool.execute(
-      `SELECT id, nombre, telefono, localidad, observaciones,
+      `SELECT id, nombre, telefono, localidad, ${observacionesSql},
               marca, modelo, factura, estado, fecha, hora
        FROM aprontes
        WHERE fecha >= ? AND fecha <= ?
@@ -141,6 +151,8 @@ function obtenerDesdeSqlite(desde: string, hasta: string) {
     throw new Error('Base de datos local deshabilitada')
   }
   const db = initDatabase()
+  const hasObservaciones = db.prepare('PRAGMA table_info(aprontes)').all().some((row: any) => row.name === 'observaciones')
+  const observacionesSql = hasObservaciones ? 'observaciones' : 'observacion AS observaciones'
   const reservas = db.prepare(
     `SELECT id, nombre, telefono, marca, modelo, km, matricula,
             tipo_turno, particular_tipo, garantia_tipo,
@@ -152,7 +164,7 @@ function obtenerDesdeSqlite(desde: string, hasta: string) {
   ).all(desde, hasta)
 
   const aprontes = db.prepare(
-    `SELECT id, nombre, telefono, localidad, observaciones,
+    `SELECT id, nombre, telefono, localidad, ${observacionesSql},
             marca, modelo, factura, estado, fecha, hora
      FROM aprontes
      WHERE fecha >= ? AND fecha <= ?

@@ -6,6 +6,7 @@ import {
   assertCanEditReservaNotes,
   assertCanMoveReserva,
   getActor,
+  isMecanicoRole,
   isTallerRole
 } from './access-control.service'
 
@@ -20,6 +21,8 @@ type ReservaInput = {
   modelo: string
   km: string
   matricula: string
+  vehiculo_id?: number | null
+  mecanico_id?: number | null
   tipo_turno: string
   particular_tipo: string | null
   garantia_tipo: string | null
@@ -36,7 +39,7 @@ type ReservaSnapshot = ReservaInput & {
 }
 
 function buildReservaMutationInput(anterior: any, incoming: any, actorRole: string) {
-  if (isTallerRole(actorRole)) {
+  if (isTallerRole(actorRole) || isMecanicoRole(actorRole)) {
     return {
       ...anterior,
       estado: incoming?.estado ?? anterior?.estado
@@ -46,6 +49,168 @@ function buildReservaMutationInput(anterior: any, incoming: any, actorRole: stri
     ...anterior,
     ...incoming
   }
+}
+
+function normalizeCedula(value: any) {
+  return String(value || '').replace(/\D/g, '')
+}
+
+async function upsertClienteMysql(pool: any, data: { cedula: string; nombre: string; telefono: string }) {
+  const cedula = normalizeCedula(data.cedula)
+  if (!cedula) return null
+  const [rows]: any = await pool.execute('SELECT id FROM clientes WHERE cedula = ? LIMIT 1', [cedula])
+  const existente = rows[0]?.id
+  if (existente) {
+    await pool.execute(
+      'UPDATE clientes SET nombre = ?, telefono = ? WHERE id = ?',
+      [data.nombre, data.telefono, existente]
+    )
+    return Number(existente)
+  }
+  const [result]: any = await pool.execute(
+    'INSERT INTO clientes (cedula, nombre, telefono) VALUES (?, ?, ?)',
+    [cedula, data.nombre, data.telefono]
+  )
+  return Number(result.insertId)
+}
+
+function upsertClienteSqlite(db: any, data: { cedula: string; nombre: string; telefono: string }) {
+  const cedula = normalizeCedula(data.cedula)
+  if (!cedula) return null
+  const existente = db.prepare('SELECT id FROM clientes WHERE cedula = ? LIMIT 1').get(cedula) as { id: number } | undefined
+  if (existente?.id) {
+    db.prepare('UPDATE clientes SET nombre = ?, telefono = ? WHERE id = ?').run(data.nombre, data.telefono, existente.id)
+    return Number(existente.id)
+  }
+  const result = db.prepare('INSERT INTO clientes (cedula, nombre, telefono) VALUES (?, ?, ?)').run(cedula, data.nombre, data.telefono)
+  return Number(result.lastInsertRowid)
+}
+
+async function upsertVehiculoMysql(pool: any, data: { clienteId: number | null; matricula: string; marca: string; modelo: string; nombre: string; telefono: string; color?: string | null; fechaCompra?: string | null; motor?: string | null; dtVehiculoCodId?: number | null; numeroMotor?: string | null }) {
+  const matricula = String(data.matricula || '').trim().toUpperCase()
+  const [rows]: any = await pool.execute('SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1', [matricula])
+  const id = rows[0]?.id
+  const payload = [
+    data.clienteId,
+    data.dtVehiculoCodId ?? null,
+    matricula,
+    data.marca,
+    data.modelo,
+    data.color ?? null,
+    data.fechaCompra ?? null,
+    data.motor ?? null,
+    data.nombre,
+    data.telefono,
+    data.numeroMotor ?? null
+  ]
+
+  if (id) {
+    await pool.execute(
+      `UPDATE vehiculos
+       SET dt_vehiculo_cod_id = ?, matricula = ?, marca = ?, modelo = ?, color = ?, fecha_compra = ?, motor = ?, nombre = ?, telefono = ?, numero_motor = ?
+       WHERE id = ?`,
+      [
+        data.dtVehiculoCodId ?? null,
+        matricula,
+        data.marca,
+        data.modelo,
+        data.color ?? null,
+        data.fechaCompra ?? null,
+        data.motor ?? null,
+        data.nombre,
+        data.telefono,
+        data.numeroMotor ?? null,
+        id
+      ]
+    )
+    return Number(id)
+  }
+
+  const [result]: any = await pool.execute(
+    `INSERT INTO vehiculos (cliente_id, dt_vehiculo_cod_id, matricula, marca, modelo, color, fecha_compra, motor, nombre, telefono, numero_motor)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    payload
+  )
+  return Number(result.insertId)
+}
+
+function upsertVehiculoSqlite(db: any, data: { clienteId: number | null; matricula: string; marca: string; modelo: string; nombre: string; telefono: string; color?: string | null; fechaCompra?: string | null; motor?: string | null; dtVehiculoCodId?: number | null; numeroMotor?: string | null }) {
+  const matricula = String(data.matricula || '').trim().toUpperCase()
+  const existente = db.prepare('SELECT id FROM vehiculos WHERE matricula = ? LIMIT 1').get(matricula) as { id: number } | undefined
+  const payload = [
+    data.clienteId,
+    data.dtVehiculoCodId ?? null,
+    matricula,
+    data.marca,
+    data.modelo,
+    data.color ?? null,
+    data.fechaCompra ?? null,
+    data.motor ?? null,
+    data.nombre,
+    data.telefono,
+    data.numeroMotor ?? null
+  ]
+
+  if (existente?.id) {
+    db.prepare(
+      `UPDATE vehiculos
+       SET dt_vehiculo_cod_id = ?, matricula = ?, marca = ?, modelo = ?, color = ?, fecha_compra = ?, motor = ?, nombre = ?, telefono = ?, numero_motor = ?
+       WHERE id = ?`
+    ).run(
+      data.dtVehiculoCodId ?? null,
+      matricula,
+      data.marca,
+      data.modelo,
+      data.color ?? null,
+      data.fechaCompra ?? null,
+      data.motor ?? null,
+      data.nombre,
+      data.telefono,
+      data.numeroMotor ?? null,
+      existente.id
+    )
+    return Number(existente.id)
+  }
+
+  const result = db.prepare(
+    `INSERT INTO vehiculos (cliente_id, dt_vehiculo_cod_id, matricula, marca, modelo, color, fecha_compra, motor, nombre, telefono, numero_motor)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(...payload)
+  return Number(result.lastInsertRowid)
+}
+
+export async function obtenerVehiculosPorCedula(cedula: string) {
+  const cedulaNormalizada = normalizeCedula(cedula)
+  if (!cedulaNormalizada) return { cliente: null, vehiculos: [] }
+
+  const mysqlResult = await tryMysql(async (pool) => {
+    const [clienteRows]: any = await pool.execute('SELECT * FROM clientes WHERE cedula = ? LIMIT 1', [cedulaNormalizada])
+    const cliente = clienteRows[0] ?? null
+    const [vehiculosRows]: any = await pool.execute(
+      `SELECT v.*, c.codigo AS dt_vehiculo_codigo, c.modelo AS dt_vehiculo_modelo
+       FROM vehiculos v
+       LEFT JOIN dt_vehiculo_cod c ON c.id = v.dt_vehiculo_cod_id
+       LEFT JOIN clientes cl ON cl.id = v.cliente_id
+       WHERE cl.cedula = ?
+       ORDER BY v.matricula`,
+      [cedulaNormalizada]
+    )
+    return { cliente, vehiculos: vehiculosRows || [] }
+  })
+
+  if (mysqlResult.ok) return mysqlResult.value
+
+  const db = initDatabase()
+  const cliente = db.prepare('SELECT * FROM clientes WHERE cedula = ? LIMIT 1').get(cedulaNormalizada) ?? null
+  const vehiculos = db.prepare(
+    `SELECT v.*, c.codigo AS dt_vehiculo_codigo, c.modelo AS dt_vehiculo_modelo
+     FROM vehiculos v
+     LEFT JOIN dt_vehiculo_cod c ON c.id = v.dt_vehiculo_cod_id
+     LEFT JOIN clientes cl ON cl.id = v.cliente_id
+     WHERE cl.cedula = ?
+     ORDER BY v.matricula`
+  ).all(cedulaNormalizada)
+  return { cliente, vehiculos }
 }
 
 function normalizarCatalogoTexto(value: any) {
@@ -128,6 +293,9 @@ function normalizarReserva(data: ReservaInput): ReservaInput {
     data.particular_tipo = null
   }
 
+  data.vehiculo_id = data.vehiculo_id == null ? null : Number(data.vehiculo_id)
+  data.mecanico_id = data.mecanico_id == null ? null : Number(data.mecanico_id)
+
   return data
 }
 
@@ -205,16 +373,22 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
 
     const tx = db.transaction(() => {
       console.log('[Service] Dentro de transaction...')
+      const clienteId = upsertClienteSqlite(db, {
+        cedula: dataNormalizada.cedula,
+        nombre: dataNormalizada.nombre,
+        telefono: dataNormalizada.telefono
+      })
+      const vehiculoIdSeleccionado = dataNormalizada.vehiculo_id == null ? null : Number(dataNormalizada.vehiculo_id)
       
       const result = db.prepare(`
         INSERT INTO reservas (
           nombre, cedula, telefono,
-          marca, modelo, km, matricula,
+          marca, modelo, km, matricula, vehiculo_id, mecanico_id,
           tipo_turno, particular_tipo, garantia_tipo,
           garantia_fecha_compra, garantia_numero_service, garantia_problema,
           fecha, hora, detalles
         )
-        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         dataNormalizada.nombre,
         dataNormalizada.cedula,
@@ -223,6 +397,8 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
         dataNormalizada.modelo,
         dataNormalizada.km,
         dataNormalizada.matricula,
+        vehiculoIdSeleccionado,
+        dataNormalizada.mecanico_id == null ? null : Number(dataNormalizada.mecanico_id),
         dataNormalizada.tipo_turno,
         dataNormalizada.particular_tipo ?? null,
         dataNormalizada.garantia_tipo ?? null,
@@ -236,36 +412,16 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
 
       console.log('[Service] Reserva insertada con ID:', result.lastInsertRowid)
 
-      const vehiculoExistente = db.prepare(`
-        SELECT id FROM vehiculos WHERE matricula = ? `).get(dataNormalizada.matricula) as { id: number } | undefined
-
-      let vehiculoId = vehiculoExistente?.id
-
-      if (!vehiculoId) {
-        const vehiculoInsert = db.prepare(`
-          INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-          VALUES ( ?, ?, ?, ?, ?)
-        `).run(
-          dataNormalizada.matricula,
-          dataNormalizada.marca,
-          dataNormalizada.modelo,
-          dataNormalizada.nombre,
-          dataNormalizada.telefono
-        )
-        vehiculoId = Number(vehiculoInsert.lastInsertRowid)
-      } else {
-        db.prepare(`
-          UPDATE vehiculos
-          SET marca = ?, modelo = ?, nombre = ?, telefono = ?
-          WHERE id = ?
-        `).run(
-          dataNormalizada.marca,
-          dataNormalizada.modelo,
-          dataNormalizada.nombre,
-          dataNormalizada.telefono,
-          vehiculoId
-        )
-      }
+      const vehiculoId = vehiculoIdSeleccionado || upsertVehiculoSqlite(db, {
+        clienteId,
+        matricula: dataNormalizada.matricula,
+        marca: dataNormalizada.marca,
+        modelo: dataNormalizada.modelo,
+        nombre: dataNormalizada.nombre,
+        telefono: dataNormalizada.telefono,
+        motor: null,
+        numeroMotor: null
+      })
 
       db.prepare(`
         INSERT INTO vehiculos_historial (
@@ -308,16 +464,22 @@ async function crearReservaSqlite(dataNormalizada: ReservaInput, fechaNormalizad
 
 async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada: string) {
   const mysqlResult = await tryMysql( async (pool) => {
+    const clienteId = await upsertClienteMysql(pool, {
+      cedula: dataNormalizada.cedula,
+      nombre: dataNormalizada.nombre,
+      telefono: dataNormalizada.telefono
+    })
+    const vehiculoIdSeleccionado = dataNormalizada.vehiculo_id == null ? null : Number(dataNormalizada.vehiculo_id)
     const [result]: any = await pool.execute(
       `
         INSERT INTO reservas (
           nombre, cedula, telefono,
-          marca, modelo, km, matricula,
+          marca, modelo, km, matricula, vehiculo_id, mecanico_id,
           tipo_turno, particular_tipo, garantia_tipo,
           garantia_fecha_compra, garantia_numero_service, garantia_problema,
           fecha, hora, detalles
         )
-        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         dataNormalizada.nombre,
@@ -327,6 +489,8 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
         dataNormalizada.modelo,
         dataNormalizada.km,
         dataNormalizada.matricula,
+        vehiculoIdSeleccionado,
+        dataNormalizada.mecanico_id == null ? null : Number(dataNormalizada.mecanico_id),
         dataNormalizada.tipo_turno,
         dataNormalizada.particular_tipo ?? null,
         dataNormalizada.garantia_tipo ?? null,
@@ -350,44 +514,16 @@ async function crearReservaMysql(dataNormalizada: ReservaInput, fechaNormalizada
       [reservaId]
     )
 
-    const [vehiculosRows]: any = await pool.execute(
-      `SELECT id FROM vehiculos WHERE matricula = ?`,
-      [dataNormalizada.matricula]
-    )
-
-    let vehiculoId = vehiculosRows[0]?.id as number | undefined
-
-    if (!vehiculoId) {
-      const [vehInsert]: any = await pool.execute(
-        `
-          INSERT INTO vehiculos (matricula, marca, modelo, nombre, telefono)
-          VALUES ( ?, ?, ?, ?, ?)
-        `,
-        [
-          dataNormalizada.matricula,
-          dataNormalizada.marca,
-          dataNormalizada.modelo,
-          dataNormalizada.nombre,
-          dataNormalizada.telefono
-        ]
-      )
-      vehiculoId = Number(vehInsert.insertId)
-    } else {
-      await pool.execute(
-        `
-          UPDATE vehiculos
-          SET marca = ?, modelo = ?, nombre = ?, telefono = ?
-          WHERE id = ?
-        `,
-        [
-          dataNormalizada.marca,
-          dataNormalizada.modelo,
-          dataNormalizada.nombre,
-          dataNormalizada.telefono,
-          vehiculoId
-        ]
-      )
-    }
+    const vehiculoId = vehiculoIdSeleccionado || await upsertVehiculoMysql(pool, {
+      clienteId,
+      matricula: dataNormalizada.matricula,
+      marca: dataNormalizada.marca,
+      modelo: dataNormalizada.modelo,
+      nombre: dataNormalizada.nombre,
+      telefono: dataNormalizada.telefono,
+      motor: null,
+      numeroMotor: null
+    })
 
     await pool.execute(
       `
@@ -673,6 +809,8 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
     modelo: String(mergedIncoming?.modelo ?? ''),
     km: String(mergedIncoming?.km ?? ''),
     matricula: matriculaNormalizada,
+    vehiculo_id: mergedIncoming?.vehiculo_id == null ? null : Number(mergedIncoming?.vehiculo_id),
+    mecanico_id: mergedIncoming?.mecanico_id == null ? null : Number(mergedIncoming?.mecanico_id),
     tipo_turno: String(mergedIncoming?.tipo_turno ?? ''),
     particular_tipo: mergedIncoming?.particular_tipo ?? null,
     garantia_tipo: mergedIncoming?.garantia_tipo ?? null,
@@ -688,8 +826,8 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
 
   const mysqlResult = await tryMysql( async (pool) => {
     const [rows]: any = await pool.execute(
-      `SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
-              tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+          `SELECT nombre, cedula, telefono, marca, modelo, km, matricula, vehiculo_id, mecanico_id,
+            tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
               garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
        FROM reservas WHERE id = ?`,
       [reservaId]
@@ -705,7 +843,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
 
     await pool.execute(
       `UPDATE reservas
-       SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+       SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?, vehiculo_id = ?, mecanico_id = ?,
            tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
            garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
        WHERE id = ?`,
@@ -717,6 +855,8 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
         payload.modelo,
         payload.km,
         payload.matricula,
+        payload.vehiculo_id ?? null,
+        payload.mecanico_id ?? null,
         payload.tipo_turno,
         payload.particular_tipo ?? null,
         payload.garantia_tipo ?? null,
@@ -752,7 +892,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
       const db = initDatabase()
       const anterior = db.prepare(`
         SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
-               tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+             vehiculo_id, mecanico_id, tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
                garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
         FROM reservas
         WHERE id = ?
@@ -763,7 +903,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
       const transaction = db.transaction(() => {
         db.prepare(`
           UPDATE reservas
-          SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+          SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?, vehiculo_id = ?, mecanico_id = ?,
               tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
               garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
           WHERE id = ?
@@ -775,6 +915,8 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
           payload.modelo,
           payload.km,
           payload.matricula,
+          payload.vehiculo_id ?? null,
+          payload.mecanico_id ?? null,
           payload.tipo_turno,
           payload.particular_tipo ?? null,
           payload.garantia_tipo ?? null,
@@ -813,7 +955,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
   try {
     const anterior = db.prepare(`
       SELECT nombre, cedula, telefono, marca, modelo, km, matricula,
-             tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
+              vehiculo_id, mecanico_id, tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
              garantia_numero_service, garantia_problema, fecha, hora, estado, detalles
       FROM reservas
       WHERE id = ?
@@ -830,7 +972,7 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
     const transaction = db.transaction(() => {
       db.prepare(`
         UPDATE reservas
-        SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+        SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?, vehiculo_id = ?, mecanico_id = ?,
             tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
             garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, estado = ?, detalles = ?
         WHERE id = ?
@@ -842,6 +984,8 @@ export async function actualizarReserva(idOrPayload: number | any, reserva?: any
         payload.modelo,
         payload.km,
         payload.matricula,
+        payload.vehiculo_id ?? null,
+        payload.mecanico_id ?? null,
         payload.tipo_turno,
         payload.particular_tipo ?? null,
         payload.garantia_tipo ?? null,
@@ -893,15 +1037,15 @@ function syncReservasToSqlite(rows: any[]) {
     `)
     const insert = db.prepare(`
       INSERT INTO reservas (
-        id, nombre, cedula, telefono, marca, modelo, km, matricula,
+        id, nombre, cedula, telefono, marca, modelo, km, matricula, vehiculo_id, mecanico_id,
         tipo_turno, particular_tipo, garantia_tipo, garantia_fecha_compra,
         garantia_numero_service, garantia_problema, fecha, hora, detalles,
         estado, notas
-      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     const update = db.prepare(`
       UPDATE reservas
-      SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?,
+      SET nombre = ?, cedula = ?, telefono = ?, marca = ?, modelo = ?, km = ?, matricula = ?, vehiculo_id = ?, mecanico_id = ?,
           tipo_turno = ?, particular_tipo = ?, garantia_tipo = ?, garantia_fecha_compra = ?,
           garantia_numero_service = ?, garantia_problema = ?, fecha = ?, hora = ?, detalles = ?,
           estado = ?, notas = ?
@@ -934,6 +1078,8 @@ function syncReservasToSqlite(rows: any[]) {
           row?.modelo ?? '',
           row?.km ?? '',
           row?.matricula ?? '',
+          row?.vehiculo_id == null ? null : Number(row?.vehiculo_id),
+          row?.mecanico_id == null ? null : Number(row?.mecanico_id),
           row?.tipo_turno ?? '',
           row?.particular_tipo ?? null,
           row?.garantia_tipo ?? null,

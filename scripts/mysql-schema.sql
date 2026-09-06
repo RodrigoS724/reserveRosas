@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS horarios_aprontes (
 
 CREATE TABLE IF NOT EXISTS aprontes (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NULL,
+  vehiculo_id INT NULL,
   nombre VARCHAR(255) NOT NULL,
   fecha DATE NOT NULL,
   hora VARCHAR(10) NOT NULL,
@@ -65,6 +67,15 @@ CREATE TABLE IF NOT EXISTS aprontes (
   INDEX idx_aprontes_fecha_hora (fecha, hora)
 );
 
+CREATE TABLE IF NOT EXISTS clientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cedula VARCHAR(50) UNIQUE,
+  nombre VARCHAR(255) NOT NULL,
+  telefono VARCHAR(50),
+  localidad VARCHAR(100),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS historial_reservas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   reserva_id INT NOT NULL,
@@ -78,12 +89,70 @@ CREATE TABLE IF NOT EXISTS historial_reservas (
 
 CREATE TABLE IF NOT EXISTS vehiculos (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NULL,
+  dt_vehiculo_cod_id INT NULL,
   matricula VARCHAR(50) UNIQUE,
   marca VARCHAR(100),
   modelo VARCHAR(100),
+  color VARCHAR(50),
+  fecha_compra DATE NULL,
+  motor VARCHAR(100),
   nombre VARCHAR(200),
   telefono VARCHAR(50),
+  numero_motor VARCHAR(100),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS dt_vehiculo_cod (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  codigo VARCHAR(50) UNIQUE NOT NULL,
+  modelo VARCHAR(100) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS vehiculos_sin_ingresar (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ci VARCHAR(50),
+  motor VARCHAR(100),
+  matricula VARCHAR(50),
+  modelo VARCHAR(100),
+  color VARCHAR(50),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS repuestos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS garantias (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vehiculo_id INT NULL,
+  motor VARCHAR(100),
+  estado VARCHAR(60),
+  texto TEXT,
+  repuesto_id INT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX (vehiculo_id),
+  INDEX (repuesto_id)
+);
+
+CREATE TABLE IF NOT EXISTS servicios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vehiculo_id INT NULL,
+  motor VARCHAR(100),
+  estado VARCHAR(60),
+  nro_servicio VARCHAR(50),
+  km VARCHAR(20),
+  matricula VARCHAR(50),
+  telefono VARCHAR(50),
+  texto TEXT,
+  fecha_ingreso DATE NULL,
+  fecha_egreso DATE NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX (vehiculo_id),
+  INDEX (matricula)
 );
 
 CREATE TABLE IF NOT EXISTS vehiculos_historial (

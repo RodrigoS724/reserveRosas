@@ -1,6 +1,6 @@
 import { safeHandle } from './safeHandle'
 import { loadUserEnv, readUserEnvText, writeUserEnvText } from '../config/env'
-import { resetMysqlPool, tryMysql } from '../db/mysql'
+import { resetMysqlPool } from '../db/mysql'
 import { testRemoteApiConnection } from './remote-proxy'
 
 export function registrarHandlersConfig() {
@@ -16,17 +16,7 @@ export function registrarHandlersConfig() {
   })
 
   safeHandle('config:db:test', async () => {
-    const result = await tryMysql( async (pool) => {
-      const [rows] = await pool.query('SELECT 1 as ok')
-      return rows
-    })
-    if (!result.ok) {
-      const message = result.error instanceof Error
-        ? result.error.message
-        : 'Error de conexión'
-      return { ok: false, error: message }
-    }
-    return { ok: true }
+    return await testRemoteApiConnection()
   })
 
   safeHandle('config:api:test', async () => {

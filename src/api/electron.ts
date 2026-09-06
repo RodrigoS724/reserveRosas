@@ -30,7 +30,21 @@ export const api = {
 	},
 	crearApronte: (data: any) => window.api.crearApronte(withActor(data)),
 	borrarApronte: (data: any) => window.api.borrarApronte(typeof data === 'object' ? { ...data, actor: getActor() } : { id: data, actor: getActor() }),
-	actualizarApronte: (data: any) => window.api.actualizarApronte(withActor(data))
+	actualizarApronte: (data: any) => window.api.actualizarApronte(withActor(data)),
+	obtenerVehiculosPorCedula: (cedula: string) => window.api.obtenerVehiculosPorCedula(cedula),
+	obtenerCatalogoVehiculos: () => window.api.obtenerCatalogoVehiculos(),
+	actualizarVehiculoCliente: (data: any) => window.api.actualizarVehiculoCliente(withActor(data)),
+	listarIngresos: () => window.api.listarIngresos(),
+	obtenerIngresosPorCliente: (cliente: number | string) => window.api.obtenerIngresosPorCliente(cliente),
+	obtenerIngreso: (id: number) => window.api.obtenerIngreso(id),
+	crearIngreso: (data: any) => window.api.crearIngreso(withActor(data)),
+	actualizarIngreso: (data: any) => window.api.actualizarIngreso(withActor(data)),
+	registrarEgreso: (data: any) => window.api.registrarEgreso(withActor(data)),
+
+	// Clientes
+	obtenerClientes: (filtro?: string) => window.api.obtenerClientes(filtro),
+	obtenerClienteDetalle: (cliente: number | string) => window.api.obtenerClienteDetalle(cliente),
+	guardarCliente: (data: any) => window.api.guardarCliente(data),
 }
 
 export const ipc = window.ipcRenderer

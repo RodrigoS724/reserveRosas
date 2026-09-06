@@ -86,6 +86,14 @@ contextBridge.exposeInMainWorld('api', {
   obtenerVehiculos: () => invokeSafe('vehiculos:todos'),
   obtenerHistorialVehiculo: (vehiculoId: number) => invokeSafe('vehiculos:historial', vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula: string) => invokeSafe('vehiculos:mysql-by-matricula', matricula),
+  obtenerVehiculosPorCedula: (cedula: string) => invokeSafe('vehiculos:por-cedula', cedula),
+  obtenerCatalogoVehiculos: () => invokeSafe('vehiculos:catalogo'),
+  actualizarVehiculoCliente: (data: any) => invokeSafe('vehiculos:actualizar', data),
+
+  // Clientes
+  obtenerClientes: (filtro?: string) => invokeSafe('clientes:listar', filtro || ''),
+  obtenerClienteDetalle: (cliente: number | string) => invokeSafe('clientes:detalle', cliente),
+  guardarCliente: (data: any) => invokeSafe('clientes:guardar', data),
 
   // Motos catalogo
   obtenerMarcasMoto: () => invokeSafe('motos:marcas'),
@@ -94,7 +102,7 @@ contextBridge.exposeInMainWorld('api', {
   // Configuración
   obtenerEnvConfig: () => invokeSafe('config:env:get'),
   guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),
-  probarConexionDB: () => invokeSafe('config:db:test'),
+  probarConexionDB: () => invokeSafe('config:api:test'),
   probarConexionApi: () => invokeSafe('config:api:test'),
 
   // Usuarios / Auth
@@ -110,4 +118,13 @@ contextBridge.exposeInMainWorld('api', {
 
   // Registros
   obtenerRegistroMensual: (d: any) => invokeSafe('registros:mensual', d)
+  ,
+
+  // Ingresos / egresos
+  listarIngresos: () => invokeSafe('ingresos:list'),
+  obtenerIngresosPorCliente: (cliente: number | string) => invokeSafe('ingresos:por-cliente', cliente),
+  obtenerIngreso: (id: number) => invokeSafe('ingresos:obtener', id),
+  crearIngreso: (d: any) => invokeSafe('ingresos:crear', d),
+  actualizarIngreso: (d: any) => invokeSafe('ingresos:actualizar', d),
+  registrarEgreso: (d: any) => invokeSafe('ingresos:egreso', d)
 })

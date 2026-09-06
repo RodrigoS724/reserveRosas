@@ -89,6 +89,7 @@ declare global {
        * APRONTES
        * ========================= */
       crearApronte: (data: {
+        cedula?: string
         nombre: string
         fecha: string
         hora: string
@@ -100,10 +101,35 @@ declare global {
         numero_motor?: string
         factura: string
         estado?: string
+        vehiculo_id?: number | null
+        mecanico_id?: number | null
         repuestos_garantia?: string
         correo_alerta_garantia?: string
         dias_alerta_garantia?: number
         fecha_alerta_garantia?: string
+        cliente?: {
+          cedula?: string
+          nombre?: string
+          telefono?: string
+          localidad?: string
+        }
+        vehiculo?: {
+          matricula?: string
+          marca?: string
+          modelo?: string
+          numero_motor?: string
+        }
+        apronte?: {
+          observaciones?: string
+          factura?: string
+          estado?: string
+          numero_motor?: string
+          mecanico_id?: number | null
+          repuestos_garantia?: string
+          correo_alerta_garantia?: string
+          dias_alerta_garantia?: number
+          fecha_alerta_garantia?: string
+        }
       }) => Promise<number>
 
       obtenerApronte: (id: number) => Promise<any>
@@ -123,6 +149,7 @@ declare global {
         numero_motor?: string
         factura: string
         estado?: string
+        mecanico_id?: number | null
         repuestos_garantia?: string
         correo_alerta_garantia?: string
         dias_alerta_garantia?: number
@@ -228,6 +255,38 @@ declare global {
       borrarHorarioPermanente: (id: number) => Promise<void>
 
       /* =========================
+       * CLIENTES
+       * ========================= */
+      obtenerClientes: (filtro?: string) => Promise<{
+        id: number
+        cedula: string
+        nombre: string
+        telefono: string | null
+        localidad: string | null
+        created_at: string
+        total_vehiculos: number
+        total_reservas: number
+        total_aprontes: number
+        ultima_reserva_fecha: string | null
+        ultimo_apronte_fecha: string | null
+      }[]>
+
+      obtenerClienteDetalle: (cliente: number | string) => Promise<{
+        cliente: any | null
+        vehiculos: any[]
+        reservas: any[]
+        aprontes: any[]
+      }>
+
+      guardarCliente: (data: {
+        id?: number | null
+        cedula: string
+        nombre: string
+        telefono?: string | null
+        localidad?: string | null
+      }) => Promise<{ id: number }>
+
+      /* =========================
        * HORARIOS APRONTES
        * ========================= */
       obtenerHorariosAprontesBase: () => Promise<{
@@ -287,6 +346,40 @@ declare global {
         ultimo_tipo_turno: string | null
         ultimo_particular_tipo: string | null
         ultimo_garantia_tipo: string | null
+      }[]>
+
+      obtenerVehiculosPorCedula: (cedula: string) => Promise<{
+        cliente: {
+          id: number
+          cedula: string
+          nombre: string
+          telefono: string | null
+          localidad: string | null
+          created_at: string
+        } | null
+        vehiculos: {
+          id: number
+          cliente_id: number | null
+          matricula: string | null
+          marca: string | null
+          modelo: string | null
+          color: string | null
+          fecha_compra: string | null
+          motor: string | null
+          nombre: string | null
+          telefono: string | null
+          numero_motor: string | null
+          dt_vehiculo_codigo?: string | null
+          dt_vehiculo_modelo?: string | null
+          created_at?: string
+        }[]
+      }>
+
+      obtenerCatalogoVehiculos: () => Promise<{
+        id: number
+        codigo: string
+        modelo: string
+        created_at: string
       }[]>
 
       obtenerHistorialVehiculo: (vehiculoId: number) => Promise<{
@@ -395,6 +488,7 @@ declare global {
         role: string
         permissions: string[]
         activo: number
+        es_mecanico_default: number
         created_at: string
       }[]>
       crearUsuario: (data: any) => Promise<{ ok: boolean; error: string }>

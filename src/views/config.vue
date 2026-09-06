@@ -19,14 +19,14 @@ const guardarEnv = async () => {
   statusDetail.value = ''
   try {
     await api.guardarEnvConfig(envText.value)
-    status.value = 'Configuración guardada. Forzando reconexión...'
+    status.value = 'Configuración guardada. Probando API remota...'
     statusOk.value = true
-    const result = await api.probarConexionDB()
+    const result = await api.probarConexionApi()
     if (result.ok) {
-      status.value = 'Conexión exitosa a MySQL.'
+      status.value = 'Conexión exitosa a API remota.'
       statusOk.value = true
     } else {
-      status.value = 'No se pudo conectar a MySQL.'
+      status.value = 'No se pudo conectar a la API remota.'
       statusOk.value = false
       statusDetail.value = result.error || ''
     }
@@ -40,27 +40,6 @@ const guardarEnv = async () => {
 }
 
 const probarConexion = async () => {
-  status.value = 'Probando conexión a MySQL...'
-  statusOk.value = true
-  statusDetail.value = ''
-  try {
-    const result = await api.probarConexionDB()
-    if (result.ok) {
-      status.value = 'Conexión exitosa a MySQL.'
-      statusOk.value = true
-    } else {
-      status.value = result.error || 'No se pudo conectar.'
-      statusOk.value = false
-      statusDetail.value = result.error || ''
-    }
-  } catch (error: any) {
-    status.value = error.message || 'Error al probar conexión'
-    statusOk.value = false
-    statusDetail.value = error.stack || ''
-  }
-}
-
-const probarApiRemota = async () => {
   status.value = 'Probando API remota...'
   statusOk.value = true
   statusDetail.value = ''
@@ -70,12 +49,12 @@ const probarApiRemota = async () => {
       status.value = 'Conexión exitosa a API remota.'
       statusOk.value = true
     } else {
-      status.value = result.error || 'No se pudo conectar a la API remota.'
+      status.value = result.error || 'No se pudo conectar.'
       statusOk.value = false
       statusDetail.value = result.error || ''
     }
   } catch (error: any) {
-    status.value = error.message || 'Error al probar API remota'
+    status.value = error.message || 'Error al probar conexión'
     statusOk.value = false
     statusDetail.value = error.stack || ''
   }
@@ -91,7 +70,7 @@ onMounted(() => {
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">CONFIGURACIÓN</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Pegá el contenido completo del archivo `.env`.</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Configuración de la API remota y su token de acceso.</p>
       </div>
       <button
         @click="cargarEnv"
@@ -106,7 +85,7 @@ onMounted(() => {
         <textarea
           v-model="envText"
           class="w-full h-full p-4 bg-transparent text-gray-800 dark:text-gray-100 font-mono text-xs outline-none resize-none"
-          placeholder="MYSQL_HOST=...\nMYSQL_PORT=3306\nMYSQL_USER=...\nMYSQL_PASSWORD=...\nMYSQL_DATABASE=...\n\nAPI_REMOTE_URL=https://rosas.uy/api-server\nAPI_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4"
+          placeholder="API_REMOTE_URL=https://rosas.uy/api-server\nAPI_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4\nAPI_REMOTE_IN_DEV=1"
         ></textarea>
       </div>
 
@@ -117,13 +96,7 @@ onMounted(() => {
             @click="probarConexion"
             class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
           >
-            Probar MySQL
-          </button>
-          <button
-            @click="probarApiRemota"
-            class="px-5 py-3 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-black uppercase tracking-widest text-xs shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-          >
-            Probar API Remota
+            Probar API
           </button>
           <button
             @click="guardarEnv"

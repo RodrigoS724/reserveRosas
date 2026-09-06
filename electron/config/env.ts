@@ -6,12 +6,6 @@ const ENV_FILENAME = 'mysql.env'
 const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
 const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 const ENV_KEYS = [
-  'MYSQL_HOST',
-  'MYSQL_PORT',
-  'MYSQL_USER',
-  'MYSQL_PASSWORD',
-  'MYSQL_DATABASE',
-  'DISABLE_LOCAL_DB',
   'API_REMOTE_URL',
   'API_REMOTE_TOKEN',
   'API_REMOTE_IN_DEV'

@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
 import { api, ipc } from './api'
+import { fetchInboxSnapshot } from './api/chat'
 
 const logoPrincipalUrl = new URL('./assets/Logo_principal.png', import.meta.url).href
 
@@ -19,7 +20,10 @@ const loginError = ref('')
 const cargandoLogin = ref(false)
 const notifications = ref([])
 const sidebarCollapsed = ref(false)
+const chatUnreadCount = ref(0)
+const chatLastSeen = ref({})
 let notificationSeq = 0
+let chatPollingTimer = null
 
 const setSidebarCollapsed = (value) => {
   sidebarCollapsed.value = value
@@ -133,6 +137,67 @@ const pushNotification = (message, variant = 'info') => {
   }, 6000)
 }
 
+const formatConversationName = (conversation) => {
+  if (!conversation) return 'Conversación'
+  if (conversation.kind === 'group') return conversation.title || 'Grupo'
+  const other = Array.isArray(conversation.members)
+    ? conversation.members.find((member) => member.username !== session.value?.username)
+    : null
+  return other?.display_name || other?.username || conversation.title || 'Chat directo'
+}
+
+const stopChatPolling = () => {
+  if (chatPollingTimer) {
+    clearInterval(chatPollingTimer)
+    chatPollingTimer = null
+  }
+}
+
+const syncChatNotifications = async (initial = false) => {
+  if (!session.value?.username) {
+    chatUnreadCount.value = 0
+    chatLastSeen.value = {}
+    return
+  }
+
+  try {
+    const snapshot = await fetchInboxSnapshot(session.value.username)
+    const nextSeen = {}
+    let unread = 0
+
+    for (const conversation of snapshot) {
+      const latest = conversation.latestMessage || null
+      if (!latest) continue
+      nextSeen[conversation.id] = latest.id
+
+      const currentMember = Array.isArray(conversation.members)
+        ? conversation.members.find((member) => member.username === session.value?.username)
+        : null
+      const lastRead = Number(currentMember?.last_read_message_id || 0)
+      if (latest.id > lastRead) {
+        unread++
+      }
+
+      const previousLatest = chatLastSeen.value[conversation.id]
+      if (!initial && previousLatest && latest.id > previousLatest && latest.sender_username !== session.value.username) {
+        pushNotification(`Nuevo mensaje en ${formatConversationName(conversation)}`, 'info')
+      }
+    }
+
+    chatUnreadCount.value = unread
+    chatLastSeen.value = nextSeen
+  } catch {}
+}
+
+const startChatPolling = () => {
+  stopChatPolling()
+  if (!session.value?.username) return
+  syncChatNotifications(true)
+  chatPollingTimer = window.setInterval(() => {
+    syncChatNotifications(false)
+  }, 12000)
+}
+
 onMounted(() => {
   loadSettings()
   loadSidebarPreference()
@@ -196,6 +261,16 @@ onMounted(() => {
     window.removeEventListener('ui:notify', onUiNotify)
     window.removeEventListener('rr:settings', onSettingsEvent)
   })
+})
+
+watch(session, (value) => {
+  if (value?.username) {
+    startChatPolling()
+    return
+  }
+  stopChatPolling()
+  chatUnreadCount.value = 0
+  chatLastSeen.value = {}
 })
 </script>
 
@@ -279,6 +354,18 @@ onMounted(() => {
           </div>
         </router-link>
 
+        <router-link v-if="puede('mecanicos') || session?.role === 'mecanico'" to="/mecanicos" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-blue-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v2m4-4h8m-8 0V3m8 2h2a2 2 0 012 2v2M5 9v8a2 2 0 002 2h2m10-10h2m-2 0v8a2 2 0 01-2 2h-2m0 0v-2m0 2H9m0 0v2m0-2H7"/></svg>
+            <span>Mecanicos</span>
+          </div>
+        </router-link>
+
         <router-link v-if="puede('ajustes')" to="/ajustes" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
@@ -307,6 +394,18 @@ onMounted(() => {
             <span>Registros</span>
           </div>
         </router-link>
+        <router-link v-if="session" to="/mensajes" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive
+              ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.767 9.767 0 01-4-.81L3 20l1.26-3.8A7.962 7.962 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span>Mensajes</span>
+            <span v-if="chatUnreadCount > 0" class="ml-auto inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{{ chatUnreadCount }}</span>
+          </div>
+        </router-link>
         <router-link v-if="puede('historial')" to="/historial" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
@@ -328,6 +427,30 @@ onMounted(() => {
           ]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
             <span>Historial BD Gestor</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="puede('registros')" to="/ingresos" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-emerald-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 10v2m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
+            <span>Ingresos</span>
+          </div>
+        </router-link>
+
+        <router-link v-if="puede('clientes')" to="/clientes" v-slot="{ isActive }">
+          <div :class="[
+            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+            isActive 
+              ? 'bg-fuchsia-600 text-white shadow-lg shadow-fuchsia-600/30' 
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-fuchsia-600'
+          ]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1m-4 6H2v-2a4 4 0 014-4h7m0 0a4 4 0 100-8 4 4 0 000 8zm6-8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+            <span>Clientes</span>
           </div>
         </router-link>
 

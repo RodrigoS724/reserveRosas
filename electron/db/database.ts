@@ -89,6 +89,8 @@ export function initDatabase() {
       modelo TEXT,
       km TEXT,
       matricula TEXT,
+      vehiculo_id INTEGER,
+      mecanico_id INTEGER,
       tipo_turno TEXT,
       particular_tipo TEXT,
       garantia_tipo TEXT,
@@ -131,6 +133,9 @@ export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS aprontes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_id INTEGER,
+      vehiculo_id INTEGER,
+      mecanico_id INTEGER,
       nombre TEXT NOT NULL,
       fecha TEXT NOT NULL,
       hora TEXT NOT NULL,
@@ -159,6 +164,39 @@ export function initDatabase() {
   `)
 
   db.exec(`CREATE INDEX IF NOT EXISTS idx_aprontes_fecha_hora ON aprontes (fecha, hora)`)
+
+  // ===============================
+  // INGRESOS / EGRESOS
+  // ===============================
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ingresos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_id INTEGER NOT NULL,
+      reserva_id INTEGER,
+      vehiculo_id INTEGER,
+      vehiculo_marca TEXT,
+      vehiculo_modelo TEXT,
+      vehiculo_color TEXT,
+      vehiculo_matricula TEXT,
+      vehiculo_motor TEXT,
+      fecha_actual TEXT NOT NULL DEFAULT (datetime('now')),
+      fecha_salida TEXT,
+      fecha_egreso TEXT,
+      monto REAL NOT NULL DEFAULT 0,
+      trabajo_realizado TEXT,
+      numero_servicios TEXT,
+      comentarios TEXT,
+      observaciones TEXT,
+      checklist_ingreso_json TEXT,
+      checklist_egreso_json TEXT,
+      trabajos_json TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_ingresos_cliente ON ingresos (cliente_id)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_ingresos_reserva ON ingresos (reserva_id)`)
 
   // ===============================
   // BLOQUEOS PUNTUALES
@@ -192,14 +230,104 @@ export function initDatabase() {
   // VEHICULOS
   // ===============================
   db.exec(`
+    CREATE TABLE IF NOT EXISTS clientes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cedula TEXT UNIQUE,
+      nombre TEXT NOT NULL,
+      telefono TEXT,
+      localidad TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  // ===============================
+  // VEHICULOS
+  // ===============================
+  db.exec(`
     CREATE TABLE IF NOT EXISTS vehiculos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cliente_id INTEGER,
+      dt_vehiculo_cod_id INTEGER,
       matricula TEXT UNIQUE,
       marca TEXT,
       modelo TEXT,
+      color TEXT,
+      fecha_compra TEXT,
+      motor TEXT,
       nombre TEXT,
       telefono TEXT,
+      numero_motor TEXT,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS dt_vehiculo_cod (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        codigo TEXT UNIQUE NOT NULL,
+        modelo TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+    `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS vehiculos_sin_ingresar (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ci TEXT,
+      motor TEXT,
+      matricula TEXT,
+      modelo TEXT,
+      color TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS dt_vehiculo_cod (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      codigo TEXT UNIQUE NOT NULL,
+      modelo TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS repuestos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS garantias (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehiculo_id INTEGER,
+      motor TEXT,
+      estado TEXT,
+      texto TEXT,
+      repuesto_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id),
+      FOREIGN KEY (repuesto_id) REFERENCES repuestos(id)
+    );
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS servicios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      vehiculo_id INTEGER,
+      motor TEXT,
+      estado TEXT,
+      nro_servicio TEXT,
+      km TEXT,
+      matricula TEXT,
+      telefono TEXT,
+      texto TEXT,
+      fecha_ingreso TEXT,
+      fecha_egreso TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id)
     );
   `)
 
@@ -227,9 +355,16 @@ export function initDatabase() {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL,
       permissions_json TEXT, activo INTEGER DEFAULT 1,
+      es_mecanico_default INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
   `)
+
+  try {
+    db.exec(`ALTER TABLE usuarios ADD COLUMN es_mecanico_default INTEGER DEFAULT 0`)
+  } catch {
+    // ignore existing column
+  }
 
   // ===============================
   // AUDITORIA DE USUARIOS
@@ -321,6 +456,32 @@ export function initDatabase() {
   }
 
   try {
+    db.exec(`ALTER TABLE reservas ADD COLUMN vehiculo_id INTEGER`)
+    console.log('âœ… [DB] Columna "vehiculo_id" agregada a reservas')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log('â„¹ï¸ [DB] Columna "vehiculo_id" ya existe en reservas')
+    } else if (err.message.includes('no such table')) {
+      console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE reservas ADD COLUMN mecanico_id INTEGER`)
+    console.log('âœ… [DB] Columna "mecanico_id" agregada a reservas')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log('â„¹ï¸ [DB] Columna "mecanico_id" ya existe en reservas')
+    } else if (err.message.includes('no such table')) {
+      console.log('â„¹ï¸ [DB] Tabla reservas no existe (serÃ¡ creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn('âš ï¸ [DB] Error durante migraciÃ³n:', err.message)
+    }
+  }
+
+  try {
     db.exec(`ALTER TABLE reservas ADD COLUMN garantia_tipo TEXT`)
     console.log('âœ… [DB] Columna "garantia_tipo" agregada a reservas')
   } catch (err: any) {
@@ -382,6 +543,19 @@ export function initDatabase() {
       console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
     } else {
       console.warn(' [DB] Error durante migracion (aprontes observaciones):', err.message)
+    }
+  }
+
+  try {
+    db.exec(`ALTER TABLE aprontes ADD COLUMN mecanico_id INTEGER`)
+    console.log(' [DB] Columna "mecanico_id" agregada a aprontes')
+  } catch (err: any) {
+    if (err.message.includes('duplicate column')) {
+      console.log(' [DB] Columna "mecanico_id" ya existe en aprontes')
+    } else if (err.message.includes('no such table')) {
+      console.log(' [DB] Tabla aprontes no existe (sera creada por CREATE TABLE IF NOT EXISTS)')
+    } else {
+      console.warn(' [DB] Error durante migracion (aprontes mecanico_id):', err.message)
     }
   }
 

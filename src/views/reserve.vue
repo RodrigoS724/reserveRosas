@@ -30,6 +30,7 @@ onMounted(() => {
 })
 const session = getSession()
 const esTaller = isTallerRole(session)
+const esMecanico = session?.role === 'mecanico'
 
 const OPCIONES_ESTADO = [
   { value: 'PENDIENTE', label: 'Pendiente' },
@@ -603,11 +604,16 @@ const matrizReservasFiltrada = computed(() => {
   const resultado: Record<string, Record<string, any[]>> = {}
   const filtroCedula = busquedaCedula.value.trim()
   const filtroEstado = estadoFiltro.value
+  const sessionId = Number(session?.id || 0)
 
   for (const [fecha, porHora] of Object.entries(matrizReservas.value)) {
     resultado[fecha] = {}
     for (const [hora, reservas] of Object.entries(porHora)) {
       resultado[fecha][hora] = reservas.filter((r: any) => {
+        if (esMecanico) {
+          const asignado = Number(r?.mecanico_id || 0) === sessionId
+          if (!asignado) return false
+        }
         if (filtroCedula && !String(r?.cedula || '').includes(filtroCedula)) {
           return false
         }

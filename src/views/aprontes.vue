@@ -22,6 +22,7 @@ type Apronte = {
   correo_alerta_garantia?: string
   dias_alerta_garantia?: number
   fecha_alerta_garantia?: string
+  mecanico_id?: number | null
   created_by_username?: string
   created_by_role?: string
   caja_aprobado?: number | boolean
@@ -29,8 +30,36 @@ type Apronte = {
   created_at?: string
 }
 
+type MechanicUser = {
+  id: number
+  nombre: string
+  username: string
+  role: string
+  es_mecanico_default?: number
+}
+
+type ClienteDetalle = {
+  cliente: {
+    id: number
+    cedula: string
+    nombre: string
+    telefono: string | null
+    localidad: string | null
+  } | null
+  vehiculos: {
+    id: number
+    matricula?: string | null
+    marca?: string | null
+    modelo?: string | null
+    numero_motor?: string | null
+    nombre?: string | null
+    telefono?: string | null
+  }[]
+}
+
 const session = getSession()
 const esTaller = isTallerRole(session)
+const esMecanico = session?.role === 'mecanico'
 
 const formatLocalDate = (date: Date) => {
   const y = date.getFullYear()
@@ -61,6 +90,13 @@ const apronteActivo = ref<Apronte | null>(null)
 const modalKey = ref(0)
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
+const usuarios = ref<MechanicUser[]>([])
+const cedula = ref('')
+const clienteEncontrado = ref(false)
+const cargandoCliente = ref(false)
+const vehiculosCliente = ref<ClienteDetalle['vehiculos']>([])
+const vehiculoSeleccionadoId = ref<number | null>(null)
+const mecanicoSeleccionadoId = ref<number | null>(null)
 
 const ESTADOS_APRONTE = [
   'APRONTE',
@@ -76,6 +112,7 @@ const configAlertas = ref({
 })
 
 const newForm = ref({
+  cedula: '',
   nombre: '',
   fecha: todayIso,
   hora: '',
@@ -94,6 +131,138 @@ const newForm = ref({
   created_by_role: ''
 })
 
+const mecanicos = computed(() => usuarios.value.filter((usuario) => usuario.role === 'mecanico'))
+
+const mecanicoPorDefecto = computed(() => {
+  const marcado = mecanicos.value.find((usuario) => Number(usuario.es_mecanico_default || 0) === 1)
+  return marcado ? Number(marcado.id) : null
+})
+
+const normalizarCedula = (value: string) => value.replace(/\D/g, '')
+
+const validarCedulaUy = (value: string) => {
+  const digitsRaw = normalizarCedula(value)
+  if (digitsRaw.length < 7 || digitsRaw.length > 8) return false
+  const digits = digitsRaw.padStart(8, '0').split('').map((digit) => parseInt(digit, 10))
+  const weights = [2, 9, 8, 7, 6, 3, 4]
+  let sum = 0
+  for (let index = 0; index < 7; index++) sum += digits[index] * weights[index]
+  const check = (10 - (sum % 10)) % 10
+  return check === digits[7]
+}
+
+const formatearCedula = (value: string) => {
+  let limpio = normalizarCedula(value)
+  if (limpio.length > 8) limpio = limpio.slice(0, 8)
+  if (limpio.length > 7) return limpio.replace(/^(\d)(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  if (limpio.length > 6) return limpio.replace(/^(\d{1,2})(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
+  return limpio
+}
+
+const cargarUsuarios = async () => {
+  try {
+    const data = await api.listarUsuarios()
+    usuarios.value = Array.isArray(data) ? data : []
+    if (!mecanicoSeleccionadoId.value) {
+      mecanicoSeleccionadoId.value = mecanicoPorDefecto.value ?? mecanicos.value[0]?.id ?? null
+    }
+  } catch (error) {
+    console.warn('[Aprontes] Error cargando usuarios:', error)
+    usuarios.value = []
+  }
+}
+
+const cargarClientePorCedula = async () => {
+  const cedulaNormalizada = normalizarCedula(cedula.value)
+  if (cedulaNormalizada.length < 7) {
+    clienteEncontrado.value = false
+    vehiculosCliente.value = []
+    vehiculoSeleccionadoId.value = null
+    newForm.value.nombre = ''
+    newForm.value.telefono = ''
+    newForm.value.localidad = ''
+    return
+  }
+
+  cargandoCliente.value = true
+  try {
+    const data = (await api.obtenerClienteDetalle(cedulaNormalizada)) as ClienteDetalle
+    const cliente = data?.cliente || null
+    const vehiculos = Array.isArray(data?.vehiculos) ? data.vehiculos : []
+    clienteEncontrado.value = Boolean(cliente)
+    vehiculosCliente.value = vehiculos
+    newForm.value.cedula = cedulaNormalizada
+    if (cliente?.nombre) newForm.value.nombre = String(cliente.nombre || '')
+    if (cliente?.telefono) newForm.value.telefono = String(cliente.telefono || '')
+    if (cliente?.localidad) newForm.value.localidad = String(cliente.localidad || '')
+    if (vehiculos.length === 1 && vehiculos[0]) {
+      seleccionarVehiculoExistente(vehiculos[0])
+    } else if (vehiculoSeleccionadoId.value && !vehiculos.some((vehiculo) => Number(vehiculo.id) === Number(vehiculoSeleccionadoId.value))) {
+      vehiculoSeleccionadoId.value = null
+    }
+  } catch (error) {
+    console.warn('[Aprontes] Error cargando cliente por cedula:', error)
+    clienteEncontrado.value = false
+    vehiculosCliente.value = []
+    vehiculoSeleccionadoId.value = null
+  } finally {
+    cargandoCliente.value = false
+  }
+}
+
+const seleccionarVehiculoExistente = (vehiculo: ClienteDetalle['vehiculos'][number]) => {
+  if (!vehiculo) return
+  vehiculoSeleccionadoId.value = Number(vehiculo.id || 0) || null
+  newForm.value.marca = String(vehiculo.marca || newForm.value.marca || '')
+  newForm.value.modelo = String(vehiculo.modelo || newForm.value.modelo || '')
+  newForm.value.numero_motor = String(vehiculo.numero_motor || newForm.value.numero_motor || '')
+  if (vehiculo.matricula) {
+    newForm.value.factura = String(newForm.value.factura || '')
+  }
+}
+
+const onVehiculoChange = (value: string) => {
+  const id = value ? Number(value) : null
+  vehiculoSeleccionadoId.value = id
+  if (!id) return
+  const vehiculo = vehiculosCliente.value.find((item) => Number(item.id) === id)
+  if (!vehiculo) return
+  seleccionarVehiculoExistente(vehiculo)
+}
+
+const onVehiculoChangeEvent = (event: Event) => {
+  const target = event.target as HTMLSelectElement | null
+  onVehiculoChange(String(target?.value || ''))
+}
+
+const onMecanicoChange = (value: string) => {
+  mecanicoSeleccionadoId.value = value ? Number(value) : null
+}
+
+const onMecanicoChangeEvent = (event: Event) => {
+  const target = event.target as HTMLSelectElement | null
+  onMecanicoChange(String(target?.value || ''))
+}
+
+watch(cedula, (value) => {
+  const formatted = formatearCedula(value)
+  if (formatted !== value) cedula.value = formatted
+})
+
+watch(cedula, async () => {
+  await cargarClientePorCedula()
+})
+
+watch(() => newForm.value.marca, (marca) => {
+  cargarModelos(marca)
+})
+
+watch(mecanicoPorDefecto, (value) => {
+  if (!mecanicoSeleccionadoId.value) {
+    mecanicoSeleccionadoId.value = value ?? mecanicos.value[0]?.id ?? null
+  }
+})
+
 const cargarAprontes = async () => {
   cargando.value = true
   try {
@@ -110,7 +279,12 @@ const cargarAprontes = async () => {
 }
 
 const resetNewForm = () => {
+  cedula.value = ''
+  clienteEncontrado.value = false
+  vehiculosCliente.value = []
+  vehiculoSeleccionadoId.value = null
   newForm.value = {
+    cedula: '',
     nombre: '',
     fecha: fechaFiltro.value || todayIso,
     hora: '',
@@ -128,6 +302,7 @@ const resetNewForm = () => {
     fecha_alerta_garantia: '',
     created_by_role: ''
   }
+  mecanicoSeleccionadoId.value = mecanicoPorDefecto.value ?? mecanicos.value[0]?.id ?? null
 }
 
 const abrirModalNuevo = async () => {
@@ -211,11 +386,14 @@ const refrescarAprontes = async () => {
 }
 
 const validarNewForm = () => {
-  const required = ['nombre', 'fecha', 'hora', 'telefono', 'localidad', 'marca', 'modelo', 'factura'] as const
+  const required = ['cedula', 'nombre', 'fecha', 'hora', 'telefono', 'localidad', 'marca', 'modelo', 'factura'] as const
   for (const key of required) {
     const value = String(newForm.value[key] || '').trim()
     if (!value) {
       throw new Error(`Campo requerido: ${key}`)
+    }
+    if (key === 'cedula' && !validarCedulaUy(value)) {
+      throw new Error('Campo requerido: cedula')
     }
   }
 }
@@ -227,19 +405,36 @@ const crearApronteDesdeModal = async () => {
   }
   guardandoNuevo.value = true
   try {
+    const cedulaNormalizada = normalizarCedula(newForm.value.cedula)
+    newForm.value.cedula = cedulaNormalizada
     validarNewForm()
-    const payload = {
+    const cliente = {
+      cedula: cedulaNormalizada,
       nombre: String(newForm.value.nombre || '').trim(),
-      fecha: String(newForm.value.fecha || '').trim(),
-      hora: String(newForm.value.hora || '').trim(),
       telefono: String(newForm.value.telefono || '').trim(),
-      localidad: String(newForm.value.localidad || '').trim(),
-      observaciones: String(newForm.value.observaciones || '').trim(),
+      localidad: String(newForm.value.localidad || '').trim()
+    }
+    const vehiculo = {
       marca: String(newForm.value.marca || '').trim(),
       modelo: String(newForm.value.modelo || '').trim(),
-      numero_motor: String(newForm.value.numero_motor || '').trim(),
+      numero_motor: String(newForm.value.numero_motor || '').trim()
+    }
+    const apronte = {
+      observaciones: String(newForm.value.observaciones || '').trim(),
       factura: String(newForm.value.factura || '').trim(),
-      estado: String(newForm.value.estado || 'APRONTE').trim().toUpperCase()
+      estado: String(newForm.value.estado || 'APRONTE').trim().toUpperCase(),
+      numero_motor: vehiculo.numero_motor,
+      mecanico_id: mecanicoSeleccionadoId.value
+    }
+    const payload = {
+      ...cliente,
+      ...vehiculo,
+      ...apronte,
+      cedula: cedulaNormalizada,
+      vehiculo_id: vehiculoSeleccionadoId.value,
+      mecanico_id: mecanicoSeleccionadoId.value,
+      fecha: String(newForm.value.fecha || '').trim(),
+      hora: String(newForm.value.hora || '').trim()
     }
     await api.crearApronte(payload)
     cerrarModalNuevo()
@@ -253,11 +448,16 @@ const crearApronteDesdeModal = async () => {
 
 const aprontesFiltrados = computed(() => {
   let resultado = aprontes.value
+  const sessionId = Number(session?.id || 0)
+
+  if (esMecanico) {
+    resultado = resultado.filter((a) => Number(a?.mecanico_id || 0) === sessionId)
+  }
 
   // Aplicar búsqueda
   const q = busqueda.value.trim().toLowerCase()
   if (!q) return resultado
-  
+
   return resultado.filter((a) => {
     return [
       a.nombre,
@@ -271,16 +471,13 @@ const aprontesFiltrados = computed(() => {
   })
 })
 
-watch(() => newForm.value.marca, (marca) => {
-  cargarModelos(marca)
-})
-
 watch(fechaFiltro, () => {
   cargarAprontes()
 })
 
 onMounted(async () => {
   await cargarConfigAlertas()
+  await cargarUsuarios()
   await cargarAprontes()
   await cargarMarcas()
   await cargarModelos(newForm.value.marca)
@@ -394,21 +591,56 @@ onMounted(async () => {
         </div>
 
         <form class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" @submit.prevent="crearApronteDesdeModal">
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Nombre</label>
-            <input v-model="newForm.nombre" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+          <div class="md:col-span-2 rounded-2xl border border-cyan-200 dark:border-cyan-900 bg-cyan-50/70 dark:bg-cyan-500/10 p-4 space-y-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <div class="text-[10px] uppercase tracking-widest text-cyan-500 font-black">Cliente</div>
+                <div class="text-sm font-bold text-gray-800 dark:text-gray-100">Buscar o crear cliente antes de registrar la moto</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="cargarClientePorCedula" class="px-3 py-2 rounded-xl border border-cyan-200 dark:border-cyan-900 text-cyan-700 dark:text-cyan-100 text-[10px] font-black uppercase tracking-widest">
+                  Buscar cliente
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Cedula</label>
+                <input v-model="cedula" type="text" autocomplete="off" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+              </div>
+              <div>
+                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Nombre</label>
+                <input v-model="newForm.nombre" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+              </div>
+              <div>
+                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Telefono</label>
+                <input v-model="newForm.telefono" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+              </div>
+              <div>
+                <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Localidad</label>
+                <input v-model="newForm.localidad" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div :class="clienteEncontrado ? 'text-emerald-600 dark:text-emerald-300' : 'text-amber-600 dark:text-amber-300'" class="text-xs font-black uppercase tracking-widest">
+                {{ cargandoCliente ? 'Buscando cliente...' : (clienteEncontrado ? 'Cliente existente' : 'Nuevo cliente') }}
+              </div>
+              <div v-if="vehiculosCliente.length > 0" class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                {{ vehiculosCliente.length }} moto(s) registradas
+              </div>
+            </div>
           </div>
+
           <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Telefono</label>
-            <input v-model="newForm.telefono" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Localidad</label>
-            <input v-model="newForm.localidad" type="text" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
-          </div>
-          <div>
-            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Observaciones</label>
-            <textarea v-model="newForm.observaciones" rows="2" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100 resize-none"></textarea>
+            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Moto del cliente</label>
+            <select :value="vehiculoSeleccionadoId ?? ''" @change="onVehiculoChangeEvent" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
+              <option value="">Crear una moto nueva</option>
+              <option v-for="vehiculo in vehiculosCliente" :key="vehiculo.id" :value="vehiculo.id">
+                {{ vehiculo.matricula ? `${vehiculo.matricula} · ` : '' }}{{ vehiculo.marca || 'Moto' }} {{ vehiculo.modelo || '' }}
+              </option>
+            </select>
           </div>
           <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Marca</label>
@@ -430,6 +662,15 @@ onMounted(async () => {
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Estado</label>
             <select v-model="newForm.estado" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
               <option v-for="estado in ESTADOS_APRONTE" :key="`nuevo-${estado}`" :value="estado">{{ estado }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Mecanico asignado</label>
+            <select :value="mecanicoSeleccionadoId ?? ''" @change="onMecanicoChangeEvent" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100">
+              <option value="">Sin asignar</option>
+              <option v-for="mecanico in mecanicos" :key="mecanico.id" :value="mecanico.id">
+                {{ mecanico.nombre }}{{ Number(mecanico.es_mecanico_default || 0) === 1 ? ' · default' : '' }}
+              </option>
             </select>
           </div>
           <ApronteSchedulePicker

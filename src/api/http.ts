@@ -107,6 +107,14 @@ export const api = {
   // Registros
   obtenerRegistroMensual: (d: any) => invoke('registros:mensual', d),
 
+  // Ingresos / egresos
+  listarIngresos: () => invoke('ingresos:list'),
+  obtenerIngresosPorCliente: (cliente: number | string) => invoke('ingresos:por-cliente', cliente),
+  obtenerIngreso: (id: number) => invoke('ingresos:obtener', id),
+  crearIngreso: (d: any) => invoke('ingresos:crear', withActor(d)),
+  actualizarIngreso: (d: any) => invoke('ingresos:actualizar', withActor(d)),
+  registrarEgreso: (d: any) => invoke('ingresos:egreso', withActor(d)),
+
   // Aprontes
   crearApronte: (d: any) => invoke('aprontes:crear', withActor(d)),
   obtenerApronte: (id: number) => invoke('aprontes:obtener', id),
@@ -149,6 +157,14 @@ export const api = {
   obtenerVehiculos: () => invoke('vehiculos:todos'),
   obtenerHistorialVehiculo: (vehiculoId: number) => invoke('vehiculos:historial', vehiculoId),
   obtenerVehiculoMysqlPorMatricula: (matricula: string) => invoke('vehiculos:mysql-by-matricula', matricula),
+  obtenerVehiculosPorCedula: (cedula: string) => invoke('vehiculos:por-cedula', cedula),
+  obtenerCatalogoVehiculos: () => invoke('vehiculos:catalogo'),
+  actualizarVehiculoCliente: (data: any) => invoke('vehiculos:actualizar', withActor(data)),
+
+  // Clientes
+  obtenerClientes: (filtro?: string) => invoke('clientes:listar', filtro),
+  obtenerClienteDetalle: (cliente: number | string) => invoke('clientes:detalle', cliente),
+  guardarCliente: (data: any) => invoke('clientes:guardar', data),
 
   // Motos catalogo
   obtenerMarcasMoto: () => invoke('motos:marcas'),
@@ -157,7 +173,7 @@ export const api = {
   // Configuracion
   obtenerEnvConfig: () => invoke('config:env:get'),
   guardarEnvConfig: (text: string) => invoke('config:env:set', text),
-  probarConexionDB: () => invoke('config:db:test'),
+  probarConexionDB: () => invoke('config:api:test'),
   probarConexionApi: async () => {
     if (!BASE_URL) {
       return { ok: false, error: 'VITE_API_URL no configurada' }

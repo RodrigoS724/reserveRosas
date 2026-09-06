@@ -11,6 +11,7 @@ type UserForm = {
   role: SessionRole
   permissions: string[]
   activo: number
+  es_mecanico_default: boolean
 }
 
 const usuarios = ref<UserForm[]>([])
@@ -24,7 +25,8 @@ const roles = [
   { value: 'administrador', label: 'Administrador', desc: 'Control operativo amplio sin configuracion DB' },
   { value: 'ventas', label: 'Ventas', desc: 'Gestion comercial de reservas y aprontes' },
   { value: 'caja', label: 'Caja', desc: 'Gestion operativa y habilitacion de aprontes de ventas' },
-  { value: 'taller', label: 'Taller', desc: 'Solo lectura operativa con cambio de estados' }
+  { value: 'taller', label: 'Taller', desc: 'Solo lectura operativa con cambio de estados' },
+  { value: 'mecanico', label: 'Mecanico', desc: 'Ve solo lo asignado y trabaja su cola diaria' }
 ]
 
 const permisosCatalogo = Object.entries(PermissionsLabels).map(([key, label]) => ({
@@ -37,8 +39,9 @@ const form = ref<UserForm>({
   username: '',
   password: '',
   role: 'ventas',
-  permissions: ['agenda', 'reservas', 'aprontes', 'historial'],
-  activo: 1
+  permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial'],
+  activo: 1,
+  es_mecanico_default: false
 })
 
 const isEdit = computed(() => Boolean(form.value.id))
@@ -58,8 +61,9 @@ const resetForm = () => {
     username: '',
     password: '',
     role: 'ventas',
-    permissions: ['agenda', 'reservas', 'aprontes', 'historial'],
-    activo: 1
+    permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial'],
+    activo: 1,
+    es_mecanico_default: false
   }
   seleccion.value = null
 }
@@ -72,7 +76,8 @@ const seleccionarUsuario = (u: any) => {
     username: u.username,
     role: normalizeRole(u.role),
     permissions: Array.isArray(u.permissions) ? [...u.permissions] : [],
-    activo: u.activo ?? 1
+    activo: u.activo ?? 1,
+    es_mecanico_default: Boolean(u.es_mecanico_default)
   }
 }
 
@@ -92,13 +97,18 @@ const aplicarPermisosPorRol = () => {
     return
   }
   if (form.value.role === 'administrador') {
-    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria']
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria', 'mecanicos']
     return
   }
   if (form.value.role === 'ventas' || form.value.role === 'caja') {
-    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'historial']
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'mecanicos']
     return
   }
+  if (form.value.role === 'mecanico') {
+    form.value.permissions = []
+    return
+  }
+  form.value.es_mecanico_default = false
   form.value.permissions = ['reservas', 'aprontes', 'historial']
 }
 
@@ -120,6 +130,7 @@ const guardarUsuario = async () => {
       role: form.value.role,
       permissions: form.value.permissions,
       activo: form.value.activo,
+      es_mecanico_default: form.value.role === 'mecanico' ? Number(form.value.es_mecanico_default) : 0,
       actor_username: getSession()?.username,
       actor_role: getSession()?.role
     }
@@ -243,7 +254,7 @@ onMounted(() => {
                 <div class="text-xs text-gray-400">@{{ u.username }}</div>
               </div>
               <span class="text-[10px] uppercase tracking-widest font-black text-blue-500">
-                {{ roles.find(r => r.value === u.role)?.label || 'Nivel' }}
+                {{ roles.find(r => r.value === u.role)?.label || 'Nivel' }}{{ u.es_mecanico_default ? ' · Default' : '' }}
               </span>
             </div>
           </button>
@@ -264,7 +275,7 @@ onMounted(() => {
           </div>
           <div>
             <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Contraseña</label>
-            <input v-model="form.password" type="password" placeholder="Nueva contraseña"
+            <input v-model="form.password" type="password" placeholder="PIN de 4 digitos o contraseña"
               class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
           </div>
           <div>
@@ -274,6 +285,12 @@ onMounted(() => {
               <option :value="1">Activo</option>
               <option :value="0">Inactivo</option>
             </select>
+          </div>
+          <div v-if="form.role === 'mecanico'" class="flex items-end">
+            <label class="flex items-center gap-3 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+              <input v-model="form.es_mecanico_default" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              <span>Mecanico por defecto</span>
+            </label>
           </div>
         </div>
 

@@ -1,0 +1,15 @@
+Reestructuracion inicial de aprontes
+
+Fecha: 2026-07-30
+
+Realizado:
+- Se crearon las clases de dominio Cliente, Vehiculo y Apronte en Electron y en el backend Node.
+- Se actualizo el alta de aprontes para crear primero el cliente, luego el vehiculo y al final el apronte dentro de una misma transaccion.
+- Se agregaron campos relacionales nuevos para cliente_id y vehiculo_id en aprontes, y cliente_id y numero_motor en vehiculos.
+- Se incorporo la tabla clientes en el esquema local SQLite, en el esquema MySQL del server y en el archivo de schema inicial.
+- El formulario de aprontes ahora arma el payload separando cliente, vehiculo y apronte, manteniendo compatibilidad con los campos actuales.
+
+Pendiente para la siguiente etapa:
+- Ajustar pantallas de cliente y vehiculo para mostrar la nueva relacion.
+- Revisar si el alta debe validar numero de motor como obligatorio.
+- Completar la edicion y sincronizacion de aprontes para actualizar tambien cliente y vehiculo cuando cambie el registro.

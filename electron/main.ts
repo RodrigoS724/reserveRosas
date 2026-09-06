@@ -4,14 +4,8 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { setupIpcHandlers } from './ipc/index.ts'
-import { initDatabase, isLocalDbDisabled } from './db/database'
-import { startBackupScheduler } from './services/backup.service'
 import { loadUserEnv } from './config/env'
-import { bootstrapSuperAdmin } from './services/users.service'
 import { setSettings } from './settings'
-import { startDailySummaryScheduler } from './services/daily-summary.service'
-import { startAprontesGarantiaAlertScheduler } from './services/aprontes-garantia-alert.service'
-import { isRemoteBackendEnabled } from './ipc/remote-proxy'
 import { startAutoUpdateFlow } from './services/updater.service'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -99,26 +93,8 @@ function createWindow() {
 // UN SOLO whenReady para todo
 app.whenReady().then(async () => {
   loadUserEnv() // Cargar .env guardado por el usuario (si existe)
-  const remoteMode = isRemoteBackendEnabled()
-  const localDbDisabled = isLocalDbDisabled()
-  if (!remoteMode && !localDbDisabled) {
-    initDatabase() // Inicializamos la base de datos local
-    await bootstrapSuperAdmin()
-  } else if (localDbDisabled) {
-    console.log('[Main] DB local deshabilitada. Se omite inicialización y backups.')
-  } else {
-    console.log('[Main] Modo API remota activo. Se omite DB local y schedulers locales.')
-  }
+  console.log('[Main] Modo API remota activo. No se inicializa BD local.')
   setupIpcHandlers() // Activamos los cables
-  if (!remoteMode && !localDbDisabled) {
-    startBackupScheduler() // Backups horarios locales
-  }
-  if (!remoteMode) {
-    startDailySummaryScheduler()
-  }
-  if (!remoteMode && !localDbDisabled) {
-    startAprontesGarantiaAlertScheduler()
-  }
   createWindow()  // Creamos la ventana
   startAutoUpdateFlow(() => win)
 
