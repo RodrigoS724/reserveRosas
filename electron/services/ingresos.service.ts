@@ -330,6 +330,7 @@ export async function actualizarIngreso(input: any = {}) {
 
   const reservaId = Number(input.reserva_id ?? input.reservaId ?? 0) || null
   const fechaActual = String(input.fecha_actual ?? input.fechaActual ?? '').trim() || null
+  const fechaSalida = String(input.fecha_salida ?? input.fechaSalida ?? '').trim() || null
   const fechaEgreso = String(input.fecha_egreso ?? input.fechaEgreso ?? '').trim() || null
   const monto = normalizarMonto(input.monto)
   const trabajoRealizado = normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000) || null

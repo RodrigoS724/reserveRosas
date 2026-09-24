@@ -286,6 +286,20 @@ declare global {
         localidad?: string | null
       }) => Promise<{ id: number }>
 
+      actualizarVehiculoCliente: (data: any) => Promise<any>
+
+      listarIngresos: () => Promise<any[]>
+
+      obtenerIngresosPorCliente: (cliente: number | string) => Promise<any[]>
+
+      obtenerIngreso: (id: number) => Promise<any>
+
+      crearIngreso: (data: any) => Promise<any>
+
+      actualizarIngreso: (data: any) => Promise<any>
+
+      registrarEgreso: (data: any) => Promise<any>
+
       /* =========================
        * HORARIOS APRONTES
        * ========================= */

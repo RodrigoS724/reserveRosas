@@ -50,6 +50,8 @@ Pasos recomendados:
 
 La referencia de esta rama es `2.0.0`.
 
+Nota: `npm run build:win:publish` solo publica si existe `GH_TOKEN` en el entorno. Para releases locales sin token, usa `npm run build:win` y sube los artefactos desde GitHub Actions.
+
 ## Estructura separada de repositorios
 
 Este repo queda solo para la app desktop.

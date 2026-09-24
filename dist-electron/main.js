@@ -1,10 +1,10 @@
-import { M, R, V } from "./main-DwObJWMi.js";
+import { M as t, R as _, V as i } from "./main-C5RLEsQw.js";
 import "electron";
 import "node:fs";
 import "node:url";
 import "node:path";
 export {
-  M as MAIN_DIST,
-  R as RENDERER_DIST,
-  V as VITE_DEV_SERVER_URL
+  t as MAIN_DIST,
+  _ as RENDERER_DIST,
+  i as VITE_DEV_SERVER_URL
 };

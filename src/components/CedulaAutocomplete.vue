@@ -87,6 +87,12 @@ const seleccionar = (cliente: ClienteSugerido) => {
   mostrarLista.value = false
 }
 
+const cerrarListaConDelay = () => {
+  setTimeout(() => {
+    mostrarLista.value = false
+  }, 150)
+}
+
 watch(query, (value) => {
   limpiarTimer()
   debounceTimer = window.setTimeout(() => {
@@ -114,7 +120,7 @@ onBeforeUnmount(() => {
         :value="props.modelValue"
         @input="onInput"
         @focus="mostrarLista = true"
-        @blur="window.setTimeout(() => (mostrarLista = false), 150)"
+        @blur="cerrarListaConDelay"
         type="text"
         inputmode="numeric"
         autocomplete="off"
