@@ -187,6 +187,10 @@ const limpiarFormularioIngreso = () => {
     { cantidad: '', descripcion: '', costo: '', importe: '' },
     { cantidad: '', descripcion: '', costo: '', importe: '' }
   ]
+}
+
+const cerrarFormularioIngreso = () => {
+  limpiarFormularioIngreso()
   mostrarFormularioIngreso.value = false
 }
 
@@ -328,6 +332,26 @@ const buildTrabajoRealizado = () => {
   })
 }
 
+const sincronizarVehiculoIngreso = async () => {
+  const vehiculoId = Number(formIngreso.value.vehiculo_id || 0)
+  if (!vehiculoId) return
+  const vehiculoActual = detalle.value.vehiculos.find((vehiculo) => Number(vehiculo.id) === vehiculoId) || null
+  try {
+    await api.actualizarVehiculoCliente({
+      id: vehiculoId,
+      matricula: formIngreso.value.matricula || vehiculoActual?.matricula || '',
+      motor: formIngreso.value.numero_motor || vehiculoActual?.motor || vehiculoActual?.numero_motor || '',
+      chasis: vehiculoActual?.chasis || '',
+      color: formIngreso.value.color || vehiculoActual?.color || '',
+      marca: formIngreso.value.marca || vehiculoActual?.marca || vehiculoActual?.codigo_marca || '',
+      modelo: formIngreso.value.modelo || vehiculoActual?.modelo || vehiculoActual?.codigo_modelo || '',
+      fecha_compra: vehiculoActual?.fecha_compra || ''
+    })
+  } catch (err) {
+    console.warn('[Client] No se pudo sincronizar la moto del ingreso:', err)
+  }
+}
+
 const crearSnapshotImpresion = () => ({
   cliente: clienteActivo.value ? clonarPlano(clienteActivo.value) : null,
   form: clonarPlano(formIngreso.value),
@@ -342,6 +366,15 @@ const guardarIngreso = async () => {
   guardandoIngreso.value = true
   error.value = ''
   try {
+    console.debug('[Client][Ingreso] guardarIngreso:start', {
+      clienteId: clienteActivo.value?.id,
+      ingresoEditandoId: ingresoEditando.value?.id ?? null,
+      vehiculoId: formIngreso.value.vehiculo_id,
+      monto: formIngreso.value.monto,
+      fechaIngreso: formIngreso.value.fecha_ingreso,
+      fechaSalida: formIngreso.value.fecha_salida
+    })
+    await sincronizarVehiculoIngreso()
     const trabajoRealizado = String(formIngreso.value.trabajo_realizado || '').trim() || buildTrabajoRealizado()
     const checklistIngresoPayload = clonarPlano(checklistIngreso.value)
     const checklistEgresoPayload = clonarPlano(checklistEgreso.value)
@@ -367,18 +400,42 @@ const guardarIngreso = async () => {
       trabajos: trabajosPayload
     }
 
+    console.debug('[Client][Ingreso] payload:', {
+      cliente_id: payload.cliente_id,
+      vehiculo_id: payload.vehiculo_id,
+      fecha_actual: payload.fecha_actual,
+      fecha_salida: payload.fecha_salida,
+      monto: payload.monto,
+      marca: payload.marca,
+      modelo: payload.modelo,
+      color: payload.color,
+      matricula: payload.matricula,
+      numero_motor: payload.numero_motor,
+      numero_servicios: payload.numero_servicios
+    })
+
     let guardado: any = null
     if (ingresoEditando.value?.id) {
+      console.debug('[Client][Ingreso] calling actualizarIngreso', { id: ingresoEditando.value.id })
       guardado = await api.actualizarIngreso({ id: ingresoEditando.value.id, ...payload })
     } else {
+      console.debug('[Client][Ingreso] calling crearIngreso')
       guardado = await api.crearIngreso(payload)
     }
-    limpiarFormularioIngreso()
-    await cargarIngresos(clienteActivo.value)
+    console.debug('[Client][Ingreso] raw save result:', guardado)
+    if (!guardado || typeof guardado !== 'object' || !('id' in guardado) || !guardado.id) {
+      throw new Error(`Respuesta de ingreso invalida: ${JSON.stringify(guardado)}`)
+    }
+    if (guardado?.id) {
+      ingresoEditando.value = guardado
+    }
+    await cargarDetalle(clienteActivo.value)
+    console.debug('[Client][Ingreso] guardarIngreso:ok', { ingresoId: guardado?.id ?? null })
     return guardado
   } catch (err: any) {
     error.value = err?.message || 'No se pudo registrar el ingreso'
-    return null
+    console.error('[Client][Ingreso] guardarIngreso:error', err)
+    throw err
   } finally {
     guardandoIngreso.value = false
   }
@@ -444,12 +501,22 @@ const guardarYImprimir = async () => {
   const printWindow = window.open('', '_blank', 'width=980,height=1200')
   if (!printWindow) {
     error.value = 'No se pudo abrir la ventana de impresión'
+    console.error('[Client][Ingreso] guardarYImprimir:popup-blocked', snapshot)
     return
   }
-  const guardado = await guardarIngreso()
-  if (guardado?.id) {
-    imprimirHoja(snapshot, guardado.id, printWindow)
-  } else {
+  try {
+    console.debug('[Client][Ingreso] guardarYImprimir:start', snapshot)
+    const guardado = await guardarIngreso()
+    if (guardado?.id) {
+      console.debug('[Client][Ingreso] guardarYImprimir:print', { ingresoId: guardado.id })
+      imprimirHoja(snapshot, guardado.id, printWindow)
+    } else {
+      console.error('[Client][Ingreso] guardarYImprimir:sin-guardado', snapshot)
+      printWindow.close()
+    }
+  } catch (err) {
+    console.error('[Client][Ingreso] guardarYImprimir:error', { error: err, snapshot })
+    error.value = err instanceof Error ? err.message : 'Error inesperado al guardar e imprimir'
     printWindow.close()
   }
 }
@@ -1007,7 +1074,7 @@ onBeforeUnmount(() => {
       :checklist-egreso="checklistEgreso"
       :trabajos="trabajos"
       :allow-print="true"
-      @close="limpiarFormularioIngreso"
+      @close="cerrarFormularioIngreso"
       @save="guardarIngreso"
       @save-and-print="guardarYImprimir"
     />

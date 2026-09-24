@@ -1,6 +1,6 @@
 import { getSession, normalizeRole } from '../auth'
 
-const EMBEDDED_API_BASE = 'https://rosas.uy/api-server'
+const EMBEDDED_API_BASE = 'https://rosas.uy/server_2.0'
 const EMBEDDED_API_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 
 const RAW_BASE = String(import.meta.env.VITE_API_URL || EMBEDDED_API_BASE).trim()

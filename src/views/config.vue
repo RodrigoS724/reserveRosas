@@ -85,7 +85,7 @@ onMounted(() => {
         <textarea
           v-model="envText"
           class="w-full h-full p-4 bg-transparent text-gray-800 dark:text-gray-100 font-mono text-xs outline-none resize-none"
-          placeholder="API_REMOTE_URL=https://rosas.uy/api-server\nAPI_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4\nAPI_REMOTE_IN_DEV=1"
+          placeholder="API_REMOTE_URL=https://rosas.uy/server_2.0\nAPI_REMOTE_TOKEN=gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4\nAPI_REMOTE_IN_DEV=1"
         ></textarea>
       </div>
 

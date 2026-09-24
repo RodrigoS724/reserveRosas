@@ -46,7 +46,7 @@ function pickVehiculoData(input: any) {
   }
 }
 
-function pickClienteData(input: any) {
+function pickIngresoClienteData(input: any) {
   return {
     cliente_correo: normalizarTexto(input?.cliente_correo ?? input?.email ?? input?.correo ?? '', 255) || null
   }
@@ -241,7 +241,7 @@ export async function crearIngreso(input: any = {}) {
   const monto = normalizarMonto(input.monto)
   const trabajoRealizado = normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000) || null
   const vehiculo = pickVehiculoData(input)
-  const clienteDatos = pickClienteData(input)
+  const clienteDatos = pickIngresoClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {
@@ -334,7 +334,7 @@ export async function actualizarIngreso(input: any = {}) {
   const monto = normalizarMonto(input.monto)
   const trabajoRealizado = normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000) || null
   const vehiculo = pickVehiculoData(input)
-  const clienteDatos = pickClienteData(input)
+  const clienteDatos = pickIngresoClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {
@@ -457,7 +457,7 @@ export async function registrarEgreso(input: any = {}) {
   const trabajoRealizado = input.trabajo_realizado == null && input.trabajoRealizado == null
     ? null
     : normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000)
-  const clienteDatos = pickClienteData(input)
+  const clienteDatos = pickIngresoClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {

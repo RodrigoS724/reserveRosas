@@ -155,6 +155,12 @@ const ingresosOrdenados = computed(() => {
   return [...ingresos.value].sort((a, b) => Number(a?.id || 0) - Number(b?.id || 0))
 })
 
+const ingresosSeguro = computed<any[]>(() => (Array.isArray(ingresos.value) ? ingresos.value : []))
+
+const ingresosPendientes = computed(() => ingresosSeguro.value.filter((item: any) => !item.fecha_egreso).length)
+
+const montoTotalIngresos = computed(() => ingresosSeguro.value.reduce((total: number, item: any) => total + Number(item?.monto || 0), 0))
+
 const ingresosFiltrados = computed(() => {
   const filtro = normalizarTexto(filtroIngresos.value)
   if (!filtro) return ingresosOrdenados.value
@@ -171,7 +177,7 @@ const ingresosFiltrados = computed(() => {
 })
 
 const siguienteFolio = computed(() => {
-  const maxId = ingresos.value.reduce((maximo, ingreso) => Math.max(maximo, Number(ingreso?.id || 0)), 0)
+  const maxId = ingresosSeguro.value.reduce((maximo, ingreso) => Math.max(maximo, Number(ingreso?.id || 0)), 0)
   return maxId + 1
 })
 
@@ -282,6 +288,26 @@ const onVehiculoChangeEvent = (event: Event) => {
   onVehiculoChange(String(target?.value || ''))
 }
 
+const sincronizarVehiculoIngreso = async () => {
+  const vehiculoId = Number(form.value.vehiculo_id || 0)
+  if (!vehiculoId) return
+  const vehiculoActual = vehiculosCliente.value.find((item) => Number(item.id) === vehiculoId) || null
+  try {
+    await api.actualizarVehiculoCliente({
+      id: vehiculoId,
+      matricula: form.value.matricula || vehiculoActual?.matricula || '',
+      motor: form.value.numero_motor || vehiculoActual?.motor || vehiculoActual?.numero_motor || '',
+      chasis: vehiculoActual?.chasis || '',
+      color: form.value.color || vehiculoActual?.color || '',
+      marca: form.value.marca || vehiculoActual?.marca || vehiculoActual?.codigo_marca || '',
+      modelo: form.value.modelo || vehiculoActual?.modelo || vehiculoActual?.codigo_modelo || '',
+      fecha_compra: vehiculoActual?.fecha_compra || ''
+    })
+  } catch (err) {
+    console.warn('[Ingresos] No se pudo sincronizar la moto del ingreso:', err)
+  }
+}
+
 const clonarPlano = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
 const buildTrabajoRealizado = () => {
@@ -358,6 +384,15 @@ const guardarIngreso = async () => {
   guardandoIngreso.value = true
   error.value = ''
   try {
+    console.debug('[Ingresos][Ingreso] guardarIngreso:start', {
+      clienteId: cliente.value?.id,
+      ingresoEnEdicionId: ingresoEnEdicionId.value,
+      vehiculoId: form.value.vehiculo_id,
+      monto: form.value.monto,
+      fechaIngreso: form.value.fecha_ingreso,
+      fechaSalida: form.value.fecha_salida
+    })
+    await sincronizarVehiculoIngreso()
     if (vehiculoSeleccionadoId.value) {
       const vehiculoActual = vehiculosCliente.value.find((item) => Number(item.id) === Number(vehiculoSeleccionadoId.value)) || {}
       await api.actualizarVehiculoCliente({
@@ -366,6 +401,8 @@ const guardarIngreso = async () => {
         motor: form.value.numero_motor || vehiculoActual.motor || vehiculoActual.numero_motor || '',
         chasis: '',
         color: form.value.color || vehiculoActual.color || '',
+        marca: form.value.marca || vehiculoActual.marca || vehiculoActual.codigo_marca || '',
+        modelo: form.value.modelo || vehiculoActual.modelo || vehiculoActual.codigo_modelo || '',
         fecha_compra: vehiculoActual.fecha_compra || ''
       })
     }
@@ -396,23 +433,44 @@ const guardarIngreso = async () => {
       trabajos: trabajosPayload
     }
 
+    console.debug('[Ingresos][Ingreso] payload:', {
+      cliente_id: payload.cliente_id,
+      vehiculo_id: payload.vehiculo_id,
+      fecha_actual: payload.fecha_actual,
+      fecha_egreso: payload.fecha_egreso,
+      monto: payload.monto,
+      marca: payload.marca,
+      modelo: payload.modelo,
+      color: payload.color,
+      matricula: payload.matricula,
+      numero_motor: payload.numero_motor,
+      numero_servicios: payload.numero_servicios
+    })
+
     let guardado: any = null
     if (ingresoEnEdicionId.value) {
+      console.debug('[Ingresos][Ingreso] calling actualizarIngreso', { id: ingresoEnEdicionId.value })
       guardado = await api.actualizarIngreso({ id: ingresoEnEdicionId.value, ...payload })
     } else {
+      console.debug('[Ingresos][Ingreso] calling crearIngreso')
       guardado = await api.crearIngreso(payload)
+    }
+    console.debug('[Ingresos][Ingreso] raw save result:', guardado)
+    if (!guardado || typeof guardado !== 'object' || !('id' in guardado) || !guardado.id) {
+      throw new Error(`Respuesta de ingreso invalida: ${JSON.stringify(guardado)}`)
     }
     form.value.trabajo_realizado = trabajoRealizado
     await cargarIngresosGenerales()
-    limpiarFormulario()
     if (guardado?.id) {
       ingresoSeleccionado.value = guardado
       ingresoEnEdicionId.value = Number(guardado.id) || ingresoEnEdicionId.value
     }
+    console.debug('[Ingresos][Ingreso] guardarIngreso:ok', { ingresoId: guardado?.id ?? null })
     return guardado
   } catch (err: any) {
     error.value = err?.message || 'No se pudo registrar el ingreso'
-    return null
+    console.error('[Ingresos][Ingreso] guardarIngreso:error', err)
+    throw err
   } finally {
     guardandoIngreso.value = false
   }
@@ -459,13 +517,27 @@ const guardarYImprimir = async () => {
   const printWindow = window.open('', '_blank', 'width=980,height=1200')
   if (!printWindow) {
     alert('No se pudo abrir la ventana de impresión')
+    console.error('[Ingresos][Ingreso] guardarYImprimir:popup-blocked')
     return
   }
-  const guardado = await guardarIngreso()
-  if (guardado?.id) {
-    ingresoSeleccionado.value = guardado
-    imprimirHoja(printWindow)
-  } else {
+  try {
+    console.debug('[Ingresos][Ingreso] guardarYImprimir:start', {
+      ingresoEnEdicionId: ingresoEnEdicionId.value,
+      clienteId: cliente.value?.id,
+      vehiculoId: form.value.vehiculo_id
+    })
+    const guardado = await guardarIngreso()
+    if (guardado?.id) {
+      ingresoSeleccionado.value = guardado
+      console.debug('[Ingresos][Ingreso] guardarYImprimir:print', { ingresoId: guardado.id })
+      imprimirHoja(printWindow)
+    } else {
+      console.error('[Ingresos][Ingreso] guardarYImprimir:sin-guardado')
+      printWindow.close()
+    }
+  } catch (err) {
+    console.error('[Ingresos][Ingreso] guardarYImprimir:error', { error: err })
+    error.value = err instanceof Error ? err.message : 'Error inesperado al guardar e imprimir'
     printWindow.close()
   }
 }
@@ -596,6 +668,21 @@ onBeforeUnmount(() => {
                 </option>
               </select>
             </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Ingresos</div>
+                <div class="mt-1 text-2xl font-black text-white">{{ ingresosSeguro.length }}</div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Pendientes</div>
+                <div class="mt-1 text-2xl font-black text-white">{{ ingresosPendientes }}</div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Monto total</div>
+                <div class="mt-1 text-2xl font-black text-white">{{ montoTotalIngresos.toFixed(2) }}</div>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -621,15 +708,15 @@ onBeforeUnmount(() => {
             <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Ingresos</div>
-                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.length }}</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresosSeguro.length }}</div>
               </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Pendientes</div>
-                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.filter((item) => !item.fecha_egreso).length }}</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresosSeguro.filter((item) => !item.fecha_egreso).length }}</div>
               </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Monto total</div>
-                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.reduce((total, item) => total + Number(item.monto || 0), 0).toFixed(2) }}</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresosSeguro.reduce((total, item) => total + Number(item.monto || 0), 0).toFixed(2) }}</div>
               </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Siguiente folio</div>

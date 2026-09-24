@@ -159,6 +159,8 @@ export async function actualizarVehiculoCliente(data: any = {}) {
     String(data.chasis || '').trim() || null,
     matricula,
     String(data.color || '').trim() || null,
+    String(data.marca || '').trim() || null,
+    String(data.modelo || '').trim() || null,
     String(data.fecha_compra || data.fechaCompra || '').trim() || null,
     id
   ]
@@ -166,7 +168,7 @@ export async function actualizarVehiculoCliente(data: any = {}) {
   const mysqlResult = await tryMysql(async (pool) => {
     await pool.execute(
       `UPDATE vehiculos
-       SET motor = ?, chasis = ?, matricula = ?, color = ?, fecha_compra = ?
+       SET motor = ?, chasis = ?, matricula = ?, color = ?, marca = ?, modelo = ?, fecha_compra = ?
        WHERE id = ?`,
       payload
     )
@@ -178,7 +180,7 @@ export async function actualizarVehiculoCliente(data: any = {}) {
   const db = initDatabase()
   db.prepare(
     `UPDATE vehiculos
-     SET motor = ?, chasis = ?, matricula = ?, color = ?, fecha_compra = ?
+      SET motor = ?, chasis = ?, matricula = ?, color = ?, marca = ?, modelo = ?, fecha_compra = ?
      WHERE id = ?`
   ).run(...payload)
   return { id }

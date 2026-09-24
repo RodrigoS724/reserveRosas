@@ -51,6 +51,8 @@ export const escapeHtml = (value: unknown) => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;')
 
+const printLogoUrl = new URL('../assets/Logo_principal.png', import.meta.url).href
+
 export const formatChecklistLabels = (checks: Checklist | undefined | null) => {
   return CHECK_ITEMS.filter((item) => Boolean(checks?.[item.key])).map((item) => item.label).join(', ') || 'Sin marcar'
 }
@@ -94,7 +96,8 @@ const renderSignature = (label: string) => `
 export const buildOrdenServicioPrintHtml = (input: OrdenServicioInput & { folio?: string | number }) => {
   const trabajoRealizado = normalizarTexto(input.trabajoRealizado) || buildTrabajoRealizadoTexto(input)
   const trabajoHtml = escapeHtml(trabajoRealizado).replace(/\n/g, '<br>')
-  const folio = escapeHtml(input.folio ?? '---')
+  const numeroIngreso = escapeHtml(input.folio ?? '---')
+  const logoUrl = escapeHtml(printLogoUrl)
 
   return `<!doctype html>
 <html>
@@ -105,12 +108,25 @@ export const buildOrdenServicioPrintHtml = (input: OrdenServicioInput & { folio?
       @page { size: A4; margin: 7mm; }
       * { box-sizing: border-box; }
       body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #222; background: #fff; }
-      .sheet { width: 100%; min-height: 282mm; padding: 2mm; }
-      .header { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; margin-bottom: 8px; }
+      .sheet { position: relative; width: 100%; min-height: 282mm; padding: 2mm; overflow: hidden; }
+      .sheet::before {
+        content: '';
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: 170mm;
+        height: 170mm;
+        transform: translate(-50%, -50%);
+        background: url('${logoUrl}') center center / contain no-repeat;
+        opacity: 0.06;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .content { position: relative; z-index: 1; }
+      .header { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; margin-bottom: 8px; }
       .title { font-size: 24px; font-weight: 800; letter-spacing: .04em; }
       .subtitle { font-size: 10px; color: #555; margin-top: 2px; }
-      .folio { text-align: right; font-size: 11px; font-weight: 700; }
-      .folio .value { display: inline-block; margin-top: 4px; min-width: 84px; border: 1px solid #333; padding: 5px 10px; font-size: 16px; font-weight: 800; text-align: center; }
+      .numero-ingreso { text-align: right; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      .numero-ingreso .value { display: inline-block; margin-top: 4px; min-width: 84px; border: 1px solid #333; padding: 5px 10px; font-size: 16px; font-weight: 800; text-align: center; letter-spacing: 0; text-transform: none; }
       .panel { border: 1px solid #444; margin-top: 8px; }
       .panel-title { background: #e5e7eb; border-bottom: 1px solid #444; padding: 5px 8px; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
       .panel-body { padding: 8px; }
@@ -122,78 +138,80 @@ export const buildOrdenServicioPrintHtml = (input: OrdenServicioInput & { folio?
       .check-item { display: flex; align-items: center; gap: 6px; font-size: 10px; line-height: 1.2; }
       .box { width: 12px; height: 12px; border: 1px solid #444; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex: none; }
       .text-box { min-height: 58px; border: 1px solid #444; padding: 6px 8px; font-size: 11px; line-height: 1.45; white-space: normal; }
-      .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px; }
-      .signature { border-top: 1px solid #222; padding-top: 18px; text-align: center; font-size: 10px; font-weight: 700; min-height: 34px; }
+      .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; }
+      .signature { border-top: 1px solid #222; padding-top: 34px; text-align: center; font-size: 10px; font-weight: 700; min-height: 68px; }
       .note { font-size: 10px; color: #555; margin-top: 6px; }
       .spacer { height: 4px; }
     </style>
   </head>
   <body onload="window.focus();window.print();">
     <div class="sheet">
-      <div class="header">
-        <div>
-          <div class="title">Orden de Servicio</div>
-          <div class="subtitle">Ingreso y egreso en una sola hoja imprimible</div>
+      <div class="content">
+        <div class="header">
+          <div>
+            <div class="title">Orden de Servicio</div>
+            <div class="subtitle">Ingreso y egreso en una sola hoja imprimible</div>
+          </div>
+          <div class="numero-ingreso">N°<div class="value">${numeroIngreso}</div></div>
         </div>
-        <div class="folio">FOLIO<div class="value">${folio}</div></div>
-      </div>
 
-      <div class="panel">
-        <div class="panel-title">Ingreso</div>
-        <div class="panel-body">
-          <div class="grid-two">
-            <div>
-              <div class="field"><span class="label">Moto:</span><span class="line">${escapeHtml([input.marca, input.modelo].filter(Boolean).join(' '))}</span></div>
-              <div class="field"><span class="label">Color:</span><span class="line">${escapeHtml(input.color)}</span></div>
-              <div class="field"><span class="label">Matrícula:</span><span class="line">${escapeHtml(input.matricula)}</span></div>
-              <div class="field"><span class="label">Motor:</span><span class="line">${escapeHtml(input.numeroMotor)}</span></div>
+        <div class="panel">
+          <div class="panel-title">Ingreso</div>
+          <div class="panel-body">
+            <div class="grid-two">
+              <div>
+                <div class="field"><span class="label">Moto:</span><span class="line">${escapeHtml([input.marca, input.modelo].filter(Boolean).join(' '))}</span></div>
+                <div class="field"><span class="label">Color:</span><span class="line">${escapeHtml(input.color)}</span></div>
+                <div class="field"><span class="label">Matrícula:</span><span class="line">${escapeHtml(input.matricula)}</span></div>
+                <div class="field"><span class="label">Motor:</span><span class="line">${escapeHtml(input.numeroMotor)}</span></div>
+              </div>
+              <div>
+                <div class="field"><span class="label">Fecha ingreso:</span><span class="line">${escapeHtml(input.fechaIngreso)}</span></div>
+                <div class="field"><span class="label">Nombre:</span><span class="line">${escapeHtml(input.nombre)}</span></div>
+                <div class="field"><span class="label">Teléfono:</span><span class="line">${escapeHtml(input.telefono)}</span></div>
+                <div class="field"><span class="label">Correo:</span><span class="line">${escapeHtml(input.correo)}</span></div>
+                <div class="field"><span class="label">Localidad:</span><span class="line">${escapeHtml(input.localidad)}</span></div>
+              </div>
             </div>
-            <div>
-              <div class="field"><span class="label">Fecha ingreso:</span><span class="line">${escapeHtml(input.fechaIngreso)}</span></div>
-              <div class="field"><span class="label">Nombre:</span><span class="line">${escapeHtml(input.nombre)}</span></div>
-              <div class="field"><span class="label">Teléfono:</span><span class="line">${escapeHtml(input.telefono)}</span></div>
-              <div class="field"><span class="label">Correo:</span><span class="line">${escapeHtml(input.correo)}</span></div>
-              <div class="field"><span class="label">Localidad:</span><span class="line">${escapeHtml(input.localidad)}</span></div>
+
+            <div class="spacer"></div>
+            <div class="panel-title" style="margin:0 -8px 8px;">Checklist de ingreso</div>
+            <div class="checklist">${renderChecklist(input.checklistIngreso)}</div>
+
+            <div class="signatures">
+              ${renderSignature('Firma del prestador del servicio')}
+              ${renderSignature('Firma del cliente')}
             </div>
-          </div>
-
-          <div class="spacer"></div>
-          <div class="panel-title" style="margin:0 -8px 8px;">Checklist de ingreso</div>
-          <div class="checklist">${renderChecklist(input.checklistIngreso)}</div>
-
-          <div class="signatures">
-            ${renderSignature('Firma del prestador del servicio')}
-            ${renderSignature('Firma del cliente')}
           </div>
         </div>
-      </div>
 
-      <div class="panel">
-        <div class="panel-title">Egreso</div>
-        <div class="panel-body">
-          <div class="field" style="grid-template-columns: 150px 1fr; align-items: start;">
-            <span class="label">Descripción del trabajo:</span>
-            <span class="text-box">${trabajoHtml}</span>
-          </div>
-          <div class="grid-two">
-            <div>
-              <div class="field"><span class="label">Observaciones:</span><span class="line">${escapeHtml(input.observaciones)}</span></div>
+        <div class="panel">
+          <div class="panel-title">Egreso</div>
+          <div class="panel-body">
+            <div class="field" style="grid-template-columns: 150px 1fr; align-items: start;">
+              <span class="label">Descripción del trabajo:</span>
+              <span class="text-box">${trabajoHtml}</span>
             </div>
-            <div>
-              <div class="field"><span class="label">Fecha de entrega:</span><span class="line">${escapeHtml(input.fechaSalida)}</span></div>
-              <div class="field"><span class="label">Comentario final:</span><span class="line">${escapeHtml(input.comentarios)}</span></div>
+            <div class="grid-two">
+              <div>
+                <div class="field"><span class="label">Observaciones:</span><span class="line">${escapeHtml(input.observaciones)}</span></div>
+              </div>
+              <div>
+                <div class="field"><span class="label">Fecha de entrega:</span><span class="line">${escapeHtml(input.fechaSalida)}</span></div>
+                <div class="field"><span class="label">Comentario final:</span><span class="line">${escapeHtml(input.comentarios)}</span></div>
+              </div>
             </div>
-          </div>
 
-          <div class="spacer"></div>
-          <div class="panel-title" style="margin:0 -8px 8px;">Checklist de egreso</div>
-          <div class="checklist">${renderChecklist(input.checklistEgreso)}</div>
+            <div class="spacer"></div>
+            <div class="panel-title" style="margin:0 -8px 8px;">Checklist de egreso</div>
+            <div class="checklist">${renderChecklist(input.checklistEgreso)}</div>
 
-          <div class="signatures">
-            ${renderSignature('Firma del prestador del servicio')}
-            ${renderSignature('Firma del cliente')}
+            <div class="signatures">
+              ${renderSignature('Firma del prestador del servicio')}
+              ${renderSignature('Firma del cliente')}
+            </div>
+            <div class="note">La impresión está pensada para completar y firmar en una sola hoja.</div>
           </div>
-          <div class="note">La impresión está pensada para completar y firmar en una sola hoja.</div>
         </div>
       </div>
     </div>

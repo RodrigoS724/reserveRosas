@@ -1,6 +1,6 @@
 import { app } from 'electron'
 
-const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
+const EMBEDDED_REMOTE_URL = 'https://rosas.uy/server_2.0'
 const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 
 const LOCAL_ONLY_CHANNELS = new Set<string>([
@@ -21,7 +21,7 @@ function getRemoteBaseUrl() {
       const host = parsed.hostname.toLowerCase()
       const path = parsed.pathname.replace(/\/+$/, '')
       const trustedHost = host === 'rosas.uy' || host === 'www.rosas.uy'
-      const trustedPath = path === '/api-server'
+      const trustedPath = path === '/server_2.0'
       if (!trustedHost || !trustedPath) {
         return EMBEDDED_REMOTE_URL
       }

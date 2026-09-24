@@ -3,7 +3,7 @@ import path from 'node:path'
 import { app } from 'electron'
 
 const ENV_FILENAME = 'mysql.env'
-const EMBEDDED_REMOTE_URL = 'https://rosas.uy/api-server'
+const EMBEDDED_REMOTE_URL = 'https://rosas.uy/server_2.0'
 const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 const ENV_KEYS = [
   'API_REMOTE_URL',

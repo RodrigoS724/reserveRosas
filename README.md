@@ -39,7 +39,7 @@ Variables opcionales:
 Pasos recomendados:
 
 1. Subir cambios a `main`.
-2. Ejecutar localmente `npm run release:github -- patch` (o `minor` / `major`).
+2. Para esta rama 2.0, ejecutar localmente `npm run release:github -- major` o dejar la versión en `2.0.0` y crear el tag `v2.0.0`.
 3. Ese script crea commit de version, crea tag `v*` y hace push.
 4. El workflow `.github/workflows/release.yml` se dispara con el tag.
 5. Confirmar en el release de GitHub que existan:
@@ -47,6 +47,8 @@ Pasos recomendados:
 	- `latest.yml`
 	- `*.blockmap`
 6. En clientes instalados, electron-updater detecta la nueva version automaticamente.
+
+La referencia de esta rama es `2.0.0`.
 
 ## Estructura separada de repositorios
 
