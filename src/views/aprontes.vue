@@ -4,6 +4,7 @@ import { api } from '../api'
 import { getSession, isTallerRole } from '../auth'
 import ApronteWindow from '../components/apronteWindow.vue'
 import ApronteSchedulePicker from '../components/ApronteSchedulePicker.vue'
+import CedulaAutocomplete from '../components/CedulaAutocomplete.vue'
 
 type Apronte = {
   id: number
@@ -209,6 +210,19 @@ const cargarClientePorCedula = async () => {
     cargandoCliente.value = false
   }
 }
+
+const onCedulaSeleccionada = async (cliente: { cedula?: string | null; nombre?: string | null; telefono?: string | null; localidad?: string | null }) => {
+  clienteEncontrado.value = true
+  if (cliente?.nombre) newForm.value.nombre = String(cliente.nombre || '')
+  if (cliente?.telefono) newForm.value.telefono = String(cliente.telefono || '')
+  if (cliente?.localidad) newForm.value.localidad = String(cliente.localidad || '')
+  await cargarClientePorCedula()
+}
+
+watch(cedula, (value) => {
+  const limpio = normalizarCedula(value)
+  if (limpio !== value) cedula.value = limpio
+})
 
 const seleccionarVehiculoExistente = (vehiculo: ClienteDetalle['vehiculos'][number]) => {
   if (!vehiculo) return
@@ -607,7 +621,13 @@ onMounted(async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Cedula</label>
-                <input v-model="cedula" type="text" autocomplete="off" class="w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100" />
+                <CedulaAutocomplete
+                  v-model="cedula"
+                  placeholder="1.234.567-8"
+                  label=""
+                  @select="onCedulaSeleccionada"
+                  :input-class="'w-full rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-3 text-gray-800 dark:text-gray-100'"
+                />
               </div>
               <div>
                 <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Nombre</label>

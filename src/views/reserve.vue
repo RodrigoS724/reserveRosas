@@ -588,6 +588,8 @@ onBeforeUnmount(() => {
 })
 
 // Filtrado por cÃƒÂ©dula
+const normalizarCedula = (value: string) => String(value || '').replace(/\D/g, '')
+
 const normalizarEstadoKey = (estado: string) => {
   if (!estado) return 'PENDIENTE'
   const key = estado
@@ -602,7 +604,7 @@ const normalizarEstadoKey = (estado: string) => {
 
 const matrizReservasFiltrada = computed(() => {
   const resultado: Record<string, Record<string, any[]>> = {}
-  const filtroCedula = busquedaCedula.value.trim()
+  const filtroCedula = normalizarCedula(busquedaCedula.value)
   const filtroEstado = estadoFiltro.value
   const sessionId = Number(session?.id || 0)
 
@@ -614,7 +616,7 @@ const matrizReservasFiltrada = computed(() => {
           const asignado = Number(r?.mecanico_id || 0) === sessionId
           if (!asignado) return false
         }
-        if (filtroCedula && !String(r?.cedula || '').includes(filtroCedula)) {
+        if (filtroCedula && normalizarCedula(String(r?.cedula || '')) !== filtroCedula) {
           return false
         }
         if (filtroEstado !== 'TODOS') {
@@ -626,6 +628,11 @@ const matrizReservasFiltrada = computed(() => {
   }
 
   return resultado
+})
+
+watch(busquedaCedula, (value) => {
+  const limpio = normalizarCedula(value)
+  if (limpio !== value) busquedaCedula.value = limpio
 })
 
 const fechaHoyIso = computed(() => formatLocalDate(new Date()))

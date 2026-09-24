@@ -1,6 +1,8 @@
 import { initDatabase, isLocalDbDisabled } from '../db/database'
 import { tryMysql } from '../db/mysql'
 
+const DEFAULT_HORAS = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
+
 function normalizarHora(hora: string): string {
   const parts = String(hora || '').split(':')
   if (parts.length < 2) {
@@ -52,6 +54,56 @@ function aplicarReglaFinDeSemana(fechaIso: string, rows: any[]) {
   return (rows || []).filter((r: any) => horaEnMinutos(String(r?.hora || '')) <= 12 * 60)
 }
 
+async function ensureHorariosAprontesSeed() {
+  const mysqlResult = await tryMysql(async (pool) => {
+    const [rows]: any = await pool.execute('SELECT COUNT(*) AS total FROM horarios_aprontes')
+    if (Number(rows?.[0]?.total || 0) > 0) {
+      return true
+    }
+
+    for (const hora of DEFAULT_HORAS) {
+      await pool.execute('INSERT IGNORE INTO horarios_aprontes (hora, cupo, activo) VALUES (?, 1, 1)', [hora])
+    }
+    return true
+  })
+
+  if (mysqlResult.ok) {
+    try {
+      const db = initDatabase()
+      const count = db.prepare('SELECT COUNT(*) AS total FROM horarios_aprontes').get() as any
+      if (Number(count?.total || 0) === 0) {
+        const insert = db.prepare('INSERT INTO horarios_aprontes (hora, cupo, activo) VALUES (?, 1, 1)')
+        const tx = db.transaction((horas: string[]) => {
+          for (const hora of horas) {
+            insert.run(hora)
+          }
+        })
+        tx(DEFAULT_HORAS)
+      }
+    } catch (error) {
+      console.warn('[HorariosAprontes] Error seed sqlite:', error)
+    }
+    return
+  }
+
+  if (isLocalDbDisabled()) {
+    return
+  }
+
+  const db = initDatabase()
+  const count = db.prepare('SELECT COUNT(*) AS total FROM horarios_aprontes').get() as any
+  if (Number(count?.total || 0) > 0) {
+    return
+  }
+  const insert = db.prepare('INSERT INTO horarios_aprontes (hora, cupo, activo) VALUES (?, 1, 1)')
+  const tx = db.transaction((horas: string[]) => {
+    for (const hora of horas) {
+      insert.run(hora)
+    }
+  })
+  tx(DEFAULT_HORAS)
+}
+
 function syncHorariosAprontesToSqlite(rows: any[]) {
   if (isLocalDbDisabled()) return
   if (!Array.isArray(rows) || rows.length === 0) return
@@ -92,6 +144,7 @@ function syncHorariosAprontesToSqlite(rows: any[]) {
 }
 
 export async function obtenerHorariosAprontesBase() {
+  await ensureHorariosAprontesSeed()
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT id, hora, cupo, activo
@@ -123,6 +176,7 @@ export async function obtenerHorariosAprontesBase() {
 }
 
 export async function obtenerHorariosAprontesInactivos() {
+  await ensureHorariosAprontesSeed()
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(
       `SELECT id, hora, cupo
@@ -155,6 +209,7 @@ export async function obtenerHorariosAprontesInactivos() {
 
 export async function obtenerHorariosAprontesDisponibles(fecha: string) {
   const fechaNormalizada = normalizarFecha(fecha)
+  await ensureHorariosAprontesSeed()
 
   const mysqlResult = await tryMysql(async (pool) => {
     const [rows]: any = await pool.execute(

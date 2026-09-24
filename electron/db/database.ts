@@ -179,6 +179,7 @@ export function initDatabase() {
       vehiculo_color TEXT,
       vehiculo_matricula TEXT,
       vehiculo_motor TEXT,
+      cliente_correo TEXT,
       fecha_actual TEXT NOT NULL DEFAULT (datetime('now')),
       fecha_salida TEXT,
       fecha_egreso TEXT,

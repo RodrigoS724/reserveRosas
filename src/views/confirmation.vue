@@ -2,6 +2,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
+import CedulaAutocomplete from '../components/CedulaAutocomplete.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -258,6 +259,17 @@ const seleccionarVehiculoExistente = (vehiculo: any) => {
   }
 }
 
+const onCedulaSeleccionada = async (cliente: { cedula?: string | null; nombre?: string | null; telefono?: string | null }) => {
+  clienteEncontrado.value = true
+  if (cliente?.nombre) {
+    nombre.value = String(cliente.nombre || '')
+  }
+  if (cliente?.telefono) {
+    telefono.value = String(cliente.telefono || '')
+  }
+  await cargarVehiculosCliente()
+}
+
 const vehiculoSeleccionado = computed(() => {
   return vehiculosCliente.value.find((vehiculo) => Number(vehiculo.id) === Number(vehiculoSeleccionadoId.value)) || null
 })
@@ -405,9 +417,15 @@ const confirmarReserva = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div class="space-y-2">
                 <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Cedula</label>
-                <input v-model="cedula" type="text" placeholder="1.234.567-8" :class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')]">
-                <p v-if="clienteEncontrado" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-600">Cliente encontrado</p>
-                <p v-else-if="cedulaValida" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">Cliente nuevo</p>
+                <CedulaAutocomplete
+                  v-model="cedula"
+                  placeholder="1.234.567-8"
+                  label=""
+                  @select="onCedulaSeleccionada"
+                  :input-class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')].join(' ')"
+                />
+                <p v-if="clienteEncontrado" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-600">Cliente existente</p>
+                <p v-else-if="cedulaValida && !cargandoVehiculosCliente" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">Cliente nuevo</p>
                 <button
                   type="button"
                   @click="abrirCliente"

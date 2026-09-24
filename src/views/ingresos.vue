@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
 import IngresoModal from '../components/IngresoModal.vue'
+import { CHECK_ITEMS, buildOrdenServicioPrintHtml } from '../utils/ordenServicio'
 
 const route = useRoute()
+const isDarkTheme = ref(true)
 
 type TrabajoRow = {
   cantidad: string
@@ -15,25 +17,10 @@ type TrabajoRow = {
 
 type Checklist = Record<string, boolean>
 
-const CHECKS = [
-  { key: 'espejos', label: 'Espejos' },
-  { key: 'faro_delantero', label: 'Faro delantero' },
-  { key: 'tapon_gasolina', label: 'Tapón de gasolina' },
-  { key: 'luz_stop_trasero', label: 'Luz de stop trasero' },
-  { key: 'cubiertas_completas', label: 'Cubiertas completas' },
-  { key: 'tapon_radiadores', label: 'Tapón de radiadores' },
-  { key: 'filtro_aire', label: 'Filtro de aire' },
-  { key: 'bateria', label: 'Batería' },
-  { key: 'llaves', label: 'Llaves' },
-  { key: 'pedales', label: 'Pedales' }
-]
-
 const normalizarCedula = (value: string) => String(value || '').replace(/\D/g, '')
 const normalizarTexto = (value: string) => String(value || '').trim().toLowerCase()
 
 const hoyIso = () => new Date().toISOString().slice(0, 10)
-const ahoraIso = () => new Date().toISOString().slice(0, 16)
-
 const formatFechaHora = (fecha?: string | null) => {
   if (!fecha) return 'Sin dato'
   const date = new Date(fecha)
@@ -41,17 +28,9 @@ const formatFechaHora = (fecha?: string | null) => {
   return `${date.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' })} · ${date.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })}`
 }
 
-const escapeHtml = (value: any) => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#039;')
-
 const cedula = ref('')
 const clienteEncontrado = ref(false)
 const cargandoCliente = ref(false)
-const cargandoIngresos = ref(false)
 const cargandoListado = ref(false)
 const guardandoIngreso = ref(false)
 const mostrarModal = ref(false)
@@ -71,6 +50,7 @@ const form = ref({
   telefono: '',
   email: '',
   localidad: '',
+  vehiculo_id: null as number | null,
   marca: '',
   modelo: '',
   color: '',
@@ -83,6 +63,12 @@ const form = ref({
   monto: '',
   trabajo_realizado: ''
 })
+
+let themeObserver: MutationObserver | null = null
+
+const syncTheme = () => {
+  isDarkTheme.value = document.documentElement.classList.contains('dark')
+}
 
 const cargarClientePorReferencia = async (referencia: string) => {
   const value = String(referencia || '').trim()
@@ -157,7 +143,7 @@ const totalTrabajo = computed(() => {
 })
 
 const resumenChecks = (checks: Checklist) => {
-  return CHECKS.filter((item) => checks[item.key]).map((item) => item.label).join(', ') || 'Sin marcar'
+  return CHECK_ITEMS.filter((item) => checks[item.key]).map((item) => item.label).join(', ') || 'Sin marcar'
 }
 
 const formatearMonto = (value: any) => {
@@ -188,23 +174,6 @@ const siguienteFolio = computed(() => {
   const maxId = ingresos.value.reduce((maximo, ingreso) => Math.max(maximo, Number(ingreso?.id || 0)), 0)
   return maxId + 1
 })
-
-const ingresoEnEdicion = computed(() => {
-  if (!ingresoEnEdicionId.value) return null
-  return ingresos.value.find((item) => Number(item.id) === Number(ingresoEnEdicionId.value)) || null
-})
-
-const cargarIngresos = async (clienteId: number) => {
-  cargandoIngresos.value = true
-  try {
-    ingresos.value = await api.obtenerIngresosPorCliente(clienteId)
-  } catch (err: any) {
-    error.value = err?.message || 'No se pudo cargar el historial de ingresos'
-    ingresos.value = []
-  } finally {
-    cargandoIngresos.value = false
-  }
-}
 
 const cargarIngresosGenerales = async () => {
   cargandoListado.value = true
@@ -313,15 +282,6 @@ const onVehiculoChangeEvent = (event: Event) => {
   onVehiculoChange(String(target?.value || ''))
 }
 
-const setTrabajoRowImporte = (row: TrabajoRow) => {
-  const cantidad = Number(String(row.cantidad || '').replace(',', '.'))
-  const costo = Number(String(row.costo || '').replace(',', '.'))
-  if (Number.isFinite(cantidad) && Number.isFinite(costo)) {
-    const importe = cantidad * costo
-    row.importe = String(Math.round(importe * 100) / 100)
-  }
-}
-
 const clonarPlano = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
 const buildTrabajoRealizado = () => {
@@ -360,6 +320,7 @@ const limpiarFormulario = () => {
     telefono: '',
     email: '',
     localidad: '',
+    vehiculo_id: null,
     marca: '',
     modelo: '',
     color: '',
@@ -373,8 +334,8 @@ const limpiarFormulario = () => {
     trabajo_realizado: ''
   }
   ingresoEnEdicionId.value = null
-  checklistIngreso.value = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
-  checklistEgreso.value = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
+  checklistIngreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+  checklistEgreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
   trabajos.value = [
     { cantidad: '', descripcion: '', costo: '', importe: '' },
     { cantidad: '', descripcion: '', costo: '', importe: '' },
@@ -457,198 +418,56 @@ const guardarIngreso = async () => {
   }
 }
 
-const registrarEgreso = async (ingreso: any) => {
-  error.value = ''
-  try {
-    await api.registrarEgreso({
-      id: ingreso.id,
-      monto: ingreso.monto,
-      trabajo_realizado: ingreso.trabajo_realizado
-    })
-    await cargarIngresosGenerales()
-  } catch (err: any) {
-    error.value = err?.message || 'No se pudo registrar el egreso'
-  }
-}
-
 const buildPrintHtml = () => {
   const folio = ingresoSeleccionado.value?.id || siguienteFolio.value
-  const workRows = trabajos.value.map((row) => {
-    return `
-      <tr>
-        <td>${escapeHtml(row.cantidad)}</td>
-        <td>${escapeHtml(row.descripcion)}</td>
-        <td>${escapeHtml(row.costo)}</td>
-        <td>${escapeHtml(row.importe)}</td>
-      </tr>`
-  }).join('')
-
-  const checkboxHtml = (checks: Checklist) => CHECKS.map((item) => `
-    <div class="check-item">
-      <span class="box">${checks[item.key] ? '✓' : ''}</span>
-      <span>${escapeHtml(item.label)}</span>
-    </div>`).join('')
-
-  return `<!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Orden de Servicio</title>
-      <style>
-        @page { size: A4; margin: 6mm; }
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #333; background: #fff; }
-        .sheet { width: 100%; min-height: 285mm; padding: 5mm; }
-        .topbar {
-          display: grid;
-          grid-template-columns: 1fr 1.4fr 0.7fr;
-          gap: 10px;
-          align-items: center;
-          background: #efefef;
-          border: 1px solid #8c8c8c;
-          padding: 10px 12px;
-          margin-bottom: 10px;
-        }
-        .brand { font-size: 13px; font-weight: 800; color: #666; line-height: 1.1; }
-        .title { text-align: center; font-size: 28px; font-weight: 800; color: #4a4a4a; line-height: 1; }
-        .title small { display: block; font-size: 13px; margin-top: 4px; }
-        .folio { text-align: right; font-weight: 800; color: #666; }
-        .folio .value { display: inline-block; margin-top: 4px; background: #fff; border: 1px solid #bbb; padding: 4px 12px; min-width: 84px; text-align: center; font-size: 18px; color: #b55; }
-        .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
-        .box-title { text-align: center; font-size: 12px; font-weight: 800; color: #555; margin: 2px 0 6px; }
-        .field-line { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 6px; }
-        .field-line .label { min-width: 90px; font-weight: 700; }
-        .field-line .line { flex: 1; border-bottom: 1px solid #555; min-height: 16px; }
-        .section-header { background: #9a9a9a; color: #fff; font-size: 12px; font-weight: 800; text-align: center; padding: 4px 8px; margin: 10px 0 8px; }
-        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
-        .grid-fields .field-line .label { min-width: 80px; }
-        .checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px 12px; align-items: start; margin-top: 6px; }
-        .check-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-        .box { width: 13px; height: 13px; border: 1px solid #444; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
-        .table th, .table td { border: 1px solid #777; padding: 5px 6px; vertical-align: top; }
-        .table th { background: #d8d8d8; color: #444; font-size: 11px; }
-        .observations, .signature-lines { margin-top: 8px; }
-        .long-line { border-bottom: 1px solid #666; min-height: 18px; margin-top: 2px; }
-        .signature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
-        .signature { border-top: 1px solid #444; padding-top: 20px; text-align: center; font-size: 10px; }
-        .small { font-size: 10px; color: #555; }
-        .footer-gap { height: 4px; }
-      </style>
-    </head>
-    <body onload="window.focus();window.print();">
-      <div class="sheet">
-        <div class="topbar">
-          <div class="brand">
-            ROSAS<br>
-            AUTOCENTRO<br>
-            DEPORTIVA
-          </div>
-          <div class="title">
-            Orden de Servicio
-            <small>Mantenimiento y reparación de motos</small>
-          </div>
-          <div class="folio">
-            NUMERO DE FOLIO
-            <div class="value">${escapeHtml(String(folio || '')) || '---'}</div>
-          </div>
-        </div>
-
-        <div class="two-cols">
-          <div>
-            <div class="box-title">DATOS DE LA MOTO</div>
-            <div class="field-line"><span class="label">Marca:</span><span class="line">${escapeHtml(form.value.marca)}</span></div>
-            <div class="field-line"><span class="label">Modelo:</span><span class="line">${escapeHtml(form.value.modelo)}</span></div>
-            <div class="field-line"><span class="label">Color:</span><span class="line">${escapeHtml(form.value.color)}</span></div>
-            <div class="field-line"><span class="label">Kilometraje:</span><span class="line">${escapeHtml(form.value.kilometraje)}</span></div>
-            <div class="field-line"><span class="label">Matrícula:</span><span class="line">${escapeHtml(form.value.matricula)}</span></div>
-            <div class="field-line"><span class="label">Número de motor:</span><span class="line">${escapeHtml(form.value.numero_motor)}</span></div>
-          </div>
-          <div>
-            <div class="box-title">DATOS DEL CLIENTE</div>
-            <div class="field-line"><span class="label">Ingreso:</span><span class="line">${escapeHtml(form.value.fecha_ingreso)}</span></div>
-            <div class="field-line"><span class="label">Nombre:</span><span class="line">${escapeHtml(form.value.nombre)}</span></div>
-            <div class="field-line"><span class="label">Teléfono:</span><span class="line">${escapeHtml(form.value.telefono)}</span></div>
-            <div class="field-line"><span class="label">Email:</span><span class="line">${escapeHtml(form.value.email)}</span></div>
-            <div class="field-line"><span class="label">Localidad:</span><span class="line">${escapeHtml(form.value.localidad)}</span></div>
-          </div>
-        </div>
-
-        <div class="section-header">CHECK LIST INGRESO</div>
-        <div class="checklist">
-          <div>${checkboxHtml(checklistIngreso.value)}</div>
-          <div>
-            <div class="box-title" style="margin-top:0">N° Servicios</div>
-            <div class="field-line"><span class="label">Servicios:</span><span class="line">${escapeHtml(form.value.numero_servicios)}</span></div>
-            <div class="field-line"><span class="label">Comentarios:</span><span class="line">${escapeHtml(form.value.comentarios)}</span></div>
-          </div>
-          <div class="small" style="grid-column: 1 / -1; margin-top: 4px;">Revisión general al ingreso, sin símbolos decorativos.</div>
-        </div>
-
-        <div class="section-header">DESCRIPCIÓN DEL TRABAJO</div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 8%">CANT</th>
-              <th>DESCRIPCIÓN DEL TRABAJO</th>
-              <th style="width: 14%">COSTO</th>
-              <th style="width: 14%">IMPORTE</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${workRows}
-            <tr>
-              <td colspan="3" style="text-align:right;font-weight:800">TOTAL:</td>
-              <td style="font-weight:800">${escapeHtml(totalTrabajo.value.toFixed(2))}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="observations">
-          <div class="section-header" style="margin-top:10px">OBSERVACIONES</div>
-          <div class="small">${escapeHtml(form.value.observaciones)}</div>
-          <div class="long-line"></div>
-          <div class="long-line"></div>
-          <div class="long-line"></div>
-        </div>
-
-        <div class="field-line" style="margin-top:10px"><span class="label">Entrega / Salida:</span><span class="line">${escapeHtml(form.value.fecha_salida)}</span></div>
-
-        <div class="section-header">CHECK LIST EGRESO</div>
-        <div class="checklist">
-          <div>${checkboxHtml(checklistEgreso.value)}</div>
-          <div>
-            <div class="field-line"><span class="label">Comentarios:</span><span class="line">${escapeHtml(form.value.comentarios)}</span></div>
-          </div>
-          <div class="small" style="grid-column: 1 / -1; margin-top: 4px;">Revisión general al egreso, sin símbolos decorativos.</div>
-        </div>
-
-        <div class="signature-row">
-          <div class="signature">FIRMA DEL PRESTADOR DEL SERVICIO</div>
-          <div class="signature">FIRMA DEL CONSUMIDOR ACEPTANDO EL PRESUPUESTO</div>
-        </div>
-      </div>
-    </body>
-  </html>`
+  return buildOrdenServicioPrintHtml({
+    folio,
+    fechaIngreso: form.value.fecha_ingreso || '',
+    fechaSalida: form.value.fecha_salida || '',
+    nombre: form.value.nombre || '',
+    cedula: cedula.value || '',
+    correo: form.value.email || '',
+    telefono: form.value.telefono || '',
+    localidad: form.value.localidad || '',
+    marca: form.value.marca || '',
+    modelo: form.value.modelo || '',
+    color: form.value.color || '',
+    matricula: form.value.matricula || '',
+    numeroMotor: form.value.numero_motor || '',
+    numeroServicios: form.value.numero_servicios || '',
+    comentarios: form.value.comentarios || '',
+    observaciones: form.value.observaciones || '',
+    checklistIngreso: checklistIngreso.value,
+    checklistEgreso: checklistEgreso.value,
+    trabajos: trabajos.value,
+    trabajoRealizado: form.value.trabajo_realizado || buildTrabajoRealizado()
+  })
 }
 
-const imprimirHoja = () => {
-  const win = window.open('', '_blank', 'width=980,height=1200')
-  if (!win) {
+const imprimirHoja = (win: Window | null = null) => {
+  const printWindow = win || window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
     alert('No se pudo abrir la ventana de impresión')
     return
   }
-  win.document.open()
-  win.document.write(buildPrintHtml())
-  win.document.close()
+  printWindow.document.open()
+  printWindow.document.write(buildPrintHtml())
+  printWindow.document.close()
 }
 
 const guardarYImprimir = async () => {
+  const printWindow = window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
+    alert('No se pudo abrir la ventana de impresión')
+    return
+  }
   const guardado = await guardarIngreso()
   if (guardado?.id) {
     ingresoSeleccionado.value = guardado
+    imprimirHoja(printWindow)
+  } else {
+    printWindow.close()
   }
-  imprimirHoja()
 }
 
 watch(cedula, (value) => {
@@ -675,11 +494,14 @@ watch(() => form.value.marca, async (marca) => {
 })
 
 onMounted(() => {
+  syncTheme()
+  themeObserver = new MutationObserver(syncTheme)
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   cargarIngresosGenerales()
   const queryClienteId = String(route.query.cliente_id || '').trim()
   const queryIngresoId = Number(route.query.ingreso_id || 0)
   if (queryIngresoId) {
-    api.obtenerIngreso(queryIngresoId).then((ingreso) => {
+    api.obtenerIngreso(queryIngresoId).then((ingreso: any) => {
       if (ingreso) {
         cargarIngresoEnEditor(ingreso)
       }
@@ -694,10 +516,15 @@ onMounted(() => {
     cargarClientePorReferencia(queryCedula)
   }
 })
+
+onBeforeUnmount(() => {
+  themeObserver?.disconnect()
+  themeObserver = null
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-[radial-gradient(circle_at_top,#0f766e_0%,#0f172a_40%,#020617_100%)] text-slate-100">
+  <div :class="isDarkTheme ? 'theme-dark' : 'theme-light'" class="min-h-screen bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_28%),linear-gradient(135deg,#07111c_0%,#0f172a_45%,#08111f_100%)] text-slate-100">
     <div class="mx-auto flex min-h-screen max-w-[1700px] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
       <header class="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl sm:p-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -714,7 +541,7 @@ onMounted(() => {
           </div>
 
           <div class="flex gap-2">
-            <button @click="imprimirHoja" class="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-slate-950/60">
+            <button @click="() => imprimirHoja()" class="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-slate-950/60">
               Imprimir hoja
             </button>
             <button @click="guardarYImprimir" :disabled="guardandoIngreso" class="rounded-2xl bg-emerald-600 px-4 py-3 text-[11px] font-black uppercase tracking-[0.22em] text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60">
@@ -736,7 +563,7 @@ onMounted(() => {
               v-model="cedula"
               type="text"
               placeholder="12345678"
-              class="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-emerald-400/40 focus:bg-white/8"
+              class="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-400/40 focus:bg-white/8"
             />
           </div>
 
@@ -772,8 +599,8 @@ onMounted(() => {
           </div>
         </aside>
 
-        <section class="min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/95 text-slate-900 shadow-2xl shadow-slate-950/30 backdrop-blur-xl">
-          <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+        <section class="min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/75 text-slate-100 shadow-2xl shadow-slate-950/40 backdrop-blur-xl">
+          <div class="border-b border-white/10 px-5 py-5 sm:px-6">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-white">
@@ -792,50 +619,50 @@ onMounted(() => {
             </div>
 
             <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Ingresos</div>
-                <div class="mt-1 text-2xl font-black text-slate-950">{{ ingresos.length }}</div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Ingresos</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.length }}</div>
               </div>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Pendientes</div>
-                <div class="mt-1 text-2xl font-black text-slate-950">{{ ingresos.filter((item) => !item.fecha_egreso).length }}</div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Pendientes</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.filter((item) => !item.fecha_egreso).length }}</div>
               </div>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Monto total</div>
-                <div class="mt-1 text-2xl font-black text-slate-950">{{ ingresos.reduce((total, item) => total + Number(item.monto || 0), 0).toFixed(2) }}</div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Monto total</div>
+                  <div class="mt-1 text-2xl font-black text-white">{{ ingresos.reduce((total, item) => total + Number(item.monto || 0), 0).toFixed(2) }}</div>
               </div>
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Siguiente folio</div>
-                <div class="mt-1 text-2xl font-black text-slate-950">#{{ siguienteFolio }}</div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Siguiente folio</div>
+                  <div class="mt-1 text-2xl font-black text-white">#{{ siguienteFolio }}</div>
               </div>
             </div>
           </div>
 
           <div class="min-h-0 overflow-auto p-5 sm:p-6">
-            <div v-if="cargandoListado" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">Cargando ingresos...</div>
-            <div v-else-if="ingresosFiltrados.length === 0" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">No hay ingresos para mostrar.</div>
+            <div v-if="cargandoListado" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">Cargando ingresos...</div>
+            <div v-else-if="ingresosFiltrados.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">No hay ingresos para mostrar.</div>
 
             <div v-else class="grid gap-3">
               <button
                 v-for="ingreso in ingresosFiltrados"
                 :key="ingreso.id"
                 @click="cargarIngresoEnEditor(ingreso)"
-                class="w-full rounded-[1.5rem] border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40"
+                class="w-full rounded-[1.5rem] border border-white/10 bg-slate-950/60 p-4 text-left shadow-lg shadow-slate-950/20 transition hover:border-cyan-400/30 hover:bg-slate-900/70"
               >
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <div class="flex flex-wrap items-center gap-2">
-                      <div class="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-600">#{{ ingreso.id }}</div>
-                      <div class="text-sm font-black text-slate-950">{{ ingreso.cliente_nombre || 'Sin cliente' }}</div>
+                      <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100">#{{ ingreso.id }}</div>
+                      <div class="text-sm font-black text-white">{{ ingreso.cliente_nombre || 'Sin cliente' }}</div>
                     </div>
-                    <div class="mt-1 text-sm text-slate-600">CI {{ ingreso.cliente_cedula || '---' }} · {{ formatFechaHora(ingreso.fecha_actual) }}</div>
-                    <div class="mt-1 text-xs text-slate-500">Monto: ${{ formatearMonto(ingreso.monto) }} · {{ ingreso.fecha_egreso ? `Egreso: ${formatFechaHora(ingreso.fecha_egreso)}` : 'Pendiente de egreso' }}</div>
+                    <div class="mt-1 text-sm text-slate-300">CI {{ ingreso.cliente_cedula || '---' }} · {{ formatFechaHora(ingreso.fecha_actual) }}</div>
+                    <div class="mt-1 text-xs text-slate-400">Monto: ${{ formatearMonto(ingreso.monto) }} · {{ ingreso.fecha_egreso ? `Egreso: ${formatFechaHora(ingreso.fecha_egreso)}` : 'Pendiente de egreso' }}</div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">
-                    <div class="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em]" :class="ingreso.fecha_egreso ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'">
+                    <div class="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em]" :class="ingreso.fecha_egreso ? 'border border-white/10 bg-white/5 text-slate-100' : 'border border-emerald-400/30 bg-emerald-500/10 text-emerald-100'">
                       {{ ingreso.fecha_egreso ? 'Egresado' : 'Abierto' }}
                     </div>
-                    <span class="rounded-2xl bg-slate-950 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.22em] text-white">Abrir modal</span>
+                    <span class="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.22em] text-slate-100">Abrir modal</span>
                   </div>
                 </div>
               </button>
@@ -861,3 +688,35 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.theme-light {
+  background: radial-gradient(circle at top, rgba(14, 165, 233, 0.12), transparent 34%), radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.10), transparent 28%), linear-gradient(135deg, #f8fafc 0%, #e2e8f0 45%, #cbd5e1 100%);
+  color: #0f172a;
+}
+
+.theme-light :deep([class*='bg-slate-950']),
+.theme-light :deep([class*='bg-white/5']),
+.theme-light :deep([class*='bg-white/10']),
+.theme-light :deep([class*='bg-slate-900']) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.theme-light :deep([class*='border-white/10']),
+.theme-light :deep([class*='border-white/15']),
+.theme-light :deep([class*='border-slate-200']),
+.theme-light :deep([class*='border-slate-300']) {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.theme-light :deep([class*='text-white']),
+.theme-light :deep([class*='text-slate-100']),
+.theme-light :deep([class*='text-slate-200']),
+.theme-light :deep([class*='text-slate-300']) {
+  color: #0f172a !important;
+}
+
+.theme-light :deep([class*='text-slate-400']) {
+  color: #475569 !important;
+}
+</style>

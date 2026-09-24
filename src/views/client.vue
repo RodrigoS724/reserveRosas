@@ -3,19 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
 import IngresoModal from '../components/IngresoModal.vue'
-
-const CHECKS = [
-  { key: 'espejos', label: 'Espejos' },
-  { key: 'faro_delantero', label: 'Faro delantero' },
-  { key: 'tapon_gasolina', label: 'Tapón de gasolina' },
-  { key: 'luz_stop_trasero', label: 'Luz de stop trasero' },
-  { key: 'cubiertas_completas', label: 'Cubiertas completas' },
-  { key: 'tapon_radiadores', label: 'Tapón de radiadores' },
-  { key: 'filtro_aire', label: 'Filtro de aire' },
-  { key: 'bateria', label: 'Batería' },
-  { key: 'llaves', label: 'Llaves' },
-  { key: 'pedales', label: 'Pedales' }
-]
+import CedulaAutocomplete from '../components/CedulaAutocomplete.vue'
+import { CHECK_ITEMS, buildOrdenServicioPrintHtml, buildTrabajoRealizadoTexto } from '../utils/ordenServicio'
 
 type TrabajoRow = {
   cantidad: string
@@ -25,15 +14,26 @@ type TrabajoRow = {
 }
 
 type Checklist = Record<string, boolean>
+type HistorialEvento = {
+  tipo: 'reserva' | 'apronte' | 'ingreso'
+  id: number
+  fecha: string
+  hora?: string | null
+  titulo: string
+  detalle: string
+  estado?: string | null
+}
 
 const route = useRoute()
+const isDarkTheme = ref(true)
 const clientes = ref<any[]>([])
 const clienteActivo = ref<any | null>(null)
-const detalle = ref<{ cliente: any | null; vehiculos: any[]; reservas: any[]; aprontes: any[] }>({
+const detalle = ref<{ cliente: any | null; vehiculos: any[]; reservas: any[]; aprontes: any[]; ingresos: any[] }>({
   cliente: null,
   vehiculos: [],
   reservas: [],
-  aprontes: []
+    aprontes: [],
+    ingresos: []
 })
 const ingresos = ref<any[]>([])
 const busqueda = ref('')
@@ -63,8 +63,8 @@ const formIngreso = ref({
   comentarios: '',
   observaciones: ''
 })
-const checklistIngreso = ref<Checklist>(Object.fromEntries(CHECKS.map((item) => [item.key, false])))
-const checklistEgreso = ref<Checklist>(Object.fromEntries(CHECKS.map((item) => [item.key, false])))
+const checklistIngreso = ref<Checklist>(Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false])))
+const checklistEgreso = ref<Checklist>(Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false])))
 const trabajos = ref<TrabajoRow[]>([
   { cantidad: '', descripcion: '', costo: '', importe: '' },
   { cantidad: '', descripcion: '', costo: '', importe: '' },
@@ -78,10 +78,50 @@ const guardandoVehiculo = ref(false)
 const vehiculoEditando = ref<any | null>(null)
 const formVehiculo = ref({ id: null as number | null, matricula: '', motor: '', chasis: '', color: '', fecha_compra: '' })
 let searchTimer: number | null = null
+let themeObserver: MutationObserver | null = null
+
+const syncTheme = () => {
+  isDarkTheme.value = document.documentElement.classList.contains('dark')
+}
 
 const totalEventos = (cliente: any) => {
-  return Number(cliente?.total_reservas || 0) + Number(cliente?.total_aprontes || 0)
+  return Number(cliente?.total_reservas || 0) + Number(cliente?.total_aprontes || 0) + Number(ingresos.value.length || 0)
 }
+const historialCliente = computed<HistorialEvento[]>(() => {
+  const reservasEventos = (detalle.value.reservas || []).map((item: any) => ({
+    tipo: 'reserva' as const,
+    id: Number(item.id),
+    fecha: String(item.fecha || item.created_at || ''),
+    hora: item.hora || null,
+    titulo: 'Reserva',
+    detalle: obtenerEtiquetaDetalle('reserva', item),
+    estado: item.estado || null
+  }))
+  const aprontesEventos = (detalle.value.aprontes || []).map((item: any) => ({
+    tipo: 'apronte' as const,
+    id: Number(item.id),
+    fecha: String(item.fecha || item.created_at || ''),
+    hora: item.hora || null,
+    titulo: 'Apronte',
+    detalle: obtenerEtiquetaDetalle('apronte', item),
+    estado: item.estado || null
+  }))
+  const ingresosEventos = (ingresos.value || []).map((item: any) => ({
+    tipo: 'ingreso' as const,
+    id: Number(item.id),
+    fecha: String(item.fecha_actual || item.created_at || ''),
+    hora: item.fecha_actual ? new Date(item.fecha_actual).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : null,
+    titulo: item.fecha_egreso ? 'Ingreso / egreso' : 'Ingreso',
+    detalle: item.trabajo_realizado || item.observaciones || 'Sin detalle',
+    estado: item.fecha_egreso ? 'Egresado' : 'Activo'
+  }))
+
+  return [...reservasEventos, ...aprontesEventos, ...ingresosEventos].sort((a, b) => {
+    const fechaA = new Date(`${a.fecha}${a.hora ? `T${a.hora}` : ''}`).getTime()
+    const fechaB = new Date(`${b.fecha}${b.hora ? `T${b.hora}` : ''}`).getTime()
+    return fechaB - fechaA
+  })
+})
 
 const clientesFiltrados = computed(() => clientes.value)
 
@@ -97,6 +137,23 @@ const poblarFormularioCliente = (cliente: any) => {
     localidad: String(cliente?.localidad || '')
   }
   mostrarFormulario.value = true
+}
+
+const onCedulaSeleccionada = async (cliente: { id?: number; cedula?: string | null; nombre?: string | null; telefono?: string | null; localidad?: string | null }) => {
+  if (!cliente) return
+  if (cliente.id) {
+    const encontrado = clientes.value.find((item) => Number(item.id) === Number(cliente.id)) || null
+    if (encontrado) {
+      clienteEditando.value = encontrado
+    }
+  }
+  formCliente.value = {
+    id: cliente.id ?? formCliente.value.id,
+    cedula: String(cliente.cedula || formCliente.value.cedula || ''),
+    nombre: String(cliente.nombre || formCliente.value.nombre || ''),
+    telefono: String(cliente.telefono || formCliente.value.telefono || ''),
+    localidad: String(cliente.localidad || formCliente.value.localidad || '')
+  }
 }
 
 const limpiarFormularioCliente = () => {
@@ -122,8 +179,8 @@ const limpiarFormularioIngreso = () => {
     comentarios: '',
     observaciones: ''
   }
-  checklistIngreso.value = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
-  checklistEgreso.value = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
+  checklistIngreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+  checklistEgreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
   trabajos.value = [
     { cantidad: '', descripcion: '', costo: '', importe: '' },
     { cantidad: '', descripcion: '', costo: '', importe: '' },
@@ -136,8 +193,8 @@ const limpiarFormularioIngreso = () => {
 const poblarFormularioIngreso = (ingreso?: any) => {
   ingresoEditando.value = ingreso || null
   const vehiculoInicial = detalle.value.vehiculos.find((vehiculo) => Number(vehiculo.id) === Number(ingreso?.vehiculo_id || 0)) || detalle.value.vehiculos[0] || null
-  let checklistIngresoData: Checklist = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
-  let checklistEgresoData: Checklist = Object.fromEntries(CHECKS.map((item) => [item.key, false]))
+  let checklistIngresoData: Checklist = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+  let checklistEgresoData: Checklist = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
   let trabajosData: TrabajoRow[] = [
     { cantidad: '', descripcion: '', costo: '', importe: '' },
     { cantidad: '', descripcion: '', costo: '', importe: '' },
@@ -226,9 +283,17 @@ const cargarIngresos = async (cliente: any) => {
   cargandoIngresos.value = true
   try {
     ingresos.value = await api.obtenerIngresosPorCliente(cliente.id)
+    detalle.value = {
+      ...detalle.value,
+      ingresos: ingresos.value
+    }
   } catch (err: any) {
     error.value = err?.message || 'No se pudo cargar el historial de ingresos'
     ingresos.value = []
+    detalle.value = {
+      ...detalle.value,
+      ingresos: []
+    }
   } finally {
     cargandoIngresos.value = false
   }
@@ -242,33 +307,35 @@ const abrirIngresoEnPanel = (ingreso: any) => {
   poblarFormularioIngreso(ingreso)
 }
 
-const resumenChecks = (checks: Checklist) => {
-  return CHECKS.filter((item) => checks[item.key]).map((item) => item.label).join(', ') || 'Sin marcar'
-}
-
 const buildTrabajoRealizado = () => {
-  const lines = [
-    `Ingreso: ${formIngreso.value.fecha_ingreso || ''}`,
-    `Cliente: ${clienteActivo.value?.nombre || ''} - CI ${clienteActivo.value?.cedula || ''}`,
-    `Moto: ${formIngreso.value.marca} ${formIngreso.value.modelo} ${formIngreso.value.color ? `- ${formIngreso.value.color}` : ''}`.trim(),
-    `Matrícula: ${formIngreso.value.matricula || ''}`,
-    `Motor: ${formIngreso.value.numero_motor || ''}`,
-    `Servicios: ${formIngreso.value.numero_servicios || ''}`,
-    `Checklist ingreso: ${resumenChecks(checklistIngreso.value)}`,
-    `Comentarios: ${formIngreso.value.comentarios || ''}`,
-    'Trabajos:'
-  ]
-
-  trabajos.value.forEach((row, index) => {
-    const contenido = [row.cantidad, row.descripcion, row.costo, row.importe].map((part) => String(part || '').trim()).join(' | ')
-    lines.push(`${index + 1}. ${contenido}`)
+  return buildTrabajoRealizadoTexto({
+    fechaIngreso: formIngreso.value.fecha_ingreso || '',
+    nombre: clienteActivo.value?.nombre || '',
+    cedula: clienteActivo.value?.cedula || '',
+    correo: clienteActivo.value?.correo || clienteActivo.value?.email || '',
+    marca: formIngreso.value.marca || '',
+    modelo: formIngreso.value.modelo || '',
+    color: formIngreso.value.color || '',
+    matricula: formIngreso.value.matricula || '',
+    numeroMotor: formIngreso.value.numero_motor || '',
+    numeroServicios: formIngreso.value.numero_servicios || '',
+    comentarios: formIngreso.value.comentarios || '',
+    observaciones: formIngreso.value.observaciones || '',
+    fechaSalida: formIngreso.value.fecha_salida || '',
+    checklistIngreso: checklistIngreso.value,
+    checklistEgreso: checklistEgreso.value,
+    trabajos: trabajos.value
   })
-
-  lines.push(`Observaciones: ${formIngreso.value.observaciones || ''}`)
-  lines.push(`Entrega / salida: ${formIngreso.value.fecha_salida || ''}`)
-  lines.push(`Checklist egreso: ${resumenChecks(checklistEgreso.value)}`)
-  return lines.join('\n')
 }
+
+const crearSnapshotImpresion = () => ({
+  cliente: clienteActivo.value ? clonarPlano(clienteActivo.value) : null,
+  form: clonarPlano(formIngreso.value),
+  checklistIngreso: clonarPlano(checklistIngreso.value),
+  checklistEgreso: clonarPlano(checklistEgreso.value),
+  trabajos: clonarPlano(trabajos.value),
+  ingresoId: ingresoEditando.value?.id ?? null
+})
 
 const guardarIngreso = async () => {
   if (!clienteActivo.value) return
@@ -281,6 +348,7 @@ const guardarIngreso = async () => {
     const trabajosPayload = clonarPlano(trabajos.value)
     const payload = {
       cliente_id: clienteActivo.value.id,
+      cliente_correo: clienteActivo.value?.correo || clienteActivo.value?.email || '',
       monto: formIngreso.value.monto,
       trabajo_realizado: trabajoRealizado,
       fecha_actual: formIngreso.value.fecha_ingreso ? `${formIngreso.value.fecha_ingreso}T${new Date().toISOString().slice(11, 16)}:00` : undefined,
@@ -313,6 +381,76 @@ const guardarIngreso = async () => {
     return null
   } finally {
     guardandoIngreso.value = false
+  }
+}
+
+const buildPrintHtml = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null) => {
+  const clienteSnapshot = snapshot.cliente
+  const formSnapshot = snapshot.form
+  return buildOrdenServicioPrintHtml({
+    folio: folio ?? snapshot.ingresoId ?? '',
+    fechaIngreso: formSnapshot.fecha_ingreso || '',
+    fechaSalida: formSnapshot.fecha_salida || '',
+    nombre: clienteSnapshot?.nombre || '',
+    cedula: clienteSnapshot?.cedula || '',
+    correo: clienteSnapshot?.correo || clienteSnapshot?.email || '',
+    telefono: clienteSnapshot?.telefono || '',
+    localidad: clienteSnapshot?.localidad || '',
+    marca: formSnapshot.marca || '',
+    modelo: formSnapshot.modelo || '',
+    color: formSnapshot.color || '',
+    matricula: formSnapshot.matricula || '',
+    numeroMotor: formSnapshot.numero_motor || '',
+    numeroServicios: formSnapshot.numero_servicios || '',
+    comentarios: formSnapshot.comentarios || '',
+    observaciones: formSnapshot.observaciones || '',
+    checklistIngreso: snapshot.checklistIngreso,
+    checklistEgreso: snapshot.checklistEgreso,
+    trabajos: snapshot.trabajos,
+    trabajoRealizado: formSnapshot.trabajo_realizado || buildTrabajoRealizadoTexto({
+      fechaIngreso: formSnapshot.fecha_ingreso || '',
+      nombre: clienteSnapshot?.nombre || '',
+      cedula: clienteSnapshot?.cedula || '',
+      correo: clienteSnapshot?.correo || clienteSnapshot?.email || '',
+      marca: formSnapshot.marca || '',
+      modelo: formSnapshot.modelo || '',
+      color: formSnapshot.color || '',
+      matricula: formSnapshot.matricula || '',
+      numeroMotor: formSnapshot.numero_motor || '',
+      numeroServicios: formSnapshot.numero_servicios || '',
+      comentarios: formSnapshot.comentarios || '',
+      observaciones: formSnapshot.observaciones || '',
+      fechaSalida: formSnapshot.fecha_salida || '',
+      checklistIngreso: snapshot.checklistIngreso,
+      checklistEgreso: snapshot.checklistEgreso,
+      trabajos: snapshot.trabajos
+    })
+  })
+}
+
+const imprimirHoja = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null, win: Window | null = null) => {
+  const printWindow = win || window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
+    error.value = 'No se pudo abrir la ventana de impresión'
+    return
+  }
+  printWindow.document.open()
+  printWindow.document.write(buildPrintHtml(snapshot, folio))
+  printWindow.document.close()
+}
+
+const guardarYImprimir = async () => {
+  const snapshot = crearSnapshotImpresion()
+  const printWindow = window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
+    error.value = 'No se pudo abrir la ventana de impresión'
+    return
+  }
+  const guardado = await guardarIngreso()
+  if (guardado?.id) {
+    imprimirHoja(snapshot, guardado.id, printWindow)
+  } else {
+    printWindow.close()
   }
 }
 
@@ -424,9 +562,13 @@ const cargarDetalle = async (cliente: any) => {
   try {
     detalle.value = await api.obtenerClienteDetalle(cliente.id)
     await cargarIngresos(cliente)
+    detalle.value = {
+      ...detalle.value,
+      ingresos: ingresos.value
+    }
   } catch (err: any) {
     error.value = err?.message || 'No se pudo cargar el detalle del cliente'
-    detalle.value = { cliente, vehiculos: [], reservas: [], aprontes: [] }
+    detalle.value = { cliente, vehiculos: [], reservas: [], aprontes: [], ingresos: [] }
   } finally {
     cargandoDetalle.value = false
   }
@@ -466,10 +608,15 @@ watch(busqueda, () => {
 })
 
 onMounted(() => {
+  syncTheme()
+  themeObserver = new MutationObserver(syncTheme)
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   cargarClientes().then(() => abrirClienteDesdeQuery())
 })
 
 onBeforeUnmount(() => {
+  themeObserver?.disconnect()
+  themeObserver = null
   if (searchTimer) {
     window.clearTimeout(searchTimer)
     searchTimer = null
@@ -478,7 +625,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[radial-gradient(circle_at_top,#1d4ed8_0%,#0f172a_36%,#020617_100%)] text-slate-100">
+  <div :class="isDarkTheme ? 'theme-dark' : 'theme-light'" class="min-h-screen bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_28%),linear-gradient(135deg,#07111c_0%,#0f172a_45%,#08111f_100%)] text-slate-100">
     <div class="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
       <header class="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl sm:p-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -586,29 +733,29 @@ onBeforeUnmount(() => {
           </div>
         </aside>
 
-        <section class="min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/95 text-slate-900 shadow-2xl shadow-slate-950/30 backdrop-blur-xl">
-          <div class="border-b border-slate-200 px-5 py-5 sm:px-6">
+        <section class="min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/75 text-slate-100 shadow-2xl shadow-slate-950/40 backdrop-blur-xl">
+          <div class="border-b border-white/10 px-5 py-5 sm:px-6">
             <div v-if="clienteActivo">
               <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <div class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-white">
+                  <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-white">
                     {{ detalle.cliente?.cedula || clienteActivo.cedula }}
                   </div>
-                  <h2 class="mt-3 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">{{ detalle.cliente?.nombre || clienteActivo.nombre }}</h2>
-                  <p class="mt-2 text-sm text-slate-500">
+                  <h2 class="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">{{ detalle.cliente?.nombre || clienteActivo.nombre }}</h2>
+                  <p class="mt-2 text-sm text-slate-400">
                     {{ detalle.cliente?.telefono || clienteActivo.telefono || 'Sin teléfono' }} · {{ detalle.cliente?.localidad || clienteActivo.localidad || 'Sin localidad' }}
                   </p>
                 </div>
                 <div class="flex gap-2">
                   <button
                     @click="poblarFormularioCliente(clienteActivo)"
-                    class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.24em] text-slate-700 transition hover:bg-slate-100"
+                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.24em] text-slate-100 transition hover:bg-white/10"
                   >
                     Editar cliente
                   </button>
                   <button
                     @click="cargarDetalle(clienteActivo)"
-                    class="rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black uppercase tracking-[0.24em] text-white transition hover:bg-slate-800"
+                    class="rounded-2xl bg-cyan-500 px-4 py-3 text-xs font-black uppercase tracking-[0.24em] text-white transition hover:bg-cyan-400"
                   >
                     {{ cargandoDetalle ? 'Actualizando...' : 'Actualizar detalle' }}
                   </button>
@@ -621,161 +768,184 @@ onBeforeUnmount(() => {
           <div v-if="clienteActivo" class="grid min-h-0 gap-5 p-5 sm:p-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div class="min-h-0 space-y-5 overflow-auto pr-1">
               <div class="grid gap-4 sm:grid-cols-3">
-                <div class="rounded-[1.5rem] bg-slate-950 p-4 text-white">
+                <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-white shadow-lg shadow-slate-950/20">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Desde</div>
                   <div class="mt-2 text-lg font-black">{{ formatearFecha(detalle.cliente?.created_at || clienteActivo.created_at) }}</div>
                 </div>
-                <div class="rounded-[1.5rem] bg-cyan-50 p-4 text-slate-900">
-                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-700">Vehículos</div>
+                <div class="rounded-[1.5rem] border border-cyan-400/20 bg-cyan-500/10 p-4 text-white shadow-lg shadow-cyan-950/10">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Vehículos</div>
                   <div class="mt-2 text-lg font-black">{{ detalle.vehiculos.length }}</div>
                 </div>
-                <div class="rounded-[1.5rem] bg-amber-50 p-4 text-slate-900">
-                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-amber-700">Actividad</div>
+                <div class="rounded-[1.5rem] border border-amber-400/20 bg-amber-500/10 p-4 text-white shadow-lg shadow-amber-950/10">
+                  <div class="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200">Actividad</div>
                   <div class="mt-2 text-lg font-black">{{ totalEventos(clienteActivo) }}</div>
                 </div>
               </div>
-
-              <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
                 <div class="flex items-center justify-between gap-3">
-                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-500">Vehículos vinculados</h3>
+                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Historial general</h3>
+                  <span class="text-xs font-semibold text-slate-400">{{ historialCliente.length }} movimientos</span>
+                </div>
+                <div class="mt-4 space-y-3">
+                  <div v-for="evento in historialCliente" :key="`${evento.tipo}-${evento.id}`" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg shadow-slate-950/20">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div class="text-sm font-black text-white">{{ evento.titulo }}</div>
+                        <div class="mt-1 text-xs text-slate-400">{{ formatearFechaHora(evento.fecha, evento.hora) }}</div>
+                      </div>
+                      <span v-if="evento.estado" class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100">
+                        {{ evento.estado }}
+                      </span>
+                    </div>
+                    <div class="mt-2 text-sm text-slate-200">{{ evento.detalle }}</div>
+                  </div>
+                  <div v-if="historialCliente.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
+                    Todavía no hay movimientos para este cliente.
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
+                <div class="flex items-center justify-between gap-3">
+                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Vehículos vinculados</h3>
                   <span class="text-xs font-semibold text-slate-400">{{ detalle.vehiculos.length }} registros</span>
                 </div>
                 <div class="mt-4 grid gap-3">
-                  <div v-for="vehiculo in detalle.vehiculos" :key="vehiculo.id" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div v-for="vehiculo in detalle.vehiculos" :key="vehiculo.id" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg shadow-slate-950/20">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <div class="text-base font-black text-slate-950">{{ vehiculo.matricula || 'Sin matrícula' }}</div>
-                        <div class="mt-1 text-sm text-slate-600">{{ vehiculo.marca }} {{ vehiculo.modelo }}</div>
+                        <div class="text-base font-black text-white">{{ vehiculo.matricula || 'Sin matrícula' }}</div>
+                        <div class="mt-1 text-sm text-slate-300">{{ vehiculo.marca }} {{ vehiculo.modelo }}</div>
                         <div class="mt-2 text-xs text-slate-400">
                           {{ vehiculo.dt_vehiculo_codigo ? `${vehiculo.dt_vehiculo_codigo} · ` : '' }}{{ vehiculo.dt_vehiculo_modelo || '' }}
                         </div>
                       </div>
                       <div class="text-right text-xs text-slate-400">
-                        <div class="font-semibold text-slate-500">Motor</div>
+                        <div class="font-semibold text-slate-300">Motor</div>
                         <div>{{ vehiculo.numero_motor || vehiculo.motor || 'Sin dato' }}</div>
-                        <button @click="poblarFormularioVehiculo(vehiculo)" class="mt-3 rounded-2xl border border-slate-300 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-700 transition hover:bg-slate-100">
+                        <button @click="poblarFormularioVehiculo(vehiculo)" class="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-white/10">
                           Editar moto
                         </button>
                       </div>
                     </div>
                   </div>
-                  <div v-if="detalle.vehiculos.length === 0" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">
+                  <div v-if="detalle.vehiculos.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
                     No hay vehículos asociados a este cliente.
                   </div>
                 </div>
               </div>
 
               <div class="grid gap-5 xl:grid-cols-2">
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-500">Reservas</h3>
+                <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
+                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Reservas</h3>
                   <div class="mt-4 space-y-3">
-                    <div v-for="reserva in detalle.reservas" :key="reserva.id" class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                    <div v-for="reserva in detalle.reservas" :key="reserva.id" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg shadow-slate-950/20">
                       <div class="flex items-center justify-between gap-3">
-                        <div class="text-sm font-black text-slate-950">{{ formatearFechaHora(reserva.fecha, reserva.hora) }}</div>
-                        <span class="rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white">{{ reserva.estado || 'pendiente' }}</span>
+                        <div class="text-sm font-black text-white">{{ formatearFechaHora(reserva.fecha, reserva.hora) }}</div>
+                        <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100">{{ reserva.estado || 'pendiente' }}</span>
                       </div>
-                      <div class="mt-2 text-sm font-semibold text-slate-700">{{ obtenerEtiquetaDetalle('reserva', reserva) }}</div>
+                      <div class="mt-2 text-sm font-semibold text-slate-200">{{ obtenerEtiquetaDetalle('reserva', reserva) }}</div>
                       <div class="mt-1 text-xs text-slate-500">{{ obtenerDetalleResumen('reserva', reserva) }}</div>
                     </div>
-                    <div v-if="detalle.reservas.length === 0" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">
+                    <div v-if="detalle.reservas.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
                       Sin reservas registradas.
                     </div>
                   </div>
                 </div>
 
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-500">Aprontes</h3>
+                <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
+                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Aprontes</h3>
                   <div class="mt-4 space-y-3">
-                    <div v-for="apronte in detalle.aprontes" :key="apronte.id" class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                    <div v-for="apronte in detalle.aprontes" :key="apronte.id" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg shadow-slate-950/20">
                       <div class="flex items-center justify-between gap-3">
-                        <div class="text-sm font-black text-slate-950">{{ formatearFechaHora(apronte.fecha, apronte.hora) }}</div>
-                        <span class="rounded-full bg-cyan-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white">{{ apronte.estado || 'apronte' }}</span>
+                        <div class="text-sm font-black text-white">{{ formatearFechaHora(apronte.fecha, apronte.hora) }}</div>
+                        <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100">{{ apronte.estado || 'apronte' }}</span>
                       </div>
-                      <div class="mt-2 text-sm font-semibold text-slate-700">{{ obtenerEtiquetaDetalle('apronte', apronte) }}</div>
+                      <div class="mt-2 text-sm font-semibold text-slate-200">{{ obtenerEtiquetaDetalle('apronte', apronte) }}</div>
                       <div class="mt-1 text-xs text-slate-500">{{ obtenerDetalleResumen('apronte', apronte) }}</div>
                     </div>
-                    <div v-if="detalle.aprontes.length === 0" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">
+                    <div v-if="detalle.aprontes.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
                       Sin aprontes registrados.
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-500">Ingresos y egresos</h3>
-                  <button @click="abrirFormularioIngreso" class="rounded-2xl bg-slate-950 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.22em] text-white transition hover:bg-slate-800">
+                  <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Ingresos y egresos</h3>
+                  <button @click="abrirFormularioIngreso" class="rounded-2xl bg-cyan-500 px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.22em] text-white transition hover:bg-cyan-400">
                     Abrir panel de ingresos
                   </button>
                 </div>
                 <div class="mt-4 space-y-3">
-                  <div v-for="ingreso in ingresos" :key="ingreso.id" class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                  <div v-for="ingreso in ingresos" :key="ingreso.id" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg shadow-slate-950/20">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <div class="text-sm font-black text-slate-950">{{ formatearFechaHoraCompleta(ingreso.fecha_actual) }}</div>
-                        <div class="mt-1 text-sm text-slate-600">Monto: ${{ Number(ingreso.monto || 0).toFixed(2) }}</div>
+                        <div class="text-sm font-black text-white">{{ formatearFechaHoraCompleta(ingreso.fecha_actual) }}</div>
+                        <div class="mt-1 text-sm text-slate-300">Monto: ${{ Number(ingreso.monto || 0).toFixed(2) }}</div>
                         <div class="mt-1 text-xs text-slate-500">{{ ingreso.trabajo_realizado || 'Sin detalle de trabajo' }}</div>
                       </div>
-                      <button @click="abrirIngresoEnPanel(ingreso)" class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-slate-700 transition hover:bg-slate-100">
+                      <button @click="abrirIngresoEnPanel(ingreso)" class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-white/10">
                         Ver / editar
                       </button>
                       <button
                         v-if="!ingreso.fecha_egreso"
                         @click="registrarEgreso(ingreso)"
-                        class="rounded-2xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-700 transition hover:bg-emerald-100"
+                        class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-100 transition hover:bg-emerald-500/15"
                       >
                         Registrar egreso
                       </button>
-                      <div v-else class="rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-600">
+                      <div v-else class="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-200">
                         Egresado
                       </div>
                     </div>
-                    <div v-if="ingreso.fecha_egreso" class="mt-3 text-xs text-slate-500">
+                    <div v-if="ingreso.fecha_egreso" class="mt-3 text-xs text-slate-400">
                       Egreso: {{ formatearFechaHoraCompleta(ingreso.fecha_egreso) }}
                     </div>
                   </div>
-                  <div v-if="cargandoIngresos" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">
+                  <div v-if="cargandoIngresos" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
                     Cargando ingresos...
                   </div>
-                  <div v-if="!cargandoIngresos && ingresos.length === 0" class="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-500">
+                  <div v-if="!cargandoIngresos && ingresos.length === 0" class="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-sm text-slate-400">
                     No hay ingresos registrados para este cliente.
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="min-h-0 overflow-auto rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <div class="min-h-0 overflow-auto rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
               <div class="flex items-center justify-between gap-3">
-                <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-500">Características</h3>
+                <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Características</h3>
                 <span class="text-xs font-semibold text-slate-400">Perfil del cliente</span>
               </div>
               <div class="mt-4 space-y-3">
-                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Cédula</div>
-                  <div class="mt-1 text-sm font-semibold text-slate-900">{{ detalle.cliente?.cedula || clienteActivo.cedula }}</div>
+                  <div class="mt-1 text-sm font-semibold text-white">{{ detalle.cliente?.cedula || clienteActivo.cedula }}</div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Teléfono</div>
-                  <div class="mt-1 text-sm font-semibold text-slate-900">{{ detalle.cliente?.telefono || clienteActivo.telefono || 'Sin dato' }}</div>
+                  <div class="mt-1 text-sm font-semibold text-white">{{ detalle.cliente?.telefono || clienteActivo.telefono || 'Sin dato' }}</div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Localidad</div>
-                  <div class="mt-1 text-sm font-semibold text-slate-900">{{ detalle.cliente?.localidad || clienteActivo.localidad || 'Sin dato' }}</div>
+                  <div class="mt-1 text-sm font-semibold text-white">{{ detalle.cliente?.localidad || clienteActivo.localidad || 'Sin dato' }}</div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Última reserva</div>
-                  <div class="mt-1 text-sm font-semibold text-slate-900">{{ formatearFecha(detalle.cliente?.ultima_reserva_fecha || clienteActivo.ultima_reserva_fecha) }}</div>
+                  <div class="mt-1 text-sm font-semibold text-white">{{ formatearFecha(detalle.cliente?.ultima_reserva_fecha || clienteActivo.ultima_reserva_fecha) }}</div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
                   <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Último apronte</div>
-                  <div class="mt-1 text-sm font-semibold text-slate-900">{{ formatearFecha(detalle.cliente?.ultimo_apronte_fecha || clienteActivo.ultimo_apronte_fecha) }}</div>
+                  <div class="mt-1 text-sm font-semibold text-white">{{ formatearFecha(detalle.cliente?.ultimo_apronte_fecha || clienteActivo.ultimo_apronte_fecha) }}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div v-else class="flex h-full items-center justify-center p-10 text-sm text-slate-500">
-            <div class="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
+          <div v-else class="flex h-full items-center justify-center p-10 text-sm text-slate-400">
+            <div class="rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 px-6 py-8 text-center backdrop-blur-xl">
               Seleccioná un cliente para ver su perfil, vehículos e historial.
             </div>
           </div>
@@ -796,7 +966,13 @@ onBeforeUnmount(() => {
         <div class="mt-6 grid gap-4 sm:grid-cols-2">
           <label class="space-y-2">
             <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Cédula</span>
-            <input v-model="formCliente.cedula" type="text" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-cyan-400/40" placeholder="12345678" />
+            <CedulaAutocomplete
+              v-model="formCliente.cedula"
+              placeholder="12345678"
+              label=""
+              @select="onCedulaSeleccionada"
+              :input-class="'w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-cyan-400/40'"
+            />
           </label>
           <label class="space-y-2">
             <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Nombre</span>
@@ -830,8 +1006,10 @@ onBeforeUnmount(() => {
       :checklist-ingreso="checklistIngreso"
       :checklist-egreso="checklistEgreso"
       :trabajos="trabajos"
+      :allow-print="true"
       @close="limpiarFormularioIngreso"
       @save="guardarIngreso"
+      @save-and-print="guardarYImprimir"
     />
 
     <div v-if="mostrarFormularioVehiculo" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-6 backdrop-blur-sm">
@@ -877,3 +1055,37 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.theme-light {
+  background: radial-gradient(circle at top, rgba(14, 165, 233, 0.12), transparent 34%), radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.10), transparent 28%), linear-gradient(135deg, #f8fafc 0%, #e2e8f0 45%, #cbd5e1 100%);
+  color: #0f172a;
+}
+
+.theme-light :deep([class*='bg-slate-950']),
+.theme-light :deep([class*='bg-white/5']),
+.theme-light :deep([class*='bg-white/10']),
+.theme-light :deep([class*='bg-slate-900']),
+.theme-light :deep([class*='bg-slate-800']) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.theme-light :deep([class*='border-white/10']),
+.theme-light :deep([class*='border-white/15']),
+.theme-light :deep([class*='border-white/20']),
+.theme-light :deep([class*='border-slate-200']),
+.theme-light :deep([class*='border-slate-300']) {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.theme-light :deep([class*='text-white']),
+.theme-light :deep([class*='text-slate-100']),
+.theme-light :deep([class*='text-slate-200']),
+.theme-light :deep([class*='text-slate-300']) {
+  color: #0f172a !important;
+}
+
+.theme-light :deep([class*='text-slate-400']) {
+  color: #475569 !important;
+}
+</style>

@@ -46,6 +46,12 @@ function pickVehiculoData(input: any) {
   }
 }
 
+function pickClienteData(input: any) {
+  return {
+    cliente_correo: normalizarTexto(input?.cliente_correo ?? input?.email ?? input?.correo ?? '', 255) || null
+  }
+}
+
 function pickServicioPayload(input: any) {
   return {
     numero_servicios: normalizarTexto(input?.numero_servicios ?? input?.numeroServicios ?? '', 255) || null,
@@ -90,6 +96,7 @@ async function asegurarSchemaMysql(pool: any) {
       vehiculo_color VARCHAR(255) NULL,
       vehiculo_matricula VARCHAR(255) NULL,
       vehiculo_motor VARCHAR(255) NULL,
+      cliente_correo VARCHAR(255) NULL,
       fecha_actual DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       fecha_salida DATETIME NULL,
       fecha_egreso DATETIME NULL,
@@ -117,6 +124,7 @@ function asegurarSchemaSqlite() {
   ensureSqliteColumn(db, 'ingresos', 'vehiculo_color', 'TEXT')
   ensureSqliteColumn(db, 'ingresos', 'vehiculo_matricula', 'TEXT')
   ensureSqliteColumn(db, 'ingresos', 'vehiculo_motor', 'TEXT')
+  ensureSqliteColumn(db, 'ingresos', 'cliente_correo', 'TEXT')
   ensureSqliteColumn(db, 'ingresos', 'fecha_salida', 'TEXT')
   ensureSqliteColumn(db, 'ingresos', 'numero_servicios', 'TEXT')
   ensureSqliteColumn(db, 'ingresos', 'comentarios', 'TEXT')
@@ -233,17 +241,18 @@ export async function crearIngreso(input: any = {}) {
   const monto = normalizarMonto(input.monto)
   const trabajoRealizado = normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000) || null
   const vehiculo = pickVehiculoData(input)
+  const clienteDatos = pickClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {
     await asegurarSchemaMysql(pool)
     const [result]: any = await pool.execute(
       `INSERT INTO ingresos (
-        cliente_id, reserva_id, vehiculo_id, vehiculo_marca, vehiculo_modelo, vehiculo_color, vehiculo_matricula, vehiculo_motor,
+        cliente_id, reserva_id, vehiculo_id, vehiculo_marca, vehiculo_modelo, vehiculo_color, vehiculo_matricula, vehiculo_motor, cliente_correo,
         fecha_actual, fecha_salida, monto, trabajo_realizado, numero_servicios, comentarios, observaciones,
         checklist_ingreso_json, checklist_egreso_json, trabajos_json
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
       [
         cliente.id,
         reservaId,
@@ -253,6 +262,7 @@ export async function crearIngreso(input: any = {}) {
         vehiculo.vehiculo_color,
         vehiculo.vehiculo_matricula,
         vehiculo.vehiculo_motor,
+        clienteDatos.cliente_correo,
         fechaActual,
         fechaSalida,
         monto,
@@ -324,6 +334,7 @@ export async function actualizarIngreso(input: any = {}) {
   const monto = normalizarMonto(input.monto)
   const trabajoRealizado = normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000) || null
   const vehiculo = pickVehiculoData(input)
+  const clienteDatos = pickClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {
@@ -338,6 +349,7 @@ export async function actualizarIngreso(input: any = {}) {
            vehiculo_color = ?,
            vehiculo_matricula = ?,
            vehiculo_motor = ?,
+           cliente_correo = ?,
            fecha_actual = COALESCE(?, fecha_actual),
            fecha_salida = COALESCE(?, fecha_salida),
            fecha_egreso = COALESCE(?, fecha_egreso),
@@ -359,6 +371,7 @@ export async function actualizarIngreso(input: any = {}) {
         vehiculo.vehiculo_color,
         vehiculo.vehiculo_matricula,
         vehiculo.vehiculo_motor,
+        clienteDatos.cliente_correo,
         fechaActual,
         fechaSalida,
         fechaEgreso,
@@ -444,6 +457,7 @@ export async function registrarEgreso(input: any = {}) {
   const trabajoRealizado = input.trabajo_realizado == null && input.trabajoRealizado == null
     ? null
     : normalizarTexto(input.trabajo_realizado ?? input.trabajoRealizado ?? '', 4000)
+  const clienteDatos = pickClienteData(input)
   const servicio = pickServicioPayload(input)
 
   const mysqlResult = await tryMysql(async (pool) => {
@@ -453,11 +467,12 @@ export async function registrarEgreso(input: any = {}) {
        SET fecha_egreso = COALESCE(?, fecha_egreso),
            monto = COALESCE(?, monto),
            trabajo_realizado = COALESCE(?, trabajo_realizado),
+           cliente_correo = COALESCE(?, cliente_correo),
            checklist_egreso_json = COALESCE(?, checklist_egreso_json),
            trabajos_json = COALESCE(?, trabajos_json),
            observaciones = COALESCE(?, observaciones)
        WHERE id = ?`,
-      [fechaEgreso, monto, trabajoRealizado, servicio.checklist_egreso_json, servicio.trabajos_json, servicio.observaciones, ingresoId]
+      [fechaEgreso, monto, trabajoRealizado, clienteDatos.cliente_correo, servicio.checklist_egreso_json, servicio.trabajos_json, servicio.observaciones, ingresoId]
     )
     return true
   })
@@ -475,12 +490,13 @@ export async function registrarEgreso(input: any = {}) {
      SET fecha_egreso = COALESCE(?, fecha_egreso),
          monto = COALESCE(?, monto),
          trabajo_realizado = COALESCE(?, trabajo_realizado),
+       cliente_correo = COALESCE(?, cliente_correo),
          checklist_egreso_json = COALESCE(?, checklist_egreso_json),
          trabajos_json = COALESCE(?, trabajos_json),
          observaciones = COALESCE(?, observaciones),
          updated_at = datetime('now')
      WHERE id = ?`
-  ).run(fechaEgreso, monto, trabajoRealizado, servicio.checklist_egreso_json, servicio.trabajos_json, servicio.observaciones, ingresoId)
+    ).run(fechaEgreso, monto, trabajoRealizado, clienteDatos.cliente_correo, servicio.checklist_egreso_json, servicio.trabajos_json, servicio.observaciones, ingresoId)
 
   return obtenerIngreso(ingresoId)
 }

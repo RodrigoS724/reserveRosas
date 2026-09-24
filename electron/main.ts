@@ -7,6 +7,7 @@ import { setupIpcHandlers } from './ipc/index.ts'
 import { loadUserEnv } from './config/env'
 import { setSettings } from './settings'
 import { startAutoUpdateFlow } from './services/updater.service'
+import { bootstrapSuperAdmin } from './services/users.service'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -94,6 +95,7 @@ function createWindow() {
 app.whenReady().then(async () => {
   loadUserEnv() // Cargar .env guardado por el usuario (si existe)
   console.log('[Main] Modo API remota activo. No se inicializa BD local.')
+  await bootstrapSuperAdmin()
   setupIpcHandlers() // Activamos los cables
   createWindow()  // Creamos la ventana
   startAutoUpdateFlow(() => win)
