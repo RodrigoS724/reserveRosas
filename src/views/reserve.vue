@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
+import IngresoModal from '../components/IngresoModal.vue'
 import ReservaWindow from '../components/reservaWindow.vue'
 import ApronteWindow from '../components/apronteWindow.vue'
 import { api, ipc } from '../api'
@@ -13,6 +14,7 @@ const panelActivo = ref<'agenda' | 'aprontes'>('agenda')
 const reservasSeleccionadas = ref<number[]>([])
 const estadoMasivo = ref('PENDIENTE')
 const aplicandoEstadoMasivo = ref(false)
+const error = ref('')
 const sidebarAbiertoLocal = ref(true)
 const sidebarAbierto = computed({
   get: () => sidebarAbiertoLocal.value,
@@ -119,6 +121,10 @@ const normalizarHoraAgenda = (value: any) => {
   }
 
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+const abrirFichaTrabajoDesdeReserva = (reserva: any) => {
+  void abrirIngresoDesdeReserva(reserva)
 }
 
 // Estructura de semana
@@ -850,6 +856,281 @@ const mostrarApronte = ref(false)
 const apronteActivo = ref<any>(null)
 const apronteModalKey = ref(0)
 
+const mostrarFormularioIngreso = ref(false)
+const guardandoIngreso = ref(false)
+const ingresoEditando = ref<any | null>(null)
+const reservaIngresoActiva = ref<any | null>(null)
+const ingresoCliente = ref<any | null>(null)
+const ingresoVehiculos = ref<any[]>([])
+const formIngreso = ref({
+  monto: '',
+  trabajo_realizado: '',
+  fecha_ingreso: new Date().toISOString().slice(0, 10),
+  fecha_salida: '',
+  historia: '',
+  vehiculo_id: null as number | null,
+  marca: '',
+  modelo: '',
+  color: '',
+  matricula: '',
+  numero_motor: '',
+  comentarios: '',
+  observaciones: ''
+})
+
+const limpiarFormularioIngreso = () => {
+  ingresoEditando.value = null
+  reservaIngresoActiva.value = null
+  ingresoCliente.value = null
+  ingresoVehiculos.value = []
+  formIngreso.value = {
+    monto: '',
+    trabajo_realizado: '',
+    fecha_ingreso: new Date().toISOString().slice(0, 10),
+    fecha_salida: '',
+    historia: '',
+    vehiculo_id: null,
+    marca: '',
+    modelo: '',
+    color: '',
+    matricula: '',
+    numero_motor: '',
+    comentarios: '',
+    observaciones: ''
+  }
+}
+
+const construirHistoriaReserva = (reserva: any, cliente: any, vehiculo: any) => {
+  const partes = [
+    `Reserva #${reserva?.id ?? ''}`.trim(),
+    reserva?.fecha || reserva?.dia || '',
+    reserva?.hora || '',
+    cliente?.nombre || reserva?.nombre || '',
+    cliente?.cedula || reserva?.cedula || '',
+    vehiculo?.matricula || reserva?.matricula || '',
+    `${vehiculo?.marca || reserva?.marca || ''} ${vehiculo?.modelo || reserva?.modelo || ''}`.trim(),
+    reserva?.detalles || reserva?.garantia_problema || ''
+  ]
+    .map((valor) => String(valor || '').trim())
+    .filter(Boolean)
+
+  return partes.join(' | ').slice(0, 255)
+}
+
+const tomarValorNoVacio = (...valores: any[]) => {
+  for (const valor of valores) {
+    if (valor !== null && valor !== undefined && String(valor).trim() !== '') {
+      return valor
+    }
+  }
+  return ''
+}
+
+const abrirIngresoDesdeReserva = async (reserva: any) => {
+  if (!reserva) return
+  reservaIngresoActiva.value = { ...reserva }
+  mostrarFormularioIngreso.value = true
+  error.value = ''
+
+  try {
+    const detalleCliente = await api.obtenerClienteDetalle(reserva.cliente_id || reserva.cedula || '')
+    const clienteBase = detalleCliente?.cliente || {}
+    ingresoCliente.value = {
+      id: tomarValorNoVacio(clienteBase.id, reserva.cliente_id, reserva.clienteId, reserva.id_cliente, reserva.idCliente),
+      cedula: tomarValorNoVacio(clienteBase.cedula, reserva.cedula, reserva.ci),
+      nombre: tomarValorNoVacio(clienteBase.nombre, reserva.nombre, reserva.cliente_nombre),
+      telefono: tomarValorNoVacio(clienteBase.telefono, reserva.telefono, reserva.cliente_telefono),
+      localidad: tomarValorNoVacio(clienteBase.localidad, reserva.localidad, reserva.cliente_localidad),
+      correo: tomarValorNoVacio(clienteBase.correo, reserva.correo, reserva.cliente_correo),
+      email: tomarValorNoVacio(clienteBase.email, reserva.email, reserva.cliente_email),
+      ...reserva,
+      ...clienteBase
+    }
+    ingresoVehiculos.value = Array.isArray(detalleCliente?.vehiculos) ? detalleCliente.vehiculos : []
+  } catch {
+    ingresoCliente.value = {
+      id: reserva.cliente_id ?? null,
+      cedula: reserva.cedula || '',
+      nombre: reserva.nombre || '',
+      telefono: reserva.telefono || '',
+      localidad: reserva.localidad || ''
+    }
+    ingresoVehiculos.value = []
+  }
+
+  const vehiculoInicial = ingresoVehiculos.value.find((vehiculo) => Number(vehiculo.id) === Number(reserva.vehiculo_id || 0)) || ingresoVehiculos.value[0] || null
+  const historia = construirHistoriaReserva(reserva, ingresoCliente.value, vehiculoInicial)
+  formIngreso.value = {
+    monto: '',
+    trabajo_realizado: '',
+    fecha_ingreso: new Date().toISOString().slice(0, 10),
+    fecha_salida: '',
+    historia,
+    vehiculo_id: vehiculoInicial?.id ? Number(vehiculoInicial.id) : Number(reserva.vehiculo_id || 0) || null,
+    marca: String(vehiculoInicial?.marca || vehiculoInicial?.codigo_marca || reserva.marca || ''),
+    modelo: String(vehiculoInicial?.modelo || vehiculoInicial?.codigo_modelo || reserva.modelo || ''),
+    color: String(vehiculoInicial?.color || reserva.color || ''),
+    matricula: String(vehiculoInicial?.matricula || reserva.matricula || ''),
+    numero_motor: String(vehiculoInicial?.motor || vehiculoInicial?.numero_motor || reserva.numero_motor || ''),
+    comentarios: String(reserva.detalles || reserva.garantia_problema || ''),
+    observaciones: String(reserva.detalles || reserva.garantia_problema || '')
+  }
+  ingresoEditando.value = null
+}
+
+const cerrarFormularioIngreso = () => {
+  mostrarFormularioIngreso.value = false
+  limpiarFormularioIngreso()
+}
+
+const clonarPlano = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
+
+const crearSnapshotImpresion = () => ({
+  cliente: ingresoCliente.value ? clonarPlano(ingresoCliente.value) : null,
+  form: clonarPlano(formIngreso.value),
+  ingresoId: ingresoEditando.value?.id ?? null,
+  reserva: reservaIngresoActiva.value ? clonarPlano(reservaIngresoActiva.value) : null
+})
+
+const buildPrintHtml = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null) => {
+  const clienteSnapshot = snapshot.cliente || {}
+  const formSnapshot = snapshot.form
+  const folioTexto = folio ?? snapshot.ingresoId ?? ''
+  return `<!doctype html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Ficha de trabajo #${folioTexto}</title>
+      <style>
+        @page { size: A4; margin: 14mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
+        .sheet { border: 2px solid #0f172a; padding: 18px; min-height: 260mm; box-sizing: border-box; }
+        .top { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; border-bottom: 1px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; }
+        .brand { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+        .title { font-size: 26px; font-weight: 900; margin: 6px 0 0; }
+        .folio { font-size: 14px; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin-bottom: 14px; }
+        .box { border: 1px solid #0f172a; padding: 10px 12px; min-height: 30px; }
+        .label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #475569; margin-bottom: 5px; }
+        .value { font-size: 14px; font-weight: 700; }
+        .block { border: 1px solid #0f172a; padding: 12px; min-height: 115px; margin-bottom: 14px; }
+        .block-title { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #475569; margin-bottom: 10px; }
+        .history { min-height: 64px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+        .lines { height: 82px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 22px, rgba(15,23,42,.22) 22px, rgba(15,23,42,.22) 23px); }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+        .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+      </style>
+    </head>
+    <body>
+      <main class="sheet">
+        <div class="top">
+          <div>
+            <div class="brand">ReserveRosas</div>
+            <div class="title">Ficha de trabajo</div>
+          </div>
+          <div class="folio">N° ${folioTexto}</div>
+        </div>
+
+        <div class="grid">
+          <div class="box"><div class="label">Ingreso</div><div class="value">${formSnapshot.fecha_ingreso || ''}</div></div>
+          <div class="box"><div class="label">Egreso</div><div class="value">${formSnapshot.fecha_salida || ''}</div></div>
+          <div class="box"><div class="label">Cliente</div><div class="value">${clienteSnapshot.nombre || ''}</div></div>
+          <div class="box"><div class="label">Cédula</div><div class="value">${clienteSnapshot.cedula || ''}</div></div>
+          <div class="box"><div class="label">Teléfono</div><div class="value">${clienteSnapshot.telefono || ''}</div></div>
+          <div class="box"><div class="label">Localidad</div><div class="value">${clienteSnapshot.localidad || ''}</div></div>
+          <div class="box"><div class="label">Moto</div><div class="value">${formSnapshot.marca || ''} ${formSnapshot.modelo || ''}</div></div>
+          <div class="box"><div class="label">Matrícula</div><div class="value">${formSnapshot.matricula || ''}</div></div>
+          <div class="box"><div class="label">Color</div><div class="value">${formSnapshot.color || ''}</div></div>
+          <div class="box"><div class="label">Motor</div><div class="value">${formSnapshot.numero_motor || ''}</div></div>
+        </div>
+
+        <div class="block"><div class="block-title">Historia</div><div class="history">${formSnapshot.historia || ''}</div></div>
+        <div class="block"><div class="block-title">Observaciones</div><div class="lines"></div></div>
+        <div class="block"><div class="block-title">Notas de entrega</div><div class="lines"></div></div>
+
+        <div class="signatures">
+          <div class="sig">Firma del prestador</div>
+          <div class="sig">Firma del cliente</div>
+        </div>
+      </main>
+    </body>
+  </html>`
+}
+
+const imprimirHoja = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null, win: Window | null = null) => {
+  const printWindow = win || window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
+    error.value = 'No se pudo abrir la ventana de impresión'
+    return
+  }
+  printWindow.document.open()
+  printWindow.document.write(buildPrintHtml(snapshot, folio))
+  printWindow.document.close()
+}
+
+const guardarIngreso = async () => {
+  if (!ingresoCliente.value?.id) return null
+  guardandoIngreso.value = true
+  error.value = ''
+  try {
+    const payload = {
+      cliente_id: ingresoCliente.value.id,
+      reserva_id: reservaIngresoActiva.value?.id || null,
+      fecha_actual: formIngreso.value.fecha_ingreso ? `${formIngreso.value.fecha_ingreso}T${new Date().toISOString().slice(11, 16)}:00` : undefined,
+      fecha_egreso: formIngreso.value.fecha_salida ? `${formIngreso.value.fecha_salida}T${new Date().toISOString().slice(11, 16)}:00` : null,
+      marca: formIngreso.value.marca,
+      modelo: formIngreso.value.modelo,
+      color: formIngreso.value.color,
+      matricula: formIngreso.value.matricula,
+      numero_motor: formIngreso.value.numero_motor,
+      historia: formIngreso.value.historia,
+      comentarios: formIngreso.value.comentarios,
+      observaciones: formIngreso.value.observaciones,
+      vehiculo_id: formIngreso.value.vehiculo_id
+    }
+
+    let guardado: any = null
+    if (ingresoEditando.value?.id) {
+      guardado = await api.actualizarIngreso({ id: ingresoEditando.value.id, ...payload })
+    } else {
+      guardado = await api.crearIngreso(payload)
+    }
+
+    if (guardado?.id) {
+      ingresoEditando.value = guardado
+    }
+    return guardado
+  } catch (err: any) {
+    error.value = err?.message || 'No se pudo registrar el ingreso'
+    throw err
+  } finally {
+    guardandoIngreso.value = false
+  }
+}
+
+const guardarYImprimirIngreso = async () => {
+  const snapshot = crearSnapshotImpresion()
+  const printWindow = window.open('', '_blank', 'width=980,height=1200')
+  if (!printWindow) {
+    error.value = 'No se pudo abrir la ventana de impresión'
+    return
+  }
+  try {
+    const guardado = await guardarIngreso()
+    if (guardado?.id) {
+      imprimirHoja(snapshot, guardado.id, printWindow)
+      mostrarFormularioIngreso.value = false
+      reservaIngresoActiva.value = null
+      setTimeout(() => cargarReservas(), 150)
+    } else {
+      printWindow.close()
+    }
+  } catch {
+    printWindow.close()
+  }
+}
+
 const abrirVentana = (reserva: any) => {
   reservaActiva.value = { ...reserva }
   modalKey.value += 1
@@ -1159,6 +1440,18 @@ const obtenerDetalleResumen = (reserva: any) => {
                   <div class="text-[9px] sm:text-[10px] font-bold opacity-80">{{ r.tipo_resumen }}</div>
                   <div v-if="r.detalle_resumen" class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ r.detalle_resumen }}</div>
                   <div class="text-[9px] sm:text-[10px] font-bold opacity-75 break-words leading-tight">{{ r.marca }} {{ r.modelo }} · {{ r.cedula }}</div>
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    <button @click.stop="abrirFichaTrabajoDesdeReserva(r)" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
+                      Ingreso
+                    </button>
+                    <button
+                      @click.stop="abrirFichaTrabajoDesdeReserva(r)"
+                      :disabled="!r.ingreso_id"
+                      class="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Egreso
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1224,6 +1517,18 @@ const obtenerDetalleResumen = (reserva: any) => {
                     <div class="text-[8px] xl:text-[10px] font-bold opacity-80 leading-tight break-words">
                       {{ r.marca }} {{ r.modelo }}<br/>
                       <span class="opacity-60">{{ r.cedula }}</span>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                      <button @click.stop="abrirFichaTrabajoDesdeReserva(r)" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
+                        Ingreso
+                      </button>
+                      <button
+                        @click.stop="abrirFichaTrabajoDesdeReserva(r)"
+                        :disabled="!r.ingreso_id"
+                        class="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Egreso
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1380,6 +1685,18 @@ const obtenerDetalleResumen = (reserva: any) => {
       :apronte="apronteActivo"
       @cerrar="manejarCierreApronte"
       @actualizar="() => { cargarReservas(); cargarMetricasAprontes(true) }"
+    />
+
+    <IngresoModal
+      :open="mostrarFormularioIngreso"
+      :cliente="ingresoCliente"
+      :vehiculos="ingresoVehiculos"
+      :ingreso="ingresoEditando"
+      :form="formIngreso"
+      :allow-print="true"
+      @close="cerrarFormularioIngreso"
+      @save="guardarIngreso"
+      @save-and-print="guardarYImprimirIngreso"
     />
 </template>
 

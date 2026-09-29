@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
 import IngresoModal from '../components/IngresoModal.vue'
-import { CHECK_ITEMS, buildOrdenServicioPrintHtml } from '../utils/ordenServicio'
+import { CHECK_ITEMS } from '../utils/ordenServicio'
 
 const route = useRoute()
 const isDarkTheme = ref(true)
@@ -41,6 +41,8 @@ const vehiculoSeleccionadoId = ref<number | null>(null)
 const ingresos = ref<any[]>([])
 const ingresoEnEdicionId = ref<number | null>(null)
 const ingresoSeleccionado = ref<any | null>(null)
+const reservaOrigen = ref<any | null>(null)
+const modalInitialSection = ref<'ingreso' | 'egreso'>('ingreso')
 const filtroIngresos = ref('')
 
 const form = ref({
@@ -142,10 +144,6 @@ const totalTrabajo = computed(() => {
   }, 0)
 })
 
-const resumenChecks = (checks: Checklist) => {
-  return CHECK_ITEMS.filter((item) => checks[item.key]).map((item) => item.label).join(', ') || 'Sin marcar'
-}
-
 const formatearMonto = (value: any) => {
   const monto = Number(value || 0)
   return Number.isFinite(monto) ? monto.toFixed(2) : '0.00'
@@ -214,10 +212,12 @@ const aplicarVehiculo = (vehiculo: any) => {
   form.value.numero_motor = String(vehiculo.motor || vehiculo.numero_motor || form.value.numero_motor || '')
 }
 
-const cargarIngresoEnEditor = (ingreso: any) => {
+const cargarIngresoEnEditor = (ingreso: any, seccion: 'ingreso' | 'egreso' = 'ingreso') => {
   if (!ingreso) return
   ingresoSeleccionado.value = ingreso
   ingresoEnEdicionId.value = Number(ingreso.id || 0) || null
+  reservaOrigen.value = ingreso?.reserva_id ? { id: Number(ingreso.reserva_id) } : null
+  modalInitialSection.value = seccion
   form.value.fecha_ingreso = String(ingreso.fecha_actual || '').slice(0, 10) || hoyIso()
   form.value.fecha_salida = String(ingreso.fecha_egreso || '').slice(0, 10)
   form.value.monto = String(ingreso.monto ?? '')
@@ -231,6 +231,82 @@ const cargarIngresoEnEditor = (ingreso: any) => {
     localidad: ingreso.localidad || ''
   }
   cedula.value = normalizarCedula(String(ingreso.cliente_cedula || ''))
+  mostrarModal.value = true
+}
+
+const cargarFichaDesdeReserva = async (reserva: any, seccion: 'ingreso' | 'egreso' = 'ingreso') => {
+  if (!reserva) return
+  reservaOrigen.value = reserva
+  ingresoSeleccionado.value = {
+    id: null,
+    reserva_id: reserva.id,
+    cliente_id: reserva.cliente_id,
+    cliente_cedula: reserva.cedula,
+    cliente_nombre: reserva.nombre,
+    cliente_telefono: reserva.telefono,
+    fecha_actual: new Date().toISOString()
+  }
+  ingresoEnEdicionId.value = null
+  modalInitialSection.value = seccion
+
+  let detalleCliente: any = null
+  try {
+    detalleCliente = await api.obtenerClienteDetalle(reserva.cliente_id || reserva.cedula || '')
+  } catch {}
+
+  const clienteBase = detalleCliente?.cliente || {
+    id: reserva.cliente_id ?? null,
+    cedula: reserva.cedula || '',
+    nombre: reserva.nombre || '',
+    telefono: reserva.telefono || '',
+    localidad: reserva.localidad || ''
+  }
+
+  aplicarCliente(clienteBase)
+  vehiculosCliente.value = Array.isArray(detalleCliente?.vehiculos) ? detalleCliente.vehiculos : []
+
+  const vehiculoInicial = vehiculosCliente.value.find((vehiculo) => Number(vehiculo.id) === Number(reserva.vehiculo_id || 0)) || vehiculosCliente.value[0] || null
+  if (vehiculoInicial) {
+    aplicarVehiculo(vehiculoInicial)
+  } else {
+    vehiculoSeleccionadoId.value = Number(reserva.vehiculo_id || 0) || null
+    form.value.marca = String(reserva.marca || '')
+    form.value.modelo = String(reserva.modelo || '')
+    form.value.color = String(reserva.color || '')
+    form.value.matricula = String(reserva.matricula || '')
+    form.value.numero_motor = String(reserva.numero_motor || '')
+  }
+
+  cedula.value = normalizarCedula(String(reserva.cedula || clienteBase.cedula || ''))
+  form.value = {
+    fecha_ingreso: hoyIso(),
+    fecha_salida: '',
+    nombre: String(clienteBase.nombre || reserva.nombre || ''),
+    telefono: String(clienteBase.telefono || reserva.telefono || ''),
+    email: String(clienteBase.correo || clienteBase.email || ''),
+    localidad: String(clienteBase.localidad || reserva.localidad || ''),
+    vehiculo_id: vehiculoInicial?.id ? Number(vehiculoInicial.id) : Number(reserva.vehiculo_id || 0) || null,
+    marca: String(vehiculoInicial?.marca || vehiculoInicial?.codigo_marca || reserva.marca || ''),
+    modelo: String(vehiculoInicial?.modelo || vehiculoInicial?.codigo_modelo || reserva.modelo || ''),
+    color: String(vehiculoInicial?.color || reserva.color || ''),
+    kilometraje: String(reserva.km || ''),
+    matricula: String(vehiculoInicial?.matricula || reserva.matricula || ''),
+    numero_motor: String(vehiculoInicial?.motor || vehiculoInicial?.numero_motor || reserva.numero_motor || ''),
+    numero_servicios: String(reserva.garantia_numero_service || ''),
+    comentarios: String(reserva.detalles || reserva.garantia_problema || ''),
+    observaciones: String(reserva.detalles || reserva.garantia_problema || ''),
+    monto: '',
+    trabajo_realizado: ''
+  }
+
+  checklistIngreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+  checklistEgreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+  trabajos.value = [
+    { cantidad: '', descripcion: '', costo: '', importe: '' },
+    { cantidad: '', descripcion: '', costo: '', importe: '' },
+    { cantidad: '', descripcion: '', costo: '', importe: '' },
+    { cantidad: '', descripcion: '', costo: '', importe: '' }
+  ]
   mostrarModal.value = true
 }
 
@@ -310,35 +386,11 @@ const sincronizarVehiculoIngreso = async () => {
 
 const clonarPlano = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
-const buildTrabajoRealizado = () => {
-  const lines = [
-    `Ingreso: ${form.value.fecha_ingreso || ''}`,
-    `Cliente: ${form.value.nombre} - CI ${cedula.value || ''}`,
-    `Moto: ${form.value.marca} ${form.value.modelo} ${form.value.color ? `- ${form.value.color}` : ''}`.trim(),
-    `Matricula: ${form.value.matricula || ''}`,
-    `Motor: ${form.value.numero_motor || ''}`,
-    `Kilometraje: ${form.value.kilometraje || ''}`,
-    `Numero de servicios: ${form.value.numero_servicios || ''}`,
-    `Checklist ingreso: ${resumenChecks(checklistIngreso.value)}`,
-    `Comentarios: ${form.value.comentarios || ''}`,
-    'Trabajos:'
-  ]
-
-  trabajos.value.forEach((row, index) => {
-    const contenido = [row.cantidad, row.descripcion, row.costo, row.importe].map((part) => String(part || '').trim()).join(' | ')
-    lines.push(`${index + 1}. ${contenido}`)
-  })
-
-  lines.push(`Observaciones: ${form.value.observaciones || ''}`)
-  lines.push(`Entrega / salida: ${form.value.fecha_salida || ''}`)
-  lines.push(`Checklist egreso: ${resumenChecks(checklistEgreso.value)}`)
-  return lines.join('\n')
-}
-
 const limpiarFormulario = () => {
   const clienteActual = cliente.value
   const vehiculoActual = vehiculoSeleccionadoId.value
   ingresoSeleccionado.value = null
+  reservaOrigen.value = null
   form.value = {
     fecha_ingreso: hoyIso(),
     fecha_salida: '',
@@ -379,6 +431,32 @@ const limpiarFormulario = () => {
   }
 }
 
+const cargarContextoDesdeQuery = async () => {
+  const queryIngresoId = Number(route.query.ingreso_id || 0)
+  const queryReservaId = Number(route.query.reserva_id || 0)
+  const queryAction = String(route.query.action || '').toLowerCase()
+  const seccion = queryAction === 'egreso' ? 'egreso' : 'ingreso'
+
+  if (queryIngresoId) {
+    try {
+      const ingreso = await api.obtenerIngreso(queryIngresoId)
+      if (ingreso) {
+        cargarIngresoEnEditor(ingreso, seccion)
+      }
+    } catch {}
+    return
+  }
+
+  if (queryReservaId) {
+    try {
+      const reserva = await api.obtenerReserva(queryReservaId)
+      if (reserva) {
+        await cargarFichaDesdeReserva(reserva, seccion)
+      }
+    } catch {}
+  }
+}
+
 const guardarIngreso = async () => {
   if (!cliente.value?.id) return
   guardandoIngreso.value = true
@@ -407,14 +485,14 @@ const guardarIngreso = async () => {
       })
     }
 
-    const trabajoRealizado = String(form.value.trabajo_realizado || '').trim() || buildTrabajoRealizado()
+    const trabajoRealizado = String(form.value.trabajo_realizado || '').trim()
     const monto = Number(String(form.value.monto || '').replace(',', '.'))
     const checklistIngresoPayload = clonarPlano(checklistIngreso.value)
     const checklistEgresoPayload = clonarPlano(checklistEgreso.value)
     const trabajosPayload = clonarPlano(trabajos.value)
     const payload = {
       cliente_id: cliente.value.id,
-      reserva_id: null,
+      reserva_id: reservaOrigen.value?.id || ingresoSeleccionado.value?.reserva_id || null,
       fecha_actual: `${form.value.fecha_ingreso}T${new Date().toISOString().slice(11, 16)}:00`,
       fecha_egreso: form.value.fecha_salida ? `${form.value.fecha_salida}T${new Date().toISOString().slice(11, 16)}:00` : null,
       monto: Number.isFinite(monto) && monto > 0 ? monto : totalTrabajo.value,
@@ -459,7 +537,6 @@ const guardarIngreso = async () => {
     if (!guardado || typeof guardado !== 'object' || !('id' in guardado) || !guardado.id) {
       throw new Error(`Respuesta de ingreso invalida: ${JSON.stringify(guardado)}`)
     }
-    form.value.trabajo_realizado = trabajoRealizado
     await cargarIngresosGenerales()
     if (guardado?.id) {
       ingresoSeleccionado.value = guardado
@@ -478,28 +555,88 @@ const guardarIngreso = async () => {
 
 const buildPrintHtml = () => {
   const folio = ingresoSeleccionado.value?.id || siguienteFolio.value
-  return buildOrdenServicioPrintHtml({
-    folio,
-    fechaIngreso: form.value.fecha_ingreso || '',
-    fechaSalida: form.value.fecha_salida || '',
-    nombre: form.value.nombre || '',
-    cedula: cedula.value || '',
-    correo: form.value.email || '',
-    telefono: form.value.telefono || '',
-    localidad: form.value.localidad || '',
-    marca: form.value.marca || '',
-    modelo: form.value.modelo || '',
-    color: form.value.color || '',
-    matricula: form.value.matricula || '',
-    numeroMotor: form.value.numero_motor || '',
-    numeroServicios: form.value.numero_servicios || '',
-    comentarios: form.value.comentarios || '',
-    observaciones: form.value.observaciones || '',
-    checklistIngreso: checklistIngreso.value,
-    checklistEgreso: checklistEgreso.value,
-    trabajos: trabajos.value,
-    trabajoRealizado: form.value.trabajo_realizado || buildTrabajoRealizado()
-  })
+  const clienteNombre = String(form.value.nombre || cliente.value?.nombre || '')
+  const clienteCedula = String(cedula.value || cliente.value?.cedula || '')
+  const telefono = String(form.value.telefono || cliente.value?.telefono || '')
+  const localidad = String(form.value.localidad || cliente.value?.localidad || '')
+  const marca = String(form.value.marca || '')
+  const modelo = String(form.value.modelo || '')
+  const color = String(form.value.color || '')
+  const matricula = String(form.value.matricula || '')
+  const motor = String(form.value.numero_motor || '')
+  const comentario = String(form.value.comentarios || '')
+  const observacion = String(form.value.observaciones || '')
+  return `<!doctype html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Ficha de trabajo #${folio}</title>
+      <style>
+        @page { size: A4; margin: 14mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
+        .sheet { border: 2px solid #0f172a; padding: 18px; min-height: 260mm; box-sizing: border-box; }
+        .top { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; border-bottom: 1px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; }
+        .brand { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+        .title { font-size: 26px; font-weight: 900; margin: 6px 0 0; }
+        .folio { font-size: 14px; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin-bottom: 14px; }
+        .box { border: 1px solid #0f172a; padding: 10px 12px; min-height: 30px; }
+        .label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #475569; margin-bottom: 5px; }
+        .value { font-size: 14px; font-weight: 700; }
+        .block { border: 1px solid #0f172a; padding: 12px; min-height: 115px; margin-bottom: 14px; }
+        .block-title { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #475569; margin-bottom: 10px; }
+        .lines { height: 82px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 22px, rgba(15,23,42,.22) 22px, rgba(15,23,42,.22) 23px); }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+        .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+        .muted { color: #475569; }
+      </style>
+    </head>
+    <body>
+      <main class="sheet">
+        <div class="top">
+          <div>
+            <div class="brand">ReserveRosas</div>
+            <div class="title">Ficha de trabajo</div>
+          </div>
+          <div class="folio">N° ${folio}</div>
+        </div>
+
+        <div class="grid">
+          <div class="box"><div class="label">Ingreso</div><div class="value">${form.value.fecha_ingreso || ''}</div></div>
+          <div class="box"><div class="label">Egreso</div><div class="value">${form.value.fecha_salida || ''}</div></div>
+          <div class="box"><div class="label">Cliente</div><div class="value">${clienteNombre}</div></div>
+          <div class="box"><div class="label">Cédula</div><div class="value">${clienteCedula}</div></div>
+          <div class="box"><div class="label">Teléfono</div><div class="value">${telefono}</div></div>
+          <div class="box"><div class="label">Localidad</div><div class="value">${localidad}</div></div>
+          <div class="box"><div class="label">Moto</div><div class="value">${marca} ${modelo}</div></div>
+          <div class="box"><div class="label">Matrícula</div><div class="value">${matricula}</div></div>
+          <div class="box"><div class="label">Color</div><div class="value">${color}</div></div>
+          <div class="box"><div class="label">Motor</div><div class="value">${motor}</div></div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">Observaciones</div>
+          <div class="lines"></div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">Notas de entrega</div>
+          <div class="lines"></div>
+        </div>
+
+        <div class="signatures">
+          <div class="sig">Firma del prestador</div>
+          <div class="sig">Firma del cliente</div>
+        </div>
+
+        <div style="margin-top:14px;font-size:10px;color:#64748b;">
+          Comentarios: ${comentario || '<span class="muted">&nbsp;</span>'}<br />
+          Observaciones: ${observacion || '<span class="muted">&nbsp;</span>'}
+        </div>
+      </main>
+    </body>
+  </html>`
 }
 
 const imprimirHoja = (win: Window | null = null) => {
@@ -565,20 +702,18 @@ watch(() => form.value.marca, async (marca) => {
   } catch {}
 })
 
+watch(() => [route.query.ingreso_id, route.query.reserva_id, route.query.action], () => {
+  void cargarContextoDesdeQuery()
+})
+
 onMounted(() => {
   syncTheme()
   themeObserver = new MutationObserver(syncTheme)
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   cargarIngresosGenerales()
+  void cargarContextoDesdeQuery()
+
   const queryClienteId = String(route.query.cliente_id || '').trim()
-  const queryIngresoId = Number(route.query.ingreso_id || 0)
-  if (queryIngresoId) {
-    api.obtenerIngreso(queryIngresoId).then((ingreso: any) => {
-      if (ingreso) {
-        cargarIngresoEnEditor(ingreso)
-      }
-    }).catch(() => {})
-  }
   if (queryClienteId) {
     cargarClientePorReferencia(queryClienteId)
   }
@@ -602,13 +737,13 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div class="max-w-3xl">
             <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-emerald-200">
-              Ingresos y egresos
+              Ficha de trabajo
             </div>
             <h1 class="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Orden de servicio con hoja imprimible
+              Hoja imprimible vinculada a la reserva
             </h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-              Cargá los datos de la foto, completá el checklist de ingreso y egreso, y imprimí una hoja A4 lista para firma.
+              Abrila desde una reserva o desde un ingreso ya creado, completá los datos necesarios y imprimí una hoja A4 lista para firma.
             </p>
           </div>
 
@@ -642,6 +777,82 @@ onBeforeUnmount(() => {
           <div class="flex-1 overflow-auto p-4 sm:p-5 space-y-4">
             <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
               <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Estado</div>
+
+          const cargarFichaDesdeReserva = async (reserva: any, seccion: 'ingreso' | 'egreso' = 'ingreso') => {
+            if (!reserva) return
+            reservaOrigen.value = reserva
+            ingresoSeleccionado.value = {
+              id: null,
+              reserva_id: reserva.id,
+              cliente_id: reserva.cliente_id,
+              cliente_cedula: reserva.cedula,
+              cliente_nombre: reserva.nombre,
+              cliente_telefono: reserva.telefono,
+              fecha_actual: new Date().toISOString()
+            }
+            ingresoEnEdicionId.value = null
+            modalInitialSection.value = seccion
+
+            let detalleCliente: any = null
+            try {
+              detalleCliente = await api.obtenerClienteDetalle(reserva.cliente_id || reserva.cedula || '')
+            } catch {}
+
+            const clienteBase = detalleCliente?.cliente || {
+              id: reserva.cliente_id ?? null,
+              cedula: reserva.cedula || '',
+              nombre: reserva.nombre || '',
+              telefono: reserva.telefono || '',
+              localidad: reserva.localidad || ''
+            }
+
+            aplicarCliente(clienteBase)
+            vehiculosCliente.value = Array.isArray(detalleCliente?.vehiculos) ? detalleCliente.vehiculos : []
+
+            const vehiculoInicial = vehiculosCliente.value.find((vehiculo) => Number(vehiculo.id) === Number(reserva.vehiculo_id || 0)) || vehiculosCliente.value[0] || null
+            if (vehiculoInicial) {
+              aplicarVehiculo(vehiculoInicial)
+            } else {
+              vehiculoSeleccionadoId.value = Number(reserva.vehiculo_id || 0) || null
+              form.value.marca = String(reserva.marca || '')
+              form.value.modelo = String(reserva.modelo || '')
+              form.value.color = String(reserva.color || '')
+              form.value.matricula = String(reserva.matricula || '')
+              form.value.numero_motor = String(reserva.numero_motor || '')
+            }
+
+            cedula.value = normalizarCedula(String(reserva.cedula || clienteBase.cedula || ''))
+            form.value = {
+              fecha_ingreso: hoyIso(),
+              fecha_salida: '',
+              nombre: String(clienteBase.nombre || reserva.nombre || ''),
+              telefono: String(clienteBase.telefono || reserva.telefono || ''),
+              email: String(clienteBase.correo || clienteBase.email || ''),
+              localidad: String(clienteBase.localidad || reserva.localidad || ''),
+              vehiculo_id: vehiculoInicial?.id ? Number(vehiculoInicial.id) : Number(reserva.vehiculo_id || 0) || null,
+              marca: String(vehiculoInicial?.marca || vehiculoInicial?.codigo_marca || reserva.marca || ''),
+              modelo: String(vehiculoInicial?.modelo || vehiculoInicial?.codigo_modelo || reserva.modelo || ''),
+              color: String(vehiculoInicial?.color || reserva.color || ''),
+              kilometraje: String(reserva.km || ''),
+              matricula: String(vehiculoInicial?.matricula || reserva.matricula || ''),
+              numero_motor: String(vehiculoInicial?.motor || vehiculoInicial?.numero_motor || reserva.numero_motor || ''),
+              numero_servicios: String(reserva.garantia_numero_service || ''),
+              comentarios: String(reserva.detalles || reserva.garantia_problema || ''),
+              observaciones: String(reserva.detalles || reserva.garantia_problema || ''),
+              monto: '',
+              trabajo_realizado: ''
+            }
+
+            checklistIngreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+            checklistEgreso.value = Object.fromEntries(CHECK_ITEMS.map((item) => [item.key, false]))
+            trabajos.value = [
+              { cantidad: '', descripcion: '', costo: '', importe: '' },
+              { cantidad: '', descripcion: '', costo: '', importe: '' },
+              { cantidad: '', descripcion: '', costo: '', importe: '' },
+              { cantidad: '', descripcion: '', costo: '', importe: '' }
+            ]
+            mostrarModal.value = true
+          }
               <div class="mt-2 text-sm font-semibold text-slate-200">
                 {{ cargandoCliente ? 'Buscando cliente...' : clienteEncontrado ? 'Cliente encontrado' : 'Esperando selección' }}
               </div>
@@ -763,6 +974,7 @@ onBeforeUnmount(() => {
         :cliente="cliente"
         :vehiculos="vehiculosCliente"
         :ingreso="ingresoSeleccionado"
+        :initial-section="modalInitialSection"
         :form="form"
         :checklist-ingreso="checklistIngreso"
         :checklist-egreso="checklistEgreso"

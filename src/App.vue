@@ -430,18 +430,6 @@ watch(session, (value) => {
           </div>
         </router-link>
 
-        <router-link v-if="puede('registros')" to="/ingresos" v-slot="{ isActive }">
-          <div :class="[
-            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
-            isActive 
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-emerald-600'
-          ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 10v2m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
-            <span>Ingresos</span>
-          </div>
-        </router-link>
-
         <router-link v-if="puede('clientes')" to="/clientes" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',

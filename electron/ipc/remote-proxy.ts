@@ -9,25 +9,36 @@ const LOCAL_ONLY_CHANNELS = new Set<string>([
   'config:api:test'
 ])
 
+function normalizeRemoteBaseUrl(rawValue: string) {
+  const fallback = EMBEDDED_REMOTE_URL
+  const raw = String(rawValue || '').trim()
+  if (!raw) return fallback
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`
+
+  try {
+    const parsed = new URL(withProtocol)
+    const host = parsed.hostname.toLowerCase()
+    const path = parsed.pathname.replace(/\/+$/, '') || '/'
+    const trustedHost = host === 'rosas.uy' || host === 'www.rosas.uy'
+    const trustedPath = path === '/server_2.0'
+    if (!trustedHost || !trustedPath) {
+      return fallback
+    }
+
+    return `${parsed.protocol}//${parsed.host}${path}`.replace(/\/+$/, '')
+  } catch {
+    return fallback
+  }
+}
+
 function getRemoteBaseUrl() {
   const raw = String(process.env.API_REMOTE_URL || EMBEDDED_REMOTE_URL).trim()
-  const normalized = raw.replace(/\/+$/, '')
-  if (!normalized) return ''
+  const normalized = normalizeRemoteBaseUrl(raw)
 
   // In packaged production builds, never allow unknown remote backends.
   if (app.isPackaged) {
-    try {
-      const parsed = new URL(normalized)
-      const host = parsed.hostname.toLowerCase()
-      const path = parsed.pathname.replace(/\/+$/, '')
-      const trustedHost = host === 'rosas.uy' || host === 'www.rosas.uy'
-      const trustedPath = path === '/server_2.0'
-      if (!trustedHost || !trustedPath) {
-        return EMBEDDED_REMOTE_URL
-      }
-    } catch {
-      return EMBEDDED_REMOTE_URL
-    }
+    return normalizeRemoteBaseUrl(normalized)
   }
 
   return normalized
