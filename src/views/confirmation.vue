@@ -163,7 +163,8 @@ const detallesTallerValidos = computed(() => detalles.value.trim().length > 0)
 
 const esValido = computed(() => {
   if (!nombreValido.value) return false
-  if (!telefonoValido.value || !marcaValida.value || !modeloValido.value) return false
+  if (!telefonoValido.value) return false
+  if (!isTomaMoto.value && (!marcaValida.value || !modeloValido.value)) return false
   if (!isTomaMoto.value && !cedulaValida.value) return false
   if (isTomaMoto.value) return true
 
@@ -182,6 +183,15 @@ watch(cedula, (value) => {
 watch(cedula, async () => {
   if (isTomaMoto.value) return
   await cargarVehiculosCliente()
+})
+
+watch(tipoTurno, (tipo) => {
+  if (tipo === 'TomaMoto') {
+    cedula.value = ''
+    vehiculosCliente.value = []
+    clienteEncontrado.value = false
+    vehiculoSeleccionadoId.value = null
+  }
 })
 
 watch(telefono, (value) => {
@@ -331,7 +341,7 @@ const confirmarReserva = async () => {
 
   const datos = {
     nombre: nombre.value.trim(),
-    cedula: cedulaNormalizada,
+    cedula: isTomaMoto.value ? '' : cedulaNormalizada,
     telefono: telefono.value.trim(),
     marca: marca.value.trim(),
     modelo: modelo.value.trim(),
@@ -503,6 +513,9 @@ const confirmarReserva = async () => {
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
                 <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
               </div>
+            </div>
+            <div class="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400 ml-1">
+              La toma de moto no requiere cédula
             </div>
             <div class="space-y-2">
               <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Codigo vehiculo</label>

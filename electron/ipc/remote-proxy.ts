@@ -61,7 +61,12 @@ function buildAuthHeaders(token: string) {
 
 function encodeIpcArgs(args: any[]) {
   try {
-    return Buffer.from(JSON.stringify(Array.isArray(args) ? args : []), 'utf-8').toString('base64')
+    const payload = Array.isArray(args) ? args : []
+    const serialized = JSON.stringify(payload)
+    if (typeof serialized !== 'string') {
+      return Buffer.from('[]', 'utf-8').toString('base64')
+    }
+    return Buffer.from(serialized, 'utf-8').toString('base64')
   } catch {
     return ''
   }
@@ -84,12 +89,14 @@ export async function proxyIpcToRemote(channel: string, args: any[]) {
     throw new Error('API remota no configurada (API_REMOTE_URL).')
   }
 
+  const safeArgs = Array.isArray(args) ? args : []
+
   const encodedChannel = encodeURIComponent(String(channel || ''))
   const endpoint = `${baseUrl}/api/admin/ipc?channel=${encodedChannel}`
   const token = getRemoteToken()
   const headers = buildAuthHeaders(token)
   headers['X-RR-IPC-Channel'] = String(channel || '')
-  const encodedArgs = encodeIpcArgs(args)
+  const encodedArgs = encodeIpcArgs(safeArgs)
   if (encodedArgs) {
     headers['X-RR-IPC-Args'] = encodedArgs
   }
@@ -106,7 +113,7 @@ export async function proxyIpcToRemote(channel: string, args: any[]) {
     const response = await fetchFn(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ channel, args }),
+      body: JSON.stringify({ channel, args: safeArgs }),
       signal: controller.signal
     })
 

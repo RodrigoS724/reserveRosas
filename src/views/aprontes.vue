@@ -106,6 +106,34 @@ const ESTADOS_APRONTE = [
   'ENTREGADA ESPERA DE GARANTIA'
 ]
 
+const normalizarEstadoApronte = (estado: any) => {
+  const raw = String(estado || '')
+    .trim()
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+
+  if (raw === 'PRONTO') return 'LISTA PARA ENTREGAR'
+  if (raw === 'LISTA PARA ENTREGAR') return 'LISTA PARA ENTREGAR'
+  if (raw === 'ENTREGADA') return 'ENTREGADA'
+  if (raw === 'ENTREGADA ESPERA DE GARANTIA') return 'ENTREGADA ESPERA DE GARANTIA'
+  return 'APRONTE'
+}
+
+const esApronteListo = (apronte: Apronte) => normalizarEstadoApronte(apronte?.estado) === 'LISTA PARA ENTREGAR'
+
+const marcarApronteListo = async (apronte: Apronte) => {
+  try {
+    await api.actualizarApronte({
+      id: apronte.id,
+      estado: 'LISTA PARA ENTREGAR'
+    })
+    await cargarAprontes()
+  } catch (error: any) {
+    alert(normalizarMensajeError(error, 'No se pudo marcar el apronte como listo'))
+  }
+}
+
 const guardandoAlertas = ref(false)
 const configAlertas = ref({
   default_email: '',
@@ -561,12 +589,16 @@ onMounted(async () => {
                   <th class="px-4 py-3 text-left">Estado</th>
                   <th class="px-4 py-3 text-left">Creado por</th>
                   <th class="px-4 py-3 text-left">Repuestos garantia</th>
+                  <th class="px-4 py-3 text-left">Pronto</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="a in aprontesFiltrados" :key="a.id"
                   @click="abrirDetalle(a)"
-                  :class="['border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50/40 dark:hover:bg-emerald-500/10']">
+                  :class="[
+                    'border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-emerald-50/40 dark:hover:bg-emerald-500/10',
+                    esApronteListo(a) ? 'bg-emerald-50/70 dark:bg-emerald-500/10' : ''
+                  ]">
                   <td class="px-4 py-3 font-bold text-gray-700 dark:text-gray-200">{{ a.fecha }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.hora }}</td>
                   <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-100">{{ a.nombre }}</td>
@@ -576,9 +608,20 @@ onMounted(async () => {
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.marca }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.modelo }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.factura }}</td>
-                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.estado || 'APRONTE' }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ normalizarEstadoApronte(a.estado) }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.created_by_username || '-' }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-[220px] truncate">{{ a.repuestos_garantia || '-' }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-full border px-2.5 py-2 text-[11px] font-black uppercase tracking-widest transition"
+                      :class="esApronteListo(a) ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-400 dark:text-gray-300 hover:border-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-300'"
+                      :title="esApronteListo(a) ? 'Ya está listo' : 'Marcar como listo'"
+                      @click.stop="marcarApronteListo(a)"
+                    >
+                      ✓
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>

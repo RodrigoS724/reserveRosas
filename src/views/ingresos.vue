@@ -28,6 +28,20 @@ const formatFechaHora = (fecha?: string | null) => {
   return `${date.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' })} · ${date.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })}`
 }
 
+const formatDuracion = (inicio?: string | null, fin?: string | null) => {
+  if (!inicio || !fin) return ''
+  const inicioDate = new Date(inicio)
+  const finDate = new Date(fin)
+  if (Number.isNaN(inicioDate.getTime()) || Number.isNaN(finDate.getTime())) return ''
+  const diffMs = finDate.getTime() - inicioDate.getTime()
+  if (diffMs < 0) return ''
+  const totalMinutos = Math.floor(diffMs / 60000)
+  const horas = Math.floor(totalMinutos / 60)
+  const minutos = totalMinutos % 60
+  if (horas <= 0) return `${totalMinutos} min`
+  return `${horas} h ${minutos.toString().padStart(2, '0')} min`
+}
+
 const cedula = ref('')
 const clienteEncontrado = ref(false)
 const cargandoCliente = ref(false)
@@ -954,7 +968,13 @@ onBeforeUnmount(() => {
                       <div class="text-sm font-black text-white">{{ ingreso.cliente_nombre || 'Sin cliente' }}</div>
                     </div>
                     <div class="mt-1 text-sm text-slate-300">CI {{ ingreso.cliente_cedula || '---' }} · {{ formatFechaHora(ingreso.fecha_actual) }}</div>
-                    <div class="mt-1 text-xs text-slate-400">Monto: ${{ formatearMonto(ingreso.monto) }} · {{ ingreso.fecha_egreso ? `Egreso: ${formatFechaHora(ingreso.fecha_egreso)}` : 'Pendiente de egreso' }}</div>
+                    <div class="mt-1 text-xs text-slate-400">
+                      Monto: ${{ formatearMonto(ingreso.monto) }} ·
+                      {{ ingreso.fecha_egreso ? `Egreso: ${formatFechaHora(ingreso.fecha_egreso)}` : 'Pendiente de egreso' }}
+                      <span v-if="ingreso.fecha_egreso && formatDuracion(ingreso.fecha_actual, ingreso.fecha_egreso)" class="ml-1">
+                        · Tiempo: {{ formatDuracion(ingreso.fecha_actual, ingreso.fecha_egreso) }}
+                      </span>
+                    </div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">
                     <div class="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em]" :class="ingreso.fecha_egreso ? 'border border-white/10 bg-white/5 text-slate-100' : 'border border-emerald-400/30 bg-emerald-500/10 text-emerald-100'">

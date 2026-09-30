@@ -30,6 +30,21 @@ const normalizarMensajeError = (error: any, fallback: string) => {
   return msg
 }
 
+const normalizarEstadoApronte = (estado: any) => {
+  const raw = String(estado || '')
+    .trim()
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+
+  if (raw === 'PRONTO') return 'LISTA PARA ENTREGAR'
+  if (raw === 'APRONTE') return 'APRONTE'
+  if (raw === 'LISTA PARA ENTREGAR') return 'LISTA PARA ENTREGAR'
+  if (raw === 'ENTREGADA') return 'ENTREGADA'
+  if (raw === 'ENTREGADA ESPERA DE GARANTIA') return 'ENTREGADA ESPERA DE GARANTIA'
+  return 'APRONTE'
+}
+
 const cerrar = () => {
   emit('cerrar')
 }
@@ -63,7 +78,7 @@ watch(
       modelo: String(nueva.modelo || ''),
       numero_motor: String(nueva.numero_motor || ''),
       factura: String(nueva.factura || ''),
-      estado: String(nueva.estado || 'APRONTE'),
+      estado: normalizarEstadoApronte(nueva.estado),
       caja_aprobado: Boolean(Number(nueva.caja_aprobado ?? 1)),
       caja_aprobado_por: String(nueva.caja_aprobado_por || ''),
       created_by_username: String(nueva.created_by_username || ''),
@@ -106,7 +121,7 @@ const guardar = async () => {
     const payload = esTaller
       ? {
           id: editable.value.id,
-          estado: String(editable.value.estado || 'APRONTE').trim().toUpperCase()
+          estado: normalizarEstadoApronte(editable.value.estado)
         }
       : {
           id: editable.value.id,

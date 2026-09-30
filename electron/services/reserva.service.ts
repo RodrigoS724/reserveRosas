@@ -570,18 +570,20 @@ export async function crearReserva(data: ReservaInput) {
   const fechaNormalizada = new Date(dataNormalizada.fecha).toISOString().split('T')[0]
   console.log('[Service] Fecha normalizada:', dataNormalizada.fecha, '->', fechaNormalizada)
 
-  try {
-    const mysqlId = await crearReservaMysql(dataNormalizada, fechaNormalizada)
+  const mysqlId = await crearReservaMysql(dataNormalizada, fechaNormalizada)
+  if (!mysqlId) {
+    throw new Error('No se pudo crear la reserva en el servidor MySQL.')
+  }
+
+  if (!isLocalDbDisabled()) {
     try {
       await crearReservaSqlite(dataNormalizada, fechaNormalizada)
     } catch (error) {
       console.warn('[Service] Backup SQLite fallo:', error)
     }
-    return mysqlId
-  } catch (error) {
-    console.warn('[Service] MySQL no disponible, usando SQLite local')
-    return await crearReservaSqlite(dataNormalizada, fechaNormalizada)
   }
+
+  return mysqlId
 }
 
 /* =========================
