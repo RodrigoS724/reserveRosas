@@ -33,4 +33,8 @@ export function registrarHandlersVehiculos() {
   safeHandle('vehiculos:actualizar', async (_event, data: any) => {
     return await withDbLock(() => actualizarVehiculoCliente(data || {}))
   })
+
+  safeHandle('vehiculos:borrar', async () => {
+    throw new Error('La eliminacion de vehiculos requiere la API remota.')
+  })
 }

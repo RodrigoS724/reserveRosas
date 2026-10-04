@@ -288,6 +288,8 @@ declare global {
 
       actualizarVehiculoCliente: (data: any) => Promise<any>
 
+      borrarVehiculoCliente: (data: any) => Promise<any>
+
       listarIngresos: () => Promise<any[]>
 
       obtenerIngresosPorCliente: (cliente: number | string) => Promise<any[]>

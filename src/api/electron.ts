@@ -34,6 +34,7 @@ export const api = {
 	obtenerVehiculosPorCedula: (cedula: string) => window.api.obtenerVehiculosPorCedula(cedula),
 	obtenerCatalogoVehiculos: () => window.api.obtenerCatalogoVehiculos(),
 	actualizarVehiculoCliente: (data: any) => window.api.actualizarVehiculoCliente(withActor(data)),
+	borrarVehiculoCliente: (data: any) => window.api.borrarVehiculoCliente(withActor(data)),
 	listarIngresos: () => window.api.listarIngresos(),
 	obtenerIngresosPorCliente: (cliente: number | string) => window.api.obtenerIngresosPorCliente(cliente),
 	obtenerIngreso: (id: number) => window.api.obtenerIngreso(id),

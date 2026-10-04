@@ -19,10 +19,8 @@ const km = ref('')
 const detalles = ref('')
 const marcas = ref<string[]>([])
 const modelos = ref<string[]>([])
-const catalogoVehiculos = ref<{ id: number; codigo: string; modelo: string }[]>([])
 const vehiculosCliente = ref<any[]>([])
 const cargandoVehiculosCliente = ref(false)
-const codigoVehiculo = ref('')
 const clienteEncontrado = ref(false)
 const vehiculoSeleccionadoId = ref<number | null>(null)
 
@@ -61,16 +59,6 @@ const cargarModelos = async (marcaValue: string) => {
   }
 }
 
-const cargarCatalogoVehiculos = async () => {
-  try {
-    const data = await api.obtenerCatalogoVehiculos()
-    catalogoVehiculos.value = Array.isArray(data) ? data : []
-  } catch (error) {
-    console.warn('[Confirmation] Error cargando catalogo de vehiculos:', error)
-    catalogoVehiculos.value = []
-  }
-}
-
 const cargarVehiculosCliente = async () => {
   const cedulaNormalizada = normalizarCedula(cedula.value)
   if (cedulaNormalizada.length < 7) {
@@ -82,7 +70,7 @@ const cargarVehiculosCliente = async () => {
 
   cargandoVehiculosCliente.value = true
   try {
-    const data = await api.obtenerClienteDetalle(cedulaNormalizada)
+    const data = await api.obtenerVehiculosPorCedula(cedulaNormalizada)
     const cliente = data?.cliente || null
     const vehiculos = Array.isArray(data?.vehiculos) ? data.vehiculos : []
 
@@ -234,7 +222,6 @@ watch(marca, (value) => {
 onMounted(async () => {
   await cargarMarcas()
   await cargarModelos(marca.value)
-  await cargarCatalogoVehiculos()
 })
 
 const generarMatriculaGenericaUnica = async () => {
@@ -261,9 +248,6 @@ const seleccionarVehiculoExistente = (vehiculo: any) => {
   marca.value = String(vehiculo.marca || marca.value || '')
   modelo.value = String(vehiculo.modelo || vehiculo.dt_vehiculo_modelo || modelo.value || '')
   telefono.value = String(vehiculo.telefono || telefono.value || '')
-  if (vehiculo.dt_vehiculo_codigo) {
-    codigoVehiculo.value = String(vehiculo.dt_vehiculo_codigo)
-  }
   if (vehiculo.matricula) {
     matriculaGenerada.value = String(vehiculo.matricula)
   }
@@ -288,14 +272,6 @@ const abrirCliente = () => {
   const cedulaNormalizada = normalizarCedula(cedula.value)
   if (!cedulaNormalizada) return
   router.push({ path: '/clientes', query: { cedula: cedulaNormalizada } })
-}
-
-const seleccionarCodigoVehiculo = (codigo: string) => {
-  codigoVehiculo.value = codigo
-  const item = catalogoVehiculos.value.find((entry) => entry.codigo === codigo)
-  if (item?.modelo) {
-    modelo.value = item.modelo
-  }
 }
 
 const confirmarReserva = async () => {
@@ -434,8 +410,7 @@ const confirmarReserva = async () => {
                   @select="onCedulaSeleccionada"
                   :input-class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')].join(' ')"
                 />
-                <p v-if="clienteEncontrado" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-600">Cliente existente</p>
-                <p v-else-if="cedulaValida && !cargandoVehiculosCliente" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">Cliente nuevo</p>
+                <p v-if="clienteEncontrado" class="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-600">Cliente agendado</p>
                 <button
                   type="button"
                   @click="abrirCliente"
@@ -451,33 +426,7 @@ const confirmarReserva = async () => {
               </div>
             </div>
 
-            <div v-if="vehiculosCliente.length > 0" class="p-4 rounded-2xl border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-500/10 space-y-3">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-600">Moto del cliente</p>
-                  <p class="text-xs text-blue-700/80 dark:text-blue-200/80">Selecciona la moto que va a ingresar al servicio o reparación.</p>
-                </div>
-                <span class="text-[10px] font-black uppercase text-blue-600">{{ vehiculosCliente.length }} registradas</span>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-blue-700 uppercase tracking-[0.22em] ml-1">Seleccionar moto</label>
-                <select v-model.number="vehiculoSeleccionadoId" @change="seleccionarVehiculoExistente(vehiculosCliente.find((vehiculo) => Number(vehiculo.id) === Number(vehiculoSeleccionadoId)))" class="w-full p-3 rounded-xl bg-white dark:bg-[#0f172a] border border-blue-200 dark:border-blue-900 outline-none transition-all dark:text-white">
-                  <option :value="null">Elegir una moto</option>
-                  <option v-for="vehiculo in vehiculosCliente" :key="vehiculo.id" :value="Number(vehiculo.id)">
-                    {{ vehiculo.matricula || 'Sin matricula' }} · {{ vehiculo.marca }} {{ vehiculo.modelo }}
-                  </option>
-                </select>
-              </div>
-
-              <div v-if="vehiculoSeleccionado" class="rounded-xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#0f172a] px-3 py-2 text-xs text-gray-600 dark:text-gray-300">
-                <div class="font-black text-gray-800 dark:text-gray-100">{{ vehiculoSeleccionado.matricula || 'Sin matricula' }}</div>
-                <div>{{ vehiculoSeleccionado.marca }} {{ vehiculoSeleccionado.modelo }}</div>
-                <div v-if="vehiculoSeleccionado.dt_vehiculo_codigo" class="uppercase tracking-[0.22em] text-[10px] text-blue-600 font-black mt-1">{{ vehiculoSeleccionado.dt_vehiculo_codigo }}</div>
-              </div>
-            </div>
-
-            <div v-else-if="cargandoVehiculosCliente" class="text-xs text-gray-500 font-bold uppercase tracking-widest">Buscando motos del cliente...</div>
+            <div v-if="cargandoVehiculosCliente" class="text-xs text-gray-500 font-bold uppercase tracking-widest">Buscando motos del cliente...</div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
               <div class="space-y-2">
@@ -490,11 +439,13 @@ const confirmarReserva = async () => {
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Codigo vehiculo</label>
-              <select v-model="codigoVehiculo" @change="seleccionarCodigoVehiculo(codigoVehiculo)" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white">
-                <option value="">Sin codigo</option>
-                <option v-for="item in catalogoVehiculos" :key="item.id" :value="item.codigo">{{ item.codigo }} · {{ item.modelo }}</option>
+            <div v-if="vehiculosCliente.length > 0" class="space-y-2">
+              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Vehiculo registrado</label>
+              <select v-model.number="vehiculoSeleccionadoId" @change="seleccionarVehiculoExistente(vehiculosCliente.find((vehiculo) => Number(vehiculo.id) === Number(vehiculoSeleccionadoId)))" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white">
+                <option :value="null">Elegir una moto</option>
+                <option v-for="vehiculo in vehiculosCliente" :key="vehiculo.id" :value="Number(vehiculo.id)">
+                  {{ vehiculo.matricula || 'Sin matricula' }} · {{ vehiculo.marca }} {{ vehiculo.modelo }}
+                </option>
               </select>
             </div>
           </div>
@@ -516,13 +467,6 @@ const confirmarReserva = async () => {
             </div>
             <div class="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400 ml-1">
               La toma de moto no requiere cédula
-            </div>
-            <div class="space-y-2">
-              <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Codigo vehiculo</label>
-              <select v-model="codigoVehiculo" @change="seleccionarCodigoVehiculo(codigoVehiculo)" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white">
-                <option value="">Sin codigo</option>
-                <option v-for="item in catalogoVehiculos" :key="item.id" :value="item.codigo">{{ item.codigo }} · {{ item.modelo }}</option>
-              </select>
             </div>
           </div>
 

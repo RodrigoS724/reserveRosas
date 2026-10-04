@@ -37,6 +37,8 @@ const detalle = ref<{ cliente: any | null; vehiculos: any[]; reservas: any[]; ap
 })
 const ingresos = ref<any[]>([])
 const busqueda = ref('')
+const paginaClientes = ref(1)
+const clientesPorPagina = 5
 const cargando = ref(false)
 const cargandoDetalle = ref(false)
 const cargandoIngresos = ref(false)
@@ -76,6 +78,7 @@ const trabajos = ref<TrabajoRow[]>([
 const clonarPlano = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 const mostrarFormularioVehiculo = ref(false)
 const guardandoVehiculo = ref(false)
+const vehiculoEliminandoId = ref<number | null>(null)
 const vehiculoEditando = ref<any | null>(null)
 const formVehiculo = ref({ id: null as number | null, matricula: '', motor: '', chasis: '', color: '', fecha_compra: '' })
 let searchTimer: number | null = null
@@ -124,7 +127,12 @@ const historialCliente = computed<HistorialEvento[]>(() => {
   })
 })
 
-const clientesFiltrados = computed(() => clientes.value)
+const totalPaginasClientes = computed(() => Math.max(1, Math.ceil(clientes.value.length / clientesPorPagina)))
+const clientesFiltrados = computed(() => {
+  const pagina = Math.min(paginaClientes.value, totalPaginasClientes.value)
+  const inicio = (pagina - 1) * clientesPorPagina
+  return clientes.value.slice(inicio, inicio + clientesPorPagina)
+})
 
 const normalizarCedula = (value: string) => String(value || '').replace(/\D/g, '')
 
@@ -625,6 +633,32 @@ const guardarVehiculo = async () => {
   }
 }
 
+const eliminarVehiculo = async (vehiculo: any) => {
+  const vehiculoId = Number(vehiculo?.id || 0)
+  if (!vehiculoId || !clienteActivo.value) return
+
+  const descripcion = [vehiculo.matricula, vehiculo.marca, vehiculo.modelo]
+    .filter(Boolean)
+    .join(' · ') || 'esta moto'
+  if (!window.confirm(`Eliminar ${descripcion}? Se conservaran las reservas, aprontes e ingresos del cliente, pero dejaran de estar vinculados a esta moto.`)) {
+    return
+  }
+
+  vehiculoEliminandoId.value = vehiculoId
+  error.value = ''
+  try {
+    await api.borrarVehiculoCliente({ id: vehiculoId })
+    if (Number(vehiculoEditando.value?.id) === vehiculoId) {
+      limpiarFormularioVehiculo()
+    }
+    await cargarDetalle(clienteActivo.value)
+  } catch (err: any) {
+    error.value = err?.message || 'No se pudo eliminar el vehiculo'
+  } finally {
+    vehiculoEliminandoId.value = null
+  }
+}
+
 const registrarEgreso = async (ingreso: any) => {
   error.value = ''
   try {
@@ -693,6 +727,9 @@ const cargarClientes = async () => {
   error.value = ''
   try {
     clientes.value = await api.obtenerClientes(busqueda.value)
+    if (paginaClientes.value > totalPaginasClientes.value) {
+      paginaClientes.value = totalPaginasClientes.value
+    }
     const activoId = clienteActivo.value?.id
     const candidato = clientes.value.find((cliente) => cliente.id === activoId) || clientes.value[0] || null
     if (candidato && candidato.id !== activoId) {
@@ -750,6 +787,7 @@ const abrirClienteDesdeQuery = async () => {
 }
 
 watch(busqueda, () => {
+  paginaClientes.value = 1
   if (searchTimer) {
     window.clearTimeout(searchTimer)
   }
@@ -784,7 +822,7 @@ onBeforeUnmount(() => {
             <div class="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em] text-cyan-200">
               Panel de clientes
             </div>
-            <h1 class="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h1 class="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-5xl">
               Clientes, vehículos e historial en una sola vista
             </h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
@@ -792,7 +830,7 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div class="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3">
               <div class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Clientes</div>
               <div class="mt-1 text-2xl font-black text-white">{{ clientes.length }}</div>
@@ -829,7 +867,7 @@ onBeforeUnmount(() => {
         {{ error }}
       </div>
 
-      <div class="grid min-h-0 flex-1 gap-5 xl:grid-cols-[390px_minmax(0,1fr)]">
+      <div class="grid min-h-0 flex-1 gap-5 2xl:grid-cols-[390px_minmax(0,1fr)]">
         <aside class="flex min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-2xl shadow-slate-950/30 backdrop-blur-xl">
           <div class="border-b border-white/10 p-4 sm:p-5">
             <label class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Buscar cliente</label>
@@ -881,6 +919,28 @@ onBeforeUnmount(() => {
             <div v-if="cargando" class="flex h-48 items-center justify-center text-sm text-slate-400">
               Cargando clientes...
             </div>
+
+            <div v-if="!cargando && clientes.length > clientesPorPagina" class="mt-3 flex items-center justify-between gap-3 px-2 pb-2">
+              <button
+                type="button"
+                :disabled="paginaClientes === 1"
+                @click="paginaClientes -= 1"
+                class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <span class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                {{ paginaClientes }} / {{ totalPaginasClientes }}
+              </span>
+              <button
+                type="button"
+                :disabled="paginaClientes === totalPaginasClientes"
+                @click="paginaClientes += 1"
+                class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -897,7 +957,7 @@ onBeforeUnmount(() => {
                     {{ detalle.cliente?.telefono || clienteActivo.telefono || 'Sin teléfono' }} · {{ detalle.cliente?.localidad || clienteActivo.localidad || 'Sin localidad' }}
                   </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                   <button
                     @click="poblarFormularioCliente(clienteActivo)"
                     class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.24em] text-slate-100 transition hover:bg-white/10"
@@ -916,7 +976,7 @@ onBeforeUnmount(() => {
             <div v-else class="text-sm text-slate-500">Seleccioná un cliente para ver su detalle.</div>
           </div>
 
-          <div v-if="clienteActivo" class="grid min-h-0 gap-5 p-5 sm:p-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <div v-if="clienteActivo" class="grid min-h-0 gap-5 p-5 sm:p-6 2xl:grid-cols-[1.1fr_0.9fr]">
             <div class="min-h-0 space-y-5 overflow-auto pr-1">
               <div class="grid gap-4 sm:grid-cols-3">
                 <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-white shadow-lg shadow-slate-950/20">
@@ -971,12 +1031,21 @@ onBeforeUnmount(() => {
                           {{ vehiculo.dt_vehiculo_codigo ? `${vehiculo.dt_vehiculo_codigo} · ` : '' }}{{ vehiculo.dt_vehiculo_modelo || '' }}
                         </div>
                       </div>
-                      <div class="text-right text-xs text-slate-400">
+                      <div class="text-left text-xs text-slate-400 sm:text-right">
                         <div class="font-semibold text-slate-300">Motor</div>
                         <div>{{ vehiculo.numero_motor || vehiculo.motor || 'Sin dato' }}</div>
-                        <button @click="poblarFormularioVehiculo(vehiculo)" class="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-white/10">
-                          Editar moto
-                        </button>
+                        <div class="mt-3 flex flex-wrap gap-2 sm:justify-end">
+                          <button @click="poblarFormularioVehiculo(vehiculo)" class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100 transition hover:bg-white/10">
+                            Editar moto
+                          </button>
+                          <button
+                            @click="eliminarVehiculo(vehiculo)"
+                            :disabled="vehiculoEliminandoId === Number(vehiculo.id)"
+                            class="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {{ vehiculoEliminandoId === Number(vehiculo.id) ? 'Eliminando...' : 'Eliminar moto' }}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -986,7 +1055,7 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <div class="grid gap-5 xl:grid-cols-2">
+              <div class="grid gap-5 2xl:grid-cols-2">
                 <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl">
                   <h3 class="text-sm font-black uppercase tracking-[0.22em] text-slate-300">Reservas</h3>
                   <div class="mt-4 space-y-3">

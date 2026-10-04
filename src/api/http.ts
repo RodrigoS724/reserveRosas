@@ -160,6 +160,7 @@ export const api = {
   obtenerVehiculosPorCedula: (cedula: string) => invoke('vehiculos:por-cedula', cedula),
   obtenerCatalogoVehiculos: () => invoke('vehiculos:catalogo'),
   actualizarVehiculoCliente: (data: any) => invoke('vehiculos:actualizar', withActor(data)),
+  borrarVehiculoCliente: (data: any) => invoke('vehiculos:borrar', withActor(data)),
 
   // Clientes
   obtenerClientes: (filtro?: string) => invoke('clientes:listar', filtro),

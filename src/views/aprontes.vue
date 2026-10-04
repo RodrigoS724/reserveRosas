@@ -84,6 +84,7 @@ const fechaFiltro = ref(todayIso)
 const busqueda = ref('')
 const cargando = ref(false)
 const guardandoNuevo = ref(false)
+const actualizandoEstadoId = ref<number | null>(null)
 const mostrarDetalle = ref(false)
 const mostrarModalNuevo = ref(false)
 const mostrarModalAlertas = ref(false)
@@ -121,18 +122,27 @@ const normalizarEstadoApronte = (estado: any) => {
 }
 
 const esApronteListo = (apronte: Apronte) => normalizarEstadoApronte(apronte?.estado) === 'LISTA PARA ENTREGAR'
+const esApronteEntregado = (apronte: Apronte) => normalizarEstadoApronte(apronte?.estado) === 'ENTREGADA'
 
-const marcarApronteListo = async (apronte: Apronte) => {
+const actualizarEstadoApronte = async (apronte: Apronte, estado: 'LISTA PARA ENTREGAR' | 'ENTREGADA') => {
+  if (!apronte?.id || normalizarEstadoApronte(apronte.estado) === estado) return
+  actualizandoEstadoId.value = apronte.id
   try {
     await api.actualizarApronte({
       id: apronte.id,
-      estado: 'LISTA PARA ENTREGAR'
+      estado
     })
     await cargarAprontes()
   } catch (error: any) {
-    alert(normalizarMensajeError(error, 'No se pudo marcar el apronte como listo'))
+    const accion = estado === 'ENTREGADA' ? 'como entregada' : 'como listo'
+    alert(normalizarMensajeError(error, `No se pudo marcar el apronte ${accion}`))
+  } finally {
+    actualizandoEstadoId.value = null
   }
 }
+
+const marcarApronteListo = (apronte: Apronte) => actualizarEstadoApronte(apronte, 'LISTA PARA ENTREGAR')
+const marcarApronteEntregado = (apronte: Apronte) => actualizarEstadoApronte(apronte, 'ENTREGADA')
 
 const guardandoAlertas = ref(false)
 const configAlertas = ref({
@@ -528,18 +538,18 @@ onMounted(async () => {
 
 <template>
   <div class="h-screen flex flex-col px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 bg-gray-50 dark:bg-[#0f172a] gap-6 overflow-y-auto overflow-x-hidden">
-    <header class="flex items-center justify-between">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 dark:text-gray-100 tracking-tight">APRONTES</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Registro y agenda de aprontes.</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
         <button @click="mostrarModalAlertas = true"
-          class="px-4 py-2 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-bold text-xs uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
+          class="flex-1 px-4 py-2 rounded-xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-bold text-xs uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 transition-all sm:flex-none">
           Gestionar alertas
         </button>
         <button v-if="!esTaller" @click="abrirModalNuevo"
-          class="px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition-all">
+          class="flex-1 px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition-all sm:flex-none">
           Nuevo apronte
         </button>
       </div>
@@ -549,17 +559,17 @@ onMounted(async () => {
       <div class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-0">
         <div class="p-4 border-b border-gray-100 dark:border-gray-800">
           <div class="flex flex-wrap items-end gap-3">
-            <div>
+            <div class="w-full sm:w-auto">
               <label class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2 block">Fecha</label>
               <input v-model="fechaFiltro" type="date"
                 class="rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-gray-800 dark:text-gray-100 text-xs" />
             </div>
             <button @click="fechaFiltro = todayIso"
-              class="px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow">
+              class="w-full px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow sm:w-auto">
               Hoy
             </button>
             <button @click="fechaFiltro = ''"
-              class="px-3 py-2 rounded-xl bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 font-black text-[10px] uppercase tracking-widest">
+              class="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 font-black text-[10px] uppercase tracking-widest sm:w-auto">
               Ver todos
             </button>
             <div class="flex-1 min-w-[200px]">
@@ -574,7 +584,56 @@ onMounted(async () => {
           <div v-if="cargando" class="p-6 text-sm text-gray-400">Cargando...</div>
           <div v-else-if="aprontesFiltrados.length === 0" class="p-6 text-sm text-gray-400">Sin aprontes para mostrar.</div>
           <div v-else>
-            <table class="w-full text-xs">
+            <div class="space-y-3 p-3 2xl:hidden">
+              <article
+                v-for="a in aprontesFiltrados"
+                :key="`mobile-${a.id}`"
+                @click="abrirDetalle(a)"
+                :class="[
+                  'cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-[#0f172a]',
+                  esApronteListo(a) ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-600 dark:bg-emerald-500/10' : ''
+                ]"
+              >
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0">
+                    <h3 class="break-words text-base font-black text-gray-800 dark:text-gray-100">{{ a.nombre }}</h3>
+                    <p class="mt-1 break-words text-xs font-bold text-cyan-700 dark:text-cyan-300">{{ a.fecha }} · {{ a.hora }}</p>
+                  </div>
+                  <span class="w-fit break-words rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                    {{ normalizarEstadoApronte(a.estado) }}
+                  </span>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                  <div class="min-w-0"><span class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Moto</span><span class="break-words text-gray-700 dark:text-gray-200">{{ a.marca }} {{ a.modelo }}</span></div>
+                  <div class="min-w-0"><span class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Factura</span><span class="break-words text-gray-700 dark:text-gray-200">{{ a.factura || '-' }}</span></div>
+                  <div class="min-w-0"><span class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Telefono</span><span class="break-words text-gray-700 dark:text-gray-200">{{ a.telefono || '-' }}</span></div>
+                  <div class="min-w-0"><span class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Localidad</span><span class="break-words text-gray-700 dark:text-gray-200">{{ a.localidad || '-' }}</span></div>
+                  <div class="min-w-0 sm:col-span-2"><span class="block text-[10px] font-black uppercase tracking-wider text-gray-400">Observaciones</span><span class="break-words text-gray-700 dark:text-gray-200">{{ a.observaciones || '-' }}</span></div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2" @click.stop>
+                  <button
+                    type="button"
+                    :disabled="esApronteListo(a) || actualizandoEstadoId === a.id"
+                    @click="marcarApronteListo(a)"
+                    class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-emerald-300"
+                  >
+                    {{ actualizandoEstadoId === a.id ? 'Actualizando...' : (esApronteListo(a) ? 'Lista' : 'Marcar lista') }}
+                  </button>
+                  <button
+                    type="button"
+                    :disabled="esApronteEntregado(a) || actualizandoEstadoId === a.id"
+                    @click="marcarApronteEntregado(a)"
+                    class="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-cyan-700 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-cyan-300"
+                  >
+                    {{ esApronteEntregado(a) ? 'Entregada' : 'Marcar entregada' }}
+                  </button>
+                </div>
+              </article>
+            </div>
+
+            <table class="hidden min-w-[1280px] text-xs 2xl:table">
               <thead class="sticky top-0 bg-white dark:bg-[#1e293b]">
                 <tr class="text-[10px] uppercase tracking-widest text-gray-400">
                   <th class="px-4 py-3 text-left">Fecha</th>
@@ -589,7 +648,7 @@ onMounted(async () => {
                   <th class="px-4 py-3 text-left">Estado</th>
                   <th class="px-4 py-3 text-left">Creado por</th>
                   <th class="px-4 py-3 text-left">Repuestos garantia</th>
-                  <th class="px-4 py-3 text-left">Pronto</th>
+                  <th class="px-4 py-3 text-left">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -611,15 +670,25 @@ onMounted(async () => {
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ normalizarEstadoApronte(a.estado) }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ a.created_by_username || '-' }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-[220px] truncate">{{ a.repuestos_garantia || '-' }}</td>
-                  <td class="px-4 py-3 text-right">
+                  <td class="px-4 py-3 text-right whitespace-nowrap">
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-full border px-2.5 py-2 text-[11px] font-black uppercase tracking-widest transition"
+                      :disabled="esApronteListo(a) || actualizandoEstadoId === a.id"
+                      class="inline-flex items-center justify-center rounded-full border px-2.5 py-2 text-[11px] font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-50"
                       :class="esApronteListo(a) ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f172a] text-gray-400 dark:text-gray-300 hover:border-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-300'"
                       :title="esApronteListo(a) ? 'Ya está listo' : 'Marcar como listo'"
                       @click.stop="marcarApronteListo(a)"
                     >
                       ✓
+                    </button>
+                    <button
+                      type="button"
+                      :disabled="esApronteEntregado(a) || actualizandoEstadoId === a.id"
+                      class="ml-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-2 text-[10px] font-black uppercase tracking-wider text-cyan-700 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-cyan-300"
+                      :title="esApronteEntregado(a) ? 'Ya está entregada' : 'Marcar como entregada'"
+                      @click.stop="marcarApronteEntregado(a)"
+                    >
+                      {{ esApronteEntregado(a) ? 'Entregada' : 'Entregar' }}
                     </button>
                   </td>
                 </tr>

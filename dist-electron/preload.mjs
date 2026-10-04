@@ -1,1 +1,119 @@
-"use strict";const s=require("electron");s.contextBridge.exposeInMainWorld("ipcRenderer",{on(...r){const[o,a]=r;return s.ipcRenderer.on(o,(i,...t)=>a(i,...t))},off(...r){const[o,...a]=r;return s.ipcRenderer.off(o,...a)},send(...r){const[o,...a]=r;return s.ipcRenderer.send(o,...a)},invoke(...r){const[o,...a]=r;return s.ipcRenderer.invoke(o,...a)}});const e=async(...r)=>{const o=await s.ipcRenderer.invoke(...r);if(o&&typeof o=="object"&&o.__ipc_error){const a=new Error(o.message||"IPC error");throw o.stack&&(a.stack=o.stack),a}return o};s.contextBridge.exposeInMainWorld("api",{crearReserva:r=>e("reservas:crear",r),obtenerReserva:r=>e("reservas:obtener",r),borrarReserva:r=>e("reservas:borrar",r),moverReserva:r=>e("reservas:mover",r),actualizarEstadoReserva:r=>e("reservas:estado",r),actualizarReserva:r=>e("reservas:actualizar",r),obtenerReservasSemana:r=>e("reservas:semana",r),obtenerReservasDia:r=>e("reservas:dia",r),obtenerTodasLasReservas:()=>e("reservas:todas"),actualizarNotasReserva:(r,o)=>e("reservas:actualizar-notas",r,o),obtenerCambiosReservas:r=>e("reservas:cambios",r),crearApronte:r=>e("aprontes:crear",r),obtenerApronte:r=>e("aprontes:obtener",r),borrarApronte:r=>e("aprontes:borrar",r),actualizarApronte:r=>e("aprontes:actualizar",r),obtenerAprontesFecha:r=>e("aprontes:fecha",r),obtenerAprontes:()=>e("aprontes:todas"),obtenerConfigAlertasAprontes:()=>e("aprontes:alertas:config:get"),guardarConfigAlertasAprontes:r=>e("aprontes:alertas:config:set",r),obtenerConfigResumenDiario:()=>e("resumen-diario:config:get"),guardarConfigResumenDiario:r=>e("resumen-diario:config:set",r),enviarResumenDiario:r=>e("resumen-diario:enviar",r),obtenerHorariosBase:()=>e("horarios:base"),obtenerHorariosInactivos:()=>e("horarios:inactivos"),obtenerHorariosDisponibles:r=>e("horarios:disponibles",r),crearHorario:r=>e("horarios:crear",r),desactivarHorario:r=>e("horarios:desactivar",r),activarHorario:r=>e("horarios:activar",r),bloquearHorario:r=>e("horarios:bloquear",r),desbloquearHorario:r=>e("horarios:desbloquear",r),obtenerHorariosBloqueados:r=>e("horarios:bloqueados",r),borrarHorarioPermanente:r=>e("horarios:borrar",r),obtenerHorariosAprontesBase:()=>e("horarios-aprontes:base"),obtenerHorariosAprontesInactivos:()=>e("horarios-aprontes:inactivos"),obtenerHorariosAprontesDisponibles:r=>e("horarios-aprontes:disponibles",r),crearHorarioApronte:r=>e("horarios-aprontes:crear",r),actualizarCupoHorarioApronte:r=>e("horarios-aprontes:actualizar-cupo",r),desactivarHorarioApronte:r=>e("horarios-aprontes:desactivar",r),activarHorarioApronte:r=>e("horarios-aprontes:activar",r),borrarHorarioApronte:r=>e("horarios-aprontes:borrar",r),obtenerHistorial:r=>e("historial:obtener",r),obtenerVehiculos:()=>e("vehiculos:todos"),obtenerHistorialVehiculo:r=>e("vehiculos:historial",r),obtenerVehiculoMysqlPorMatricula:r=>e("vehiculos:mysql-by-matricula",r),obtenerVehiculosPorCedula:r=>e("vehiculos:por-cedula",r),obtenerCatalogoVehiculos:()=>e("vehiculos:catalogo"),actualizarVehiculoCliente:r=>e("vehiculos:actualizar",r),obtenerClientes:r=>e("clientes:listar",r||""),obtenerClienteDetalle:r=>e("clientes:detalle",r),guardarCliente:r=>e("clientes:guardar",r),obtenerMarcasMoto:()=>e("motos:marcas"),obtenerModelosMoto:r=>e("motos:modelos",r),obtenerEnvConfig:()=>e("config:env:get"),guardarEnvConfig:r=>e("config:env:set",r),probarConexionDB:()=>e("config:api:test"),probarConexionApi:()=>e("config:api:test"),obtenerUsuariosLogin:()=>e("usuarios:login-list"),login:(r,o)=>e("auth:login",r,o),cambiarPasswordPropia:r=>e("auth:change-password",r),listarUsuarios:()=>e("usuarios:list"),crearUsuario:r=>e("usuarios:create",r),actualizarUsuario:r=>e("usuarios:update",r),borrarUsuario:r=>e("usuarios:delete",r),actualizarPasswordUsuario:r=>e("usuarios:password",r),obtenerAuditoriaUsuarios:()=>e("auditoria:list"),obtenerRegistroMensual:r=>e("registros:mensual",r),listarIngresos:()=>e("ingresos:list"),obtenerIngresosPorCliente:r=>e("ingresos:por-cliente",r),obtenerIngreso:r=>e("ingresos:obtener",r),crearIngreso:r=>e("ingresos:crear",r),actualizarIngreso:r=>e("ingresos:actualizar",r),registrarEgreso:r=>e("ingresos:egreso",r)});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("ipcRenderer", {
+  on(...args) {
+    const [channel, listener] = args;
+    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+  },
+  off(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.off(channel, ...omit);
+  },
+  send(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.send(channel, ...omit);
+  },
+  invoke(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.invoke(channel, ...omit);
+  }
+});
+const invokeSafe = async (...args) => {
+  const result = await electron.ipcRenderer.invoke(...args);
+  if (result && typeof result === "object" && result.__ipc_error) {
+    const err = new Error(result.message || "IPC error");
+    if (result.stack) {
+      err.stack = result.stack;
+    }
+    throw err;
+  }
+  return result;
+};
+electron.contextBridge.exposeInMainWorld("api", {
+  // Reservas
+  crearReserva: (d) => invokeSafe("reservas:crear", d),
+  obtenerReserva: (id) => invokeSafe("reservas:obtener", id),
+  borrarReserva: (data) => invokeSafe("reservas:borrar", data),
+  moverReserva: (d) => invokeSafe("reservas:mover", d),
+  actualizarEstadoReserva: (d) => invokeSafe("reservas:estado", d),
+  actualizarReserva: (d) => invokeSafe("reservas:actualizar", d),
+  obtenerReservasSemana: (d) => invokeSafe("reservas:semana", d),
+  obtenerReservasDia: (d) => invokeSafe("reservas:dia", d),
+  obtenerTodasLasReservas: () => invokeSafe("reservas:todas"),
+  actualizarNotasReserva: (data, notas) => invokeSafe("reservas:actualizar-notas", data, notas),
+  obtenerCambiosReservas: (d) => invokeSafe("reservas:cambios", d),
+  // Aprontes
+  crearApronte: (d) => invokeSafe("aprontes:crear", d),
+  obtenerApronte: (id) => invokeSafe("aprontes:obtener", id),
+  borrarApronte: (data) => invokeSafe("aprontes:borrar", data),
+  actualizarApronte: (d) => invokeSafe("aprontes:actualizar", d),
+  obtenerAprontesFecha: (f) => invokeSafe("aprontes:fecha", f),
+  obtenerAprontes: () => invokeSafe("aprontes:todas"),
+  obtenerConfigAlertasAprontes: () => invokeSafe("aprontes:alertas:config:get"),
+  guardarConfigAlertasAprontes: (d) => invokeSafe("aprontes:alertas:config:set", d),
+  obtenerConfigResumenDiario: () => invokeSafe("resumen-diario:config:get"),
+  guardarConfigResumenDiario: (d) => invokeSafe("resumen-diario:config:set", d),
+  enviarResumenDiario: (d) => invokeSafe("resumen-diario:enviar", d),
+  // Horarios
+  obtenerHorariosBase: () => invokeSafe("horarios:base"),
+  obtenerHorariosInactivos: () => invokeSafe("horarios:inactivos"),
+  obtenerHorariosDisponibles: (f) => invokeSafe("horarios:disponibles", f),
+  crearHorario: (h) => invokeSafe("horarios:crear", h),
+  desactivarHorario: (id) => invokeSafe("horarios:desactivar", id),
+  activarHorario: (id) => invokeSafe("horarios:activar", id),
+  bloquearHorario: (d) => invokeSafe("horarios:bloquear", d),
+  desbloquearHorario: (d) => invokeSafe("horarios:desbloquear", d),
+  obtenerHorariosBloqueados: (f) => invokeSafe("horarios:bloqueados", f),
+  borrarHorarioPermanente: (id) => invokeSafe("horarios:borrar", id),
+  // Horarios Aprontes
+  obtenerHorariosAprontesBase: () => invokeSafe("horarios-aprontes:base"),
+  obtenerHorariosAprontesInactivos: () => invokeSafe("horarios-aprontes:inactivos"),
+  obtenerHorariosAprontesDisponibles: (f) => invokeSafe("horarios-aprontes:disponibles", f),
+  crearHorarioApronte: (d) => invokeSafe("horarios-aprontes:crear", d),
+  actualizarCupoHorarioApronte: (d) => invokeSafe("horarios-aprontes:actualizar-cupo", d),
+  desactivarHorarioApronte: (id) => invokeSafe("horarios-aprontes:desactivar", id),
+  activarHorarioApronte: (id) => invokeSafe("horarios-aprontes:activar", id),
+  borrarHorarioApronte: (id) => invokeSafe("horarios-aprontes:borrar", id),
+  // Historial
+  obtenerHistorial: (id) => invokeSafe("historial:obtener", id),
+  // Vehiculos
+  obtenerVehiculos: () => invokeSafe("vehiculos:todos"),
+  obtenerHistorialVehiculo: (vehiculoId) => invokeSafe("vehiculos:historial", vehiculoId),
+  obtenerVehiculoMysqlPorMatricula: (matricula) => invokeSafe("vehiculos:mysql-by-matricula", matricula),
+  obtenerVehiculosPorCedula: (cedula) => invokeSafe("vehiculos:por-cedula", cedula),
+  obtenerCatalogoVehiculos: () => invokeSafe("vehiculos:catalogo"),
+  actualizarVehiculoCliente: (data) => invokeSafe("vehiculos:actualizar", data),
+  borrarVehiculoCliente: (data) => invokeSafe("vehiculos:borrar", data),
+  // Clientes
+  obtenerClientes: (filtro) => invokeSafe("clientes:listar", filtro || ""),
+  obtenerClienteDetalle: (cliente) => invokeSafe("clientes:detalle", cliente),
+  guardarCliente: (data) => invokeSafe("clientes:guardar", data),
+  // Motos catalogo
+  obtenerMarcasMoto: () => invokeSafe("motos:marcas"),
+  obtenerModelosMoto: (marca) => invokeSafe("motos:modelos", marca),
+  // Configuración
+  obtenerEnvConfig: () => invokeSafe("config:env:get"),
+  guardarEnvConfig: (text) => invokeSafe("config:env:set", text),
+  probarConexionDB: () => invokeSafe("config:api:test"),
+  probarConexionApi: () => invokeSafe("config:api:test"),
+  // Usuarios / Auth
+  obtenerUsuariosLogin: () => invokeSafe("usuarios:login-list"),
+  login: (username, password) => invokeSafe("auth:login", username, password),
+  cambiarPasswordPropia: (data) => invokeSafe("auth:change-password", data),
+  listarUsuarios: () => invokeSafe("usuarios:list"),
+  crearUsuario: (data) => invokeSafe("usuarios:create", data),
+  actualizarUsuario: (data) => invokeSafe("usuarios:update", data),
+  borrarUsuario: (data) => invokeSafe("usuarios:delete", data),
+  actualizarPasswordUsuario: (data) => invokeSafe("usuarios:password", data),
+  // Auditor�a
+  obtenerAuditoriaUsuarios: () => invokeSafe("auditoria:list"),
+  // Registros
+  obtenerRegistroMensual: (d) => invokeSafe("registros:mensual", d),
+  // Ingresos / egresos
+  listarIngresos: () => invokeSafe("ingresos:list"),
+  obtenerIngresosPorCliente: (cliente) => invokeSafe("ingresos:por-cliente", cliente),
+  obtenerIngreso: (id) => invokeSafe("ingresos:obtener", id),
+  crearIngreso: (d) => invokeSafe("ingresos:crear", d),
+  actualizarIngreso: (d) => invokeSafe("ingresos:actualizar", d),
+  registrarEgreso: (d) => invokeSafe("ingresos:egreso", d)
+});

@@ -89,6 +89,7 @@ contextBridge.exposeInMainWorld('api', {
   obtenerVehiculosPorCedula: (cedula: string) => invokeSafe('vehiculos:por-cedula', cedula),
   obtenerCatalogoVehiculos: () => invokeSafe('vehiculos:catalogo'),
   actualizarVehiculoCliente: (data: any) => invokeSafe('vehiculos:actualizar', data),
+  borrarVehiculoCliente: (data: any) => invokeSafe('vehiculos:borrar', data),
 
   // Clientes
   obtenerClientes: (filtro?: string) => invokeSafe('clientes:listar', filtro || ''),
