@@ -18,8 +18,8 @@ const props = withDefaults(defineProps<{
   minDigits?: number
   inputClass?: string
 }>(), {
-  label: 'Cedula',
-  placeholder: 'Ingrese CI...',
+  label: 'Cédula / RUT',
+  placeholder: 'Ingrese CI o RUT...',
   disabled: false,
   minDigits: 3,
   inputClass: ''
@@ -38,7 +38,7 @@ let debounceTimer: number | null = null
 const normalizarCedula = (value: string) => String(value || '').replace(/\D/g, '')
 const formatearCedula = (value: string) => {
   let limpio = normalizarCedula(value)
-  if (limpio.length > 8) limpio = limpio.slice(0, 8)
+  if (limpio.length > 12) limpio = limpio.slice(0, 12)
   if (limpio.length > 7) return limpio.replace(/^(\d)(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
   if (limpio.length > 6) return limpio.replace(/^(\d{1,2})(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
   return limpio

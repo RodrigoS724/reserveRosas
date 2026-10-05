@@ -295,7 +295,7 @@ const cargarFichaDesdeReserva = async (reserva: any, seccion: 'ingreso' | 'egres
   form.value = {
     fecha_ingreso: hoyIso(),
     fecha_salida: '',
-    nombre: String(clienteBase.nombre || reserva.nombre || ''),
+    nombre: String(reserva.nombre || clienteBase.nombre || ''),
     telefono: String(clienteBase.telefono || reserva.telefono || ''),
     email: String(clienteBase.correo || clienteBase.email || ''),
     localidad: String(clienteBase.localidad || reserva.localidad || ''),
@@ -606,7 +606,7 @@ const buildPrintHtml = () => {
         .muted { color: #475569; }
       </style>
     </head>
-    <body>
+    <body onload="window.focus();window.print();">
       <main class="sheet">
         <div class="top">
           <div>

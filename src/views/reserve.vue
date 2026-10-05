@@ -123,8 +123,8 @@ const normalizarHoraAgenda = (value: any) => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-const abrirFichaTrabajoDesdeReserva = (reserva: any) => {
-  void abrirIngresoDesdeReserva(reserva)
+const abrirFichaTrabajoDesdeReserva = (reserva: any, seccion: 'ingreso' | 'egreso' = 'ingreso') => {
+  void abrirIngresoDesdeReserva(reserva, seccion)
 }
 
 // Estructura de semana
@@ -926,7 +926,7 @@ const tomarValorNoVacio = (...valores: any[]) => {
   return ''
 }
 
-const abrirIngresoDesdeReserva = async (reserva: any) => {
+const abrirIngresoDesdeReserva = async (reserva: any, seccion: 'ingreso' | 'egreso' = 'ingreso') => {
   if (!reserva) return
   reservaIngresoActiva.value = { ...reserva }
   mostrarFormularioIngreso.value = true
@@ -938,7 +938,7 @@ const abrirIngresoDesdeReserva = async (reserva: any) => {
     ingresoCliente.value = {
       id: tomarValorNoVacio(clienteBase.id, reserva.cliente_id, reserva.clienteId, reserva.id_cliente, reserva.idCliente),
       cedula: tomarValorNoVacio(clienteBase.cedula, reserva.cedula, reserva.ci),
-      nombre: tomarValorNoVacio(clienteBase.nombre, reserva.nombre, reserva.cliente_nombre),
+      nombre: tomarValorNoVacio(reserva.nombre, reserva.cliente_nombre, clienteBase.nombre),
       telefono: tomarValorNoVacio(clienteBase.telefono, reserva.telefono, reserva.cliente_telefono),
       localidad: tomarValorNoVacio(clienteBase.localidad, reserva.localidad, reserva.cliente_localidad),
       correo: tomarValorNoVacio(clienteBase.correo, reserva.correo, reserva.cliente_correo),
@@ -964,7 +964,7 @@ const abrirIngresoDesdeReserva = async (reserva: any) => {
     monto: '',
     trabajo_realizado: '',
     fecha_ingreso: new Date().toISOString().slice(0, 10),
-    fecha_salida: '',
+    fecha_salida: seccion === 'egreso' ? fechaHoyIso.value : '',
     historia,
     vehiculo_id: vehiculoInicial?.id ? Number(vehiculoInicial.id) : Number(reserva.vehiculo_id || 0) || null,
     marca: String(vehiculoInicial?.marca || vehiculoInicial?.codigo_marca || reserva.marca || ''),
@@ -1022,7 +1022,7 @@ const buildPrintHtml = (snapshot: ReturnType<typeof crearSnapshotImpresion>, fol
         .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
       </style>
     </head>
-    <body>
+    <body onload="window.focus();window.print();">
       <main class="sheet">
         <div class="top">
           <div>
@@ -1441,11 +1441,11 @@ const obtenerDetalleResumen = (reserva: any) => {
                   <div v-if="r.detalle_resumen" class="text-[9px] sm:text-[10px] opacity-70 break-words leading-tight">{{ r.detalle_resumen }}</div>
                   <div class="text-[9px] sm:text-[10px] font-bold opacity-75 break-words leading-tight">{{ r.marca }} {{ r.modelo }} · {{ r.cedula }}</div>
                   <div class="mt-2 flex flex-wrap gap-1.5">
-                    <button @click.stop="abrirFichaTrabajoDesdeReserva(r)" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
+                    <button @click.stop="abrirFichaTrabajoDesdeReserva(r, 'ingreso')" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
                       Ingreso
                     </button>
                     <button
-                      @click.stop="abrirFichaTrabajoDesdeReserva(r)"
+                      @click.stop="abrirFichaTrabajoDesdeReserva(r, 'egreso')"
                       :disabled="!r.ingreso_id"
                       class="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -1519,11 +1519,11 @@ const obtenerDetalleResumen = (reserva: any) => {
                       <span class="opacity-60">{{ r.cedula }}</span>
                     </div>
                     <div class="mt-2 flex flex-wrap gap-1.5">
-                      <button @click.stop="abrirFichaTrabajoDesdeReserva(r)" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
+                      <button @click.stop="abrirFichaTrabajoDesdeReserva(r, 'ingreso')" class="rounded-full bg-cyan-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-cyan-400">
                         Ingreso
                       </button>
                       <button
-                        @click.stop="abrirFichaTrabajoDesdeReserva(r)"
+                        @click.stop="abrirFichaTrabajoDesdeReserva(r, 'egreso')"
                         :disabled="!r.ingreso_id"
                         class="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
                       >

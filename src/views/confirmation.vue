@@ -103,6 +103,7 @@ const normalizarCedula = (value: string) => value.replace(/\D/g, '')
 
 const validarCedulaUy = (value: string) => {
   const digitsRaw = normalizarCedula(value)
+  if (digitsRaw.length === 12) return true
   if (digitsRaw.length < 7 || digitsRaw.length > 8) return false
   const digits = digitsRaw.padStart(8, '0').split('').map((d) => parseInt(d, 10))
   const weights = [2, 9, 8, 7, 6, 3, 4]
@@ -114,7 +115,8 @@ const validarCedulaUy = (value: string) => {
 
 const formatCedula = (value: string) => {
   let limpio = normalizarCedula(value)
-  if (limpio.length > 8) limpio = limpio.slice(0, 8)
+  if (limpio.length > 12) limpio = limpio.slice(0, 12)
+  if (limpio.length > 8) return limpio
   if (limpio.length > 7) return limpio.replace(/^(\d)(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
   if (limpio.length > 6) return limpio.replace(/^(\d{1,2})(\d{3})(\d{3})(\d{1})$/, '$1.$2.$3-$4')
   return limpio
@@ -402,10 +404,10 @@ const confirmarReserva = async () => {
           <div v-if="!isTomaMoto" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div class="space-y-2">
-                <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Cedula</label>
+                <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Cédula / RUT</label>
                 <CedulaAutocomplete
                   v-model="cedula"
-                  placeholder="1.234.567-8"
+                  placeholder="Ingrese CI o RUT"
                   label=""
                   @select="onCedulaSeleccionada"
                   :input-class="[baseInputClass, cedula && !cedulaValida ? errorClass : (cedulaValida ? successClass : '')].join(' ')"

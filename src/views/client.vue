@@ -536,7 +536,7 @@ const buildPrintHtml = (snapshot: ReturnType<typeof crearSnapshotImpresion>, fol
         .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
       </style>
     </head>
-    <body>
+    <body onload="window.focus();window.print();">
       <main class="sheet">
         <div class="top">
           <div>
@@ -1197,10 +1197,10 @@ onBeforeUnmount(() => {
 
         <div class="mt-6 grid gap-4 sm:grid-cols-2">
           <label class="space-y-2">
-            <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Cédula</span>
+            <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Cédula / RUT</span>
             <CedulaAutocomplete
               v-model="formCliente.cedula"
-              placeholder="12345678"
+              placeholder="Ingrese CI o RUT"
               label=""
               @select="onCedulaSeleccionada"
               :input-class="'w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-cyan-400/40'"

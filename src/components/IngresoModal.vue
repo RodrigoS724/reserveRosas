@@ -34,12 +34,25 @@ const emit = defineEmits<{
 }>()
 
 const activeSection = ref<'ingreso' | 'egreso'>('ingreso')
+const hoyIso = () => new Date().toISOString().slice(0, 10)
 
 watch(
   () => props.open,
   (open) => {
     if (open) {
       activeSection.value = props.initialSection || (props.ingreso?.fecha_egreso ? 'egreso' : 'ingreso')
+      if (activeSection.value === 'egreso' && !String(props.form.fecha_salida || '').trim()) {
+        props.form.fecha_salida = hoyIso()
+      }
+    }
+  }
+)
+
+watch(
+  () => activeSection.value,
+  (section) => {
+    if (section === 'egreso' && !String(props.form.fecha_salida || '').trim()) {
+      props.form.fecha_salida = hoyIso()
     }
   }
 )
