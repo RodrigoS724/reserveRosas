@@ -18,6 +18,7 @@ import Auditoria from './views/auditoria.vue'
 import DailySummary from './views/dailySummary.vue'
 import Registros from './views/registros.vue'
 import Mensajes from './views/mensajes.vue'
+import PedidosPanel from './views/chatPanels.vue'
 import { canAccessRoute, getFallbackRoute, getSession } from './auth'
 
 const router = createRouter({
@@ -37,6 +38,8 @@ const router = createRouter({
     { path: '/resumen-diario', component: DailySummary },
     { path: '/registros', component: Registros },
     { path: '/mensajes', component: Mensajes },
+    { path: '/pedidos-moto', component: PedidosPanel, meta: { title: 'Pedidos Moto', subtitle: 'Canal operativo para pedidos de motos y encargos relacionados.' } },
+    { path: '/pedidos-repuestos', component: PedidosPanel, meta: { title: 'Pedidos Repuestos', subtitle: 'Canal operativo para repuestos y seguimiento de piezas.' } },
     { path: '/config', component: Config },
     { path: '/usuarios', component: Users },
     { path: '/auditoria', component: Auditoria },

@@ -20,6 +20,9 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/clientes': 'clientes',
   '/ajustes': 'ajustes',
   '/vehiculos': 'vehiculos',
+  '/mensajes': 'mensajes',
+  '/pedidos-moto': 'mensajes',
+  '/pedidos-repuestos': 'mensajes',
   '/config': 'config',
   '/usuarios': 'usuarios',
   '/auditoria': 'auditoria'
@@ -123,6 +126,7 @@ export const PermissionsLabels: Record<string, string> = {
   reservas: 'Reservas',
   registros: 'Registros',
   aprontes: 'Aprontes',
+  mensajes: 'Mensajes y pedidos',
   mecanicos: 'Mecanicos',
   historial: 'Historial',
   clientes: 'Clientes',

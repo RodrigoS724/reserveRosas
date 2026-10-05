@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { clearSession, getSession, setSession, hasPermission } from './auth'
 import { api, ipc } from './api'
 import { fetchInboxSnapshot } from './api/chat'
@@ -22,6 +23,9 @@ const notifications = ref([])
 const sidebarCollapsed = ref(false)
 const chatUnreadCount = ref(0)
 const chatLastSeen = ref({})
+const route = useRoute()
+const otrosMenuOpen = ref(false)
+const otrosMenuRoutes = ['/mensajes', '/pedidos-moto', '/pedidos-repuestos']
 let notificationSeq = 0
 let chatPollingTimer = null
 
@@ -44,6 +48,20 @@ const loadSidebarPreference = () => {
 const toggleSidebar = () => {
   setSidebarCollapsed(!sidebarCollapsed.value)
 }
+
+const toggleOtrosMenu = () => {
+  otrosMenuOpen.value = !otrosMenuOpen.value
+}
+
+watch(
+  () => route.path,
+  (path) => {
+    if (otrosMenuRoutes.some((item) => path === item || path.startsWith(`${item}/`))) {
+      otrosMenuOpen.value = true
+    }
+  },
+  { immediate: true }
+)
 
 const applyTheme = (value) => {
   isDark.value = value
@@ -394,18 +412,57 @@ watch(session, (value) => {
             <span>Registros</span>
           </div>
         </router-link>
-        <router-link v-if="session" to="/mensajes" v-slot="{ isActive }">
-          <div :class="[
-            'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
-            isActive
-              ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
-          ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.767 9.767 0 01-4-.81L3 20l1.26-3.8A7.962 7.962 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            <span>Mensajes</span>
-            <span v-if="chatUnreadCount > 0" class="ml-auto inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{{ chatUnreadCount }}</span>
+        <div v-if="session" class="space-y-1">
+          <button
+            type="button"
+            @click="toggleOtrosMenu"
+            :class="[
+              'flex w-full items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',
+              otrosMenuOpen || otrosMenuRoutes.some((item) => route.path === item || route.path.startsWith(`${item}/`))
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
+            ]"
+          >
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.767 9.767 0 01-4-.81L3 20l1.26-3.8A7.962 7.962 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span>Otros</span>
+            <svg class="ml-auto h-4 w-4 transition-transform" :class="otrosMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div v-if="otrosMenuOpen" class="ml-4 space-y-1 border-l border-gray-200 dark:border-gray-800 pl-4">
+            <router-link v-if="session" to="/mensajes" v-slot="{ isActive }">
+              <div :class="[
+                'flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-300 group',
+                isActive
+                  ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
+              ]">
+                <span>Mensajes</span>
+                <span v-if="chatUnreadCount > 0" class="ml-auto inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{{ chatUnreadCount }}</span>
+              </div>
+            </router-link>
+
+            <router-link v-if="puede('mensajes')" to="/pedidos-moto" v-slot="{ isActive }">
+              <div :class="[
+                'flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-300 group',
+                isActive
+                  ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
+              ]">
+                <span>Pedidos Moto</span>
+              </div>
+            </router-link>
+
+            <router-link v-if="puede('mensajes')" to="/pedidos-repuestos" v-slot="{ isActive }">
+              <div :class="[
+                'flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-300 group',
+                isActive
+                  ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-cyan-600'
+              ]">
+                <span>Pedidos Repuestos</span>
+              </div>
+            </router-link>
           </div>
-        </router-link>
+        </div>
         <router-link v-if="puede('historial')" to="/historial" v-slot="{ isActive }">
           <div :class="[
             'flex items-center gap-4 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group',

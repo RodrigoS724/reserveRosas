@@ -7,8 +7,13 @@ import CedulaAutocomplete from '../components/CedulaAutocomplete.vue'
 const route = useRoute()
 const router = useRouter()
 
-const fecha = (route.query.fecha as string) || '2026-01-19'
-const hora = (route.query.hora as string) || '11:00'
+const hoyIso = () => new Date().toISOString().slice(0, 10)
+const DRAFT_KEY = 'reserveRosas.confirmacion.draft.v1'
+const DRAFT_TTL_MS = 15 * 60 * 1000
+
+const fecha = ref(String(route.query.fecha || hoyIso()))
+const hora = ref(String(route.query.hora || '11:00'))
+const mostrarAjustesFechaHora = ref(false)
 
 const nombre = ref('')
 const cedula = ref('')
@@ -33,6 +38,92 @@ const garantiaProblema = ref('')
 
 const guardando = ref(false)
 const matriculaGenerada = ref('TMP0000')
+
+type ReservationDraft = {
+  updatedAt: number
+  fecha: string
+  hora: string
+  nombre: string
+  cedula: string
+  telefono: string
+  marca: string
+  modelo: string
+  km: string
+  detalles: string
+  tipoTurno: 'Garantia' | 'Particular' | 'TomaMoto'
+  particularTipo: 'Service' | 'Taller'
+  garantiaTipo: 'Service' | 'Reparacion'
+  garantiaFechaCompra: string
+  garantiaNumeroService: string
+  garantiaProblema: string
+  vehiculoSeleccionadoId: number | null
+}
+
+const leerBorrador = (): ReservationDraft | null => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (!Number.isFinite(Number(parsed.updatedAt))) return null
+    if (Date.now() - Number(parsed.updatedAt) > DRAFT_TTL_MS) return null
+    return parsed as ReservationDraft
+  } catch {
+    return null
+  }
+}
+
+const guardarBorrador = () => {
+  try {
+    const payload: ReservationDraft = {
+      updatedAt: Date.now(),
+      fecha: fecha.value,
+      hora: hora.value,
+      nombre: nombre.value,
+      cedula: cedula.value,
+      telefono: telefono.value,
+      marca: marca.value,
+      modelo: modelo.value,
+      km: km.value,
+      detalles: detalles.value,
+      tipoTurno: tipoTurno.value,
+      particularTipo: particularTipo.value,
+      garantiaTipo: garantiaTipo.value,
+      garantiaFechaCompra: garantiaFechaCompra.value,
+      garantiaNumeroService: garantiaNumeroService.value,
+      garantiaProblema: garantiaProblema.value,
+      vehiculoSeleccionadoId: vehiculoSeleccionadoId.value
+    }
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+  } catch {}
+}
+
+const borrarBorrador = () => {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY)
+  } catch {}
+}
+
+const restaurarBorrador = () => {
+  const borrador = leerBorrador()
+  if (!borrador) return
+  fecha.value = borrador.fecha || fecha.value
+  hora.value = borrador.hora || hora.value
+  nombre.value = borrador.nombre || ''
+  cedula.value = borrador.cedula || ''
+  telefono.value = borrador.telefono || ''
+  marca.value = borrador.marca || ''
+  modelo.value = borrador.modelo || ''
+  km.value = borrador.km || ''
+  detalles.value = borrador.detalles || ''
+  tipoTurno.value = borrador.tipoTurno || 'Particular'
+  particularTipo.value = borrador.particularTipo || 'Service'
+  garantiaTipo.value = borrador.garantiaTipo || 'Service'
+  garantiaFechaCompra.value = borrador.garantiaFechaCompra || ''
+  garantiaNumeroService.value = borrador.garantiaNumeroService || ''
+  garantiaProblema.value = borrador.garantiaProblema || ''
+  vehiculoSeleccionadoId.value = borrador.vehiculoSeleccionadoId ?? null
+}
 
 const baseInputClass = 'w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white'
 const smallInputClass = 'w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none transition-all dark:text-white'
@@ -86,6 +177,9 @@ const cargarVehiculosCliente = async () => {
 
     if (vehiculos.length === 1) {
       seleccionarVehiculoExistente(vehiculos[0])
+      if (!garantiaFechaCompra.value && vehiculos[0]?.fecha_compra) {
+        garantiaFechaCompra.value = String(vehiculos[0].fecha_compra || '').slice(0, 10)
+      }
     } else if (vehiculoSeleccionadoId.value && !vehiculos.some((vehiculo: any) => Number(vehiculo.id) === Number(vehiculoSeleccionadoId.value))) {
       vehiculoSeleccionadoId.value = null
     }
@@ -215,6 +309,18 @@ watch(garantiaTipo, () => {
   garantiaFechaCompra.value = ''
   garantiaNumeroService.value = ''
   garantiaProblema.value = ''
+  const vehiculo = vehiculosCliente.value.find((item) => Number(item.id) === Number(vehiculoSeleccionadoId.value))
+  if (vehiculo?.fecha_compra && tipoTurno.value === 'Garantia') {
+    garantiaFechaCompra.value = String(vehiculo.fecha_compra || '').slice(0, 10)
+  }
+})
+
+watch(tipoTurno, (tipo) => {
+  if (tipo !== 'Garantia') return
+  const vehiculo = vehiculosCliente.value.find((item) => Number(item.id) === Number(vehiculoSeleccionadoId.value))
+  if (vehiculo?.fecha_compra && !garantiaFechaCompra.value) {
+    garantiaFechaCompra.value = String(vehiculo.fecha_compra || '').slice(0, 10)
+  }
 })
 
 watch(marca, (value) => {
@@ -224,6 +330,25 @@ watch(marca, (value) => {
 onMounted(async () => {
   await cargarMarcas()
   await cargarModelos(marca.value)
+  restaurarBorrador()
+  if (cedula.value) {
+    await cargarVehiculosCliente()
+  }
+})
+
+watch(
+  [fecha, hora, nombre, cedula, telefono, marca, modelo, km, detalles, tipoTurno, particularTipo, garantiaTipo, garantiaFechaCompra, garantiaNumeroService, garantiaProblema, vehiculoSeleccionadoId],
+  () => {
+    guardarBorrador()
+  }
+)
+
+watch(tipoTurno, (tipo) => {
+  if (tipo !== 'Garantia') return
+  const vehiculo = vehiculosCliente.value.find((item) => Number(item.id) === Number(vehiculoSeleccionadoId.value))
+  if (vehiculo?.fecha_compra && !garantiaFechaCompra.value) {
+    garantiaFechaCompra.value = String(vehiculo.fecha_compra || '').slice(0, 10)
+  }
 })
 
 const generarMatriculaGenericaUnica = async () => {
@@ -252,6 +377,9 @@ const seleccionarVehiculoExistente = (vehiculo: any) => {
   telefono.value = String(vehiculo.telefono || telefono.value || '')
   if (vehiculo.matricula) {
     matriculaGenerada.value = String(vehiculo.matricula)
+  }
+  if (tipoTurno.value === 'Garantia' && vehiculo.fecha_compra && !garantiaFechaCompra.value) {
+    garantiaFechaCompra.value = String(vehiculo.fecha_compra || '').slice(0, 10)
   }
 }
 
@@ -283,8 +411,8 @@ const confirmarReserva = async () => {
   }
 
   try {
-    const horariosDisponibles = await api.obtenerHorariosDisponibles(fecha)
-    const horaDisponible = horariosDisponibles.some((h: any) => h.hora === hora)
+    const horariosDisponibles = await api.obtenerHorariosDisponibles(fecha.value)
+    const horaDisponible = horariosDisponibles.some((h: any) => h.hora === hora.value)
     if (!horaDisponible) {
       alert('Este horario ya no esta disponible. Por favor selecciona otro.')
       return
@@ -331,8 +459,8 @@ const confirmarReserva = async () => {
     garantia_fecha_compra: isGarantia.value ? garantiaFechaCompra.value.trim() : null,
     garantia_numero_service: isGarantiaService.value ? garantiaNumeroService.value.trim() : null,
     garantia_problema: isGarantiaReparacion.value ? garantiaProblema.value.trim() : null,
-    fecha,
-    hora,
+    fecha: fecha.value,
+    hora: hora.value,
     detalles: isParticularTaller.value ? detalles.value.trim() : '',
     vehiculo_id: vehiculoActual?.id || null
   }
@@ -340,6 +468,7 @@ const confirmarReserva = async () => {
   try {
     const resultado = await api.crearReserva(datos as any)
     if (resultado && typeof resultado === 'number' && resultado > 0) {
+      borrarBorrador()
       alert(`Reserva guardada exitosamente. Matricula generica: ${matriculaAuto}`)
       router.push('/reservas')
     } else {
@@ -380,6 +509,27 @@ const confirmarReserva = async () => {
               <p class="text-sm sm:text-base text-gray-800 dark:text-white font-bold">{{ matriculaGenerada }}</p>
               <p class="text-[10px] text-gray-500 mt-1">Se crea automatica y luego se puede editar en panel de vehiculos.</p>
             </div>
+          </div>
+          <button
+            type="button"
+            @click="mostrarAjustesFechaHora = !mostrarAjustesFechaHora"
+            class="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-blue-300 hover:bg-blue-500/15"
+          >
+            {{ mostrarAjustesFechaHora ? 'Ocultar ajustes' : 'Cambiar fecha y hora' }}
+          </button>
+
+          <div v-if="mostrarAjustesFechaHora" class="mt-4 space-y-3 rounded-2xl border border-white/10 bg-slate-950/35 p-3">
+            <div class="grid gap-3">
+              <label class="space-y-1">
+                <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Fecha</span>
+                <input v-model="fecha" type="date" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none" />
+              </label>
+              <label class="space-y-1">
+                <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Hora</span>
+                <input v-model="hora" type="time" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none" />
+              </label>
+            </div>
+            <p class="text-[10px] leading-5 text-slate-400">Estos cambios se guardan por unos minutos en esta pestaña para que puedas volver atrás sin perderlos.</p>
           </div>
         </div>
       </div>

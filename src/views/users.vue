@@ -39,7 +39,7 @@ const form = ref<UserForm>({
   username: '',
   password: '',
   role: 'ventas',
-  permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial'],
+  permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial', 'mensajes'],
   activo: 1,
   es_mecanico_default: false
 })
@@ -61,7 +61,7 @@ const resetForm = () => {
     username: '',
     password: '',
     role: 'ventas',
-    permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial'],
+    permissions: ['agenda', 'reservas', 'aprontes', 'clientes', 'mecanicos', 'historial', 'mensajes'],
     activo: 1,
     es_mecanico_default: false
   }
@@ -97,11 +97,11 @@ const aplicarPermisosPorRol = () => {
     return
   }
   if (form.value.role === 'administrador') {
-    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria', 'mecanicos']
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'ajustes', 'vehiculos', 'usuarios', 'auditoria', 'mecanicos', 'mensajes']
     return
   }
   if (form.value.role === 'ventas' || form.value.role === 'caja') {
-    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'mecanicos']
+    form.value.permissions = ['agenda', 'reservas', 'aprontes', 'clientes', 'historial', 'mecanicos', 'mensajes']
     return
   }
   if (form.value.role === 'mecanico') {
