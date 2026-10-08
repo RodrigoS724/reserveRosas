@@ -4,6 +4,7 @@ import IngresoModal from '../components/IngresoModal.vue'
 import ReservaWindow from '../components/reservaWindow.vue'
 import ApronteWindow from '../components/apronteWindow.vue'
 import { api, ipc } from '../api'
+import { buildOrdenServicioPrintHtml } from '../utils/ordenServicio'
 import { getSession, isTallerRole } from '../auth'
 
 const semanaOffset = ref(0)
@@ -992,71 +993,7 @@ const crearSnapshotImpresion = () => ({
   reserva: reservaIngresoActiva.value ? clonarPlano(reservaIngresoActiva.value) : null
 })
 
-const buildPrintHtml = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null) => {
-  const clienteSnapshot = snapshot.cliente || {}
-  const formSnapshot = snapshot.form
-  const folioTexto = folio ?? snapshot.ingresoId ?? ''
-  return `<!doctype html>
-  <html lang="es">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Ficha de trabajo #${folioTexto}</title>
-      <style>
-        @page { size: A4; margin: 14mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
-        .sheet { border: 2px solid #0f172a; padding: 18px; min-height: 260mm; box-sizing: border-box; }
-        .top { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; border-bottom: 1px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; }
-        .brand { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-        .title { font-size: 26px; font-weight: 900; margin: 6px 0 0; }
-        .folio { font-size: 14px; font-weight: 800; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin-bottom: 14px; }
-        .box { border: 1px solid #0f172a; padding: 10px 12px; min-height: 30px; }
-        .label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #475569; margin-bottom: 5px; }
-        .value { font-size: 14px; font-weight: 700; }
-        .block { border: 1px solid #0f172a; padding: 12px; min-height: 115px; margin-bottom: 14px; }
-        .block-title { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #475569; margin-bottom: 10px; }
-        .history { min-height: 64px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
-        .lines { height: 82px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 22px, rgba(15,23,42,.22) 22px, rgba(15,23,42,.22) 23px); }
-        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
-        .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
-      </style>
-    </head>
-    <body onload="window.focus();window.print();">
-      <main class="sheet">
-        <div class="top">
-          <div>
-            <div class="brand">ReserveRosas</div>
-            <div class="title">Ficha de trabajo</div>
-          </div>
-          <div class="folio">N° ${folioTexto}</div>
-        </div>
 
-        <div class="grid">
-          <div class="box"><div class="label">Ingreso</div><div class="value">${formSnapshot.fecha_ingreso || ''}</div></div>
-          <div class="box"><div class="label">Egreso</div><div class="value">${formSnapshot.fecha_salida || ''}</div></div>
-          <div class="box"><div class="label">Cliente</div><div class="value">${clienteSnapshot.nombre || ''}</div></div>
-          <div class="box"><div class="label">Cédula</div><div class="value">${clienteSnapshot.cedula || ''}</div></div>
-          <div class="box"><div class="label">Teléfono</div><div class="value">${clienteSnapshot.telefono || ''}</div></div>
-          <div class="box"><div class="label">Localidad</div><div class="value">${clienteSnapshot.localidad || ''}</div></div>
-          <div class="box"><div class="label">Moto</div><div class="value">${formSnapshot.marca || ''} ${formSnapshot.modelo || ''}</div></div>
-          <div class="box"><div class="label">Matrícula</div><div class="value">${formSnapshot.matricula || ''}</div></div>
-          <div class="box"><div class="label">Color</div><div class="value">${formSnapshot.color || ''}</div></div>
-          <div class="box"><div class="label">Motor</div><div class="value">${formSnapshot.numero_motor || ''}</div></div>
-        </div>
-
-        <div class="block"><div class="block-title">Historia</div><div class="history">${formSnapshot.historia || ''}</div></div>
-        <div class="block"><div class="block-title">Observaciones</div><div class="lines"></div></div>
-        <div class="block"><div class="block-title">Notas de entrega</div><div class="lines"></div></div>
-
-        <div class="signatures">
-          <div class="sig">Firma del prestador</div>
-          <div class="sig">Firma del cliente</div>
-        </div>
-      </main>
-    </body>
-  </html>`
-}
 
 const imprimirHoja = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio?: number | string | null, win: Window | null = null) => {
   const printWindow = win || window.open('', '_blank', 'width=980,height=1200')
@@ -1065,7 +1002,24 @@ const imprimirHoja = (snapshot: ReturnType<typeof crearSnapshotImpresion>, folio
     return
   }
   printWindow.document.open()
-  printWindow.document.write(buildPrintHtml(snapshot, folio))
+  printWindow.document.write(buildOrdenServicioPrintHtml({
+    folio: folio ?? snapshot.ingresoId ?? undefined,
+    fechaIngreso: snapshot.form.fecha_ingreso,
+    fechaSalida: snapshot.form.fecha_salida,
+    nombre: snapshot.cliente?.nombre,
+    cedula: snapshot.cliente?.cedula,
+    correo: snapshot.cliente?.correo ?? snapshot.cliente?.email,
+    telefono: snapshot.cliente?.telefono,
+    localidad: snapshot.cliente?.localidad,
+    marca: snapshot.form.marca,
+    modelo: snapshot.form.modelo,
+    color: snapshot.form.color,
+    matricula: snapshot.form.matricula,
+    numeroMotor: snapshot.form.numero_motor,
+    comentarios: snapshot.form.comentarios,
+    observaciones: snapshot.form.observaciones,
+    trabajoRealizado: snapshot.form.historia
+  }))
   printWindow.document.close()
 }
 
@@ -1699,5 +1653,4 @@ const obtenerDetalleResumen = (reserva: any) => {
       @save-and-print="guardarYImprimirIngreso"
     />
 </template>
-
 

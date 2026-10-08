@@ -52,6 +52,8 @@ La referencia de esta rama es `2.0.0`.
 
 Nota: `npm run build:win:publish` solo publica si existe `GH_TOKEN` en el entorno. Para releases locales sin token, usa `npm run build:win` y sube los artefactos desde GitHub Actions.
 
+Si queres evitar cargar el token a mano en cada terminal, crea `.env.release.local` en la raiz del proyecto con `GH_TOKEN=...`. Ese archivo ya queda fuera del control de versiones por la regla `*.local`.
+
 ## Estructura separada de repositorios
 
 Este repo queda solo para la app desktop.

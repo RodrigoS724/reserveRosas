@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "build:win": "vue-tsc && vite build && electron-builder --win",
-    "build:win:publish": "vue-tsc && vite build && electron-builder --win --publish always",
+    "build:win:publish": "powershell -ExecutionPolicy Bypass -File scripts/build-win-publish.ps1",
     "release:local": "powershell -ExecutionPolicy Bypass -File scripts/release-local.ps1",
     "release:github": "powershell -ExecutionPolicy Bypass -File scripts/release-github.ps1",
     "preview": "vite preview",

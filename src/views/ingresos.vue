@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
 import IngresoModal from '../components/IngresoModal.vue'
-import { CHECK_ITEMS } from '../utils/ordenServicio'
+import { buildOrdenServicioPrintHtml, CHECK_ITEMS } from '../utils/ordenServicio'
 
 const route = useRoute()
 const isDarkTheme = ref(true)
@@ -567,91 +567,7 @@ const guardarIngreso = async () => {
   }
 }
 
-const buildPrintHtml = () => {
-  const folio = ingresoSeleccionado.value?.id || siguienteFolio.value
-  const clienteNombre = String(form.value.nombre || cliente.value?.nombre || '')
-  const clienteCedula = String(cedula.value || cliente.value?.cedula || '')
-  const telefono = String(form.value.telefono || cliente.value?.telefono || '')
-  const localidad = String(form.value.localidad || cliente.value?.localidad || '')
-  const marca = String(form.value.marca || '')
-  const modelo = String(form.value.modelo || '')
-  const color = String(form.value.color || '')
-  const matricula = String(form.value.matricula || '')
-  const motor = String(form.value.numero_motor || '')
-  const comentario = String(form.value.comentarios || '')
-  const observacion = String(form.value.observaciones || '')
-  return `<!doctype html>
-  <html lang="es">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Ficha de trabajo #${folio}</title>
-      <style>
-        @page { size: A4; margin: 14mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
-        .sheet { border: 2px solid #0f172a; padding: 18px; min-height: 260mm; box-sizing: border-box; }
-        .top { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; border-bottom: 1px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; }
-        .brand { font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
-        .title { font-size: 26px; font-weight: 900; margin: 6px 0 0; }
-        .folio { font-size: 14px; font-weight: 800; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin-bottom: 14px; }
-        .box { border: 1px solid #0f172a; padding: 10px 12px; min-height: 30px; }
-        .label { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #475569; margin-bottom: 5px; }
-        .value { font-size: 14px; font-weight: 700; }
-        .block { border: 1px solid #0f172a; padding: 12px; min-height: 115px; margin-bottom: 14px; }
-        .block-title { font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #475569; margin-bottom: 10px; }
-        .lines { height: 82px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 22px, rgba(15,23,42,.22) 22px, rgba(15,23,42,.22) 23px); }
-        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
-        .sig { border: 1px dashed #0f172a; min-height: 88px; display: flex; align-items: end; justify-content: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
-        .muted { color: #475569; }
-      </style>
-    </head>
-    <body onload="window.focus();window.print();">
-      <main class="sheet">
-        <div class="top">
-          <div>
-            <div class="brand">ReserveRosas</div>
-            <div class="title">Ficha de trabajo</div>
-          </div>
-          <div class="folio">N° ${folio}</div>
-        </div>
 
-        <div class="grid">
-          <div class="box"><div class="label">Ingreso</div><div class="value">${form.value.fecha_ingreso || ''}</div></div>
-          <div class="box"><div class="label">Egreso</div><div class="value">${form.value.fecha_salida || ''}</div></div>
-          <div class="box"><div class="label">Cliente</div><div class="value">${clienteNombre}</div></div>
-          <div class="box"><div class="label">Cédula</div><div class="value">${clienteCedula}</div></div>
-          <div class="box"><div class="label">Teléfono</div><div class="value">${telefono}</div></div>
-          <div class="box"><div class="label">Localidad</div><div class="value">${localidad}</div></div>
-          <div class="box"><div class="label">Moto</div><div class="value">${marca} ${modelo}</div></div>
-          <div class="box"><div class="label">Matrícula</div><div class="value">${matricula}</div></div>
-          <div class="box"><div class="label">Color</div><div class="value">${color}</div></div>
-          <div class="box"><div class="label">Motor</div><div class="value">${motor}</div></div>
-        </div>
-
-        <div class="block">
-          <div class="block-title">Observaciones</div>
-          <div class="lines"></div>
-        </div>
-
-        <div class="block">
-          <div class="block-title">Notas de entrega</div>
-          <div class="lines"></div>
-        </div>
-
-        <div class="signatures">
-          <div class="sig">Firma del prestador</div>
-          <div class="sig">Firma del cliente</div>
-        </div>
-
-        <div style="margin-top:14px;font-size:10px;color:#64748b;">
-          Comentarios: ${comentario || '<span class="muted">&nbsp;</span>'}<br />
-          Observaciones: ${observacion || '<span class="muted">&nbsp;</span>'}
-        </div>
-      </main>
-    </body>
-  </html>`
-}
 
 const imprimirHoja = (win: Window | null = null) => {
   const printWindow = win || window.open('', '_blank', 'width=980,height=1200')
@@ -660,7 +576,28 @@ const imprimirHoja = (win: Window | null = null) => {
     return
   }
   printWindow.document.open()
-  printWindow.document.write(buildPrintHtml())
+  printWindow.document.write(buildOrdenServicioPrintHtml({
+    folio: ingresoSeleccionado.value?.id || siguienteFolio.value,
+    fechaIngreso: form.value.fecha_ingreso,
+    fechaSalida: form.value.fecha_salida,
+    nombre: form.value.nombre || cliente.value?.nombre,
+    cedula: cedula.value || cliente.value?.cedula,
+    correo: form.value.email || cliente.value?.correo || cliente.value?.email,
+    telefono: form.value.telefono || cliente.value?.telefono,
+    localidad: form.value.localidad || cliente.value?.localidad,
+    marca: form.value.marca,
+    modelo: form.value.modelo,
+    color: form.value.color,
+    matricula: form.value.matricula,
+    numeroMotor: form.value.numero_motor,
+    numeroServicios: form.value.numero_servicios,
+    comentarios: form.value.comentarios,
+    observaciones: form.value.observaciones,
+    checklistIngreso: checklistIngreso.value,
+    checklistEgreso: checklistEgreso.value,
+    trabajos: trabajos.value,
+    trabajoRealizado: form.value.trabajo_realizado
+  }))
   printWindow.document.close()
 }
 
