@@ -52,6 +52,14 @@ const limpiarFecha = (value: string) => {
   return m ? v : ''
 }
 
+const tomarTextoNoVacio = (...valores: Array<any>) => {
+  for (const valor of valores) {
+    const texto = String(valor ?? '').trim()
+    if (texto) return texto
+  }
+  return ''
+}
+
 const esGarantia = computed(() => normalizarTipoTurno(editable.value?.tipo_turno) === 'Garantia')
 const esParticular = computed(() => normalizarTipoTurno(editable.value?.tipo_turno) === 'Particular')
 const esService = computed(() => normalizarTipoGarantia(editable.value?.garantia_tipo) === 'Service')
@@ -108,7 +116,22 @@ watch(
       garantia_tipo: tipoGarantiaNormalizado || String(nueva.garantia_tipo || ''),
       garantia_fecha_compra: limpiarFecha(nueva.garantia_fecha_compra),
       garantia_numero_service: String(nueva.garantia_numero_service || ''),
-      garantia_problema: String(nueva.garantia_problema || '')
+      garantia_problema: tomarTextoNoVacio(
+        nueva.garantia_problema,
+        nueva.problema,
+        nueva.detalle_problema,
+        nueva.descripcion_problema,
+        nueva.observaciones
+      ),
+      detalles: tomarTextoNoVacio(
+        nueva.detalles,
+        nueva.detalle,
+        nueva.observaciones,
+        nueva.observacion,
+        nueva.comentarios,
+        nueva.garantia_problema,
+        nueva.problema
+      )
     }
     cargarMarcas()
     cargarModelos(String(nueva.marca || ''))

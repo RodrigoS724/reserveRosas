@@ -1086,7 +1086,25 @@ const guardarYImprimirIngreso = async () => {
 }
 
 const abrirVentana = (reserva: any) => {
-  reservaActiva.value = { ...reserva }
+  reservaActiva.value = {
+    ...reserva,
+    garantia_problema: tomarValorNoVacio(
+      reserva?.garantia_problema,
+      reserva?.problema,
+      reserva?.detalle_problema,
+      reserva?.descripcion_problema,
+      reserva?.observaciones
+    ),
+    detalles: tomarValorNoVacio(
+      reserva?.detalles,
+      reserva?.detalle,
+      reserva?.observaciones,
+      reserva?.observacion,
+      reserva?.comentarios,
+      reserva?.garantia_problema,
+      reserva?.problema
+    )
+  }
   modalKey.value += 1
   mostrarVentana.value = true
 }

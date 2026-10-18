@@ -10,6 +10,7 @@ const router = useRouter()
 const hoyIso = () => new Date().toISOString().slice(0, 10)
 const DRAFT_KEY = 'reserveRosas.confirmacion.draft.v1'
 const DRAFT_TTL_MS = 15 * 60 * 1000
+const TOMA_CEDULA_GENERICA = '11111111'
 
 const fecha = ref(String(route.query.fecha || hoyIso()))
 const hora = ref(String(route.query.hora || '11:00'))
@@ -150,7 +151,15 @@ const cargarModelos = async (marcaValue: string) => {
   }
 }
 
+const limpiarMotoSeleccionada = () => {
+  vehiculoSeleccionadoId.value = null
+  marca.value = ''
+  modelo.value = ''
+  garantiaFechaCompra.value = ''
+}
+
 const cargarVehiculosCliente = async () => {
+  const tipoTurnoSolicitado = tipoTurno.value
   const cedulaNormalizada = normalizarCedula(cedula.value)
   if (cedulaNormalizada.length < 7) {
     vehiculosCliente.value = []
@@ -162,6 +171,9 @@ const cargarVehiculosCliente = async () => {
   cargandoVehiculosCliente.value = true
   try {
     const data = await api.obtenerVehiculosPorCedula(cedulaNormalizada)
+    if (tipoTurnoSolicitado === 'TomaMoto' || tipoTurno.value === 'TomaMoto' || normalizarCedula(cedula.value) !== cedulaNormalizada) {
+      return
+    }
     const cliente = data?.cliente || null
     const vehiculos = Array.isArray(data?.vehiculos) ? data.vehiculos : []
 
@@ -271,10 +283,11 @@ watch(cedula, async () => {
 
 watch(tipoTurno, (tipo) => {
   if (tipo === 'TomaMoto') {
-    cedula.value = ''
+    nombre.value = ''
+    telefono.value = ''
+    limpiarMotoSeleccionada()
     vehiculosCliente.value = []
     clienteEncontrado.value = false
-    vehiculoSeleccionadoId.value = null
   }
 })
 
@@ -294,7 +307,6 @@ watch(tipoTurno, (tipo) => {
   } else if (tipo === 'Garantia') {
     garantiaTipo.value = 'Service'
   } else {
-    cedula.value = ''
     vehiculosCliente.value = []
   }
 })
@@ -384,6 +396,7 @@ const seleccionarVehiculoExistente = (vehiculo: any) => {
 }
 
 const onCedulaSeleccionada = async (cliente: { cedula?: string | null; nombre?: string | null; telefono?: string | null }) => {
+  if (isTomaMoto.value) return
   clienteEncontrado.value = true
   if (cliente?.nombre) {
     nombre.value = String(cliente.nombre || '')
@@ -424,17 +437,12 @@ const confirmarReserva = async () => {
 
   guardando.value = true
   const vehiculoActual = vehiculoSeleccionado.value
-  if (!isTomaMoto.value && vehiculosCliente.value.length > 0 && !vehiculoActual) {
-    alert('Selecciona la moto del cliente para continuar.')
-    guardando.value = false
-    return
-  }
 
   const matriculaAuto = vehiculoActual?.matricula
     ? String(vehiculoActual.matricula || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
     : await generarMatriculaGenericaUnica()
   matriculaGenerada.value = matriculaAuto
-  const cedulaNormalizada = isTomaMoto.value ? '' : normalizarCedula(cedula.value)
+  const cedulaNormalizada = isTomaMoto.value ? TOMA_CEDULA_GENERICA : normalizarCedula(cedula.value)
 
   if (!isTomaMoto.value) {
     await api.guardarCliente({
@@ -447,7 +455,7 @@ const confirmarReserva = async () => {
 
   const datos = {
     nombre: nombre.value.trim(),
-    cedula: isTomaMoto.value ? '' : cedulaNormalizada,
+    cedula: isTomaMoto.value ? cedulaNormalizada : cedulaNormalizada,
     telefono: telefono.value.trim(),
     marca: marca.value.trim(),
     modelo: modelo.value.trim(),
@@ -462,7 +470,7 @@ const confirmarReserva = async () => {
     fecha: fecha.value,
     hora: hora.value,
     detalles: isParticularTaller.value ? detalles.value.trim() : '',
-    vehiculo_id: vehiculoActual?.id || null
+    vehiculo_id: isTomaMoto.value ? null : (vehiculoActual?.id || null)
   }
 
   try {
@@ -539,7 +547,7 @@ const confirmarReserva = async () => {
         <form class="space-y-4 sm:space-y-5 md:space-y-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar" @submit.prevent="confirmarReserva">
           <div class="space-y-2">
             <label class="text-[10px] sm:text-xs font-black text-gray-400 uppercase ml-1">Nombre completo</label>
-            <input v-model="nombre" type="text" placeholder="Ej: Rodrigo Rosas" :class="[baseInputClass, nombre && !nombreValido ? errorClass : (nombreValido ? successClass : '')]">
+            <input v-model="nombre" type="text" placeholder="Ej: Nombre Apellido" :class="[baseInputClass, nombre && !nombreValido ? errorClass : (nombreValido ? successClass : '')]">
           </div>
 
           <div class="space-y-2 sm:space-y-3">
@@ -616,9 +624,6 @@ const confirmarReserva = async () => {
                 <label class="text-[8px] sm:text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1">Modelo</label>
                 <input v-model="modelo" type="text" list="motos-modelos" :class="[smallInputClass, modelo && !modeloValido ? errorClass : (modeloValido ? successClass : '')]">
               </div>
-            </div>
-            <div class="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400 ml-1">
-              La toma de moto no requiere cédula
             </div>
           </div>
 
