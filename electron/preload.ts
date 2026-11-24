@@ -100,6 +100,13 @@ contextBridge.exposeInMainWorld('api', {
   obtenerMarcasMoto: () => invokeSafe('motos:marcas'),
   obtenerModelosMoto: (marca?: string) => invokeSafe('motos:modelos', marca),
 
+  // Pedidos de repuestos
+  listarPedidosRepuestos: () => invokeSafe('pedidos-repuestos:list'),
+  crearPedidoRepuestos: (d: any) => invokeSafe('pedidos-repuestos:create', d),
+  actualizarPedidoRepuestos: (d: any) => invokeSafe('pedidos-repuestos:update', d),
+  actualizarEstadoPedidoRepuestos: (d: any) => invokeSafe('pedidos-repuestos:update-estado', d),
+  borrarPedidoRepuestos: (d: any) => invokeSafe('pedidos-repuestos:delete', d),
+
   // Configuración
   obtenerEnvConfig: () => invokeSafe('config:env:get'),
   guardarEnvConfig: (text: string) => invokeSafe('config:env:set', text),
@@ -118,7 +125,8 @@ contextBridge.exposeInMainWorld('api', {
   obtenerAuditoriaUsuarios: () => invokeSafe('auditoria:list'),
 
   // Registros
-  obtenerRegistroMensual: (d: any) => invokeSafe('registros:mensual', d)
+  obtenerRegistroMensual: (d: any) => invokeSafe('registros:mensual', d),
+  obtenerRegistroMensualAnterior: (d: any) => invokeSafe('registros:legacy-mensual', d)
   ,
 
   // Ingresos / egresos

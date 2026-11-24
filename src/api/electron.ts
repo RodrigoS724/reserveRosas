@@ -41,6 +41,12 @@ export const api = {
 	crearIngreso: (data: any) => window.api.crearIngreso(withActor(data)),
 	actualizarIngreso: (data: any) => window.api.actualizarIngreso(withActor(data)),
 	registrarEgreso: (data: any) => window.api.registrarEgreso(withActor(data)),
+	listarPedidosRepuestos: () => window.api.listarPedidosRepuestos(),
+	crearPedidoRepuestos: (data: any) => window.api.crearPedidoRepuestos(withActor(data)),
+	actualizarPedidoRepuestos: (data: any) => window.api.actualizarPedidoRepuestos(withActor(data)),
+	actualizarEstadoPedidoRepuestos: (data: { id: number; estado: string }) =>
+		window.api.actualizarEstadoPedidoRepuestos(withActor(data)),
+	borrarPedidoRepuestos: (id: number) => window.api.borrarPedidoRepuestos({ id, actor: getActor() }),
 
 	// Clientes
 	obtenerClientes: (filtro?: string) => window.api.obtenerClientes(filtro),

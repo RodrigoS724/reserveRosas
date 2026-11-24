@@ -36,6 +36,11 @@ const today = new Date()
 const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
 const mes = ref(defaultMonth)
+type Fuente = 'actual' | 'anterior'
+const fuente = ref<Fuente>('actual')
+const anioExport = ref(String(today.getFullYear()))
+const exportandoAnio = ref(false)
+const progresoAnio = ref('')
 const cargando = ref(false)
 const error = ref('')
 const datos = ref<RegistroMensual | null>(null)
@@ -137,8 +142,7 @@ const cargarRegistros = async () => {
   cargando.value = true
   error.value = ''
   try {
-    const data = await api.obtenerRegistroMensual({ mes: mes.value })
-    datos.value = data
+    datos.value = await consultarMes(mes.value, fuente.value)
   } catch (err: any) {
     console.error('[Registros] Error cargando:', err)
     error.value = err?.message || 'No se pudo cargar el registro mensual'
@@ -148,12 +152,19 @@ const cargarRegistros = async () => {
   }
 }
 
-const downloadCsv = () => {
-  if (!datos.value) return
-  const rows: string[][] = []
-  rows.push(['Categoria', 'ID', 'Nombre', 'Fecha', 'Hora', 'Tipo', 'Subtipo/Estado', 'Marca', 'Modelo', 'Matricula/Factura', 'Telefono/Localidad'])
+const consultarMes = (mesConsulta: string, origen: Fuente): Promise<RegistroMensual> =>
+  origen === 'anterior'
+    ? api.obtenerRegistroMensualAnterior({ mes: mesConsulta })
+    : api.obtenerRegistroMensual({ mes: mesConsulta })
 
-  for (const r of datos.value.reservas || []) {
+const buildCsv = (registros: Array<{ mes: string; registro: RegistroMensual }>, conMes = false) => {
+  const rows: string[][] = []
+  const cabecera = ['Categoria', 'ID', 'Nombre', 'Fecha', 'Hora', 'Tipo', 'Subtipo/Estado', 'Marca', 'Modelo', 'Matricula/Factura', 'Telefono/Localidad']
+  rows.push(conMes ? ['Mes', ...cabecera] : cabecera)
+
+  for (const { mes: etiqueta, registro } of registros) {
+  const inicio = rows.length
+  for (const r of registro.reservas || []) {
     rows.push([
       'Reserva',
       String(r.id ?? ''),
@@ -169,7 +180,7 @@ const downloadCsv = () => {
     ])
   }
 
-  for (const a of datos.value.aprontes || []) {
+  for (const a of registro.aprontes || []) {
     rows.push([
       'Apronte',
       String(a.id ?? ''),
@@ -184,6 +195,10 @@ const downloadCsv = () => {
       a.localidad || a.telefono || ''
     ])
   }
+  if (conMes) {
+    for (let i = inicio; i < rows.length; i++) rows[i].unshift(etiqueta)
+  }
+  }
 
   const escapeCell = (value: any) => {
     const cell = value == null ? '' : String(value)
@@ -193,17 +208,73 @@ const downloadCsv = () => {
     return cell
   }
 
-  const csv = rows.map((row) => row.map(escapeCell).join(';')).join('\n')
+  // BOM para que Excel lea bien los acentos
+  return '\ufeff' + rows.map((row) => row.map(escapeCell).join(';')).join('\n')
+}
+
+const guardarCsv = (nombre: string, csv: string) => {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `registros-${mes.value || 'mes'}.csv`
+  link.download = nombre
   link.click()
   URL.revokeObjectURL(url)
 }
 
-watch(mes, () => {
+const sufijoFuente = (origen: Fuente) => (origen === 'anterior' ? '-version-anterior' : '')
+
+const downloadCsv = () => {
+  if (!datos.value) return
+  guardarCsv(`registros-${mes.value || 'mes'}${sufijoFuente(fuente.value)}.csv`, buildCsv([{ mes: mes.value, registro: datos.value }]))
+}
+
+const exportarAnio = async () => {
+  const anio = Number(anioExport.value)
+  if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+    error.value = 'Ingresa un año valido'
+    return
+  }
+
+  exportandoAnio.value = true
+  error.value = ''
+  progresoAnio.value = ''
+  const acumulado: Array<{ mes: string; registro: RegistroMensual }> = []
+  const fallidos: string[] = []
+  try {
+    for (let m = 1; m <= 12; m++) {
+      const mesConsulta = `${anio}-${String(m).padStart(2, '0')}`
+      progresoAnio.value = `Consultando ${mesConsulta}...`
+      try {
+        const registro = await consultarMes(mesConsulta, fuente.value)
+        if ((registro?.reservas?.length || 0) + (registro?.aprontes?.length || 0) === 0) continue
+        acumulado.push({ mes: mesConsulta, registro })
+      } catch (err) {
+        console.error(`[Registros] Error exportando ${mesConsulta}:`, err)
+        fallidos.push(mesConsulta)
+      }
+    }
+    if (acumulado.length === 0 && fallidos.length === 0) {
+      error.value = `No hay registros en ${anio} para la fuente seleccionada`
+    } else if (acumulado.length > 0) {
+      guardarCsv(`registros-${anio}${sufijoFuente(fuente.value)}.csv`, buildCsv(acumulado, true))
+      if (fallidos.length > 0) {
+        error.value = `Exportado, pero fallaron: ${fallidos.join(', ')}`
+      } else {
+        window.dispatchEvent(new CustomEvent('ui:notify', {
+          detail: { message: `Se exportaron ${acumulado.length} meses de ${anio} en un archivo`, variant: 'success' }
+        }))
+      }
+    } else {
+      error.value = `Fallaron todos los meses: ${fallidos.join(', ')}`
+    }
+  } finally {
+    exportandoAnio.value = false
+    progresoAnio.value = ''
+  }
+}
+
+watch([mes, fuente], () => {
   cargarRegistros()
 })
 
@@ -232,6 +303,11 @@ onMounted(() => {
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Fuente</label>
+          <select v-model="fuente" class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm font-bold">
+            <option value="actual">Base actual</option>
+            <option value="anterior">Versión anterior</option>
+          </select>
           <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Mes</label>
           <input v-model="mes" type="month" class="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm font-bold" />
           <button @click="cargarRegistros" :disabled="cargando" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 disabled:opacity-60">
@@ -239,6 +315,12 @@ onMounted(() => {
           </button>
           <button @click="downloadCsv" :disabled="!datos" class="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 disabled:opacity-60">
             Exportar Excel
+          </button>
+          <span class="mx-1 hidden h-6 w-px bg-gray-300 dark:bg-gray-700 sm:block"></span>
+          <label class="text-[10px] uppercase tracking-widest font-black text-gray-400">Año</label>
+          <input v-model="anioExport" type="number" min="2000" max="2100" class="w-24 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm font-bold" />
+          <button @click="exportarAnio" :disabled="exportandoAnio" class="px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 disabled:opacity-60">
+            {{ exportandoAnio ? (progresoAnio || 'Exportando...') : 'Exportar año completo' }}
           </button>
         </div>
       </header>

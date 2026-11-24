@@ -422,6 +422,12 @@ declare global {
       obtenerMarcasMoto: () => Promise<string[]>
       obtenerModelosMoto: (marca?: string) => Promise<string[]>
 
+      listarPedidosRepuestos: () => Promise<any[]>
+      crearPedidoRepuestos: (data: any) => Promise<{ ok: boolean; id: number }>
+      actualizarPedidoRepuestos: (data: any) => Promise<{ ok: boolean }>
+      actualizarEstadoPedidoRepuestos: (data: { id: number; estado: string }) => Promise<{ ok: boolean }>
+      borrarPedidoRepuestos: (data: { id: number; actor?: { username?: string; role?: string } }) => Promise<{ ok: boolean }>
+
       obtenerTodasLasReservas: () => Promise<{
         id: number
         nombre: string
@@ -521,9 +527,9 @@ declare global {
         created_at: string
       }[]>
       obtenerRegistroMensual: (d: { mes: string }) => Promise<any>
+      obtenerRegistroMensualAnterior: (d: { mes: string }) => Promise<any>
     }
   }
 }
 export {}
-
 

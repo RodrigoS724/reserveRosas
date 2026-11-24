@@ -6,8 +6,58 @@ const EMBEDDED_REMOTE_TOKEN = 'gh2t2oNre50TR4ZucrkssNPFb8LnDhD5JT9gM89ERy4'
 const LOCAL_ONLY_CHANNELS = new Set<string>([
   'config:env:get',
   'config:env:set',
-  'config:api:test'
+  'config:api:test',
+  'registros:legacy-mensual'
 ])
+
+const EMBEDDED_LEGACY_URL = 'https://rosas.uy/api-server'
+
+function getLegacyBaseUrl() {
+  const raw = String(process.env.API_LEGACY_URL || EMBEDDED_LEGACY_URL).trim()
+  try {
+    const parsed = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`)
+    const host = parsed.hostname.toLowerCase()
+    if (host !== 'rosas.uy' && host !== 'www.rosas.uy') return EMBEDDED_LEGACY_URL
+    return `${parsed.protocol}//${parsed.host}${parsed.pathname}`.replace(/\/+$/, '')
+  } catch {
+    return EMBEDDED_LEGACY_URL
+  }
+}
+
+export async function fetchLegacyRegistroMensual(mes: string) {
+  const safeMes = String(mes || '').trim()
+  if (!/^\d{4}-\d{2}$/.test(safeMes)) {
+    throw new Error('Mes invalido (formato AAAA-MM)')
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 60000)
+  try {
+    const response = await fetch(`${getLegacyBaseUrl()}/api/registros?mes=${encodeURIComponent(safeMes)}`, {
+      method: 'GET',
+      headers: buildAuthHeaders(getRemoteToken()),
+      signal: controller.signal
+    })
+    const raw = await response.text()
+    let payload: any = null
+    try {
+      payload = raw ? JSON.parse(raw) : null
+    } catch {
+      payload = null
+    }
+    if (!response.ok) {
+      throw new Error(`API anterior error (${response.status}): ${payload?.error || payload?.message || raw}`)
+    }
+    return payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error('Timeout consultando la API anterior (60s)')
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 
 function normalizeRemoteBaseUrl(rawValue: string) {
   const fallback = EMBEDDED_REMOTE_URL

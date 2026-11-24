@@ -7,6 +7,7 @@ const RAW_BASE = String(import.meta.env.VITE_API_URL || EMBEDDED_API_BASE).trim(
 const BASE_URL = RAW_BASE.replace(/\/+$/, '')
 const IPC_ENDPOINT = BASE_URL ? `${BASE_URL}/api/admin/ipc` : '/api/admin/ipc'
 const API_TOKEN = String(import.meta.env.VITE_API_TOKEN || EMBEDDED_API_TOKEN).trim()
+const LEGACY_BASE_URL = String(import.meta.env.VITE_API_LEGACY_URL || 'https://rosas.uy/api-server').trim().replace(/\/+$/, '')
 
 function encodeIpcArgs(args: any[]) {
   try {
@@ -106,6 +107,16 @@ export const api = {
 
   // Registros
   obtenerRegistroMensual: (d: any) => invoke('registros:mensual', d),
+  obtenerRegistroMensualAnterior: async (d: { mes: string }) => {
+    const mes = String(d?.mes || '').trim()
+    if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('Mes invalido (formato AAAA-MM)')
+    const response = await fetch(`${LEGACY_BASE_URL}/api/registros?mes=${encodeURIComponent(mes)}`, {
+      headers: { Authorization: `Bearer ${API_TOKEN}`, 'X-API-KEY': API_TOKEN }
+    })
+    if (!response.ok) throw new Error(`API anterior error (${response.status})`)
+    const payload = await response.json()
+    return payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  },
 
   // Ingresos / egresos
   listarIngresos: () => invoke('ingresos:list'),
@@ -171,6 +182,14 @@ export const api = {
   obtenerMarcasMoto: () => invoke('motos:marcas'),
   obtenerModelosMoto: (marca?: string) => invoke('motos:modelos', marca),
 
+  // Pedidos de repuestos
+  listarPedidosRepuestos: () => invoke('pedidos-repuestos:list'),
+  crearPedidoRepuestos: (d: any) => invoke('pedidos-repuestos:create', withActor(d)),
+  actualizarPedidoRepuestos: (d: any) => invoke('pedidos-repuestos:update', withActor(d)),
+  actualizarEstadoPedidoRepuestos: (d: { id: number; estado: string }) =>
+    invoke('pedidos-repuestos:update-estado', withActor(d)),
+  borrarPedidoRepuestos: (id: number) => invoke('pedidos-repuestos:delete', withActor({ id })),
+
   // Configuracion
   obtenerEnvConfig: () => invoke('config:env:get'),
   guardarEnvConfig: (text: string) => invoke('config:env:set', text),
@@ -216,6 +235,5 @@ export const api = {
   // Auditoria
   obtenerAuditoriaUsuarios: () => invoke('auditoria:list')
 }
-
 
 
